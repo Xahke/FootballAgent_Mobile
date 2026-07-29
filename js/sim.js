@@ -333,9 +333,9 @@ function endSeason(){
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
     if(p.yrs===0){p.yrs=1;p.morale=clamp(p.morale-10,0,100);}
-    if(p.age>=36){
+    if(RF()<careerEndProb(p,lvl)){
       if(p.agent==='you'){S.clients=S.clients.filter(c=>c!==p.id);pushNews('retire',{n:p.n,pid:p.id},'info');}
-      Object.assign(p,genPlayer(teamOf(p),p.pos),{id:p.id,age:R(16,20)});
+      regenPlayer(p);
     }
   });
   S.teams.forEach(tm=>{tm.pts=0;tm.w=0;tm.d=0;tm.l=0;tm.gf=0;tm.ga=0;});

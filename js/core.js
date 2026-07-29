@@ -33,23 +33,29 @@ function pickNat(domestic){
   for(const n of others){x-=(w[n]||1);if(x<=0)return n;}
   return others[0];
 }
-function genPlayer(team,pos){
+/* yaş → güç eğrisi: genç oyuncu kulübünün seviyesinin belirgin altında başlar,
+   zirveye 24-30 arasında ulaşır, sonra geriler. forceAge verilirse r/pot O yaşa göre hesaplanır. */
+function genPlayer(team,pos,forceAge){
   const str=team.str;
   const nat=pickNat(LEAGUES[team.lg].nat);
   const low=str<=60;
-  const age=low?(RF()<0.5?R(16,21):R(22,32)):R(17,34);
+  const age=forceAge||(low?(RF()<0.5?R(16,21):R(22,32)):R(17,34));
   let r;
-  if(age<=20)r=clamp(R(str-12,str),35,90);
-  else if(age<=23)r=clamp(R(str-9,str+2),38,92);
-  else r=clamp(R(str-7,str+4),40,93);
+  if(age<=17)r=clamp(R(str-24,str-14),35,70);
+  else if(age<=19)r=clamp(R(str-19,str-10),35,78);
+  else if(age<=21)r=clamp(R(str-14,str-4),35,84);
+  else if(age<=23)r=clamp(R(str-9,str+2),38,88);
+  else if(age<=30)r=clamp(R(str-7,str+4),40,93);
+  else r=clamp(R(str-9,str+2),38,90);
   let pot;
-  if(age<=20){
-    pot=r+R(4,16);
+  if(age<=21){
+    pot=r+(age<=17?R(8,20):age<=19?R(6,17):R(4,13));
     const w=RF();
     if(w<0.007)pot=r+R(30,45);      // gerçek wonderkid — çok nadir
     else if(w<0.045)pot=r+R(18,30); // yüksek potansiyel — nadir
-  } else if(age<=23)pot=r+R(2,10);
-  else pot=r+R(0,2);
+  } else if(age<=23)pot=r+R(2,9);
+  else if(age<=26)pot=r+R(0,4);
+  else pot=r+R(0,1);
   pot=clamp(pot,r,96);
   /* 90+ potansiyel gerçekten nadir olsun: yolu ne olursa olsun küresel eleme */
   if(pot>=90&&r<88&&RF()>0.15)pot=clamp(89-R(0,4),r,96);
@@ -57,6 +63,23 @@ function genPlayer(team,pos){
     team:team.id,wage:Math.max(1,Math.round(marketWage(r)*(0.75+RF()*0.35))),yrs:R(1,4),
     morale:R(55,85),form:R(40,70),g:0,a:0,app:0,min:0,rtSum:0,rtN:0,l5:[],agent:RF()<(low?0.25:0.45)?'rival':null,ignored:0,
     h:R(168,196),ft:RF()<0.74?'R':'L',hist:[],seasons:[]};
+}
+/* ===== kariyer sonu & kadro yenilenmesi =====
+   Kulüpler her sezon kadronun bir kısmını yeniler: yaşlananlar bırakır,
+   seviyeyi hiç yakalayamayanlar sessizce elenir. Yerlerine çoğunlukla genç,
+   bir kısmı hazır oyuncu gelir — böylece yaş piramidi kendini korur. */
+function careerEndProb(p,lvl){
+  if(p.age>=38)return 1;
+  if(p.age>=34)return 0.30+(p.age-34)*0.20+(p.r<lvl-5?0.18:0);
+  if(p.age>=31)return 0.08+(p.r<lvl-6?0.12:0);
+  if(p.age>=24&&p.pot<lvl-11)return 0.13; // seviyeyi yakalayamadı
+  return 0;
+}
+function intakeAge(){const w=RF();return w<0.66?R(16,20):w<0.89?R(21,24):R(25,28);}
+/* ayrılan oyuncunun yerine yeni bir oyuncu doğar — id korunur, eski kayıtlar silinir */
+function regenPlayer(p){
+  Object.assign(p,genPlayer(teamOf(p),p.pos,intakeAge()),{id:p.id});
+  delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
 }
 function newGame(){
   PID=1;
