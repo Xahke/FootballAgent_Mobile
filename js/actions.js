@@ -17,27 +17,39 @@ function renderNeg(){
   const mood=clamp(Math.round(140-ratio*100)*negCtx.patience/100,0,100);
   const mc=mood>60?'var(--acc)':mood>30?'var(--warn)':'var(--bad)';
   openModal(`
-   <div class="row">${tmBadge(tm,40)}<div><h2>${t('negotiate')}</h2>
-   <div class="sub">${p.n} · ${tm.n} · ${t('round')} ${negCtx.round}/3</div></div></div>
+   <div class="row">${tmBadge(tm,42)}
+     <div style="flex:1;min-width:0"><h2>${t('negotiate')}</h2>
+     <div class="sub">${p.n} · ${tm.n}</div></div>
+     <span class="roundPill">${t('round')} ${negCtx.round}/3</span></div>
    <div class="negbox">
-     <div class="row" style="justify-content:space-between"><span class="sub">${t('wage')}: ${fmtK(p.wage)}/${t('wk')}</span>
-     <span class="sub">${t('rating')}: <b style="color:var(--txt)">${p.r}</b></span></div>
-     <div style="margin-top:16px"><b>${t('demandWage')}: <span style="color:var(--acc)">${fmtK(negCtx.wage)}/${t('wk')}</span></b>
-       <input type="range" min="${Math.round(p.wage*0.9)}" max="${Math.round(negCtx.max*1.8)}" value="${negCtx.wage}"
-        oninput="negCtx.wage=+this.value;renderNeg()"></div>
-     <div style="margin-top:12px"><b>${t('contractLen')}: ${negCtx.years} ${t('yrs')}</b>
+     <div class="grid2" style="gap:8px">
+       <div style="background:var(--sur2);border-radius:10px;padding:9px 11px">
+         <div style="font-size:9px;color:var(--txt3);font-weight:800;text-transform:uppercase;letter-spacing:.07em">${t('wage')}</div>
+         <div class="num" style="font-size:15px;font-weight:800;margin-top:2px">${fmtK(p.wage)}<span class="faint" style="font-size:10px">/${t('wk')}</span></div>
+       </div>
+       <div style="background:var(--acc-soft);border-radius:10px;padding:9px 11px;box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)">
+         <div style="font-size:9px;color:var(--acc);font-weight:800;text-transform:uppercase;letter-spacing:.07em">${t('demandWage')}</div>
+         <div class="num" style="font-size:15px;font-weight:800;color:var(--acc);margin-top:2px">${fmtK(negCtx.wage)}<span style="font-size:10px;opacity:.7">/${t('wk')}</span></div>
+       </div>
+     </div>
+     <input type="range" min="${Math.round(p.wage*0.9)}" max="${Math.round(negCtx.max*1.8)}" value="${negCtx.wage}"
+        oninput="negCtx.wage=+this.value;renderNeg()">
+     <div style="margin-top:12px"><b style="font-size:12.5px">${t('contractLen')}: <span class="num">${negCtx.years} ${t('yrs')}</span></b>
        <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()"></div>
-     ${negCtx.counter?`<div style="margin-top:12px;padding:9px 11px;background:rgba(192,124,16,.09);border-radius:9px;font-size:12.5px">
-       ${t('counter')}: <b style="color:var(--warn)">${fmtK(negCtx.counter)}/${t('wk')}</b>
-       <span class="faint"> — ${L==='tr'?'bu rakamı ya da altını seçersen anlaşma kesin':'match it or go lower to seal the deal'}</span></div>`:''}
-     <div style="margin-top:14px" class="sub">${t('clubMood')}</div>
+     ${negCtx.counter?`<div class="counterCard">
+       <b style="color:var(--warn)">${t('counter')}: ${fmtK(negCtx.counter)}/${t('wk')}</b><br>
+       <span class="faint" style="font-size:11.5px">${L==='tr'?'Bu rakamı ya da altını seçersen anlaşma kesin.':'Match it or go lower to seal the deal.'}</span></div>`:''}
+     <div style="margin-top:14px;display:flex;justify-content:space-between;font-size:11px">
+       <span class="sub" style="font-weight:700">${t('clubMood')}</span>
+       <b class="num" style="color:${mc}">%${Math.round(mood)}</b></div>
      <div class="moodbar"><div style="width:${mood}%;background:${mc}"></div></div>
-     <div class="sub" style="margin-top:12px">${t('signBonus')} → <b style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*0.10))}</b></div>
+     <div class="divider" style="margin:12px 0"></div>
+     <div style="display:flex;justify-content:space-between;font-size:12px">
+       <span class="sub">${t('signBonus')}</span>
+       <b class="num" style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*0.10))}</b></div>
    </div>
-   <div class="row">
-     <button class="btn p" onclick="negSubmit()">${t('send')}</button>
-     <button class="btn s" onclick="closeModal()">${t('walkAway')}</button>
-   </div>`);
+   <button class="btn p" onclick="negSubmit()">${t('send')}</button>
+   <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('walkAway')}</button>`);
 }
 function negSubmit(){
   const p=byId(negCtx.pid);
@@ -247,17 +259,21 @@ function renderMeeting(){
   const col=MT.chance>60?'var(--acc)':MT.chance>35?'var(--warn)':'var(--bad)';
   const opts=MT.round<3?MT.order.slice(MT.round*3,MT.round*3+3):[];
   openModal(`
-   <div class="row">${tmBadge(tm,40)}<div><h2>${t('meeting')}</h2>
-   <div class="sub">${p.n} · ${tm.n}</div></div>
-   <div class="spacer"></div><div class="rt ${rtClass(p.r)}">${p.r}</div></div>
-   <div class="negbox">
-     <div class="sub" style="margin-bottom:10px">${meetHint(MT.ctx)}</div>
-     <div class="row" style="justify-content:space-between;font-size:11.5px"><span class="sub">${t('chance')}</span><b style="color:${col}">%${MT.chance}</b></div>
+   <div class="row">${tmBadge(tm,42)}
+     <div style="flex:1;min-width:0"><h2>${t('meeting')}</h2>
+     <div class="sub">${p.n} · ${tm.n}</div></div>
+     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>
+   <div class="dctx" style="margin-top:12px">${ICONS?ICONS.alert:''}<span>${meetHint(MT.ctx)}</span></div>
+   <div class="negbox" style="margin-top:10px">
+     <div class="row" style="justify-content:space-between;font-size:11px">
+       <span class="sub" style="font-weight:800;text-transform:uppercase;letter-spacing:.06em">${t('chance')}</span>
+       <b class="num" style="color:${col};font-size:15px">%${MT.chance}</b></div>
      <div class="moodbar"><div style="width:${MT.chance}%;background:${col}"></div></div>
-     ${MT.react?`<div style="margin-top:10px;font-size:12.5px;font-style:italic;color:${MT.react.d>=6?'var(--acc)':MT.react.d<=-4?'var(--bad)':'var(--txt2)'}">${MT.react.txt} <span class="faint">(${MT.react.d>0?'+':''}${MT.react.d}%)</span></div>`:''}
+     ${MT.react?`<div class="dquote ${MT.react.d>=6?'good':MT.react.d<=-4?'bad':'mid'}">${MT.react.txt}
+       <span class="faint" style="font-style:normal;font-weight:800"> ${MT.react.d>0?'+':''}${MT.react.d}%</span></div>`:''}
    </div>
    ${opts.length?`<div class="sect">${t('round')} ${MT.round+1}/3 · ${t('meetPick')}</div>
-     ${opts.map(li=>`<button class="btn s" style="margin-bottom:8px;text-align:left;font-weight:500;line-height:1.45" onclick="pickLine(${li})">${LINES[li][L]}</button>`).join('')}`
+     ${opts.map(li=>`<button class="dchoice" onclick="pickLine(${li})">${LINES[li][L]}</button>`).join('')}`
    :`<button class="btn p" onclick="finishMeeting()">${t('finalBtn')} · %${MT.chance} · ${fmtK(pitchCost(p))}</button>`}
    <button class="btn s" style="margin-top:8px" onclick="leaveMeeting()">${t('walkAway')}</button>`);
 }

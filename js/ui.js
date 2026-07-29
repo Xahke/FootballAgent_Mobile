@@ -12,7 +12,9 @@ function toast(msg){
   setTimeout(()=>el.classList.remove('show'),2200);
 }
 function openModal(html){
-  document.getElementById('sheet').innerHTML='<div class="handle"></div>'+html;
+  const sh=document.getElementById('sheet');
+  sh.innerHTML='<div class="handle"></div>'+html;
+  if(sh.classList){sh.classList.remove('sin');void (sh.offsetWidth||0);sh.classList.add('sin');}
   document.getElementById('modal').classList.add('open');
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');}
@@ -34,14 +36,15 @@ function playerRow(p,opts){
       ?` · <span style="color:var(--txt3)">${pitchCd(p)} ${t('wk')}</span>`
       :` · <span style="color:var(--acc)">%${Math.round(pitchChance(p)*100)}</span>`)
     :'';
-  const potTag=(p.age<=23&&p.pot-p.r>=8)?` · <span style="color:var(--blue)">${t('pot')} ${p.pot}</span>`:'';
+  const potTag=(p.age<=23&&p.pot-p.r>=8)?` · <span style="color:var(--blue);font-weight:700">${t('pot')} ${p.pot}</span>`:'';
   const lgTag=opts.lg?`${LEAGUES[tm.lg].c} · `:'';
-  return `<div class="pitem" onclick="pushV('player',${p.id})">
+  const wonder=(p.age<=21&&p.pot-p.r>=14)?ICONS.gem.replace('<svg ','<svg class="gem" '):'';
+  return `<div class="pitem${p.agent==='you'?' mine':''}" onclick="pushV('player',${p.id})">
     ${opts.noBadge?'':tmBadge(tm,34)}
-    <div class="pinfo"><div class="pname">${p.n}${p.agent==='you'?' <span class="star">★</span>':''}
+    <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
       <span class="natc">${NATS[p.nat].c}</span></div>
     <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}</div></div>
-    <div class="mood" style="background:${moodColor(p.morale)}"></div>
+    <div class="mood"><i style="height:${p.morale}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
 }
 function listWrap(html){return `<div class="list">${html}</div>`;}
@@ -119,7 +122,7 @@ function cupView(){
   let body='';
   if(ci<3){
     const cp=(S.cups||[])[ci];
-    if(!cp){body=`<div class="card"><div class="empty">${t('noCupYet')}</div></div>`;}
+    if(!cp){body=`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;}
     else{
       body=cp.rounds.map((rd,ri)=>`<div class="card">
         <div class="sect">${RL[ri]} · ${t('week')} ${CUPWKS[ri]}</div>
@@ -141,7 +144,7 @@ function cupView(){
     /* World Cup */
     if(!S.wc){
       const next=Math.ceil(S.season/4)*4;
-      body=`<div class="card"><div class="empty">${t('noCupYet')}<br>${t('nextWc')}: ${t('season')} ${next}</div></div>`;
+      body=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+next)}</div>`;
     } else {
       const wcRL=S.wc.rounds.length===4?RL:RL.slice(4-S.wc.rounds.length);
       body=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${S.wc.se}</div>
@@ -208,36 +211,57 @@ dash(){
       <div class="psub">${[lastStr,nextStr].filter(Boolean).join(' · ')}</div></div>
       <div class="rt ${rtClass(x.p.r)}">${x.p.r}</div></div>`;
   }).join('')):'';
+  /* durum kartları: bu hafta neyle ilgilenmeliyim? */
+  const cUnhappy=S.clients.map(byId).filter(p=>p.morale<40).length;
+  const cSign=(S.pendC||[]).length;
+  const cDeals=(S.offers||[]).length+(S.pending||[]).length;
+  const cUnread=S.inbox.filter(m=>!m.read).length+S.inbox.filter(m=>m.action).length;
+  const stCards=[
+    cUnhappy?`<div class="stCard bad" onclick="navTo('clients')">${ICONS.alert}<div><div class="cnt">${cUnhappy}</div><div class="lbl">${t('unhappy')}</div></div></div>`:'',
+    cDeals?`<div class="stCard blue" onclick="navTo('clients')">${ICONS.transfer}<div><div class="cnt">${cDeals}</div><div class="lbl">${t('considering')}</div></div></div>`:'',
+    cSign?`<div class="stCard good" onclick="navTo('clients')">${ICONS.contract}<div><div class="cnt">${cSign}</div><div class="lbl">${t('signPending')}</div></div></div>`:'',
+    cUnread?`<div class="stCard warn" onclick="navTo('inbox')">${ICONS.inbox}<div><div class="cnt">${cUnread}</div><div class="lbl">${t('notifs')}</div></div></div>`:''
+  ].filter(Boolean).join('');
   return `
-  <div class="card"><div class="sect">${S.agent?S.agent.agency+' · '+S.agent.fn+' '+S.agent.ln+' ('+NATNAME[S.agent.nat][L]+')':t('agency')}</div>
-    <div class="grid3">
-      <div class="stat"><div class="v" style="color:var(--acc)">${fmtK(inc)}</div><div class="l">${t('weeklyIncome')}</div></div>
-      <div class="stat"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
-      <div class="stat"><div class="v">${S.rep}</div><div class="l">${t('rep')}</div></div>
+  <div class="agHero">
+    <div class="row" style="position:relative;z-index:1">
+      <div style="flex:1;min-width:0">
+        <div class="agName">${S.agent?S.agent.agency:t('agency')}</div>
+        <div class="agSub">${S.agent?S.agent.fn+' '+S.agent.ln+' · '+NATNAME[S.agent.nat][L]:''} · ${t('season')} ${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</div>
+      </div>
     </div>
-    <div class="divider" style="margin:12px 0 10px"></div>
-    <div class="row" style="font-size:12px">
-      <span style="width:8px;height:8px;border-radius:50%;background:${windowOpen()?'var(--acc)':'var(--txt3)'};flex-shrink:0"></span>
-      <span class="${windowOpen()?'':'sub'}" style="font-weight:600">${windowOpen()?t('twOpen'):t('twClosed')}</span>
+    <div class="agCash num">${fmtK(S.cash)}<small>+${fmtK(inc)}/${t('wk')}</small></div>
+    <div class="agGrid">
+      <div class="agCell"><div class="v" style="color:var(--gold)">${S.rep}</div><div class="l">${t('rep')}</div>
+        <div class="repbar"><div style="width:${S.rep}%"></div></div></div>
+      <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
+      <div class="agCell"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
+    </div>
+    <div class="twline">
+      <span class="twdot ${windowOpen()?'on':'off'}"></span>
+      ${windowOpen()?t('twOpen'):t('twClosed')}
       ${windowOpen()?'':`<span class="faint">· ${t('twNext')}: ${nextWindowLabel()}</span>`}
-    </div></div>
+    </div>
+  </div>
+  ${stCards?`<div class="statusRow">${stCards}</div>`:''}
   ${(()=>{
-    const fresh=S.inbox.filter(m=>m.action||!m.read).slice(0,4);
+    const fresh=S.inbox.filter(m=>m.action||!m.read).slice(0,3);
     if(!fresh.length)return '';
-    return `<div class="sect" style="margin:0 2px 8px">${t('notifs')}
-      <span style="background:var(--bad);color:#fff;border-radius:8px;padding:1px 7px;font-size:9.5px;margin-left:4px">${S.inbox.filter(m=>!m.read).length}</span></div>
+    return `<div class="sect" style="margin:2px 2px 8px">${t('notifs')}</div>
       ${fresh.map(m=>msgHtml(m)).join('')}
-      <button class="btn s" style="margin-bottom:14px" onclick="navTo('inbox')">${t('allNotifs')}</button>`;
+      <button class="btn s" style="margin-bottom:12px" onclick="navTo('inbox')">${t('allNotifs')}</button>`;
   })()}
-  ${S.clients.length?`<div class="sect" style="margin:0 2px 8px">${t('agenda')}</div>${agendaHtml}`:
-    `<div class="card"><div class="empty">${t('noClients')}</div></div>`}
-  ${cms.length?`<div class="sect" style="margin:0 2px 8px">${t('myMatches')}</div>${cmHtml}`:''}
+  ${S.clients.length?`<div class="sect" style="margin:2px 2px 8px">${t('agenda')}</div>${agendaHtml}`:
+    `<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
+     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}
+  ${cms.length?`<div class="sect" style="margin:2px 2px 8px">${t('myMatches')}</div>${cmHtml}`:''}
   <button class="btn s" onclick="if(confirm(t('resetQ'))){localStorage.removeItem('menajerSaveV8');location.reload()}">${t('reset')}</button>`;
 },
 clients(){
   const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);
   return `<h2 class="sec">${t('clients')} <span class="sub" style="font-weight:400">${ps.length}/${maxClients()}</span></h2>
-   ${ps.length?listWrap(ps.map(p=>playerRow(p,{lg:1})).join('')):`<div class="card"><div class="empty">${t('noClients')}</div></div>`}`;
+   ${ps.length?listWrap(ps.map(p=>playerRow(p,{lg:1})).join('')):`<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
+     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}`;
 },
 market(){
   S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
@@ -278,7 +302,7 @@ market(){
    <button class="ftoggle ${f.elig?'on':''}" onclick="setF('elig',${!f.elig})">
      <span class="sw"></span>${t('onlyElig')}<span class="spacer"></span><span class="faint">${total} ${t('found')}</span>
    </button>
-   ${free.length?listWrap(free.map(p=>playerRow(p,{lg:1})).join('')):`<div class="card"><div class="empty">—</div></div>`}`;
+   ${free.length?listWrap(free.map(p=>playerRow(p,{lg:1})).join('')):`<div class="card">${emptyState('market',t('noResults'),t('noResultsSub'))}</div>`}`;
 },
 league(){
   if((S.curCon||'eu')==='cup')return cupView();
@@ -339,7 +363,7 @@ league(){
     }
     body=parts?finHtml+parts.map(([lbl,rows])=>`<div class="card tight">
       ${lbl?`<div class="sect" style="margin:12px 0 0">${lbl}</div>`:''}${rowsHtml(rows,!!lbl)}</div>`).join('')
-      :`<div class="card"><div class="empty">${t('notArch')}</div></div>`;
+      :`<div class="card">${emptyState('league',t('notArch'),'')}</div>`;
   } else if(tab==='fix'){
     const len=lgWeeks(lg);
     const lim=len-1+(LEAGUES[lg].grp?1:0); // grouped leagues get an extra "Final" page
@@ -383,10 +407,10 @@ league(){
       rows=S.players.filter(p=>p[key]>0&&teamOf(p).lg===lg).sort((a,b)=>b[key]-a[key]).slice(0,15)
         .map(p=>[p.n,p.team,p[key],p.id,p.agent==='you']);
     } else rows=aEntry?(key==='g'?aEntry.sc:aEntry.as).map(r=>[r[0],r[1],r[2],null,false]):null;
-    if(!rows)body=`<div class="card"><div class="empty">${t('notArch')}</div></div>`;
+    if(!rows)body=`<div class="card">${emptyState('league',t('notArch'),'')}</div>`;
     else body=`<div class="card tight"><table>
     <tr><th></th><th>${t('player')}</th><th>${t('team')}</th><th class="c">${key==='g'?t('goals'):t('assists')}</th></tr>
-    ${rows.map((r,i)=>`<tr class="${r[3]?'click':''} ${r[4]?'hl':''}" ${r[3]?`onclick="pushV('player',${r[3]})"`:''}>
+    ${rows.map((r,i)=>`<tr class="${r[3]?'click':''} ${r[4]?'hl':''} ${i<3?'top3':''}" ${r[3]?`onclick="pushV('player',${r[3]})"`:''}>
     <td><span class="posn ${i===0?'zone1':''}">${i+1}</span></td>
     <td><b>${r[0]}</b>${r[4]?' <span class="star">★</span>':''}</td>
     <td><div class="row" style="gap:6px">${tmBadge(S.teams[r[1]],18)}<span class="sub">${S.teams[r[1]].n}</span></div></td>
@@ -418,7 +442,7 @@ league(){
 },
 inbox(){
   S.inbox.forEach(m=>{if(!m.action)m.read=true;});
-  if(!S.inbox.length)return `<div class="empty">${t('noNews')}</div>`;
+  if(!S.inbox.length)return `<div class="card">${emptyState('inbox',t('noNews'),t('noNewsSub'))}</div>`;
   return S.inbox.map(m=>msgHtml(m)).join('');
 },
 team(id){
@@ -476,9 +500,10 @@ player(id){
   <div class="hero">
     <div class="stripe" style="background:linear-gradient(180deg,${tm.c1} 50%,${tm.c2} 50%)"></div>
     <div class="row">
-      <div style="flex:1"><div class="hname">${p.n}</div>
+      ${tmBadge(tm,44)}
+      <div style="flex:1;min-width:0"><div class="hname">${p.n}</div>
       <div class="hsub">${p.age} ${L==='tr'?'yaş':'years'} · ${POSFULL[L][p.pos]} · ${NATS[p.nat].c}</div></div>
-      <div class="bigrt"><span class="n">${p.r}</span><span class="l">${t('rating')}</span></div>
+      <div class="bigrt ${rtClass(p.r)}"><span class="n">${p.r}</span><span class="l">${t('rating')}</span></div>
     </div>
     <div style="margin-top:14px">${tags.join('')}</div>
   </div>
@@ -570,8 +595,19 @@ dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1
 clients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
 market:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
 league:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M6 3h12v6a6 6 0 0 1-12 0z"/><path d="M6 5H3v2a4 4 0 0 0 4 4"/><path d="M18 5h3v2a4 4 0 0 1-4 4"/></svg>',
-inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>'
+inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+cash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9"/><path d="M14.8 9.2c-.6-.8-1.7-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1 1.7 2.8 2c1.8.3 2.8 1 2.8 2s-1.2 2-2.8 2c-1.1 0-2.2-.4-2.8-1.2"/></svg>',
+rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/></svg>',
+transfer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"/><path d="m14 4 4 4-4 4"/><path d="M20 16H7"/><path d="m10 12-4 4 4 4"/></svg>',
+contract:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>',
+scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/></svg>',
+alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></svg>',
+gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>'
 };
+/* boş ekranlar: ikon + başlık + alt metin */
+function emptyState(icon,title,sub){
+  return `<div class="estate">${ICONS[icon]||ICONS.market}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;
+}
 const NAVS=['dash','clients','market','league','inbox'];
 function setupHtml(){
   return `
@@ -621,10 +657,12 @@ function render(){
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;
   const base=stack[0].v;
-  document.getElementById('nav').innerHTML=NAVS.map(v=>
+  document.getElementById('nav').innerHTML=`<div class="navin">${NAVS.map(v=>
     `<button class="${base===v&&stack.length===1?'on':''}" onclick="navTo('${v}')">
-     ${ICONS[v]}${t(v)}${v==='inbox'&&unread?`<span class="nbadge">${unread>9?'9+':unread}</span>`:''}</button>`).join('');
-  document.getElementById('view').innerHTML=VIEWS[c.v](c.id);
+     <span class="icw">${ICONS[v]}</span>${t(v)}${v==='inbox'&&unread?`<span class="nbadge">${unread>9?'9+':unread}</span>`:''}</button>`).join('')}</div>`;
+  const vw=document.getElementById('view');
+  vw.innerHTML=VIEWS[c.v](c.id);
+  if(vw.classList){vw.classList.remove('vin');void (vw.offsetWidth||0);vw.classList.add('vin');}
   window.scrollTo(0,0);
 }
 function showSeasonModal(champs){
