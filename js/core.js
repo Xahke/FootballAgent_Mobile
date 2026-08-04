@@ -8,14 +8,26 @@ const RF=()=>Math.random();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const fmtK=v=>v>=1000?(v/1000).toFixed(2).replace(/\.?0+$/,'')+'M €':Math.round(v)+'K €';
 const fmtM=v=>v.toFixed(1).replace(/\.0$/,'')+'M €';
-const marketWage=r=>Math.round(5*Math.pow(1.115,r-60));
-const marketValue=r=>+(0.6*Math.pow(1.13,r-60)).toFixed(1);
+/* ===== piyasa eğrileri =====
+   Modern futbolun ölçeğine yakın dursun: alt liglerde birkaç bin, üst düzeyde
+   yüz binlerce euro haftalık; bonservisler on milyonlarla yüz milyonlar arasında.
+   Referans: 60 ≈ ikinci lig oturmuş oyuncu, 70 ≈ üst lig ilk 11, 80 ≈ üst lig
+   yıldızı, 88+ ≈ dünya çapında. Değer maaştan daha dik artar — futbolda da öyle. */
+const marketWage=r=>Math.max(1,Math.round(8*Math.pow(1.129,r-60)));
+const marketValue=r=>{
+  const v=2*Math.pow(1.145,r-60);
+  return v<10?+v.toFixed(1):Math.round(v);   // küçük değerlerde ondalık, büyükte tam sayı
+};
+/* Menajerlik komisyonu itibara bağlıdır: adı olmayan menajer düşük oranla çalışır,
+   aranan menajer masaya kendi oranını koyar. */
+function commissionRate(){return +(0.05+(S.rep/100)*0.10).toFixed(3);}
+function commissionPct(){return Math.round(commissionRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
 function tmBadge(tm,size){
   const s=size||36, f=Math.round(s*0.28);
   const txt=lum(tm.c1)>150?'#16181c':'#fff';
   return `<div class="tb" style="width:${s}px;height:${s}px;font-size:${f}px;color:${txt};background:${tm.c1}">
-    ${tm.n.slice(0,3)}<i style="background:${tm.c2}"></i></div>`;
+    ${tm.ab||tm.n.slice(0,3)}<i style="background:${tm.c2}"></i></div>`;
 }
 let PID=1;
 function genName(nat){
@@ -27,7 +39,7 @@ function pickNat(domestic){
   else if(domestic==='afN')domestic=NAF[R(0,NAF.length-1)];
   if(RF()<0.62)return domestic;
   const others=NATKEYS.filter(n=>n!==domestic);
-  const w={br:3,ar:2,fr:1.5,es:1.2,nl:1.2,de:1,it:1,en:0.8,tr:0.8,pt:1,mx:0.8,us:0.5,jp:0.3,sa:0.2,eg:0.4,ma:0.4,ng:0.5,sn:0.5,gh:0.4,cm:0.4};
+  const w={br:3,ar:2,fr:1.5,es:1.2,nl:1.2,de:1,it:1,en:0.8,tr:0.8,pt:1,mx:0.8,us:0.5,jp:0.3,sa:0.2,eg:0.4,ma:0.4,ng:0.5,sn:0.5,gh:0.4,cm:0.4,be:0.8,hr:0.6,rs:0.6,pl:0.6,cz:0.4,gr:0.4,no:0.4,se:0.5,dk:0.5,ch:0.5,at:0.4,ua:0.5,ro:0.3,sct:0.4,ie:0.3,ru:0.4,co:0.9,uy:0.6,cl:0.5,pe:0.4,ec:0.4,py:0.3,ve:0.3,ci:0.6,dz:0.5,tn:0.4,ml:0.4,cd:0.4,kr:0.4,ir:0.3,au:0.3,cn:0.2};
   let tot=0;others.forEach(n=>tot+=w[n]||1);
   let x=RF()*tot;
   for(const n of others){x-=(w[n]||1);if(x<=0)return n;}
@@ -76,6 +88,20 @@ function careerEndProb(p,lvl){
   return 0;
 }
 function intakeAge(){const w=RF();return w<0.66?R(16,20):w<0.89?R(21,24):R(25,28);}
+/* Sözleşmesi biten oyuncuyu kulüp tutar mı? Seviyeye katkısı, yaşı ve potansiyeli belirler. */
+function renewProb(p,lvl){
+  let q=0.74+(p.r-lvl)*0.045;
+  if(p.age<=23&&p.pot-p.r>=6)q+=0.22;  // geleceği olan genç bırakılmaz
+  if(p.age>=33)q-=0.38;
+  if(p.r<lvl-6)q-=0.28;                // kadroya katkısı yok
+  return clamp(q,0.04,0.96);
+}
+/* Kulüpten ayrıldı: artık kulüpsüz. Kadroda açılan yeri sezon sonu dengelemesi doldurur. */
+function releaseToFree(p){
+  p.team=-1;p.yrs=0;p.freeFor=0;
+  p.morale=clamp(p.morale-10,0,100);
+  delete p.grp;
+}
 /* ayrılan oyuncunun yerine yeni bir oyuncu doğar — id korunur, eski kayıtlar silinir */
 function regenPlayer(p){
   Object.assign(p,genPlayer(teamOf(p),p.pos,intakeAge()),{id:p.id});
@@ -83,10 +109,10 @@ function regenPlayer(p){
 }
 function newGame(){
   PID=1;
-  S={lang:L,week:1,season:1,cash:100,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
+  S={lang:L,week:1,season:1,cash:250,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
   TEAMS.forEach((lgTeams,lg)=>{
-    lgTeams.forEach(([n,c1,c2,str])=>{
-      const tm={id:S.teams.length,n,c1,c2,lg,str,bud:clamp((str-55)/30,0.4,1.05),pts:0,w:0,d:0,l:0,gf:0,ga:0};
+    lgTeams.forEach(([n,ab,c1,c2,str])=>{
+      const tm={id:S.teams.length,n,ab,c1,c2,lg,str,bud:clamp((str-55)/30,0.4,1.05),pts:0,w:0,d:0,l:0,gf:0,ga:0};
       S.teams.push(tm);
       [['KL',2],['DF',5],['OS',5],['FV',4]].forEach(([p,cnt])=>{for(let k=0;k<cnt;k++)S.players.push(genPlayer(tm,p));});
     });
@@ -95,7 +121,8 @@ function newGame(){
   seedCups();
   pushNews('tut',{},'info');
 }
-function makeFixtures(idList){
+const SEASONW=38;   // sezon uzunluğu hedefi (en kalabalık ligin çift devresi)
+function makeFixtures(idList,targetW){
   let ids=[...idList];
   if(ids.length%2)ids.push(-1); // bye for odd-sized groups
   const n=ids.length,rounds=[];
@@ -107,16 +134,22 @@ function makeFixtures(idList){
     }
     rounds.push(ms);ids.splice(1,0,ids.pop());
   }
-  /* big leagues (21+ teams) play a single round-robin to keep the calendar sane */
-  const all=(2*(idList.length-1)<=40)?[...rounds,...rounds.map(ms=>ms.map(m=>({h:m.a,a:m.h})))]:rounds;
+  /* Ligler farklı uzunlukta olabilir — 18 takımlı lig 34, 20 takımlı 38 hafta oynar,
+     bu gerçekçidir. Sorun yalnızca çift devrenin sezona sığmadığı liglerde: 24 takımlı
+     bir lig tek devrede 23 haftada biter, kalan 15 hafta boş geçerdi. Orada rövanşların
+     sığdığı kadarı eklenir; her takım yine eşit sayıda maç yapar. */
+  const rev=rounds.map(ms=>ms.map(m=>({h:m.a,a:m.h})));
+  const cap=targetW||Infinity;
+  const all=(2*rounds.length<=cap)?[...rounds,...rev]
+           :[...rounds,...rev.slice(0,Math.max(0,cap-rounds.length))];
   return all.map(ms=>ms.map(m=>({...m,hg:null,ag:null})));
 }
 /* ===== continental cups ===== */
 function seedPair(ids){const r=[];for(let i=0;i<ids.length/2;i++)r.push({h:ids[i],a:ids[ids.length-1-i],hg:null,ag:null});return r;}
 function consPair(ids){const r=[];for(let i=0;i<ids.length;i+=2)r.push({h:ids[i],a:ids[i+1],hg:null,ag:null});return r;}
 function seedCups(){
-  /* qualification: final placements in the 8 European leagues — pos1-2 → ŞL, pos3-4 → AL, pos5-6 → KL */
-  const order=['PL','LL','BL','SA','L1','SL','ED','LP'];
+  /* katılım: 8 Avrupa liginin bitiş sıralamasından — 1-2. sıra EC1, 3-4. EC2, 5-6. EC3 */
+  const order=['EN1','ES1','DE1','IT1','FR1','TR1','NL1','PT1'];
   const perLg=order.map(c=>{
     const i=LEAGUES.findIndex(l=>l.c===c);
     return leagueTable(i).map(tm=>tm.id);
@@ -160,42 +193,118 @@ function buildAllFixtures(){
       tms.forEach((tm,k)=>{tm.grp=k%2;}); // alternate by strength order → balanced groups
       const A=tms.filter(tm=>tm.grp===0).map(tm=>tm.id);
       const B=tms.filter(tm=>tm.grp===1).map(tm=>tm.id);
+      /* gruplu liglerde grup aşamasının bitişini finalin takip etmesi gerekiyor —
+         doğal çift devrede bırakılır, uzatılmaz */
       const fa=makeFixtures(A),fb=makeFixtures(B);
       S.fx[i]=fa.map((r,w)=>r.concat(fb[w]||[]));
-    } else S.fx[i]=makeFixtures(tms.map(tm=>tm.id));
+    } else S.fx[i]=makeFixtures(tms.map(tm=>tm.id),SEASONW);
   });
 }
 function totalWeeks(){return Math.max(...S.fx.map(f=>f.length));}
 function lgWeeks(lg){return S.fx[lg].length;}
+/* Lig adı ülke adı + kademeden üretilir: hem iki dilli olur hem de gerçek lig
+   markalarına hiç yaklaşmaz. Ad veride tutulmadığı için dil değişince de doğrudur. */
+function lgName(i){
+  const l=LEAGUES[i];
+  if(!l)return '';
+  return CTRYS[l.ctry][L]+' '+t(l.tier===2?'tier2':'tier1');
+}
 function byId(id){return S.players.find(p=>p.id===id);}
-function teamOf(p){return S.teams[p.team];}
+/* ===== serbest oyuncular =====
+   Sözleşmesi biten ve yenilenmeyen oyuncu team=-1 olur. Kulübü yoktur ama arayüzün
+   her yerinde tm.n / tm.c1 / tm.lg okunuyor; bu yüzden gerçek bir takım nesnesi yerine
+   geçen tek bir sözde takım kullanıyoruz. lg=-1 olduğu için hiçbir lig listesine girmez. */
+const FREETM={id:-1,n:'—',ab:'—',c1:'#6b7280',c2:'#3f444c',lg:-1,str:50,bud:0,pts:0,w:0,d:0,l:0,gf:0,ga:0};
+function isFree(p){return !p||p.team<0;}
+function teamOf(p){return p.team<0?FREETM:S.teams[p.team];}
+function freeAgents(){return S.players.filter(p=>p.team<0);}
+/* Moralin tek giriş noktası. Maç performansı, transferler, sözleşmeler ve ileride
+   eklenecek olaylar hep buradan geçsin — böylece morali etkileyen her şey tek yerde
+   sınırlanır ve dengelenebilir. */
+/* ===== güven =====
+   Oyuncuyla aranızdaki ilişki. Moralden ayrı: moral kulübünden ve sahadan gelir,
+   güven senden. Olaylar, tuttuğun sözler ve pazarlıklar burayı hareket ettirir. */
+function trustOf(p){return p&&p.trust===undefined?55:(p?p.trust:0);}
+function trustEvent(p,delta){
+  if(!p)return;
+  p.trust=stat(trustOf(p)+delta,0);
+  return p.trust;
+}
+function trustLabel(v){return v>=75?'trHigh':v>=55?'trGood':v>=35?'trMid':'trLow';}
+function moraleEvent(p,delta){
+  if(!p)return;
+  p.morale=stat(p.morale+delta,0);
+  return p.morale;
+}
+/* Form ve moral kesirli katkılarla besleniyor; tek ondalıkta tutuluyor ki kayıt
+   dosyasında 50.66495834095 gibi değerler birikmesin. Ekranda tam sayı gösterilir. */
+function stat(v,lo){return Math.round(clamp(v,lo===undefined?0:lo,100)*10)/10;}
 function pushNews(key,params,type,action){
   S.inbox.unshift({w:S.week,se:S.season,key,params,type:type||'info',action,read:false});
   if(S.inbox.length>60)S.inbox.pop();
 }
-function weeklyIncome(){return Math.round(S.clients.reduce((s,id)=>s+byId(id).wage*0.05,0)*10)/10;}
+/* Müşterinin maaşından aldığın pay da itibarınla birlikte büyür. */
+function weeklyIncome(){
+  const rate=commissionRate();
+  return Math.round(S.clients.reduce((s,id)=>{const p=byId(id);return s+(p&&!isFree(p)?p.wage*rate:0);},0)*10)/10;
+}
+/* Ajansın sabit gideri: ofis + müşteri başına idari yük + her keşif ağının bakımı.
+   Başlangıçta küçük tutuluyor ki ilk transferini yapmaya vaktin olsun; ağ genişledikçe
+   ve isim yaptıkça büyüyor, böylece "nereye kadar büyüyeceğim" gerçek bir karar oluyor. */
+function weeklyCost(){
+  const office=1+S.rep*0.03;
+  const admin=S.clients.length*0.6;
+  const scouts=(S.known||[]).reduce((s,i)=>s+scoutCost(i)*0.0025,0);
+  return Math.round((office+admin+scouts)*10)/10;
+}
+function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
 function maxClients(){return 2+Math.floor(S.rep/18);}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,
    hidden gems at small clubs stay reachable — that's where a nobody agent starts */
 function profileOf(p){
-  const tm=teamOf(p);
   const hype=(p.age<=23&&p.pot-p.r>=10)?Math.min(8,(p.pot-p.r)/3):0;
-  const visibility=tm.str-6+hype;
+  /* kulüpsüz oyuncunun arkasında kulüp gücü yok — kapısı yeni menajerlere açık */
+  if(isFree(p))return Math.max(p.r-4,0);
+  const visibility=teamOf(p).str-6+hype;
   return Math.max(p.r,visibility);
 }
 /* --- transfer windows: season start (wk 1-5) & mid-season (4 weeks around halfway) --- */
 function midWeek(){return Math.ceil(totalWeeks()/2)+1;}
 function windowOpen(){const m=midWeek();return (S.week>=1&&S.week<=5)||(S.week>=m&&S.week<=m+3);}
 function nextWindowLabel(){const m=midWeek();return S.week<m?(t('week')+' '+m):t('newSeasonLbl');}
+/* ===== sözleşme yenileme koşulları =====
+   Bir kulüp masaya her istendiğinde oturmaz. Görüşmenin bir gerekçesi olmalı:
+   sözleşme bitiyordur, oyuncu üst üste iyi oynamıştır ya da maaşı piyasanın
+   belirgin altında kalmıştır. Aksi halde "neden şimdi?" sorusunun cevabı yoktur. */
+function last5Avg(p){
+  if(!p.l5||p.l5.length<5)return 0;
+  return p.l5.reduce((s,m)=>s+m.rt,0)/p.l5.length;
+}
+function renewReason(p){
+  if(isFree(p))return null;
+  if(p.yrs<=1)return 'expiring';
+  if(last5Avg(p)>=7.2)return 'form';
+  if(p.wage<marketWage(p.r)*0.6)return 'underpaid';
+  return null;
+}
+/* Görüşme neden açılamıyor? null dönerse açılabilir. */
+function renewBlock(p){
+  if(pendCFor(p.id))return 'pending';
+  if((p.rnw||0)>(S.tw||0))return 'cooldown';
+  if(!renewReason(p))return 'noreason';
+  return null;
+}
+function renewCd(p){return Math.max(0,(p.rnw||0)-(S.tw||0));}
 function offerFor(pid){return (S.offers||[]).find(x=>x.pid===pid);}
 function pendingFor(pid){return (S.pending||[]).find(x=>x.pid===pid);}
 function pendCFor(pid){return (S.pendC||[]).find(x=>x.pid===pid);} // imzası beklenen sözleşme
 function movedThisSeason(p){return (p.hist||[]).some(h=>h.se===S.season);}
 function honeymoon(p){return (p.hm||0)>(S.tw||0);} // fresh deal — content for a while
 /* ===== scouting network: you only see leagues you know ===== */
-function knownLg(i){return (S.known||[]).includes(i);}
+/* serbest oyuncular herkese açıktır; keşif ağı yalnızca kulüplü oyuncular için geçerli */
+function knownLg(i){return i<0||(S.known||[]).includes(i);}
 function lgAvgStr(i){const ts=S.teams.filter(tm=>tm.lg===i);return ts.reduce((s,tm)=>s+tm.str,0)/ts.length;}
 function scoutCost(i){return Math.round(30+Math.max(0,lgAvgStr(i)-40)*12);} // K
 function scoutPending(i){return (S.scout||[]).find(x=>x.lg===i);}
@@ -204,7 +313,7 @@ function createAgent(fn,ln,nat,ag){
   const home=NAT2CTRY[nat]||'WAF';
   S.known=LEAGUES.map((l,i)=>l.ctry===home?i:-1).filter(i=>i>=0);
   /* keep leagues of any existing clients reachable (old saves) */
-  S.clients.forEach(id=>{const lg=teamOf(byId(id)).lg;if(!S.known.includes(lg))S.known.push(lg);});
+  S.clients.forEach(id=>{const lg=teamOf(byId(id)).lg;if(lg>=0&&!S.known.includes(lg))S.known.push(lg);});
   S.scout=S.scout||[];
   save();render();
 }
@@ -230,8 +339,8 @@ function openScout(){
     if(knownLg(i))return '';
     const pend=scoutPending(i);
     return `<div class="pitem" style="cursor:default">
-      <div class="pinfo"><div class="pname">${l.n}</div>
-      <div class="psub">${CTRYS[l.ctry][L]} · ${t('avgRating')} ~${Math.round(lgAvgStr(i))}</div></div>
+      <div class="pinfo"><div class="pname">${lgName(i)}</div>
+      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLowerCase()}</div></div>
       ${pend?`<span class="tag w">${t('scoutPendingT')} · ${Math.max(1,pend.done-(S.tw||0))} ${t('wk')}</span>`
         :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuild')} · ${fmtK(scoutCost(i))}</button>`}
     </div>`;
@@ -244,6 +353,7 @@ function sortTbl(arr){return [...arr].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf
 function leagueTable(lg){return sortTbl(S.teams.filter(tm=>tm.lg===lg));}
 function groupTable(lg,g){return sortTbl(S.teams.filter(tm=>tm.lg===lg&&tm.grp===g));}
 function teamPos(tid){
+  if(tid<0)return 0;
   const tm=S.teams[tid];
   const tbl=LEAGUES[tm.lg].grp?groupTable(tm.lg,tm.grp):leagueTable(tm.lg);
   return tbl.findIndex(x=>x.id===tid)+1;

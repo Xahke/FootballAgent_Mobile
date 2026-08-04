@@ -1,0 +1,47 @@
+name: Android build
+
+# Elle çalıştırılır (Actions sekmesi → Run workflow) ya da main'e push'ta.
+# Amaç: Android Studio kurmadan indirilebilir bir APK üretmek.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Capacitor 6 → Android Gradle Plugin 8 → JDK 17
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Bağımlılıklar
+        run: npm install
+
+      - name: Web varlıklarını hazırla
+        run: npm run www
+
+      # android/ depoda tutulmuyor; her derlemede sıfırdan üretiliyor
+      - name: Android projesini oluştur
+        run: npx cap add android
+
+      - name: Senkronize et
+        run: npx cap sync android
+
+      - name: APK derle
+        run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: menajer-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

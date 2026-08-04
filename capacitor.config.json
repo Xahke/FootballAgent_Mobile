@@ -1,0 +1,11 @@
+{
+  "appId": "com.berkin.menajer",
+  "appName": "Menajer",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#f7f8f9"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

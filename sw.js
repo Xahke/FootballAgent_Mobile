@@ -1,0 +1,62 @@
+/* sw.js — çevrimdışı çalışma.
+   Oyun tamamen istemci tarafında; ağ yalnızca dosyaları indirmek için gerekiyor.
+   Bu yüzden uygulama kabuğu kuruluşta önbelleğe alınır ve sonrasında ağ hiç beklenmez.
+   CACHE sürümünü, önbelleğe alınan dosyalardan biri her değiştiğinde artır. */
+const CACHE = 'menajer-v2';
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.json',
+  './css/style.css',
+  './js/i18n.js',
+  './js/data.js',
+  './js/core.js',
+  './js/sim.js',
+  './js/market.js',
+  './js/events.js',
+  './js/sfx.js',
+  './js/actions.js',
+  './js/ui.js',
+  './js/main.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/maskable-192.png',
+  './icons/maskable-512.png',
+  './icons/apple-touch-icon.png'
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE)
+      /* tek bir dosya 404 verirse tüm kurulum düşmesin */
+      .then(c => Promise.allSettled(SHELL.map(u => c.add(u))))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+/* Önce önbellek: uygulama dosyaları sürümlendiği için bayat içerik riski yok,
+   buna karşılık uçak modunda ve kötü bağlantıda anında açılır. */
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  e.respondWith(
+    caches.match(req).then(hit => {
+      if (hit) return hit;
+      return fetch(req).then(res => {
+        if (res && res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
+        return res;
+      }).catch(() => caches.match('./index.html'));
+    })
+  );
+});

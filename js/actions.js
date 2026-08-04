@@ -3,12 +3,21 @@
 /* ================= NEGOTIATION ================= */
 function clubMaxWage(p){
   const tm=teamOf(p);
-  return marketWage(p.r)*(0.85+(p.form-50)/250+(S.rep/500))*(0.8+tm.bud*0.35);
+  /* Kulübün cömertliği görüşmenin gerekçesine bağlı: sözleşmesi biten oyuncuyu
+     kaybetmemek için para verir, formda olanı ödüllendirir, düşük maaşlıyı hizaya
+     çeker. Gerekçesiz masaya oturmaz zaten (bkz. renewBlock). */
+  const reason=renewReason(p);
+  const lever=reason==='expiring'?1.10:reason==='form'?1.04:reason==='underpaid'?0.98:0.88;
+  return marketWage(p.r)*(0.85+(p.form-50)/250+(S.rep/500))*(0.8+tm.bud*0.35)*lever;
 }
 function openNeg(pid){
-  if(pendCFor(pid)){toast(t('contractPendingT'));return;}
   const p=byId(pid);
-  negCtx={pid,round:1,max:clubMaxWage(p),patience:100,wage:Math.round(marketWage(p.r)),years:3,counter:null};
+  const blk=renewBlock(p);
+  if(blk==='pending'){toast(t('contractPendingT'));return;}
+  if(blk==='cooldown'){toast(t('renewCdMsg').replace('{w}',renewCd(p)));return;}
+  if(blk==='noreason'){toast(t('renewNoReason'));return;}
+  negCtx={pid,round:1,max:clubMaxWage(p),patience:100,wage:Math.round(marketWage(p.r)),years:3,counter:null,
+    reason:renewReason(p)};
   renderNeg();
 }
 function renderNeg(){
@@ -21,6 +30,7 @@ function renderNeg(){
      <div style="flex:1;min-width:0"><h2>${t('negotiate')}</h2>
      <div class="sub">${p.n} · ${tm.n}</div></div>
      <span class="roundPill">${t('round')} ${negCtx.round}/3</span></div>
+   <div class="dctx" style="margin-top:10px">${ICONS?ICONS.alert:''}<span>${t('why_'+negCtx.reason)}</span></div>
    <div class="negbox">
      <div class="grid2" style="gap:8px">
        <div style="background:var(--sur2);border-radius:10px;padding:9px 11px">
@@ -45,8 +55,8 @@ function renderNeg(){
      <div class="moodbar"><div style="width:${mood}%;background:${mc}"></div></div>
      <div class="divider" style="margin:12px 0"></div>
      <div style="display:flex;justify-content:space-between;font-size:12px">
-       <span class="sub">${t('signBonus')}</span>
-       <b class="num" style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*0.10))}</b></div>
+       <span class="sub">${t('signBonus')} · %${commissionPct()}</span>
+       <b class="num" style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*commissionRate()))}</b></div>
    </div>
    <button class="btn p" onclick="negSubmit()">${t('send')}</button>
    <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('walkAway')}</button>`);
@@ -56,12 +66,16 @@ function negSubmit(){
   const ratio=negCtx.wage/negCtx.max;
   /* accepting the club's own counter (or less) always seals the deal */
   const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02);
-  const acc=meetsCounter?1:clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*negCtx.patience/100)+S.rep/500;
+  /* Sana güvenen oyuncu masada arkanda durur; güvenmeyen kendi hesabını yapar. */
+  const trustBonus=(trustOf(p)-55)/600;
+  const acc=meetsCounter?1:clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*negCtx.patience/100)+S.rep/500+trustBonus;
   if(RF()<acc){
     /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar */
     S.pendC=S.pendC||[];
-    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,at:(S.tw||0)+R(1,2)});
+    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,rate:commissionRate(),at:(S.tw||0)+R(1,2)});
     p.morale=clamp(p.morale+10,0,100);p.ignored=0;p.hm=(S.tw||0)+4;
+    /* Yeni imzadan sonra kulüp uzun süre masaya oturmaz. */
+    p.rnw=(S.tw||0)+45;
     pushNews('contractAgreed',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team,y:negCtx.years,w:fmtK(negCtx.wage)},'good');
     toast(t('negAgreed'));closeModal();save();render();
   } else {
@@ -80,51 +94,83 @@ function negSubmit(){
 }
 /* ================= TRANSFER ================= */
 let trSel=new Set();
+/* Ek madde kademeleri. Kabul etkisi seçilen büyüklükle orantılı hesaplanır
+   (bkz. clauseAcc), böylece "az iste, kolay kabul edilsin" dengesi kurulur. */
+const PAYPLANS=[2,3,4,6,8,12];
+const GBTIERS=[10,15,20,25];
+const SOTIERS=[5,10,15,20,25,30,40,50];
+/* Taksit ve gol bonusu kulübün riskini azaltır → kabulü kolaylaştırır.
+   Satış payı gelecekteki kazancından alır → zorlaştırır, oran büyüdükçe daha çok. */
+function clauseAcc(pay,gb,so){
+  const inst=pay>1?Math.min(0.14,0.035*Math.log2(pay)+0.03):0;
+  const bonus=gb?0.02+(gb-10)*0.004:0;
+  const sell=so?0.02+so*0.0075:0;
+  return inst+bonus-sell;
+}
+/* Aracı ücreti: kulüp başına, anlaşmanın büyüklüğüne göre. Kasadaki para büyüdükçe
+   harcayacak yer de büyüsün diye bonservise (yoksa maaşa) endeksli. */
+function fixCostFor(p,fee){
+  const base=fee>0?fee*1000*0.05:p.wage*22*0.05;
+  return Math.max(4,Math.round(base));
+}
 function openTransfer(pid){
   const p=byId(pid);
   if(offerFor(pid)||pendingFor(pid)){toast(t('offerPending'));return;}
   if(movedThisSeason(p)){toast(t('movedAlready'));return;}
   const potBonus=(p.age<=21&&p.pot-p.r>=12)?7:(p.age<=23&&p.pot-p.r>=8)?4:0;
+  const free=isFree(p);
   const buyers=S.teams.filter(tm=>{
     if(tm.id===p.team)return false;
+    /* bonservissiz oyuncuya kapı daha geniş: kulübün ödeyeceği bir bedel yok */
+    if(free)return p.r>=teamStr(tm.id)-9-potBonus&&RF()<0.62+(p.form-50)/120;
     return p.r>=teamStr(tm.id)-4-potBonus&&tm.bud*12>=marketValue(p.r)*0.5&&RF()<0.5+(p.form-50)/120;
   }).sort(()=>RF()-0.5).slice(0,6);
   if(!buyers.length){openModal(`<h2>${t('offerClubs')}</h2><div class="empty">${t('noInterest')}</div>`);return;}
   const v=marketValue(p.r);
   trSel=new Set();
   openModal(`
-   <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${t('value')}: ${fmtM(v)}</div>
+   <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${free?t('faSub'):t('value')+': '+fmtM(v)}</div>
    <div class="sub" style="margin-top:6px">${t('pickClubs')}</div>
-   <div class="negbox"><b>${t('askFee')}: <span style="color:var(--acc)" id="feeV">${fmtM(v)}</span></b>
+   ${free?`<div class="negbox"><b>${t('freeFee')}</b>
+     <div class="sub" style="margin-top:6px">${t('faDealHint')}</div>
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()}</div></div>`
+   :`<div class="negbox"><b>${t('askFee')}: <span style="color:var(--acc)" id="feeV">${fmtM(v)}</span></b>
      <input type="range" min="${Math.round(v*7)}" max="${Math.round(v*18)}" value="${Math.round(v*10)}" id="feeR"
        oninput="document.getElementById('feeV').textContent=fmtM(this.value/10)">
-     <div class="sub" style="margin-top:10px">${t('commission')}: %10</div>
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()} · ${t('repScales')}</div>
    </div>
-   <div class="sect">${t('clauses')}</div>
-   <div class="fgrid" style="margin-bottom:4px">
+   <div class="sect">${t('clauses')}</div>`}
+   <div class="fgrid" style="margin-bottom:4px;${free?'display:none':''}">
      <label class="fitem"><span>${t('payPlan')}</span>
        <select class="fsel" id="trPay">
          <option value="1">${t('payCash')}</option>
-         <option value="2">${t('pay2')}</option>
-         <option value="4">${t('pay4')}</option>
+         ${PAYPLANS.map(n=>`<option value="${n}">${n} ${t('instal')}</option>`).join('')}
        </select></label>
      <label class="fitem"><span>${t('goalBonusL')}</span>
        <select class="fsel" id="trGb">
          <option value="0">${t('none')}</option>
-         <option value="1">${t('gbOpt')}</option>
+         ${GBTIERS.map(n=>`<option value="${n}">${n} ${t('gbGoals')}</option>`).join('')}
        </select></label>
      <label class="fitem" style="grid-column:1/-1"><span>${t('nextSaleL')}</span>
        <select class="fsel" id="trSo">
          <option value="0">${t('none')}</option>
-         <option value="15">${t('soOpt')}</option>
+         ${SOTIERS.map(n=>`<option value="${n}">%${n}${n>=30?' · '+t('soHard'):''}</option>`).join('')}
        </select></label>
    </div>
-   <div class="sub" style="margin-bottom:10px">${t('clauseHint')}</div>
+   ${free?'':`<div class="sub" style="margin-bottom:10px">${t('clauseHint')}</div>`}
+   <div class="sect">${t('fixerL')}</div>
+   <label class="fitem" style="margin-bottom:6px">
+     <select class="fsel" id="trFix">
+       <option value="0">${t('none')}</option>
+       <option value="1">${t('fixLow')}</option>
+       <option value="2">${t('fixHigh')}</option>
+     </select></label>
+   <div class="sub" style="margin-bottom:10px">${t('fixerHint')}</div>
    <div class="sect">${t('interested')}</div>
    <div class="list">
    ${buyers.map(b=>`<div class="pitem" onclick="trToggle(${b.id})">
      ${tmBadge(b,36)}
-     <div class="pinfo"><div class="pname">${b.n}</div><div class="psub">${LEAGUES[b.lg].n} · #${teamPos(b.id)} · ${t('wage')} ~${fmtK(Math.round(marketWage(p.r)*(0.9+b.bud*0.3)))}/${t('wk')}</div></div>
+     <div class="pinfo"><div class="pname">${b.n}</div><div class="psub">${lgName(b.lg)} · #${teamPos(b.id)} · ${t('wage')} ~${fmtK(Math.round(marketWage(p.r)*(0.9+b.bud*0.3)))}/${t('wk')}</div></div>
      <span class="trk" id="trk${b.id}"></span></div>`).join('')}
    </div>
    <button class="btn p" id="trBtn" disabled onclick="submitOffers(${pid})">${t('sendOffers')}</button>`);
@@ -139,22 +185,31 @@ function trToggle(tid){
 function submitOffers(pid){
   if(!trSel.size)return;
   if(offerFor(pid)||pendingFor(pid)){toast(t('offerPending'));return;}
-  const fee=+document.getElementById('feeR').value/10;
-  const pay=+((document.getElementById('trPay')||{}).value||1);
-  const gb=+((document.getElementById('trGb')||{}).value||0);
-  const so=+((document.getElementById('trSo')||{}).value||0);
+  const p=byId(pid),free=isFree(p);
+  const feeEl=document.getElementById('feeR');
+  const fee=free||!feeEl?0:+feeEl.value/10;
+  const pay=free?1:+((document.getElementById('trPay')||{}).value||1);
+  const gb=free?0:+((document.getElementById('trGb')||{}).value||0);
+  const so=free?0:+((document.getElementById('trSo')||{}).value||0);
+  const fix=+((document.getElementById('trFix')||{}).value||0);
+  /* aracı ücreti kulüp başına peşin ödenir — anlaşma büyüdükçe pahalanır */
+  const fixCost=fix?Math.round(fixCostFor(p,fee)*fix*trSel.size):0;
+  if(fixCost>S.cash){toast(t('noCash'));return;}
+  S.cash-=fixCost;
   S.offers=S.offers||[];
-  trSel.forEach(tid=>S.offers.push({pid,tid,fee,pay,gb,so,at:(S.tw||0)+R(1,3)}));
+  trSel.forEach(tid=>S.offers.push({pid,tid,fee,pay,gb,so,fix,at:(S.tw||0)+R(1,3)}));
   trSel=new Set();
   toast(t('offerSent'));
   closeModal();save();render();
 }
 function doTransfer(p,b,fee,quiet,terms){
   terms=terms||{};
-  const oldTm=teamOf(p),old=oldTm.n;
+  const oldTm=teamOf(p),old=oldTm.n,wasFree=isFree(p);
+  if(wasFree)fee=0;   // bonservissiz oyuncuda kulüpler arası ödeme yok
   /* önceki anlaşmadan "sonraki satıştan pay" varsa şimdi öde */
   if(p.so&&p.so.pct){
-    const s=Math.max(1,Math.round(fee*1000*p.so.pct/100*0.10));
+    /* klozda yazan oran neyse o ödenir — arayüzdeki %15 ile hesap aynı olmalı */
+    const s=Math.max(1,Math.round(fee*1000*p.so.pct/100));
     S.cash+=s;
     pushNews('soPaid',{n:p.n,pid:p.id,f:fmtK(s)},'good');
     p.so=null;
@@ -164,7 +219,10 @@ function doTransfer(p,b,fee,quiet,terms){
   if(p.hist.length>6)p.hist.shift();
   p.team=b.id;p.wage=Math.max(1,Math.round(Math.max(p.wage*1.15,marketWage(p.r)*(0.85+b.bud*0.25))));
   p.yrs=R(2,4);p.morale=clamp(Math.max(p.morale+30,70),0,100);p.ignored=0;p.hm=(S.tw||0)+8;p.form=clamp(p.form+5,0,100);
-  const cut=Math.max(1,Math.round(fee*100));
+  delete p.freeFor;
+  /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
+  const rate=commissionRate();
+  const cut=wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate));
   const repGain=Math.round(2+Math.max(0,(b.str-oldTm.str)/4));
   /* ödeme planı: komisyon taksitle gelir */
   const plan=terms.pay||1;
@@ -175,8 +233,9 @@ function doTransfer(p,b,fee,quiet,terms){
     S.pendPay=S.pendPay||[];
     for(let k=1;k<plan;k++)S.pendPay.push({amt:part,at:(S.tw||0)+k*10,n:p.n});
   }
-  /* gol bonusu anlaşması: yeni kulübünde 10+ gol → pay */
-  if(terms.gb)(S.deals=S.deals||[]).push({pid:p.id,tid:b.id,amt:Math.round(marketValue(p.r)*1000*0.15),se:S.season});
+  /* gol bonusu: eşik ne kadar yüksekse pay o kadar büyük */
+  if(terms.gb)(S.deals=S.deals||[]).push({pid:p.id,tid:b.id,goals:terms.gb,
+    amt:Math.round(marketValue(p.r)*1000*(0.10+(terms.gb-10)*0.012)),se:S.season});
   /* sonraki satıştan pay klozu */
   if(terms.so)p.so={pct:terms.so};
   S.rep=clamp(S.rep+repGain,0,100);
@@ -305,6 +364,7 @@ function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
   p.agent='you';p.ignored=0;
+  if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
   if(!S.clients.includes(p.id))S.clients.push(p.id);
   S.rep=clamp(S.rep+1,0,100);
   pushNews('sign',{n:p.n,pid:p.id},'good');

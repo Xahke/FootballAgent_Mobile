@@ -5,24 +5,80 @@ function cur(){return stack[stack.length-1];}
 function navTo(v){stack=[{v}];render();}
 function pushV(v,id){stack.push({v,id});render();}
 function back(){if(stack.length>1){stack.pop();render();}}
+/* ================= TEMALAR =================
+   Her tema css/themes/*.css içinde ayrı bir stylesheet; tools/build-themes.js
+   hepsini html[data-theme="ad"] altına kapsamlayıp css/style.css'i üretir. */
+const THEMES=[
+ {id:'dosya',   bg:'#f7f8f9', sw:['#f7f8f9','#ffffff','#1c6b52'], n:{tr:'Dosya',   en:'Dossier'},
+  d:{tr:'Açık nötr zemin, geniş boşluk. Uzun oturumlarda en dinlendirici.',
+     en:'Light neutral ground, generous spacing. Easiest over long sessions.'}},
+ {id:'gazete',  bg:'#faf8f4', sw:['#faf8f4','#ece8df','#1f6b4a'], n:{tr:'Gazete',  en:'Newsprint'},
+  d:{tr:'Sıcak kağıt zemin, serif başlıklar, mürekkep yeşili.',
+     en:'Warm paper stock, serif headings, ink green.'}},
+ {id:'terminal',bg:'#0d0e10', sw:['#0d0e10','#1a1c20','#4f9c6b'], n:{tr:'Terminal',en:'Terminal'},
+  d:{tr:'Koyu nötr, monospace rakamlar, hizalı kolonlar. En yoğun.',
+     en:'Dark neutral, monospace figures, aligned columns. Densest.'}},
+ {id:'saha',    bg:'#0b111e', sw:['#0b111e','#131b2e','#1ec97e'], n:{tr:'Saha',    en:'Pitch'},
+  d:{tr:'İlk tasarım: koyu lacivert, emerald vurgu, yumuşak gölgeler.',
+     en:'The original: deep navy, emerald accent, soft shadows.'}}
+];
+const DEFTHEME='dosya';
+function themeOf(){return (S&&S.theme)||DEFTHEME;}
+function applyTheme(){
+  const id=themeOf();
+  const th=THEMES.find(x=>x.id===id)||THEMES[0];
+  document.documentElement.setAttribute('data-theme',th.id);
+  /* tarayıcı çubuğu tema ile aynı renkte olsun */
+  const m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute('content',th.bg);
+}
+function setTheme(id){
+  if(!THEMES.some(x=>x.id===id))return;
+  S.theme=id;applyTheme();save();render();
+}
 /* ================= UI HELPERS ================= */
 function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2200);
 }
-function openModal(html){
+/* lock=true iken arka plana dokunmak kapatmaz — karar verilmesi gereken ekranlar
+   (olaylar) böyle açılır, yoksa seçim yapmadan atlanabiliyor. */
+let modalLock=false;
+function openModal(html,lock){
+  modalLock=!!lock;
   const sh=document.getElementById('sheet');
-  sh.innerHTML='<div class="handle"></div>'+html;
+  sh.innerHTML=(lock?'':'<div class="handle"></div>')+html;
   if(sh.classList){sh.classList.remove('sin');void (sh.offsetWidth||0);sh.classList.add('sin');}
   document.getElementById('modal').classList.add('open');
 }
-function closeModal(){document.getElementById('modal').classList.remove('open');}
+/* arka plana dokunma yalnızca kilitli değilse kapatır */
+function dismissModal(){if(!modalLock)closeModal();}
+/* Bir hafta içinde hem rapor hem olay çıkabiliyor; üst üste binmesinler diye sıra.
+   Modal kapanınca sıradaki kendiliğinden açılır. */
+let modalQueue=[];
+function modalOpen(){return document.getElementById('modal').classList.contains('open');}
+function pushModal(fn){
+  modalQueue.push(fn);
+  if(!modalOpen())runNextModal();
+}
+function runNextModal(){
+  const fn=modalQueue.shift();
+  if(fn)fn();
+}
+function closeModal(){
+  modalLock=false;
+  document.getElementById('modal').classList.remove('open');
+  if(modalQueue.length)setTimeout(runNextModal,220);
+}
+/* kullanıcının yazdığı metinler innerHTML'e giriyor — kaçırmadan basma */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function moodColor(m){return m>65?'var(--acc)':m>40?'var(--warn)':'var(--bad)';}
 function rtClass(r){return r>=78?'g':r>=68?'y':'o';}
 function bar(label,val){
-  return `<div class="attr"><div class="arow"><span class="sub">${label}</span><b style="color:${moodColor(val)}">${val}</b></div>
-  <div class="abar"><div style="width:${val}%;background:${moodColor(val)}"></div></div></div>`;
+  const v=Math.round(val||0);   // form/moral içeride kesirli tutuluyor, ekranda tam sayı
+  return `<div class="attr"><div class="arow"><span class="sub">${label}</span><b style="color:${moodColor(v)}">${v}</b></div>
+  <div class="abar"><div style="width:${v}%;background:${moodColor(v)}"></div></div></div>`;
 }
 function playerRow(p,opts){
   opts=opts||{};
@@ -37,14 +93,14 @@ function playerRow(p,opts){
       :` · <span style="color:var(--acc)">%${Math.round(pitchChance(p)*100)}</span>`)
     :'';
   const potTag=(p.age<=23&&p.pot-p.r>=8)?` · <span style="color:var(--blue);font-weight:700">${t('pot')} ${p.pot}</span>`:'';
-  const lgTag=opts.lg?`${LEAGUES[tm.lg].c} · `:'';
+  const lgTag=opts.lg?`${isFree(p)?t('faShort'):LEAGUES[tm.lg].c} · `:'';
   const wonder=(p.age<=21&&p.pot-p.r>=14)?ICONS.gem.replace('<svg ','<svg class="gem" '):'';
   return `<div class="pitem${p.agent==='you'?' mine':''}" onclick="pushV('player',${p.id})">
     ${opts.noBadge?'':tmBadge(tm,34)}
     <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
       <span class="natc">${NATS[p.nat].c}</span></div>
     <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}</div></div>
-    <div class="mood"><i style="height:${p.morale}%;background:${moodColor(p.morale)}"></i></div>
+    <div class="mood"><i style="height:${Math.round(p.morale)}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
 }
 function listWrap(html){return `<div class="list">${html}</div>`;}
@@ -91,7 +147,7 @@ function weekFixHtml(lg,wk){
 function lgChips(sel,cb,withAll){
   let html='<div class="chips">';
   if(withAll)html+=`<button class="${sel==='all'?'on':''}" onclick="${cb}('all')">${t('all')}</button>`;
-  LEAGUES.forEach((lg,i)=>{html+=`<button class="${sel===i?'on':''}" onclick="${cb}(${i})">${lg.n}</button>`;});
+  LEAGUES.forEach((lg,i)=>{html+=`<button class="${sel===i?'on':''}" onclick="${cb}(${i})">${lgName(i)}</button>`;});
   return html+'</div>';
 }
 function setCurLg(i){S.curLg=i;S.curCtry=LEAGUES[i].ctry;S.curCon=LEAGUES[i].con;render();}
@@ -141,7 +197,7 @@ function cupView(){
         <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`;
     }
   } else {
-    /* World Cup */
+    /* milli takımlar turnuvası */
     if(!S.wc){
       const next=Math.ceil(S.season/4)*4;
       body=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+next)}</div>`;
@@ -165,13 +221,14 @@ function cupView(){
 }
 const VIEWS={
 dash(){
-  const inc=weeklyIncome();
+  const inc=weeklyIncome(),net=weeklyNet();
   /* agenda: everything that needs my attention */
   const items=[];
   S.clients.map(byId).forEach(p=>{
     const pen=pendingFor(p.id),offs=(S.offers||[]).filter(x=>x.pid===p.id);
     let st=null,col='var(--warn)';
-    if(pen){st=t('pendingTag')+': '+S.teams[pen.tid].n+' · '+nextWindowLabel();col='var(--acc)';}
+    if(isFree(p)){st=t('needsClub');col='var(--bad)';}
+    else if(pen){st=t('pendingTag')+': '+S.teams[pen.tid].n+' · '+nextWindowLabel();col='var(--acc)';}
     else if(offs.length){st=t('considering')+': '+offs.map(o=>S.teams[o.tid].n).join(', ');col='var(--blue)';}
     else if(p.morale<40){st=p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut');col='var(--bad)';}
     else if(p.yrs<=1)st=t('expiring');
@@ -181,6 +238,7 @@ dash(){
   /* my clients' matches this week */
   const cms=[];
   S.clients.map(byId).forEach(p=>{
+    if(isFree(p))return;          // kulüpsüz oyuncunun maçı olmaz
     const tm=teamOf(p);
     const len=lgWeeks(tm.lg);
     const wkL=Math.min(S.week-1,len-1);
@@ -226,11 +284,16 @@ dash(){
   <div class="agHero">
     <div class="row" style="position:relative;z-index:1">
       <div style="flex:1;min-width:0">
-        <div class="agName">${S.agent?S.agent.agency:t('agency')}</div>
-        <div class="agSub">${S.agent?S.agent.fn+' '+S.agent.ln+' · '+NATNAME[S.agent.nat][L]:''} · ${t('season')} ${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</div>
+        <div class="agName">${S.agent?esc(S.agent.agency):t('agency')}</div>
+        <div class="agSub">${S.agent?esc(S.agent.fn+' '+S.agent.ln)+' · '+NATNAME[S.agent.nat][L]:''} · ${t('season')} ${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</div>
       </div>
     </div>
-    <div class="agCash num">${fmtK(S.cash)}<small>+${fmtK(inc)}/${t('wk')}</small></div>
+    <div class="agCash num" ${S.cash<0?'style="color:var(--bad)"':''}>${fmtK(S.cash)}<small>${net>=0?'+':'−'}${fmtK(Math.abs(net))}/${t('wk')}</small></div>
+    <div class="twline" style="margin-top:6px;font-weight:600">
+      <span class="faint">${t('weeklyIncome')} ${fmtK(inc)}</span>
+      <span class="faint">· ${t('costLbl')} ${fmtK(weeklyCost())}</span>
+      <span style="color:${net>=0?'var(--acc)':'var(--bad)'}">· ${t('netLbl')} ${net>=0?'+':'−'}${fmtK(Math.abs(net))}</span>
+    </div>
     <div class="agGrid">
       <div class="agCell"><div class="v" style="color:var(--gold)">${S.rep}</div><div class="l">${t('rep')}</div>
         <div class="repbar"><div style="width:${S.rep}%"></div></div></div>
@@ -254,8 +317,7 @@ dash(){
   ${S.clients.length?`<div class="sect" style="margin:2px 2px 8px">${t('agenda')}</div>${agendaHtml}`:
     `<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
      <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}
-  ${cms.length?`<div class="sect" style="margin:2px 2px 8px">${t('myMatches')}</div>${cmHtml}`:''}
-  <button class="btn s" onclick="if(confirm(t('resetQ'))){localStorage.removeItem('menajerSaveV8');location.reload()}">${t('reset')}</button>`;
+  ${cms.length?`<div class="sect" style="margin:2px 2px 8px">${t('myMatches')}</div>${cmHtml}`:''}`;
 },
 clients(){
   const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);
@@ -268,7 +330,8 @@ market(){
   const f=S.f;
   let free=S.players.filter(p=>p.agent===null&&knownLg(teamOf(p).lg));
   if(f.elig)free=free.filter(p=>profileOf(p)<=repCap());
-  if(f.lg!=='all')free=free.filter(p=>teamOf(p).lg===+f.lg);
+  if(f.lg==='fa')free=free.filter(p=>isFree(p));
+  else if(f.lg!=='all')free=free.filter(p=>teamOf(p).lg===+f.lg);
   if(f.pos!=='all')free=free.filter(p=>p.pos===f.pos);
   if(f.age==='u18')free=free.filter(p=>p.age<=18);
   else if(f.age==='u21')free=free.filter(p=>p.age<=21);
@@ -284,9 +347,10 @@ market(){
   const lgSel=`<label class="fitem"><span>${t('league')}</span>
     <select class="fsel" onchange="setF('lg',this.value)">
     <option value="all" ${f.lg==='all'?'selected':''}>${t('all')}</option>
+    <option value="fa" ${f.lg==='fa'?'selected':''}>${t('freeAgentsF')} (${freeAgents().filter(p=>p.agent===null).length})</option>
     ${Object.keys(CTRYS).map(cc=>{
       const opts=LEAGUES.map((lg,i)=>lg.ctry===cc&&knownLg(i)?
-        `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lg.n}</option>`:'').join('');
+        `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lgName(i)}</option>`:'').join('');
       return opts?`<optgroup label="${CTRYS[cc][L]}">${opts}</optgroup>`:'';
     }).join('')}
     </select></label>`;
@@ -336,7 +400,8 @@ league(){
       const z=grouped?(i===0?'zone1':''):(i===0?'zone1':i<4?'zone2':i>=rows.length-3?'zoneR':'');
       return `<tr class="click ${myTeams.has(tm.id)?'hl':''}" onclick="pushV('team',${tm.id})">
       <td><span class="posn ${z}">${i+1}</span></td>
-      <td><div class="row" style="gap:8px">${tmBadge(tm,22)}<b>${tm.n}</b></div></td>
+      <td><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
+        <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tm.n}</b></div></td>
       <td class="c">${r[2]+r[3]+r[4]}</td><td class="c">${r[2]}</td><td class="c">${r[3]}</td><td class="c">${r[4]}</td>
       <td class="c">${r[5]-r[6]}</td><td class="c"><b>${r[1]}</b></td></tr>`;}).join('')}</table>`;
     let parts=null;
@@ -374,6 +439,22 @@ league(){
       <b style="font-variant-numeric:tabular-nums">${lbl}</b>
       <button class="btn s" style="width:42px;padding:7px" onclick="S.fxWeek=${Math.min(lim,wk+1)};render()">›</button></div>
       ${weekFixHtml(lg,wk)}</div>`;
+  } else if(tab==='tr'){
+    const rows=(S.tlog||[]).filter(x=>(x.a>=0&&S.teams[x.a].lg===lg)||S.teams[x.b].lg===lg);
+    if(!rows.length)body=`<div class="card">${emptyState('market',t('noTransfers'),'')}</div>`;
+    else body=`<div class="sub" style="margin:0 2px 10px">${t('transfersSub')}</div>
+    ${listWrap(rows.map(x=>{
+      const from=x.a>=0?S.teams[x.a].n:t('faShort'),to=S.teams[x.b];
+      return `<div class="pitem" onclick="pushV('team',${to.id})">
+        ${tmBadge(to,34)}
+        <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${x.n}</span>
+          <span class="natc">${POSL[L][x.pos]}</span></div>
+        <div class="psub">${from} → <b style="color:var(--txt2)">${to.n}</b> · ${x.age} · S${x.se}/${t('wk')}${x.w}</div></div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="num" style="font-size:12px;font-weight:800;color:var(--gold)">${x.f?fmtM(x.f):t('freeFee')}</div>
+          <div class="l" style="font-size:9px;color:var(--txt3)">${t('feeL')}</div></div>
+        <div class="rt ${rtClass(x.r)}">${x.r}</div></div>`;
+    }).join(''))}`;
   } else if(tab==='hist'){
     const h=((S.lgHist||[])[lg]||[]).slice().reverse();
     if(!h.length)body=`<div class="card"><div class="empty">${t('noHist')}</div></div>`;
@@ -430,13 +511,14 @@ league(){
   const ctryChips=`<div class="chips">${ctryList.map(cc=>
     `<button class="${ctry===cc?'on':''}" onclick="setCtry('${cc}')">${CTRYS[cc][L]}</button>`).join('')}</div>`;
   const lgRow=`<div class="chips">${LEAGUES.map((l2,i)=>l2.ctry===ctry?
-    `<button class="${lg===i?'on':''}" onclick="setCurLg(${i})">${l2.n}</button>`:'').join('')}</div>`;
+    `<button class="${lg===i?'on':''}" onclick="setCurLg(${i})">${lgName(i)}</button>`:'').join('')}</div>`;
   return `${conChips}${ctryChips}${lgRow}
   <div class="tabs">
     <button class="${tab==='table'?'on':''}" onclick="S.ltab='table';render()">${t('standings')}</button>
     <button class="${tab==='fix'?'on':''}" onclick="S.ltab='fix';render()">${t('fixtures')}</button>
     <button class="${tab==='scorers'?'on':''}" onclick="S.ltab='scorers';render()">${t('scorers')}</button>
     <button class="${tab==='assists'?'on':''}" onclick="S.ltab='assists';render()">${t('assistsT')}</button>
+    <button class="${tab==='tr'?'on':''}" onclick="S.ltab='tr';render()">${t('transfersT')}</button>
     <button class="${tab==='hist'?'on':''}" onclick="S.ltab='hist';render()">${t('history')}</button>
   </div>${selRow}${body}`;
 },
@@ -470,7 +552,7 @@ team(id){
     <div class="row">
       ${tmBadge(tm,48)}
       <div style="flex:1"><div class="hname">${tm.n}</div>
-      <div class="hsub">${LEAGUES[tm.lg].n}${LEAGUES[tm.lg].gl?' · '+LEAGUES[tm.lg].gl[tm.grp||0][L==='tr'?0:1]:''} · #${pos} · ${tm.pts} ${t('PTS')} · ${tm.w}${t('W')} ${tm.d}${t('D')} ${tm.l}${t('L')} · ${tm.gf}:${tm.ga}</div></div>
+      <div class="hsub">${lgName(tm.lg)}${LEAGUES[tm.lg].gl?' · '+LEAGUES[tm.lg].gl[tm.grp||0][L==='tr'?0:1]:''} · #${pos} · ${tm.pts} ${t('PTS')} · ${tm.w}${t('W')} ${tm.d}${t('D')} ${tm.l}${t('L')} · ${tm.gf}:${tm.ga}</div></div>
       <div class="bigrt"><span class="n">${avg}</span><span class="l">${t('avgRating')}</span></div>
     </div>
     ${last5.length?`<div style="margin-top:14px" class="row"><span class="sub">${t('form')}</span><span>${formHtml}</span></div>`:''}
@@ -480,6 +562,45 @@ team(id){
     if(!ps.length)return '';
     return `<div class="sect" style="margin:16px 2px 8px">${t(lk)}</div>${listWrap(ps.map(p=>playerRow(p,{noBadge:true})).join(''))}`;
   }).join('')}`;
+},
+settings(){
+  const cur=themeOf();
+  /* önizleme karesi: temanın zemin / yüzey / vurgu renkleri.
+     Renkler satır içi veriliyor — aktif temanın değişkenlerinden bağımsız olmalı. */
+  const swatch=th=>`<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;
+    display:flex;flex-direction:column;background:${th.sw[0]};box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)">
+    <i style="flex:1.6;background:${th.sw[0]}"></i>
+    <i style="flex:1;background:${th.sw[1]}"></i>
+    <i style="height:8px;background:${th.sw[2]}"></i></div>`;
+  return `<h2 class="sec">${t('settings')}</h2>
+  <div class="sect">${t('appearance')}</div>
+  <div class="sub" style="margin:-4px 2px 10px">${t('themeHint')}</div>
+  ${listWrap(THEMES.map(th=>`<div class="pitem${th.id===cur?' mine':''}" onclick="setTheme('${th.id}')">
+    ${swatch(th)}
+    <div class="pinfo"><div class="pname">${th.n[L]}${th.id===cur?'<span class="star">★</span>':''}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${th.d[L]}</div></div>
+    <span class="trk${th.id===cur?' on':''}">${th.id===cur?'✓':''}</span></div>`).join(''))}
+  <div class="sect">${t('gameplayLbl')}</div>
+  <button class="ftoggle ${S.wkRepOn!==false?'on':''}" onclick="S.wkRepOn=${S.wkRepOn===false};save();render()">
+    <span class="sw"></span>${t('wkRepSetting')}</button>
+  <div class="sub" style="margin:-4px 2px 12px">${t('wkRepHint')}</div>
+  <button class="ftoggle ${S.evOn!==false?'on':''}" onclick="S.evOn=${S.evOn===false};save();render()">
+    <span class="sw"></span>${t('evSetting')}</button>
+  <div class="sub" style="margin:-4px 2px 12px">${t('evHint')}</div>
+  <button class="ftoggle ${S.sfxOn!==false?'on':''}" onclick="S.sfxOn=${S.sfxOn===false};save();render()">
+    <span class="sw"></span>${t('sfxSetting')}</button>
+  <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
+  <div class="sect">${t('langLbl')}</div>
+  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
+    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
+    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
+  <div class="sect">${t('dataLbl')}</div>
+  <div class="card">
+    <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</span></div>
+    <div class="kv"><span class="k">${t('clients')}</span><span class="v">${S.clients.length}/${maxClients()}</span></div>
+    <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
+  </div>
+  <button class="btn d" onclick="if(confirm(t('resetQ'))){localStorage.removeItem('menajerSaveV9');location.reload()}">${t('reset')}</button>`;
 },
 player(id){
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
@@ -511,8 +632,8 @@ player(id){
     <div class="pitem" onclick="pushV('team',${tm.id})">
       ${tmBadge(tm,34)}
       <div class="pinfo"><div class="pname">${tm.n}</div>
-      <div class="psub">${LEAGUES[tm.lg].n} · #${teamPos(tm.id)} · ${tm.pts} ${t('PTS')}</div></div>
-      <span class="faint">›</span>
+      <div class="psub">${isFree(p)?t('faSub'):`${lgName(tm.lg)} · #${teamPos(tm.id)} · ${tm.pts} ${t('PTS')}`}</div></div>
+      ${isFree(p)?'':'<span class="faint">›</span>'}
     </div>
   </div>
   <div class="card">
@@ -532,6 +653,8 @@ player(id){
     <div class="divider"></div>
     ${bar(t('form'),p.form)}
     ${bar(t('morale'),p.morale)}
+    ${mine?bar(t('trustL'),trustOf(p)):''}
+    ${mine?`<div class="sub" style="margin-top:-4px">${t(trustLabel(trustOf(p)))}</div>`:''}
   </div>
   ${(p.l5&&p.l5.length)?`<div class="card">
     <div class="sect">${t('last5')}</div>
@@ -545,7 +668,9 @@ player(id){
         <div style="flex:1;min-width:0">
           <div style="font-size:12.5px;font-weight:600">${o.n} <span class="faint" style="font-variant-numeric:tabular-nums">${m5.sc}</span>
             <b style="color:${resCol};font-size:11px">${resCh}</b></div>
-          <div class="psub">${m5.g?m5.g+' G':''}${m5.g&&m5.a?' · ':''}${m5.a?m5.a+' A':''}${(m5.g||m5.a)&&m5.mm?' · ':''}${m5.mm?`<span style="color:var(--gold);font-weight:700">${t('motm')}</span>`:''}${!(m5.g||m5.a||m5.mm)?'—':''}</div>
+          <div class="psub">${[m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
+            m5.mm?`<span style="color:var(--gold);font-weight:700">${t('motm')}</span>`:'']
+            .filter(Boolean).join(' · ')||'—'}</div>
         </div>
         <b style="color:${rc};font-variant-numeric:tabular-nums">${m5.rt.toFixed(1)}</b>
       </div>`;
@@ -572,8 +697,13 @@ player(id){
   </div>`:''}
   ${mine?`
     <div class="grid2">
-      ${pc?`<button class="btn p" disabled>${t('signPending')}…</button>`
-       :`<button class="btn p" ${pen?'disabled':''} onclick="openNeg(${p.id})">${t('negotiate')}</button>`}
+      ${(()=>{
+        const blk=renewBlock(p);
+        if(pc)return `<button class="btn p" disabled>${t('signPending')}…</button>`;
+        if(blk==='cooldown')return `<button class="btn p" disabled>${t('renewWait')} · ${renewCd(p)} ${t('wk')}</button>`;
+        if(blk==='noreason')return `<button class="btn p" disabled>${t('renewLocked')}</button>`;
+        return `<button class="btn p" ${pen?'disabled':''} onclick="openNeg(${p.id})">${t('negotiate')}</button>`;
+      })()}
       ${pen?`<button class="btn b" disabled>${t('pendingTag')} · ${nextWindowLabel()}</button>`
        :off?`<button class="btn b" disabled>${t('considering')} (${offs.length})…</button>`
        :`<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`}
@@ -602,13 +732,25 @@ transfer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 contract:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>',
 scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/></svg>',
 alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></svg>',
-gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>'
+gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>',
+settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
 function emptyState(icon,title,sub){
   return `<div class="estate">${ICONS[icon]||ICONS.market}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;
 }
 const NAVS=['dash','clients','market','league','inbox'];
+/* Kurulumda önce kıta, sonra ülke seçiliyor. Kıta değişince yalnızca ülke listesi
+   yeniden yazılıyor — tam render yapsaydık kullanıcının yazdığı ad silinirdi. */
+let setupCon='eu';
+function fillNatSel(con){
+  if(con)setupCon=con;
+  const sel=document.getElementById('sel_nat');
+  if(!sel)return;
+  const list=NATKEYS.filter(n=>NATCON[n]===setupCon)
+    .sort((a,b)=>NATNAME[a][L].localeCompare(NATNAME[b][L],L));
+  sel.innerHTML=list.map(n=>`<option value="${n}">${NATNAME[n][L]}</option>`).join('');
+}
 function setupHtml(){
   return `
   <div class="hero" style="margin-top:10px">
@@ -621,10 +763,12 @@ function setupHtml(){
       <input class="finp" id="inp_fn" maxlength="18" placeholder="${t('fname')}"></div>
     <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('lname')}</span>
       <input class="finp" id="inp_ln" maxlength="18" placeholder="${t('lname')}"></div>
-    <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('natL')}</span>
-      <select class="fsel" id="sel_nat">
-      ${NATKEYS.map(n=>`<option value="${n}" ${n==='tr'?'selected':''}>${NATNAME[n][L]}</option>`).join('')}
+    <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('contL')}</span>
+      <select class="fsel" id="sel_con" onchange="fillNatSel(this.value)">
+      ${NCONTS.map(([c,nm])=>`<option value="${c}" ${c===setupCon?'selected':''}>${nm[L]}</option>`).join('')}
       </select></div>
+    <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('natL')}</span>
+      <select class="fsel" id="sel_nat"></select></div>
     <div class="fitem"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('agencyN')}</span>
       <input class="finp" id="inp_ag" maxlength="24" placeholder="—"></div>
   </div>
@@ -632,13 +776,19 @@ function setupHtml(){
   <button class="btn p" onclick="startCareer()">${t('startBtn')}</button>
   <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
 }
+let lastSig=null;
 function render(){
+  applyTheme();
+  document.documentElement.lang=L;   // ekran okuyucu ve tarayıcı doğru dili görsün
   if(!S.agent){
     document.getElementById('hT1').textContent='Menajer';
     document.getElementById('hT2').textContent=t('setupTitle');
     document.getElementById('hBack').classList.remove('show');
+    const b0=document.getElementById('btnSet');
+    if(b0)b0.classList.remove('show'); // kariyer başlamadan ayar yok
     document.getElementById('nav').innerHTML='';
     document.getElementById('view').innerHTML=setupHtml();
+    fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
     return;
   }
   const c=cur();
@@ -646,6 +796,7 @@ function render(){
   let t1='Menajer',t2=t('season')+' '+S.season+' · '+t('week')+' '+Math.min(S.week,totalWeeks());
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
+  else if(c.v==='settings')t1=t('settings');
   else if(c.v!=='dash')t1=t(c.v);
   document.getElementById('hT1').textContent=t1;
   document.getElementById('hT2').textContent=t2;
@@ -653,7 +804,11 @@ function render(){
   document.getElementById('hRep').textContent=S.rep;
   document.getElementById('hCashL').textContent=t('cash');
   document.getElementById('hRepL').textContent=t('rep');
-  document.getElementById('btnLang').textContent=L==='tr'?'EN':'TR';
+  const bs=document.getElementById('btnSet');
+  if(bs){
+    bs.classList.add('show');
+    if(!bs.firstChild){bs.innerHTML=ICONS.settings;const sv=bs.querySelector('svg');if(sv){sv.style.width='17px';sv.style.height='17px';}}
+  }
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;
   const base=stack[0].v;
@@ -663,9 +818,93 @@ function render(){
   const vw=document.getElementById('view');
   vw.innerHTML=VIEWS[c.v](c.id);
   if(vw.classList){vw.classList.remove('vin');void (vw.offsetWidth||0);vw.classList.add('vin');}
-  window.scrollTo(0,0);
+  /* Yalnızca gerçekten başka bir ekrana geçildiğinde başa dön. Aksi halde piyasada
+     filtre değiştirmek ya da bir tema seçmek listeyi en üste fırlatıyor. */
+  const sig=c.v+':'+(c.id===undefined?'':c.id);
+  if(sig!==lastSig){lastSig=sig;if(window.scrollTo)window.scrollTo(0,0);}
+}
+/* ===== olaylar ===== */
+function showEvent(ref){
+  const ev=evById(ref.id);
+  if(!ev)return;
+  const c=evCtx(ref.pid);
+  S.evCur=ref;save();   // sayfa yenilense de karar bekliyor olarak kalsın
+  const head=c.p
+    ? `<div class="row">${tmBadge(c.tm,42)}
+        <div style="flex:1;min-width:0"><h2>${ev.ttl(c)[L]}</h2>
+        <div class="sub">${c.p.n} · ${c.tm.n}</div></div>
+        <div class="rt ${rtClass(c.p.r)}">${c.p.r}</div></div>`
+    : `<h2>${ev.ttl(c)[L]}</h2>`;
+  openModal(`${head}
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${ev.txt(c)[L]}</span></div>
+    <div class="sect" style="margin-top:14px">${t('evPick')}</div>
+    ${ev.opts.map((o,i)=>`<button class="dchoice" onclick="evChoose(${i})">${o.t[L]}</button>`).join('')}`,true);
+}
+function evChoose(i){
+  const ref=S.evCur;
+  if(!ref)return;
+  const ev=evById(ref.id),c=evCtx(ref.pid);
+  const opt=ev.opts[i];
+  if(!opt)return;
+  const r=opt.eff(c)||{};
+  const changes=applyEff(r,c);
+  S.evCur=null;
+  const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form')};
+  const chips=changes.map(x=>{
+    const good=x.v>0, val=x.k==='cash'?fmtK(Math.abs(x.v)):Math.abs(x.v);
+    return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${good?'+':'−'}${val}</span>`;
+  }).join('');
+  openModal(`<h2>${ev.ttl(c)[L]}</h2>
+    <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>
+    ${chips?`<div style="margin-top:14px">${chips}</div>`:''}
+    <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
+  save();render();
+}
+/* ===== haftalık müşteri raporu =====
+   Hafta geçtikten sonra doğrudan önüne gelir: kim kaç dakika oynadı, ne üretti,
+   kim kadroya giremedi. Gelen kutusuna dağılmış tek tek bildirimler yerine
+   tek ekranda toplu görünüm. */
+function showWeekReport(wk){
+  const rows=(S.wkRep||[]).slice().sort((a,b)=>(b.rt||0)-(a.rt||0));
+  if(!rows.length)return;
+  const resCh=res=>L==='en'?res:(res==='W'?'G':res==='L'?'M':'B');
+  const resCol=res=>res==='W'?'var(--acc)':res==='L'?'var(--bad)':'var(--warn)';
+  /* Sayılar oyuncunun hizasında sabit kolonlarda dursun — satırlar arası göz
+     taraması ancak böyle çalışıyor. Kolon genişlikleri başlıkla birebir aynı. */
+  const W={min:36,g:22,a:22,rt:38};
+  const cell=(v,w,style)=>`<div style="width:${w}px;flex-shrink:0;text-align:center;font-variant-numeric:tabular-nums;${style||''}">${v}</div>`;
+  const head=`<div style="display:flex;align-items:center;gap:11px;padding:0 13px 6px;font-size:8.5px;
+    color:var(--txt3);font-weight:800;text-transform:uppercase;letter-spacing:.06em">
+    <div style="width:30px;flex-shrink:0"></div><div style="flex:1;min-width:0"></div>
+    ${cell(t('minShort'),W.min)}${cell('G',W.g)}${cell('A',W.a)}${cell(t('ratingShort'),W.rt)}</div>`;
+  const body=rows.map(r=>{
+    const tm=S.teams[r.tid],opp=S.teams[r.opp];
+    const rc=r.rt>=7.5?'var(--acc)':r.rt>=6.5?'var(--warn)':'var(--bad)';
+    const dim='color:var(--txt3)';
+    return `<div class="pitem" style="gap:11px" onclick="closeModal();pushV('player',${r.pid})">
+      ${tmBadge(tm,30)}
+      <div class="pinfo">
+        <div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${r.n}</span>${r.mm?'<span class="star">★</span>':''}</div>
+        <div class="psub">${opp?opp.n:'—'} <b style="color:${resCol(r.res)}">${r.sc} ${resCh(r.res)}</b>${r.dnp?` · <span style="color:var(--txt3)">${t('dnp')}</span>`:''}</div>
+      </div>
+      ${r.dnp
+        ? cell('–',W.min,dim)+cell('–',W.g,dim)+cell('–',W.a,dim)+cell('–',W.rt,dim)
+        : cell(r.min+"'",W.min,'font-size:12px;font-weight:600')
+         +cell(r.g||'–',W.g,r.g?'font-weight:800;color:var(--acc)':dim)
+         +cell(r.a||'–',W.a,r.a?'font-weight:800':dim)
+         +cell(r.rt.toFixed(1),W.rt,`font-weight:800;font-size:13.5px;color:${rc}`)}
+    </div>`;
+  }).join('');
+  openModal(`
+    <div class="sect" style="text-align:center;margin-bottom:2px">${t('weekReport')}</div>
+    <div class="sub" style="text-align:center;margin-bottom:12px">${t('season')} ${S.season} · ${t('week')} ${wk}</div>
+    ${head}
+    <div class="list">${body}</div>
+    <button class="btn p" onclick="closeModal()">${t('gotIt')}</button>
+    <button class="btn s" style="margin-top:8px" onclick="S.wkRepOn=false;save();closeModal();toast(t('wkRepOff'))">${t('dontShow')}</button>`);
 }
 function showSeasonModal(champs){
+  modalQueue=[];   // sezon özeti her şeyin önüne geçer; bekleyen varsa düşer
   setTimeout(()=>openModal(`
    <div style="padding:8px 0 4px">
      <div class="sect" style="text-align:center">${t('seasonEnd')} · ${t('champion')}</div>
@@ -673,10 +912,11 @@ function showSeasonModal(champs){
      ${champs.map(c=>`<div class="pitem" style="cursor:default">
        ${tmBadge(c.tm,32)}
        <div class="pinfo"><div class="pname">${c.tm.n}</div>
-       <div class="psub">${c.lg} · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})</div></div>
+       <div class="psub">${lgName(c.lgi)} · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})</div></div>
      </div>`).join('')}
      </div>
      <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
    </div>`),300);
 }
 function toggleLang(){L=L==='tr'?'en':'tr';S.lang=L;save();render();}
+function setLang(lc){if(lc!==L){L=lc;S.lang=L;save();}render();}

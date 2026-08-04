@@ -1,0 +1,22 @@
+{
+  "name": "menajer",
+  "version": "1.0.0",
+  "description": "Futbolcu menajerliği simülasyonu — mobil öncelikli, çevrimdışı, TR/EN",
+  "private": true,
+  "scripts": {
+    "themes": "node tools/build-themes.js",
+    "dist": "node tools/build-themes.js && node build.js",
+    "www": "node tools/build-themes.js && node tools/build-www.js",
+    "serve": "npx --yes serve . -l 5173",
+    "android:add": "npm run www && npx cap add android",
+    "android:sync": "npm run www && npx cap sync android",
+    "android:open": "npm run www && npx cap sync android && npx cap open android",
+    "android:apk": "npm run android:sync && node tools/android.js apk",
+    "android:aab": "npm run android:sync && node tools/android.js aab"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}
