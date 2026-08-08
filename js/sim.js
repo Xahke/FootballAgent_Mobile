@@ -124,6 +124,10 @@ function simWeek(){
           p.form=stat(p.form+(rt-6.7)*1.5,5);
           if(min>=PERF.shortMin)moraleEvent(p,(rt-6.7)*0.7);
           p.rtSum=(p.rtSum||0)+rt;p.rtN=(p.rtN||0)+1;
+          /* belirli maç aralıklarıyla piyasa değeri sahadaki işe göre güncellenir */
+          const vd=updateValue(p);
+          if(vd&&p.agent==='you'&&Math.abs(vd)>=0.05)
+            pushNews(vd>0?'valUp':'valDown',{n:p.n,pid:p.id,v:fmtM(valueOf(p))},vd>0?'good':'warn');
           (p.l5=p.l5||[]).push({o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
             sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0});
           if(p.l5.length>5)p.l5.shift();
@@ -201,7 +205,7 @@ function nextWeek(){
     p.wage=x.wage;p.yrs=x.years;
     p.morale=clamp(Math.max(p.morale+25,65),0,100);p.ignored=0;p.hm=(S.tw||0)+8;
     const fee=Math.round(x.wage*52*x.years*(x.rate||commissionRate()));
-    S.cash+=fee;S.rep=clamp(S.rep+2,0,100);
+    S.cash+=fee;repEvent(0.7);
     pushNews('contractSigned',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team,y:x.years,w:fmtK(x.wage),f:fmtK(fee)},'good');
   });
   /* --- taksitli komisyon ödemeleri --- */
@@ -219,7 +223,7 @@ function nextWeek(){
     const p=byId(o.pid),b=S.teams[o.tid];
     if(!p||p.agent!=='you'||p.team===o.tid)return;
     if(pendingFor(o.pid)||movedThisSeason(p))return; // deal already agreed / already moved this season
-    const v=marketValue(p.r);
+    const v=valueOf(p);
     let acc=clamp(1.6-(o.fee/v)/(0.85+b.bud*0.3),0.05,0.95);
     /* pazarlık şartları kabulü etkiler: taksit +, gol bonusu +, sonraki satış payı - */
     acc+=clauseAcc(o.pay,o.gb,o.so);
@@ -253,7 +257,7 @@ function nextWeek(){
       const patience=4+Math.round(trustOf(p)/9);
       if(p.ignored>patience){
         p.agent=null;S.clients=S.clients.filter(c=>c!==id);
-        S.rep=clamp(S.rep-5,0,100);
+        repEvent(-3);
         pushNews('firedYou',{n:p.n,pid:p.id},'bad');
       }
     } else p.ignored=0;
@@ -280,7 +284,7 @@ function nextWeek(){
       const buyers=S.teams.filter(tm=>tm.id!==p.team&&tm.bud>=0.55&&Math.abs(tm.str-p.r)<8);
       if(buyers.length){
         const b=buyers[R(0,buyers.length-1)];
-        const fee=+(marketValue(p.r)*(0.9+RF()*0.5)).toFixed(1);
+        const fee=+(valueOf(p)*(0.9+RF()*0.5)).toFixed(1);
         pushNews('clubOffer',{c:b.n,tid:b.id,n:p.n,pid:p.id,f:fmtM(fee)},'act',{type:'bid',pid:p.id,tid:b.id,fee});
       }
     }
@@ -414,11 +418,12 @@ function endSeason(){
     p.r=dev>0?clamp(p.r+dev,35,Math.min(p.pot,96)):clamp(p.r+dev,35,96);
     const gained=p.r-oldR;
     if(p.agent==='you'){
-      if(gained>=4){S.rep=clamp(S.rep+2,0,100);pushNews('devUp',{n:p.n,pid:p.id,d:gained,r:p.r},'good');}
-      else if(gained>=2)S.rep=clamp(S.rep+1,0,100);
+      if(gained>=4){repEvent(0.8);pushNews('devUp',{n:p.n,pid:p.id,d:gained,r:p.r},'good');}
+      else if(gained>=2)repEvent(0.4);
       if(p.r>lvl+6&&p.age<=29){pushNews('outgrow',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team},'warn');p.morale=clamp(p.morale-12,0,100);}
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
+    p.vmAt=0;if(p.vm)p.vm=+(1+(p.vm-1)*VAL.revert).toFixed(3);
     /* --- kulüpsüz oyuncular: uzun süre imza bulamazsa futbolu bırakır --- */
     if(isFree(p)){
       p.freeFor=(p.freeFor||0)+1;

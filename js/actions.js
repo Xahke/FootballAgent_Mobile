@@ -1,14 +1,33 @@
 'use strict';
 /* js/actions.js — oyuncu aksiyonları: sözleşme pazarlığı, transfer teklifleri, temsilcilik görüşmesi, keşif satın alma */
 /* ================= NEGOTIATION ================= */
+/* Son 5 maçın ortalama reytingi kulübün cömertliğini doğrudan belirler:
+   iyi oynayan zam alır, kötü oynayan almaz. 5 maçı dolmamışsa nötr. */
+function negPerf(p){
+  const l5=last5Avg(p);
+  if(!l5)return 1;
+  return clamp(1+(l5-6.80)*0.16,0.88,1.40);
+}
 function clubMaxWage(p){
   const tm=teamOf(p);
   /* Kulübün cömertliği görüşmenin gerekçesine bağlı: sözleşmesi biten oyuncuyu
      kaybetmemek için para verir, formda olanı ödüllendirir, düşük maaşlıyı hizaya
      çeker. Gerekçesiz masaya oturmaz zaten (bkz. renewBlock). */
   const reason=renewReason(p);
-  const lever=reason==='expiring'?1.10:reason==='form'?1.04:reason==='underpaid'?0.98:0.88;
-  return marketWage(p.r)*(0.85+(p.form-50)/250+(S.rep/500))*(0.8+tm.bud*0.35)*lever;
+  const lever=reason==='expiring'?1.12:reason==='form'?1.10:reason==='underpaid'?1.02:0.90;
+  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p);
+  /* Yenileme masasında kulüp mevcut maaşın altını teklif etmez — kimse zam
+     görüşmesine indirim beklentisiyle oturmaz. İstisnası yaşlanan oyuncu:
+     30'unu geçmişse kulübün eli rahatlar, 32'yi geçmişse kesinti isteyebilir. */
+  const floor=p.age<=30?1.06:p.age<=32?1.00:0.92;
+  return Math.max(base,p.wage*floor);
+}
+/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler. */
+function negChance(p,wage,patience){
+  const ratio=wage/negCtx.max;
+  const trustBonus=(trustOf(p)-55)/600;
+  return clamp(clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*patience/100)
+               +S.rep/500+trustBonus+skillBonus('neg'),0,1);
 }
 function openNeg(pid){
   const p=byId(pid);
@@ -16,15 +35,22 @@ function openNeg(pid){
   if(blk==='pending'){toast(t('contractPendingT'));return;}
   if(blk==='cooldown'){toast(t('renewCdMsg').replace('{w}',renewCd(p)));return;}
   if(blk==='noreason'){toast(t('renewNoReason'));return;}
-  negCtx={pid,round:1,max:clubMaxWage(p),patience:100,wage:Math.round(marketWage(p.r)),years:3,counter:null,
-    reason:renewReason(p)};
+  const max=clubMaxWage(p);
+  /* Açılış talebi kulübün ödeyebileceğinin biraz altında: masaya gerçekçi bir
+     rakamla oturursun, pazarlık payı yukarı doğru kalır. Formda bir oyuncuda bu
+     rakam ciddi bir zamdır; 33'ünü geçmiş oyuncuda kesinti olabilir — kulüpler
+     de öyle davranır. */
+  negCtx={pid,round:1,max,patience:100,wage:Math.max(1,Math.round(max*0.95)),
+    years:3,counter:null,reason:renewReason(p)};
   renderNeg();
 }
 function renderNeg(){
   const p=byId(negCtx.pid),tm=teamOf(p);
-  const ratio=negCtx.wage/negCtx.max;
-  const mood=clamp(Math.round(140-ratio*100)*negCtx.patience/100,0,100);
+  const mood=Math.round(negChance(p,negCtx.wage,negCtx.patience)*100);
   const mc=mood>60?'var(--acc)':mood>30?'var(--warn)':'var(--bad)';
+  /* Kaydırıcı sınırları: aşağıda mevcut maaş, yukarıda kabul şansının sıfırlandığı yer */
+  const sMin=Math.max(1,Math.floor(Math.min(p.wage,negCtx.max)*0.9));
+  const sMax=Math.max(sMin+2,Math.ceil(negCtx.max*1.6));
   openModal(`
    <div class="row">${tmBadge(tm,42)}
      <div style="flex:1;min-width:0"><h2>${t('negotiate')}</h2>
@@ -42,7 +68,7 @@ function renderNeg(){
          <div class="num" style="font-size:15px;font-weight:800;color:var(--acc);margin-top:2px">${fmtK(negCtx.wage)}<span style="font-size:10px;opacity:.7">/${t('wk')}</span></div>
        </div>
      </div>
-     <input type="range" min="${Math.round(p.wage*0.9)}" max="${Math.round(negCtx.max*1.8)}" value="${negCtx.wage}"
+     <input type="range" min="${sMin}" max="${sMax}" value="${clamp(negCtx.wage,sMin,sMax)}"
         oninput="negCtx.wage=+this.value;renderNeg()">
      <div style="margin-top:12px"><b style="font-size:12.5px">${t('contractLen')}: <span class="num">${negCtx.years} ${t('yrs')}</span></b>
        <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()"></div>
@@ -66,9 +92,8 @@ function negSubmit(){
   const ratio=negCtx.wage/negCtx.max;
   /* accepting the club's own counter (or less) always seals the deal */
   const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02);
-  /* Sana güvenen oyuncu masada arkanda durur; güvenmeyen kendi hesabını yapar. */
-  const trustBonus=(trustOf(p)-55)/600;
-  const acc=meetsCounter?1:clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*negCtx.patience/100)+S.rep/500+trustBonus;
+  /* Ekrandaki çubukla birebir aynı hesap — gördüğün oran gerçek oran. */
+  const acc=meetsCounter?1:negChance(p,negCtx.wage,negCtx.patience);
   if(RF()<acc){
     /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar */
     S.pendC=S.pendC||[];
@@ -81,7 +106,9 @@ function negSubmit(){
   } else {
     negCtx.round++;negCtx.patience-=30;
     if(negCtx.round>3||ratio>1.7){
-      S.rep=clamp(S.rep-2,0,100);p.morale=clamp(p.morale-8,0,100);
+      /* Koptuktan sonra kulüp bir süre masaya dönmez. Bekleme olmasaydı oyuncu
+         her hafta yeniden deneyip eninde sonunda kabul ettirirdi. */
+      repEvent(-1.5);p.morale=clamp(p.morale-8,0,100);p.rnw=(S.tw||0)+14;
       toast(t('negFail'));closeModal();save();render();
     } else {
       const counter=Math.round(negCtx.max*(0.82+RF()*0.12));
@@ -123,10 +150,10 @@ function openTransfer(pid){
     if(tm.id===p.team)return false;
     /* bonservissiz oyuncuya kapı daha geniş: kulübün ödeyeceği bir bedel yok */
     if(free)return p.r>=teamStr(tm.id)-9-potBonus&&RF()<0.62+(p.form-50)/120;
-    return p.r>=teamStr(tm.id)-4-potBonus&&tm.bud*12>=marketValue(p.r)*0.5&&RF()<0.5+(p.form-50)/120;
+    return p.r>=teamStr(tm.id)-4-potBonus&&tm.bud*12>=valueOf(p)*0.5&&RF()<0.5+(p.form-50)/120;
   }).sort(()=>RF()-0.5).slice(0,6);
   if(!buyers.length){openModal(`<h2>${t('offerClubs')}</h2><div class="empty">${t('noInterest')}</div>`);return;}
-  const v=marketValue(p.r);
+  const v=valueOf(p);
   trSel=new Set();
   openModal(`
    <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${free?t('faSub'):t('value')+': '+fmtM(v)}</div>
@@ -222,11 +249,14 @@ function doTransfer(p,b,fee,quiet,terms){
   delete p.freeFor;
   /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
   const rate=commissionRate();
-  const cut=wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate));
-  const repGain=Math.round(2+Math.max(0,(b.str-oldTm.str)/4));
+  /* Geleceğini bir fona sattıysan (bkz. tpoOffer olayı) bu satıştan sana pay yok. */
+  const cut=p.tpo?0:(wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate)));
+  if(p.tpo)delete p.tpo;
+  const repGain=0.8+Math.max(0,(b.str-oldTm.str)/8);
   /* ödeme planı: komisyon taksitle gelir */
   const plan=terms.pay||1;
-  if(plan===1)S.cash+=cut;
+  if(!cut){/* fon aldı, sana bir şey kalmadı */}
+  else if(plan===1)S.cash+=cut;
   else{
     const part=Math.max(1,Math.round(cut/plan));
     S.cash+=part;
@@ -235,10 +265,10 @@ function doTransfer(p,b,fee,quiet,terms){
   }
   /* gol bonusu: eşik ne kadar yüksekse pay o kadar büyük */
   if(terms.gb)(S.deals=S.deals||[]).push({pid:p.id,tid:b.id,goals:terms.gb,
-    amt:Math.round(marketValue(p.r)*1000*(0.10+(terms.gb-10)*0.012)),se:S.season});
+    amt:Math.round(valueOf(p)*1000*(0.10+(terms.gb-10)*0.012)),se:S.season});
   /* sonraki satıştan pay klozu */
   if(terms.so)p.so={pct:terms.so};
-  S.rep=clamp(S.rep+repGain,0,100);
+  repEvent(repGain);
   pushNews('transfer',{n:p.n,pid:p.id,a:old,aid:oldTm.id,b:b.n,bid:b.id,f:fmtM(fee),k:fmtK(cut)},'good');
   if(!quiet){toast(t('transferDone'));closeModal();save();render();}
 }
@@ -359,21 +389,21 @@ function leaveMeeting(){
   closeModal();save();render();
 }
 function pitchCost(p){return 10+Math.round(Math.max(0,p.r-65)*2);}
-function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022,0.08,0.95);}
+function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch'),0.08,0.95);}
 function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
   p.agent='you';p.ignored=0;
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
   if(!S.clients.includes(p.id))S.clients.push(p.id);
-  S.rep=clamp(S.rep+1,0,100);
+  repEvent(0.4);
   pushNews('sign',{n:p.n,pid:p.id},'good');
   toast(t('pitchOk'));save();render();
 }
 function releaseClient(pid){
   const p=byId(pid);
   p.agent=null;S.clients=S.clients.filter(c=>c!==pid);
-  S.rep=clamp(S.rep-1,0,100);
+  repEvent(-0.8);
   save();render();
 }
 function inboxAction(i,yes){

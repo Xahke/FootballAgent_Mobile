@@ -33,7 +33,7 @@ function sellable(p){
 /* ================= ÜCRET ================= */
 function aiFee(p){
   if(isFree(p))return 0;                             // bonservissiz
-  let f=marketValue(p.r)*(0.85+RF()*0.65);
+  let f=valueOf(p)*(0.85+RF()*0.65);
   if(p.age<=23&&p.pot-p.r>=8)f*=1.25+(p.pot-p.r)/60; // potansiyel primi
   if(p.age>=31)f*=0.55;                              // yaş indirimi
   if(p.yrs<=1)f*=0.60;                               // sözleşmesi bitiyor
@@ -126,7 +126,7 @@ function simTransfers(){
       if(RF()<clamp(0.55-(buyer.str<pick.p.r-8?0.35:0),0.1,0.9))aiTransfer(pick.p,buyer,0,idx);
       return;
     }
-    const v=marketValue(pick.p.r);
+    const v=valueOf(pick.p);
     let acc=clamp(0.55+(pick.fee/Math.max(0.05,v)-1)*0.9,0.05,0.90);
     if(buyer.str>pick.sel.str+6)acc+=0.20;     // büyük kulübe hayır demek zor
     if(pick.p.age>=31)acc+=0.15;

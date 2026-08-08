@@ -1362,7 +1362,7 @@ morale:'Moral',wage:'Maaş',contract:'Sözleşme',value:'Piyasa Değeri',goals:'
 negotiate:'Sözleşme Görüşmesi',offerClubs:'Kulüplere Öner',pitch:'Temsilcilik Teklif Et',
 release:'Müşteriyi Bırak',standings:'Puan Durumu',fixtures:'Fikstür',scorers:'Gol Krallığı',assistsT:'Asist Krallığı',
 P:'O',W:'G',D:'B',L:'M',GD:'AV',PTS:'P',player:'Oyuncu',noNews:'Gelen kutun boş.',
-demandWage:'Maaş talebin',contractLen:'Sözleşme süresi',clubMood:'Kulübün tavrı',send:'Teklifi Sun',walkAway:'Masadan Kalk',
+demandWage:'Maaş talebin',contractLen:'Sözleşme süresi',clubMood:'Kabul şansı',send:'Teklifi Sun',walkAway:'Masadan Kalk',
 accept:'Kabul Et',decline:'Reddet',counter:'Karşı teklif',round:'Tur',
 negFail:'Görüşmeler koptu. İtibarın zedelendi.',
 interested:'İlgilenen Kulüpler',askFee:'Bonservis talebin',noInterest:'Şu an hiçbir kulüp ilgilenmiyor. Oyuncunun formu yükselince tekrar dene.',
@@ -1373,6 +1373,7 @@ seasonEnd:'Sezon Bitti',champion:'Şampiyonlar',topScorer:'Gol Kralı',newSeason
 expiring:'Sözleşme bitiyor',wantsNew:'Yeni sözleşme istiyor',wantsOut:'Transfer istiyor',
 reset:'Oyunu Sıfırla',resetQ:'Tüm ilerleme silinsin mi?',
 commission:'Komisyon',signBonus:'İmza bedeli payı',avgRating:'Güç',
+  capacity:'Kapasite',weeklyCost:'Haftalık gider',permanent:'kalıcı',
 hasAgent:'Bu oyuncunun menajeri var.',myClient:'Müşterin',
 gk:'Kaleciler',df:'Defans',mf:'Orta Saha',fw:'Forvet',
 chance:'İmza şansı',rejectedCd:'Oyuncu şu an seninle görüşmek istemiyor.',
@@ -1445,6 +1446,11 @@ faDealHint:'Bonservis ödenmeyeceği için kulüpler daha istekli. Komisyonun ko
 freeAgentsF:'Kulüpsüz oyuncular',costLbl:'Gider',netLbl:'Net',
 fixerL:'Aracı Ücreti',fixLow:'Ölçülü — kabul şansı +%8',fixHigh:'Yüklü — kabul şansı +%18',
 fixerHint:'Seçtiğin her kulüp için peşin ödenir; anlaşma büyüdükçe pahalanır.',
+skills:'Yetenek',skAvail:'Kullanılabilir',skSpent:'Harcanan',skTotal:'Toplam',skPt:'puan',
+skOwned:'Açık',skTierLock:'Önce bu daldaki bir alt kademeyi aç.',
+skHint:'Her {n} itibar bir yetenek puanı kazandırır. Puanlar geri alınamaz — dalını seçerken düşün.',
+skLockedT:'Önce alt kademeyi açman gerekiyor.',skNoPoints:'Yeterli yetenek puanın yok.',
+skUnlocked:'{n} açıldı.',
 settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
@@ -1458,7 +1464,7 @@ morale:'Morale',wage:'Wage',contract:'Contract',value:'Market Value',goals:'Goal
 negotiate:'Contract Talks',offerClubs:'Offer to Clubs',pitch:'Pitch Representation',
 release:'Release Client',standings:'Standings',fixtures:'Fixtures',scorers:'Top Scorers',assistsT:'Top Assists',
 P:'P',W:'W',D:'D',L:'L',GD:'GD',PTS:'PTS',player:'Player',noNews:'Your inbox is empty.',
-demandWage:'Your wage demand',contractLen:'Contract length',clubMood:'Club stance',send:'Submit Offer',walkAway:'Walk Away',
+demandWage:'Your wage demand',contractLen:'Contract length',clubMood:'Chance of acceptance',send:'Submit Offer',walkAway:'Walk Away',
 accept:'Accept',decline:'Decline',counter:'Counter offer',round:'Round',
 negFail:'Talks collapsed. Your reputation took a hit.',
 interested:'Interested Clubs',askFee:'Your asking fee',noInterest:'No club is interested right now. Try again when form improves.',
@@ -1469,6 +1475,7 @@ seasonEnd:'Season Over',champion:'Champions',topScorer:'Top Scorer',newSeason:'N
 expiring:'Contract expiring',wantsNew:'Wants a new contract',wantsOut:'Wants a transfer',
 reset:'Reset Game',resetQ:'Delete all progress?',
 commission:'Commission',signBonus:'Signing fee cut',avgRating:'Rating',
+  capacity:'Capacity',weeklyCost:'Weekly overhead',permanent:'permanent',
 hasAgent:'This player already has an agent.',myClient:'Your client',
 gk:'Goalkeepers',df:'Defence',mf:'Midfield',fw:'Attack',
 chance:'Sign chance',rejectedCd:'The player refuses to meet you right now.',
@@ -1541,6 +1548,11 @@ faDealHint:'With no fee to pay, clubs are keener. Your commission comes from the
 freeAgentsF:'Free agents',costLbl:'Costs',netLbl:'Net',
 fixerL:'Intermediary Fee',fixLow:'Modest — +8% acceptance',fixHigh:'Heavy — +18% acceptance',
 fixerHint:'Paid up front for every club you select; scales with the size of the deal.',
+skills:'Skills',skAvail:'Available',skSpent:'Spent',skTotal:'Earned',skPt:'pt',
+skOwned:'Unlocked',skTierLock:'Unlock a lower tier in this branch first.',
+skHint:'Every {n} reputation earns you a skill point. Points can\'t be refunded — choose your branch carefully.',
+skLockedT:'You need to unlock the tier below first.',skNoPoints:'Not enough skill points.',
+skUnlocked:'{n} unlocked.',
 settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',
@@ -1586,6 +1598,8 @@ devUp:p=>`${lkP(p.pid,p.n)} bu sezon ${p.d} puan gelişti (${p.r} güç). İtiba
 clubOffer:p=>`${lkT(p.tid,p.c)}, müşterin ${lkP(p.pid,p.n)} için ${p.f} bonservis teklif ediyor.`,
 rivalSigned:p=>`${lkT(p.tid,p.c)}, ${POSFULL.tr[p.pos]||p.pos} mevkisine ${lkP(p.pid,p.n)} (${p.r} güç) transferini yaptı — müşterin ${lkP(p.cid,p.cn)} forma mücadelesinde zorlanacak.`,
 renewed:p=>`${lkP(p.pid,p.n)}, ${lkT(p.tid,p.c)} ile sözleşmesini ${p.y} yıl uzattı.`,
+valUp:p=>`${lkP(p.pid,p.n)} sahadaki formuyla değerini yükseltti — yeni piyasa değeri ${p.v}.`,
+valDown:p=>`${lkP(p.pid,p.n)} beklentinin altında kaldı; piyasa değeri ${p.v} seviyesine geriledi.`,
 released:p=>`${lkT(p.tid,p.c)}, ${lkP(p.pid,p.n)} ile yollarını ayırdı. Müşterin artık kulüpsüz — ona yeni bir takım bulman gerek.`,
 inDebt:p=>`Kasan eksiye düştü. Haftalık giderin ${p.c}; ya müşteri kazan ya keşif ağlarını daralt.`},
 en:{goal:p=>`${lkP(p.pid,p.n)} scored ${p.g} this week. Form is rising.`,
@@ -1617,6 +1631,8 @@ devUp:p=>`${lkP(p.pid,p.n)} improved by ${p.d} points this season (now ${p.r}). 
 clubOffer:p=>`${lkT(p.tid,p.c)} are offering ${p.f} for your client ${lkP(p.pid,p.n)}.`,
 rivalSigned:p=>`${lkT(p.tid,p.c)} signed ${lkP(p.pid,p.n)} (${p.r} rated) at ${POSFULL.en[p.pos]||p.pos} — your client ${lkP(p.cid,p.cn)} will struggle for minutes.`,
 renewed:p=>`${lkP(p.pid,p.n)} extended his deal at ${lkT(p.tid,p.c)} by ${p.y} years.`,
+valUp:p=>`${lkP(p.pid,p.n)} has driven his value up with his form — now worth ${p.v}.`,
+valDown:p=>`${lkP(p.pid,p.n)} has fallen short of expectations; his value has slipped to ${p.v}.`,
 released:p=>`${lkT(p.tid,p.c)} released ${lkP(p.pid,p.n)}. Your client is now without a club — find him a new one.`,
 inDebt:p=>`Your balance has gone negative. Weekly costs are ${p.c} — win clients or scale back your scouting network.`}
 };
@@ -2102,9 +2118,34 @@ const marketValue=r=>{
   const v=2*Math.pow(1.145,r-60);
   return v<10?+v.toFixed(1):Math.round(v);   // küçük değerlerde ondalık, büyükte tam sayı
 };
+/* ===== oyuncunun güncel piyasa değeri =====
+   Güç tek başına yetmiyor: aynı güçte iki oyuncudan sezonu domine eden daha pahalı,
+   sönük geçen daha ucuz olmalı. Bu yüzden her oyuncunun bir değer çarpanı var ve
+   belirli maç aralıklarıyla sahadaki işine göre güncelleniyor (bkz. updateValue).
+
+   Beklenen puan oyuncunun seviyesinden türetiliyor — yoksa iyi oyuncular zaten
+   yüksek puan aldığı için sürekli değerlenir, kötüler sürekli değer kaybederdi. */
+const VAL={every:12, gain:0.18, lo:0.62, hi:1.60, revert:0.70};
+function expectedRating(r){return 6.10+(r-50)*0.045;}
+function valueMult(p){return p&&p.vm?p.vm:1;}
+function valueOf(p){const v=marketValue(p.r)*valueMult(p)*(1+(p.agent==='you'?skillBonus('val'):0));return +v.toFixed(v<10?1:0);}
+/* Her VAL.every maçta bir çalışır. Dönüşü: değer arttı mı azaldı mı (bildirim için). */
+function updateValue(p){
+  if(!p.rtN||p.rtN<VAL.every)return 0;
+  if((p.vmAt||0)+VAL.every>p.rtN)return 0;
+  p.vmAt=p.rtN;
+  const avg=p.rtSum/p.rtN;
+  const diff=avg-expectedRating(p.r);
+  const before=valueMult(p);
+  p.vm=+clamp(before+diff*VAL.gain,VAL.lo,VAL.hi).toFixed(3);
+  return p.vm-before;
+}
 /* Menajerlik komisyonu itibara bağlıdır: adı olmayan menajer düşük oranla çalışır,
    aranan menajer masaya kendi oranını koyar. */
-function commissionRate(){return +(0.05+(S.rep/100)*0.10).toFixed(3);}
+/* Ajansın kalıcı değiştiricileri. Yetenek ağacından gelen bonusun yanında,
+   olaylarda verdiğin kararlar da buraya yazar (bkz. applyEff). */
+function agMod(k){return (S&&S.ag&&S.ag[k])||0;}
+function commissionRate(){return +clamp(0.05+(S.rep/100)*0.10+skillBonus('comm')+agMod('comm'),0.03,0.25).toFixed(3);}
 function commissionPct(){return Math.round(commissionRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
 function tmBadge(tm,size){
@@ -2266,7 +2307,7 @@ function simCups(){
       S.cupHist=S.cupHist||{};
       (S.cupHist[cp.c]=S.cupHist[cp.c]||[]).push({se:S.season,tid:champ.id});
       if(S.cupHist[cp.c].length>20)S.cupHist[cp.c].shift();
-      if(S.clients.some(id=>byId(id).team===champ.id))S.rep=clamp(S.rep+3,0,100);
+      if(S.clients.some(id=>byId(id).team===champ.id))repEvent(1.5);
     }
   });
 }
@@ -2305,13 +2346,31 @@ function freeAgents(){return S.players.filter(p=>p.team<0);}
 /* Moralin tek giriş noktası. Maç performansı, transferler, sözleşmeler ve ileride
    eklenecek olaylar hep buradan geçsin — böylece morali etkileyen her şey tek yerde
    sınırlanır ve dengelenebilir. */
+/* ===== itibar =====
+   Kariyer boyu süren tek ilerleme çizgisi: müşteri kalitesini, kapasiteni ve
+   komisyon oranını o belirliyor. Bu yüzden tırmanışın uzun olması gerekiyor.
+
+   Azalan verim: yükseldikçe aynı iş daha az getirir. Adı olmayan menajer için
+   orta seviye bir transfer olaydır; adı olan için rutindir. Kayıplar tam değerde
+   işler — skandal her seviyede aynı zarar. */
+const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
+function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
+function repEvent(delta,raw){
+  if(!delta)return S.rep;
+  const d=delta>0&&!raw?delta*repFactor():delta;
+  S.rep=stat(S.rep+d,0);
+  /* Ulaşılan en yüksek itibar ayrıca tutuluyor: yetenek puanları buradan sayılır,
+     yoksa itibar düştüğünde harcanmış puanlar borca dönüşürdü. */
+  if(S.rep>(S.repMax||0))S.repMax=S.rep;
+  return S.rep;
+}
 /* ===== güven =====
    Oyuncuyla aranızdaki ilişki. Moralden ayrı: moral kulübünden ve sahadan gelir,
    güven senden. Olaylar, tuttuğun sözler ve pazarlıklar burayı hareket ettirir. */
 function trustOf(p){return p&&p.trust===undefined?55:(p?p.trust:0);}
 function trustEvent(p,delta){
   if(!p)return;
-  p.trust=stat(trustOf(p)+delta,0);
+  p.trust=stat(trustOf(p)+(delta>0?delta*(1+skillBonus('trust')):delta),0);
   return p.trust;
 }
 function trustLabel(v){return v>=75?'trHigh':v>=55?'trGood':v>=35?'trMid':'trLow';}
@@ -2339,10 +2398,12 @@ function weeklyCost(){
   const office=1+S.rep*0.03;
   const admin=S.clients.length*0.6;
   const scouts=(S.known||[]).reduce((s,i)=>s+scoutCost(i)*0.0025,0);
-  return Math.round((office+admin+scouts)*10)/10;
+  const cut=1-clamp(skillBonus('cost'),0,0.6);
+  /* agMod('cost') olaylardan gelen kalıcı gider farkı: büyük ofis artırır, sıkı yönetim azaltır */
+  return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
 }
 function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
-function maxClients(){return 2+Math.floor(S.rep/18);}
+function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap');}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,
@@ -2390,7 +2451,7 @@ function honeymoon(p){return (p.hm||0)>(S.tw||0);} // fresh deal — content for
 /* serbest oyuncular herkese açıktır; keşif ağı yalnızca kulüplü oyuncular için geçerli */
 function knownLg(i){return i<0||(S.known||[]).includes(i);}
 function lgAvgStr(i){const ts=S.teams.filter(tm=>tm.lg===i);return ts.reduce((s,tm)=>s+tm.str,0)/ts.length;}
-function scoutCost(i){return Math.round(30+Math.max(0,lgAvgStr(i)-40)*12);} // K
+function scoutCost(i){return Math.round((30+Math.max(0,lgAvgStr(i)-40)*12)*(1-clamp(skillBonus('scout'),0,0.6)));} // K
 function scoutPending(i){return (S.scout||[]).find(x=>x.lg===i);}
 function createAgent(fn,ln,nat,ag){
   S.agent={fn,ln,nat,agency:ag||(ln+(L==='tr'?' Menajerlik':' Management'))};
@@ -2568,6 +2629,10 @@ function simWeek(){
           p.form=stat(p.form+(rt-6.7)*1.5,5);
           if(min>=PERF.shortMin)moraleEvent(p,(rt-6.7)*0.7);
           p.rtSum=(p.rtSum||0)+rt;p.rtN=(p.rtN||0)+1;
+          /* belirli maç aralıklarıyla piyasa değeri sahadaki işe göre güncellenir */
+          const vd=updateValue(p);
+          if(vd&&p.agent==='you'&&Math.abs(vd)>=0.05)
+            pushNews(vd>0?'valUp':'valDown',{n:p.n,pid:p.id,v:fmtM(valueOf(p))},vd>0?'good':'warn');
           (p.l5=p.l5||[]).push({o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
             sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0});
           if(p.l5.length>5)p.l5.shift();
@@ -2645,7 +2710,7 @@ function nextWeek(){
     p.wage=x.wage;p.yrs=x.years;
     p.morale=clamp(Math.max(p.morale+25,65),0,100);p.ignored=0;p.hm=(S.tw||0)+8;
     const fee=Math.round(x.wage*52*x.years*(x.rate||commissionRate()));
-    S.cash+=fee;S.rep=clamp(S.rep+2,0,100);
+    S.cash+=fee;repEvent(0.7);
     pushNews('contractSigned',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team,y:x.years,w:fmtK(x.wage),f:fmtK(fee)},'good');
   });
   /* --- taksitli komisyon ödemeleri --- */
@@ -2663,7 +2728,7 @@ function nextWeek(){
     const p=byId(o.pid),b=S.teams[o.tid];
     if(!p||p.agent!=='you'||p.team===o.tid)return;
     if(pendingFor(o.pid)||movedThisSeason(p))return; // deal already agreed / already moved this season
-    const v=marketValue(p.r);
+    const v=valueOf(p);
     let acc=clamp(1.6-(o.fee/v)/(0.85+b.bud*0.3),0.05,0.95);
     /* pazarlık şartları kabulü etkiler: taksit +, gol bonusu +, sonraki satış payı - */
     acc+=clauseAcc(o.pay,o.gb,o.so);
@@ -2697,7 +2762,7 @@ function nextWeek(){
       const patience=4+Math.round(trustOf(p)/9);
       if(p.ignored>patience){
         p.agent=null;S.clients=S.clients.filter(c=>c!==id);
-        S.rep=clamp(S.rep-5,0,100);
+        repEvent(-3);
         pushNews('firedYou',{n:p.n,pid:p.id},'bad');
       }
     } else p.ignored=0;
@@ -2724,7 +2789,7 @@ function nextWeek(){
       const buyers=S.teams.filter(tm=>tm.id!==p.team&&tm.bud>=0.55&&Math.abs(tm.str-p.r)<8);
       if(buyers.length){
         const b=buyers[R(0,buyers.length-1)];
-        const fee=+(marketValue(p.r)*(0.9+RF()*0.5)).toFixed(1);
+        const fee=+(valueOf(p)*(0.9+RF()*0.5)).toFixed(1);
         pushNews('clubOffer',{c:b.n,tid:b.id,n:p.n,pid:p.id,f:fmtM(fee)},'act',{type:'bid',pid:p.id,tid:b.id,fee});
       }
     }
@@ -2858,11 +2923,12 @@ function endSeason(){
     p.r=dev>0?clamp(p.r+dev,35,Math.min(p.pot,96)):clamp(p.r+dev,35,96);
     const gained=p.r-oldR;
     if(p.agent==='you'){
-      if(gained>=4){S.rep=clamp(S.rep+2,0,100);pushNews('devUp',{n:p.n,pid:p.id,d:gained,r:p.r},'good');}
-      else if(gained>=2)S.rep=clamp(S.rep+1,0,100);
+      if(gained>=4){repEvent(0.8);pushNews('devUp',{n:p.n,pid:p.id,d:gained,r:p.r},'good');}
+      else if(gained>=2)repEvent(0.4);
       if(p.r>lvl+6&&p.age<=29){pushNews('outgrow',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team},'warn');p.morale=clamp(p.morale-12,0,100);}
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
+    p.vmAt=0;if(p.vm)p.vm=+(1+(p.vm-1)*VAL.revert).toFixed(3);
     /* --- kulüpsüz oyuncular: uzun süre imza bulamazsa futbolu bırakır --- */
     if(isFree(p)){
       p.freeFor=(p.freeFor||0)+1;
@@ -2943,7 +3009,7 @@ function sellable(p){
 /* ================= ÜCRET ================= */
 function aiFee(p){
   if(isFree(p))return 0;                             // bonservissiz
-  let f=marketValue(p.r)*(0.85+RF()*0.65);
+  let f=valueOf(p)*(0.85+RF()*0.65);
   if(p.age<=23&&p.pot-p.r>=8)f*=1.25+(p.pot-p.r)/60; // potansiyel primi
   if(p.age>=31)f*=0.55;                              // yaş indirimi
   if(p.yrs<=1)f*=0.60;                               // sözleşmesi bitiyor
@@ -3036,7 +3102,7 @@ function simTransfers(){
       if(RF()<clamp(0.55-(buyer.str<pick.p.r-8?0.35:0),0.1,0.9))aiTransfer(pick.p,buyer,0,idx);
       return;
     }
-    const v=marketValue(pick.p.r);
+    const v=valueOf(pick.p);
     let acc=clamp(0.55+(pick.fee/Math.max(0.05,v)-1)*0.9,0.05,0.90);
     if(buyer.str>pick.sel.str+6)acc+=0.20;     // büyük kulübe hayır demek zor
     if(pick.p.age>=31)acc+=0.15;
@@ -3151,8 +3217,11 @@ function rebalanceSquads(){
    Sonuçlar tek bir uygulayıcıdan geçer (applyEff), böylece her olay aynı
    kaldıraçları kullanır ve denge tek yerden ayarlanır. */
 
-const EV_CHANCE=0.16;   // uygun bir hafta içinde olay çıkma olasılığı
-const EV_GAP=3;         // iki olay arasında en az bu kadar hafta
+const EV_CHANCE=0.40;   // uygun bir hafta içinde olay çıkma olasılığı
+const EV_GAP=1;         // iki olay arasında en az bu kadar hafta
+/* Büyük bir karardan sonra üst üste bir büyük daha gelmesin: art arda çıkan olay
+   küçük olanlardan seçilir. Böylece sıklık artarken oyun kriz yağmuruna dönmüyor. */
+const EV_BIGGAP=5;      // iki büyük olay arasında en az bu kadar hafta
 
 /* Olay bağlamı: seçilen müşteri (varsa) ve türetilmiş bilgiler */
 function evCtx(pid){
@@ -3173,8 +3242,10 @@ const EVENTS=[
      :{trust:-7,msg:{tr:'Sorgulanmaktan hoşlanmadı. "Beni takip mi ediyorsun?" Araya soğukluk girdi.',
                      en:'He didn\'t like being questioned. "Are you keeping tabs on me?" Things cooled off.'}}},
   {t:{tr:'Sessiz kal, işini daha iyi yap',en:'Say nothing, just do better work'},
-   eff:()=>({trust:3,msg:{tr:'Konuyu açmadın. Zaman kazandın ama belirsizlik sürüyor.',
-                          en:'You let it lie. You bought time, but the uncertainty remains.'}})},
+   eff:()=>RF()<0.6
+     ?{msg:{tr:'Konuyu açmadın. Şimdilik bir şey değişmedi.',en:'You let it lie. Nothing changed — for now.'}}
+     :{trust:-5,msg:{tr:'Sessizliğini kayıtsızlık saydı. Rakip menajerle bir kez daha görüşmüş.',
+                     en:'He read your silence as indifference — and met the other agent again.'}}},
   {t:{tr:'Komisyonundan feda et, bağlılığını satın al',en:'Cut your commission to keep him close'},
    eff:c=>({cash:-Math.max(20,Math.round(c.p.wage*8)),trust:14,morale:4,
             msg:{tr:'Cebinden çıktı ama oyuncu bunu unutmayacak.',en:'It cost you, but he won\'t forget it.'}})}]},
@@ -3185,8 +3256,8 @@ const EVENTS=[
           en:`${c.p.n} calls. "I'm not playing at ${c.tm.n}. Either fix it or tell me the truth."`}),
  opts:[
   {t:{tr:'Söz ver: sezon sonunda taşırım',en:'Promise to move him at season\'s end'},
-   eff:()=>({trust:9,morale:8,msg:{tr:'Rahatladı. Ama artık bir sözün var — tutmazsan hatırlayacak.',
-                                   en:'He\'s relieved. But now you owe him — he\'ll remember if you don\'t deliver.'}})},
+   eff:()=>({trust:5,morale:5,msg:{tr:'Rahatladı. Ama artık bir sözün var — sezon sonunda taşımazsan bunu hatırlayacak.',
+                                   en:'He\'s relieved. But now you owe him — if he isn\'t moved by season\'s end, he\'ll remember.'}})},
   {t:{tr:'Kulüple konuş, teknik ekibe git',en:'Talk to the club and the coaching staff'},
    eff:c=>({cash:-Math.max(15,Math.round(c.p.wage*3)),morale:6,trust:5,
             msg:{tr:'Bir öğle yemeği ve birkaç telefon. Antrenör "bakarız" dedi — bu da bir şey.',
@@ -3222,17 +3293,17 @@ const EVENTS=[
           en:`A sportswear brand wants a boot deal with ${c.p.n}. The number is decent, but there's room to push.`}),
  opts:[
   {t:{tr:'Masadaki teklifi kabul et',en:'Take the offer on the table'},
-   eff:c=>({cash:Math.round(marketValue(c.p.r)*22),morale:5,trust:4,
+   eff:c=>({cash:Math.round(valueOf(c.p)*10),morale:4,trust:3,
             msg:{tr:'Temiz iş. Herkes memnun.',en:'Clean deal. Everyone happy.'}})},
   {t:{tr:'Daha fazlası için diren',en:'Push for more'},
-   eff:c=>RF()<0.42+S.rep/250
-     ?{cash:Math.round(marketValue(c.p.r)*45),rep:2,morale:7,trust:8,
+   eff:c=>RF()<0.34+S.rep/300
+     ?{cash:Math.round(valueOf(c.p)*19),rep:1,morale:6,trust:6,
        eff_msg:1,msg:{tr:'Blöfü tuttu. Rakam neredeyse ikiye katlandı, oyuncu sana hayran.',
                       en:'The bluff held. The figure nearly doubled — he\'s impressed.'}}
-     :{trust:-6,msg:{tr:'Marka masadan kalktı. Oyuncu fırsatın kaçtığını düşünüyor.',
+     :{trust:-9,morale:-4,msg:{tr:'Marka masadan kalktı. Oyuncu fırsatın kaçtığını düşünüyor.',
                      en:'The brand walked. He thinks you let it slip away.'}}},
   {t:{tr:'Reddet — markayla imajı uyuşmuyor',en:'Decline — the brand doesn\'t fit him'},
-   eff:()=>({trust:7,rep:1,msg:{tr:'Uzun vadeli düşündüğünü gördü. Para gitti, itibar kaldı.',
+   eff:()=>({trust:4,msg:{tr:'Uzun vadeli düşündüğünü gördü. Para gitti, itibar kaldı.',
                                 en:'He saw you thinking long-term. The money went; the standing stayed.'}})}]},
 
 {id:'family',w:7,need:'client',
@@ -3286,6 +3357,255 @@ const EVENTS=[
    eff:()=>({cash:-45,trust:11,morale:3,msg:{tr:'Netleşti, doğru karar verildi. Profesyonelliğin fark edildi.',
                                              en:'It cleared things up and the right call was made. Your professionalism registered.'}})}]},
 
+/* ----- küçük olaylar: sık çıkar, kariyeri tek başına değiştirmez ----- */
+{id:'shirtNumber',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Forma numarası',en:'The shirt number'}),
+ txt:c=>({tr:`${c.p.n} istediği numarayı istiyor ama forma başkasının sırtında. O oyuncu "boşaltırım, ama bedeli var" diyor.`,
+          en:`${c.p.n} wants his number, but it's on someone else's back. That player says he'll give it up — for a price.`}),
+ opts:[
+  {t:{tr:'Parayı sen öde',en:'Pay for it yourself'},
+   eff:c=>({cash:-Math.max(12,Math.round(c.p.wage*3)),trust:6,morale:4,
+            msg:{tr:'Küçük bir jest, büyük bir memnuniyet. Numara sırtında.',en:'A small gesture, a large amount of goodwill. He has the number.'}})},
+  {t:{tr:'Kulüp halletsin',en:'Let the club sort it'},
+   eff:()=>RF()<0.5?{trust:3,morale:3,msg:{tr:'Kulüp araya girdi, mesele tatlıya bağlandı.',en:'The club stepped in and smoothed it over.'}}
+                   :{morale:-3,msg:{tr:'Kulüp karışmak istemedi. Numara sahibinde kaldı.',en:'The club wouldn\'t get involved. The number stayed where it was.'}}},
+  {t:{tr:'Bu sezon idare etsin',en:'He can live with it'},
+   eff:()=>({morale:-4,msg:{tr:'"Tamam." Küçük bir şey ama aklında kaldı.',en:'"Fine." A small thing, but it stuck with him.'}})}]},
+
+{id:'socialLike',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Sosyal medyada bir beğeni',en:'A like on the wrong post'}),
+ txt:c=>({tr:`${c.p.n} rakip kulübün paylaşımını beğenmiş. Ekran görüntüsü çoktan dolaşımda.`,
+          en:`${c.p.n} liked a rival club's post. The screenshot is already going around.`}),
+ opts:[
+  {t:{tr:'Hesabını profesyonele devret',en:'Put a professional on his account'},
+   eff:()=>({cash:-25,trust:3,msg:{tr:'Bundan sonra ne paylaşacağını bilen biri var.',en:'Someone who knows what to post is handling it now.'}})},
+  {t:{tr:'Kendisi açıklasın',en:'Let him explain'},
+   eff:()=>RF()<0.5?{morale:2,msg:{tr:'İki cümlelik bir açıklama yetti.',en:'Two sentences and it was over.'}}
+                   :{rep:-1,morale:-5,msg:{tr:'Açıklama beğeniden daha çok konuşuldu.',en:'The explanation got more attention than the like.'}}},
+  {t:{tr:'Görmezden gel',en:'Ignore it'},
+   eff:()=>({morale:-3,msg:{tr:'Birkaç gün üstüne gittiler. Hoş değildi.',en:'They went at him for a few days. Not pleasant.'}})}]},
+
+{id:'barber',w:9,sz:'s',need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Maç sabahı berber',en:'A haircut on matchday'}),
+ txt:c=>({tr:`${c.p.n} maç sabahı saç kestirmek için şehir dışına çıkmış ve antrenmana geç kalmış. ${c.tm.n} hiç memnun değil.`,
+          en:`${c.p.n} drove out of town for a haircut on the morning of the match and turned up late. ${c.tm.n} are not amused.`}),
+ opts:[
+  {t:{tr:'Kulübe sen izah et',en:'Explain it to the club yourself'},
+   eff:()=>({rep:-1,trust:7,msg:{tr:'Suçu üstlendin. Oyuncu bunu gördü.',en:'You took the blame. He noticed.'}})},
+  {t:{tr:'Cezasını çeksin',en:'Let him take the fine'},
+   eff:()=>({trust:-4,form:6,morale:-3,msg:{tr:'Kesinti canını yaktı. Ertesi hafta antrenmanda ilk gelen oydu.',
+                                            en:'The fine stung. He was first in to training the next week.'}})},
+  {t:{tr:'Şakaya vur',en:'Laugh it off'},
+   eff:()=>RF()<0.7?{morale:5,trust:3,msg:{tr:'Gülüp geçtiniz. Soyunma odası da öyle.',en:'You both laughed. So did the dressing room.'}}
+                   :{rep:-2,morale:-2,msg:{tr:'Espriyi kulüp komik bulmadı. Ciddiyetsiz göründün.',en:'The club didn\'t find it funny. You looked unserious.'}}}]},
+
+{id:'gameRating',w:9,sz:'s',need:'client',when:c=>c.p.r>=60,
+ ttl:()=>({tr:'Reytingi beğenmedi',en:'He doesn\'t like his rating'}),
+ txt:c=>({tr:`${c.p.n} bir futbol oyununda çıkan puanını beğenmemiş. Telefonda sesi gerçekten kırgın.`,
+          en:`${c.p.n} has seen his rating in a football video game and he's genuinely hurt by it.`}),
+ opts:[
+  {t:{tr:'Yapımcıyla konuş',en:'Call the publisher'},
+   eff:()=>({cash:-20,morale:6,msg:{tr:'Bir sonraki güncellemede bakılacakmış. Çocuk gibi sevindi.',
+                                    en:'They\'ll look at it in the next update. He lit up like a kid.'}})},
+  {t:{tr:'Sahada cevap versin',en:'Tell him to answer on the pitch'},
+   eff:()=>({form:7,morale:-4,msg:{tr:'Somurttu ama antrenmanda bir şey değişti.',en:'He sulked — and something changed in training.'}})},
+  {t:{tr:'Ciddiye alma',en:'Don\'t indulge it'},
+   eff:()=>RF()<0.6?{msg:{tr:'Birkaç gün sonra kendisi de güldü.',en:'A few days later he was laughing about it himself.'}}
+                   :{morale:-4,trust:-3,msg:{tr:'Küçük bir şeydi ama ciddiye alınmadığını hissetti.',en:'A small thing, but he felt brushed aside.'}}}]},
+
+{id:'homesick',w:9,sz:'s',need:'client',
+ when:c=>!isFree(c.p)&&LEAGUES[c.tm.lg]&&LEAGUES[c.tm.lg].nat!==c.p.nat,
+ ttl:()=>({tr:'Yabancı bir şehirde',en:'A long way from home'}),
+ txt:c=>({tr:`${c.p.n} yeni ülkeye alışamıyor. Dili yok, soyunma odasında kimseyle konuşmuyor.`,
+          en:`${c.p.n} isn't settling. He has no language, and he says nothing in the dressing room.`}),
+ opts:[
+  {t:{tr:'Dil hocası tut',en:'Get him a language tutor'},
+   eff:()=>({cash:-35,form:6,morale:6,msg:{tr:'İki ay sonra saha içinde bağırabiliyordu. Fark ediliyor.',
+                                           en:'Two months later he was shouting on the pitch. It shows.'}})},
+  {t:{tr:'Ailesini getirt',en:'Fly his family over'},
+   eff:()=>({cash:-60,morale:12,trust:8,msg:{tr:'Evinde ışık yanıyor artık. Gerisi kendiliğinden geldi.',
+                                             en:'There are lights on at home now. The rest followed.'}})},
+  {t:{tr:'Kendi alışsın',en:'He\'ll adapt'},
+   eff:()=>({morale:-8,form:-4,msg:{tr:'Alışamadı. Antrenmandan sonra ilk çıkan hep o.',en:'He didn\'t adapt. He\'s always first out after training.'}})}]},
+
+{id:'preseasonWeight',w:8,sz:'s',need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Ara dönüşü',en:'Back from the break'}),
+ txt:c=>({tr:`${c.p.n} aradan kilolu döndü. Ölçümler kulübü memnun etmedi.`,
+          en:`${c.p.n} came back from the break heavy. The measurements did not please the club.`}),
+ opts:[
+  {t:{tr:'Özel kondisyoner tut',en:'Hire a private fitness coach'},
+   eff:()=>({cash:-40,form:10,trust:4,msg:{tr:'Üç haftada toparladı. Kimse bir daha konuşmadı.',en:'Three weeks and it was gone. Nobody mentioned it again.'}})},
+  {t:{tr:'Kulübün programına bırak',en:'Leave it to the club\'s programme'},
+   eff:()=>RF()<0.55?{form:5,msg:{tr:'Kulüp halletti. Yavaş ama oldu.',en:'The club handled it. Slowly, but it happened.'}}
+                    :{form:-5,morale:-3,msg:{tr:'Program işe yaramadı, kadro dışı kaldığı haftalar oldu.',en:'The programme didn\'t take. He lost weeks out of the squad.'}}},
+  {t:{tr:'Üstüne sert git',en:'Come down hard on him'},
+   eff:()=>({trust:-5,form:12,morale:-5,msg:{tr:'Hoşuna gitmedi ama sahaya bambaşka döndü.',en:'He hated it, and came back a different player.'}})}]},
+
+{id:'oldClubGoal',w:8,sz:'s',need:'client',when:c=>!isFree(c.p)&&(c.p.hist||[]).length>0,
+ ttl:()=>({tr:'Eski takımına gol',en:'A goal against his old club'}),
+ txt:c=>({tr:`${c.p.n} eski kulübüne gol attı ve ne yapacağını bilemedi. Sonrasında sana soruyor.`,
+          en:`${c.p.n} scored against his old club and froze. Afterwards he asks you what he should have done.`}),
+ opts:[
+  {t:{tr:'Sevinme, saygı göster',en:'Don\'t celebrate — show respect'},
+   eff:()=>({rep:1,msg:{tr:'Elini kaldırıp özür diledi. İki tarafın da taraftarı bunu sevdi.',
+                        en:'He raised a hand and apologised. Both sets of supporters liked it.'}})},
+  {t:{tr:'Coş, o senin golün',en:'Celebrate — it\'s his goal'},
+   eff:()=>RF()<0.6?{morale:7,msg:{tr:'Köşe direğine koştu. Kendi taraftarı bayıldı.',en:'He ran to the corner flag. His own end loved it.'}}
+                   :{morale:7,rep:-2,msg:{tr:'Kendi taraftarı bayıldı, eskiler affetmedi. Adın günlerce anıldı.',
+                                          en:'His own end loved it. His old one didn\'t forget. Your name was in it for days.'}}},
+  {t:{tr:'Ona bırak',en:'His call'},
+   eff:()=>RF()<0.5?{morale:3,msg:{tr:'Doğru olanı kendi buldu.',en:'He found the right thing to do on his own.'}}
+                   :{msg:{tr:'Ne yaptığını kendisi de bilmiyor. Kimse de umursamadı.',en:'He isn\'t sure what he did. Nobody minded either way.'}}}]},
+
+/* ----- büyük olaylar ----- */
+{id:'familyAgent',w:7,need:'client',when:c=>trustOf(c.p)<80,
+ ttl:()=>({tr:'Ailede bir menajer adayı',en:'An agent in the family'}),
+ txt:c=>({tr:`${c.p.n} için bir akrabası "bu işi ben de yaparım" diyormuş. Oyuncunun kulağına fısıldayıp duruyor.`,
+          en:`A relative of ${c.p.n} reckons he could do your job. He keeps whispering it in the player's ear.`}),
+ opts:[
+  {t:{tr:'Ekibine al, öğret',en:'Bring him in and teach him'},
+   eff:()=>({cash:-80,trust:16,msg:{tr:'İşin içine girince zorluğunu gördü. Artık senin tarafında.',
+                                    en:'He saw how hard it is once he was inside. He\'s on your side now.'}})},
+  {t:{tr:'Oyuncuyla açık konuş',en:'Talk to the player openly'},
+   eff:c=>RF()<0.5+trustOf(c.p)/300
+     ?{trust:12,rep:1,msg:{tr:'Ne yaptığını anlattın. Aralarına mesafe koydu.',en:'You showed him what you actually do. He put distance between them.'}}
+     :{trust:-10,morale:-5,msg:{tr:'Kan bağı ağır bastı. "O benim ailem." Konuşma kötü bitti.',
+                                en:'Blood won. "That\'s my family." The conversation ended badly.'}}},
+  {t:{tr:'Sert çık',en:'Shut it down hard'},
+   eff:()=>({trust:-16,morale:-6,msg:{tr:'Sesini yükselttin. Sözlerin geri alınmıyor.',en:'You raised your voice. Those words don\'t come back.'}})}]},
+
+{id:'badInvestment',w:7,need:'client',when:c=>c.p.wage>=15,
+ ttl:()=>({tr:'Garantili getiri',en:'A guaranteed return'}),
+ txt:c=>({tr:`${c.p.n} bir "danışmana" güvenip birikiminin çoğunu bir yatırıma koymuş. Para yok.`,
+          en:`${c.p.n} trusted an "adviser" and put most of his savings into an investment. The money is gone.`}),
+ opts:[
+  {t:{tr:'Zararı sen kapat',en:'Cover the loss yourself'},
+   eff:c=>({cash:-Math.max(120,Math.round(c.p.wage*6)),trust:26,morale:12,
+            msg:{tr:'Ağır bir fatura. Ama bu adam ömrünün sonuna kadar seninle.',
+                 en:'A heavy bill. This man is with you for the rest of his career.'}})},
+  {t:{tr:'Avukat tut, peşine düş',en:'Get a lawyer and chase it'},
+   eff:c=>{const won=RF()<0.55;
+     return won?{cash:Math.round(c.p.wage*4)-60,trust:12,morale:8,
+                 msg:{tr:'Aylar sürdü ama paranın çoğu geri geldi.',en:'It took months, but most of it came back.'}}
+               :{cash:-60,trust:4,morale:-4,
+                 msg:{tr:'Adam ortadan kayboldu. Avukat parası cebinden gitti.',en:'The man vanished. The legal fees didn\'t.'}};}},
+  {t:{tr:'Ders olsun',en:'Let it be a lesson'},
+   eff:()=>({morale:-14,trust:-9,msg:{tr:'Haklıydın ve bunu söyledin. İhtiyacı olan şey bu değildi.',
+                                      en:'You were right and you said so. That wasn\'t what he needed.'}})}]},
+
+{id:'deadlineDay',w:7,need:'client',when:c=>!isFree(c.p)&&windowOpen(),
+ ttl:()=>({tr:'Son gün, son saat',en:'Deadline day'}),
+ txt:c=>({tr:`Bir kulüp ${c.p.n} için son dakikada masaya oturdu. Evrakların yetişmesine kırk dakika var ve imzalar başka şehirde.`,
+          en:`A club came in for ${c.p.n} at the last minute. There are forty minutes to file the paperwork and the signatures are in another city.`}),
+ opts:[
+  {t:{tr:'Arabaya atla, elden yetiştir',en:'Get in the car and hand-deliver it'},
+   eff:()=>RF()<0.72?{cash:-55,rep:3,morale:8,trust:8,
+                      msg:{tr:'Son yedi dakika. Elin titriyordu ama oldu.',en:'Seven minutes to spare. Your hands were shaking. It went through.'}}
+                    :{cash:-55,rep:-1,morale:-6,
+                      msg:{tr:'Trafik. Kapı kapandığında hâlâ yoldaydın.',en:'Traffic. You were still on the road when the window shut.'}}},
+  {t:{tr:'Kulübün memuruna bırak',en:'Leave it to the club\'s office'},
+   eff:()=>RF()<0.45?{rep:2,morale:6,msg:{tr:'Hallettiler. Sen de rahat bir nefes aldın.',en:'They got it done. You could breathe again.'}}
+                    :{morale:-8,trust:-5,msg:{tr:'Bir belge eksikti. Transfer yattı ve suçu sen aldın.',
+                                              en:'One document was missing. The move died and the blame landed on you.'}}},
+  {t:{tr:'Bu iş yaza kalsın',en:'It can wait until summer'},
+   eff:()=>({morale:-5,trust:-3,msg:{tr:'Belki doğru karardı. Oyuncu öyle düşünmüyor.',en:'It may have been the right call. He doesn\'t think so.'}})}]},
+
+{id:'newCoach',w:7,need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Yeni teknik direktör',en:'A new manager'}),
+ txt:c=>({tr:`${c.tm.n} hocasını değiştirdi. Yeni isim ${c.p.n} için "planlarımda yok" demiş.`,
+          en:`${c.tm.n} have changed manager. The new one has said ${c.p.n} isn't in his plans.`}),
+ opts:[
+  {t:{tr:'Hocayla tanış',en:'Get in front of the manager'},
+   eff:()=>RF()<0.6?{cash:-50,morale:10,form:5,msg:{tr:'Bir kahve ve yirmi dakika. Fikri değişti.',en:'A coffee and twenty minutes. He changed his mind.'}}
+                   :{cash:-50,morale:-5,msg:{tr:'Kibardı ama kararlıydı. Para da boşa gitti.',en:'Polite, and immovable. The money went with it.'}}},
+  {t:{tr:'Kış transferine hazırla',en:'Start lining up a January move'},
+   eff:()=>({trust:9,morale:6,msg:{tr:'Bir planı olduğunu bilmek onu rahatlattı.',en:'Knowing there\'s a plan settled him.'}})},
+  {t:{tr:'Bekle, gör',en:'Wait and see'},
+   eff:()=>({form:-7,morale:-8,msg:{tr:'Üç ay tribünde. Kimse beklemedi, sadece unuttular.',en:'Three months in the stands. Nobody waited — they just forgot.'}})}]},
+
+{id:'redCard',w:6,need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Disiplin kurulu',en:'A disciplinary hearing'}),
+ txt:c=>({tr:`${c.p.n} ağır bir kırmızı kart gördü. Kurul cezayı bu hafta görüşüyor.`,
+          en:`${c.p.n} was sent off for a bad one. The panel hears the case this week.`}),
+ opts:[
+  {t:{tr:'İyi bir avukatla savun',en:'Defend him properly'},
+   eff:()=>({cash:-95,morale:6,trust:8,msg:{tr:'Ceza yarıya indi. Arkasında durduğunu gördü.',en:'The ban was halved. He saw you stand behind him.'}})},
+  {t:{tr:'Özür ve gönüllü ceza',en:'Apologise and accept it'},
+   eff:()=>({rep:2,morale:-6,form:-5,msg:{tr:'Doğru olanı yaptın. Ona pahalıya patladı.',en:'You did the right thing. It cost him.'}})},
+  {t:{tr:'Savaş aç',en:'Fight it publicly'},
+   eff:()=>RF()<0.6?{rep:-1,morale:3,msg:{tr:'Ceza aynı kaldı ama oyuncu yalnız olmadığını hissetti.',en:'The ban stood, but he didn\'t feel alone.'}}
+                   :{rep:-4,morale:-10,form:-8,msg:{tr:'Kurul kızdı, ceza uzadı. Herkes senin yüzünden olduğunu biliyor.',
+                                                    en:'The panel took offence and extended it. Everyone knows why.'}}}]},
+
+{id:'unpaidBonus',w:6,need:'client',when:c=>!isFree(c.p),
+ ttl:()=>({tr:'Ödenmeyen imza parası',en:'The bonus that never came'}),
+ txt:c=>({tr:`${c.tm.n} taahhüt ettiği imza bedelini aylardır geciktiriyor. ${c.p.n} sana soruyor.`,
+          en:`${c.tm.n} have been sitting on the signing fee for months. ${c.p.n} is asking you about it.`}),
+ opts:[
+  {t:{tr:'Sessizce diren, ödet',en:'Push quietly until they pay'},
+   eff:c=>RF()<0.65?{cash:Math.round(c.p.wage*8),trust:10,msg:{tr:'Gürültü çıkarmadan aldın. En iyi menajerlik böyle görünür.',
+                                                               en:'You got it without a sound. That\'s what good agency looks like.'}}
+                   :{trust:-4,msg:{tr:'Oyalandın ve oyalandın. Hâlâ ödenmedi.',en:'You were passed along and along. Still unpaid.'}}},
+  {t:{tr:'Resmî şikâyette bulun',en:'File a formal complaint'},
+   eff:c=>({cash:Math.round(c.p.wage*10),rep:-3,
+            msg:{tr:'Para geldi. Bu kulüple bir daha kolay iş yapamazsın — diğerleri de duydu.',
+                 en:'The money came. You won\'t deal easily with this club again — and the others heard.'}})},
+  {t:{tr:'Sabır iste',en:'Ask him to be patient'},
+   eff:()=>({trust:-9,morale:-4,msg:{tr:'"Sen kimin tarafındasın?" Cevabın yoktu.',en:'"Whose side are you on?" You didn\'t have an answer.'}})}]},
+
+{id:'nationalTeam',w:6,need:'client',when:c=>c.p.age<=24,
+ ttl:()=>({tr:'İki bayrak',en:'Two flags'}),
+ txt:c=>({tr:`${c.p.n} iki ülkeye de oynayabiliyor ve ikisi de arıyor. Karar onun ama fikrini soruyor.`,
+          en:`${c.p.n} is eligible for two countries and both have called. It's his decision, but he's asking you.`}),
+ opts:[
+  {t:{tr:'Güçlü olanı seç',en:'Take the bigger one'},
+   eff:()=>RF()<0.45?{rep:4,morale:10,trust:6,msg:{tr:'İlk maçta oynadı. Bir anda başka bir oyuncu oldu.',
+                                                   en:'He played in the first camp. Overnight he became a different player.'}}
+                    :{morale:-8,form:-4,msg:{tr:'Kadroya bir daha çağrılmadı. Diğer kapı da kapandı.',
+                                             en:'He was never called again. And the other door had closed.'}}},
+  {t:{tr:'Doğduğu yeri seç',en:'Take the one he grew up with'},
+   eff:()=>({morale:12,trust:10,msg:{tr:'Marşı söylerken ağladı. Bunu sana borçlu olduğunu biliyor.',
+                                     en:'He cried during the anthem. He knows who told him to.'}})},
+  {t:{tr:'Acele etmesin',en:'Tell him not to rush'},
+   eff:()=>({morale:-5,trust:-4,msg:{tr:'Bekledi ve iki taraf da soğudu. Kararsızlık da bir karardır.',
+                                     en:'He waited, and both went cold. Indecision is a decision.'}})}]},
+
+{id:'documentary',w:6,need:'client',when:c=>c.p.r>=70,
+ ttl:()=>({tr:'Belgesel teklifi',en:'A documentary crew'}),
+ txt:c=>({tr:`Bir yapım şirketi ${c.p.n} için bir sezonluk belgesel çekmek istiyor. Kamera her yerde olacak.`,
+          en:`A production company wants to follow ${c.p.n} for a season. The camera would be everywhere.`}),
+ opts:[
+  {t:{tr:'Kabul et',en:'Say yes'},
+   eff:c=>({cash:Math.round(valueOf(c.p)*14),rep:2,form:-8,
+            msg:{tr:'İyi para ve iyi tanıtım. Kamera soyunma odasına girince futbol biraz geri kaldı.',
+                 en:'Good money, good exposure. With a camera in the dressing room, the football slipped a little.'}})},
+  {t:{tr:'Sadece sezon sonu çeksinler',en:'Only at the end of the season'},
+   eff:c=>({cash:Math.round(valueOf(c.p)*5),rep:1,
+            msg:{tr:'Az para, sıfır risk. İki taraf da razı.',en:'Less money, no risk. Both sides content.'}})},
+  {t:{tr:'Reddet',en:'Decline'},
+   eff:()=>({trust:4,msg:{tr:'"Sen benim işimi düşünüyorsun." Aynen öyle.',en:'"You\'re thinking about my football." Exactly.'}})}]},
+
+{id:'tpoOffer',w:6,need:'client',when:c=>!isFree(c.p)&&c.p.pot-c.p.r>=6,
+ ttl:()=>({tr:'Geleceğine yatırım',en:'An investment in his future'}),
+ txt:c=>({tr:`Bir fon ${c.p.n} için şimdi para veriyor. Karşılığında bir sonraki transferinden senin payın onların oluyor.`,
+          en:`A fund will pay you now for ${c.p.n}. In return, your cut of his next transfer becomes theirs.`}),
+ opts:[
+  {t:{tr:'Kabul et',en:'Take the money'},
+   /* Ödeme, bir sonraki satıştan beklenen komisyonun yaklaşık yarısı: bugünkü
+      kesin para, yarınki büyük paranın yerine geçiyor. */
+   eff:c=>({cash:Math.round(valueOf(c.p)*90),flag:'tpo',trust:-4,
+            msg:{tr:'Para bugün cebinde. Bir dahaki satıştan sana bir kuruş yok.',
+                 en:'The money is in your pocket today. His next sale pays you nothing.'}})},
+  {t:{tr:'Oyuncuya sor',en:'Ask the player'},
+   eff:c=>RF()<0.5
+     ?{cash:Math.round(valueOf(c.p)*55),flag:'tpo',trust:8,
+       msg:{tr:'Birlikte karar verdiniz, daha küçük bir rakama razı oldu. Ama sorduğunu unutmayacak.',
+            en:'You decided together and settled for less. He won\'t forget that you asked.'}}
+     :{trust:8,rep:1,msg:{tr:'"Benim geleceğim satılık değil." Haklıydı ve sen de sordun.',
+                          en:'"My future isn\'t for sale." He was right — and you asked.'}}},
+  {t:{tr:'Reddet',en:'Refuse'},
+   eff:()=>({rep:2,msg:{tr:'Bu tür fonlarla çalışmayan bir isim olarak anıldın.',en:'You became known as someone who doesn\'t work with those funds.'}})}]},
+
 /* ================= MENAJERLE İLGİLİ ================= */
 {id:'taxAudit',w:6,
  ttl:()=>({tr:'Vergi incelemesi',en:'Tax inspection'}),
@@ -3308,10 +3628,10 @@ const EVENTS=[
            en:'A well-known sports magazine wants to profile you.'}),
  opts:[
   {t:{tr:'Kabul et, açık konuş',en:'Accept and speak openly'},
-   eff:()=>RF()<0.7?{rep:4,msg:{tr:'İyi geçti. Adın daha çok kapıyı açıyor artık.',en:'It went well. Your name opens more doors now.'}}
+   eff:()=>RF()<0.62?{rep:3,msg:{tr:'İyi geçti. Adın daha çok kapıyı açıyor artık.',en:'It went well. Your name opens more doors now.'}}
                    :{rep:-2,msg:{tr:'Bir cümlen bağlamından koparıldı. Küçük bir tatsızlık.',en:'A line was taken out of context. A minor mess.'}}},
   {t:{tr:'Ücret talep et',en:'Ask for a fee'},
-   eff:()=>({cash:60,rep:-1,msg:{tr:'Ödediler ama "para canlısı" etiketini de yapıştırdılar.',
+   eff:()=>({cash:35,rep:-2,msg:{tr:'Ödediler ama "para canlısı" etiketini de yapıştırdılar.',
                                  en:'They paid — and quietly filed you under "money first".'}})},
   {t:{tr:'Reddet, sessiz kal',en:'Decline and stay quiet'},
    eff:()=>({msg:{tr:'Gündeme girmedin. Bazen en iyi haber, haber olmamaktır.',
@@ -3323,11 +3643,89 @@ const EVENTS=[
            en:'An intermediary offers you a cut for putting your name to a transfer. He says nobody will hear.'}),
  opts:[
   {t:{tr:'Al',en:'Take it'},
-   eff:()=>RF()<0.65?{cash:340,msg:{tr:'Para geldi, kimse bir şey sormadı. Şimdilik.',en:'The money landed. Nobody asked. For now.'}}
-                    :{cash:340,rep:-9,msg:{tr:'Para geldi ama biri konuştu. Çevrede adın kirlendi.',
+   eff:()=>RF()<0.5?{cash:170,msg:{tr:'Para geldi, kimse bir şey sormadı. Şimdilik.',en:'The money landed. Nobody asked. For now.'}}
+                    :{cash:170,rep:-12,msg:{tr:'Para geldi ama biri konuştu. Çevrede adın kirlendi.',
                                            en:'The money landed — but someone talked. Your name took damage.'}}},
   {t:{tr:'Reddet',en:'Refuse'},
-   eff:()=>({rep:2,msg:{tr:'Hayır dedin. Bu tür haberler de dolaşıyor.',en:'You said no. Word of that travels too.'}})}]},
+   eff:()=>({rep:1,msg:{tr:'Hayır dedin. Bu tür haberler de dolaşıyor.',en:'You said no. Word of that travels too.'}})}]},
+
+{id:'agentExam',w:6,when:()=>S.rep>=12,
+ ttl:()=>({tr:'Temsilci lisansı sınavı',en:'The agent licence exam'}),
+ txt:()=>({tr:'Futbolcu temsilcisi lisansın yenileniyor. Federasyonun sınavına yeniden girmen gerekiyor — geçemezsen kimseyi temsil edemezsin. Tarih yakın.',
+           en:'Your football agent licence is up for renewal. You have to sit the federation exam again — fail it and you can\'t represent anyone. The date is close.'}),
+ opts:[
+  {t:{tr:'Haftalarca çalış',en:'Study for weeks'},
+   eff:()=>({rep:3,msg:{tr:'Geçtin. Haftalarca yönetmelik okudun ama kimse bir daha lisansını sormayacak.',
+                        en:'You passed. Weeks of reading regulations, and nobody will ask about your licence again.'}})},
+  {t:{tr:'Hazırlık kursu al',en:'Pay for a prep course'},
+   eff:()=>({cash:-110,rep:2,msg:{tr:'Pahalı ama garanti. Sınavda sürpriz yoktu.',
+                                  en:'Expensive but certain. No surprises in the exam.'}})},
+  {t:{tr:'Şansını dene',en:'Wing it'},
+   eff:()=>RF()<0.5?{rep:1,msg:{tr:'Kıl payı geçtin. Kimsenin bilmesine gerek yok.',en:'You scraped through. Nobody needs to know.'}}
+                   :{rep:-5,cash:-40,msg:{tr:'Kaldın. Tekrar ücreti ve birkaç ay boyunca kulislerde espri konusu oldun.',
+                                          en:'You failed. A re-sit fee, and a running joke in the corridors for months.'}}}]},
+
+{id:'journalistTrade',w:6,
+ ttl:()=>({tr:'Muhabirle takas',en:'A trade with a journalist'}),
+ txt:()=>({tr:'Tanınmış bir muhabir sana kulis bilgisi öneriyor. Karşılığında senden düzenli haber bekliyor.',
+           en:'A well-connected journalist offers you inside information. In return he expects stories from you.'}),
+ opts:[
+  {t:{tr:'Anlaş',en:'Make the trade'},
+   eff:()=>RF()<0.65?{cash:60,msg:{tr:'Bilgi işe yaradı, kimse nereden geldiğini sormadı.',en:'The information paid off. Nobody asked where it came from.'}}
+                    :{cash:60,rep:-6,msg:{tr:'Bir haberin kaynağı olarak adın geçti. Kulüpler artık yanında dikkatli konuşuyor.',
+                                          en:'You were named as a source. Clubs choose their words around you now.'}}},
+  {t:{tr:'Bilgiyi al ama haber verme',en:'Take the tip, give nothing back'},
+   eff:()=>({cash:60,rep:-3,msg:{tr:'Bir kez işe yaradı. O numara bir daha açılmayacak.',
+                                 en:'It worked once. That number won\'t pick up again.'}})},
+  {t:{tr:'Reddet',en:'Turn him down'},
+   eff:()=>({rep:1,msg:{tr:'Kapıyı kapattın. Bu tür haberler de dolaşıyor.',en:'You closed the door. Word of that travels too.'}})}]},
+
+{id:'fanProtest',w:6,when:()=>S.rep>=12,
+ ttl:()=>({tr:'Tesis önünde pankart',en:'A banner outside the training ground'}),
+ txt:()=>({tr:'Yaptığın bir transfer taraftarı kızdırdı. Tesisin önünde adının geçtiği bir pankart asılı.',
+           en:'One of your transfers angered the supporters. There\'s a banner outside the training ground with your name on it.'}),
+ opts:[
+  {t:{tr:'Açıklama yap',en:'Make a statement'},
+   eff:()=>RF()<0.62?{rep:2,msg:{tr:'Sakin, net bir açıklama. Tartışma birkaç günde söndü.',en:'Calm and clear. The argument burned out in days.'}}
+                    :{rep:-3,msg:{tr:'Açıklama yeni bir tartışma başlattı. Konuşmasan daha iyiydi.',en:'The statement started a new argument. Silence would have been cheaper.'}}},
+  {t:{tr:'Sessiz kal',en:'Say nothing'},
+   eff:()=>({rep:-1,msg:{tr:'Bir süre üstüne gittiler, sonra unuttular. Küçük bir iz kaldı.',
+                         en:'They kept at it for a while, then moved on. A small mark stayed.'}})},
+  {t:{tr:'Güvenlik tut',en:'Hire security'},
+   eff:()=>({cash:-45,msg:{tr:'Bir süre gölge gibi peşinde biri oldu. Rahat ama pahalı.',
+                           en:'Someone shadowed you for a few weeks. Comfortable, and costly.'}})}]},
+
+{id:'agencyBuyout',w:5,when:()=>S.rep>=40,
+ ttl:()=>({tr:'Satın alma teklifi',en:'A buyout offer'}),
+ txt:()=>({tr:'Büyük bir ajans seni bünyesine katmak istiyor. Rakam ciddi — ama masa artık senin masan olmayacak.',
+           en:'A major agency wants to absorb you. The number is serious — but the table stops being yours.'}),
+ opts:[
+  {t:{tr:'Sat ve onlara katıl',en:'Sell up and join them'},
+   eff:()=>({cash:Math.round(600+S.rep*22),ag:{comm:-0.03},
+             msg:{tr:'Para bir kerede geldi. Bundan sonra her anlaşmadan onların da payı var.',
+                  en:'The money landed at once. From now on they take a slice of every deal.'}})},
+  {t:{tr:'Ortak ol, bağımsız kal',en:'Partner up, stay independent'},
+   eff:()=>({cash:Math.round(220+S.rep*8),ag:{cap:1,cost:0.15},
+             msg:{tr:'Sermayeleri, senin adın. Daha fazla oyuncu taşıyabilirsin — ofis de büyüdü.',
+                  en:'Their capital, your name. You can carry more players — and the office got bigger.'}})},
+  {t:{tr:'Reddet',en:'Decline'},
+   eff:()=>({rep:3,msg:{tr:'Hayır dedin ve bu duyuldu. Tek başına ayakta durabilen bir isimsin.',
+                        en:'You said no, and it was noticed. You\'re a name that stands on its own.'}})}]},
+
+{id:'officeMove',w:8,sz:'s',when:()=>S.rep>=20,
+ ttl:()=>({tr:'Yeni ofis',en:'A bigger office'}),
+ txt:()=>({tr:'İş büyüdü, ekip sığmıyor. Şehrin daha görünür bir yerinde bir yer tutabilirsin.',
+           en:'The work has grown and the team doesn\'t fit. You could take a place somewhere more visible.'}),
+ opts:[
+  {t:{tr:'Taşın',en:'Move'},
+   eff:()=>({cash:-130,ag:{cap:1,cost:0.25},
+             msg:{tr:'Artık insanları ağırlayabileceğin bir yerin var. Kirası da öyle.',
+                  en:'You have somewhere to receive people now. The rent reflects it.'}})},
+  {t:{tr:'Ekip uzaktan çalışsın',en:'Let the team work remotely'},
+   eff:()=>({ag:{cost:-0.10},msg:{tr:'Kimse ofise gelmiyor, kimse de şikâyet etmiyor. Gider düştü.',
+                                  en:'Nobody comes in, nobody complains. Overheads dropped.'}})},
+  {t:{tr:'Şimdilik burası yeter',en:'This will do for now'},
+   eff:()=>({msg:{tr:'Ertelendi. Kutular hâlâ koridorda.',en:'Postponed. The boxes are still in the corridor.'}})}]},
 
 {id:'youngAgent',w:5,
  ttl:()=>({tr:'Yanına biri isteniyor',en:'Someone wants to learn from you'}),
@@ -3340,9 +3738,11 @@ const EVENTS=[
    eff:()=>({msg:{tr:'Kibarca reddettin. İşine odaklandın.',en:'You declined politely and got back to work.'}})}]}
 ];
 /* ================= MOTOR ================= */
-function evEligible(){
+function evSmall(e){return e.sz==='s';}
+function evEligible(smallOnly){
   const cl=S.clients.map(byId).filter(Boolean);
   return EVENTS.filter(e=>{
+    if(smallOnly&&!evSmall(e))return false;
     if(e.need==='client'&&!cl.length)return false;
     if(!e.when)return true;
     return cl.some(p=>{try{return e.when({p,tm:teamOf(p)});}catch(x){return false;}});
@@ -3353,7 +3753,10 @@ function rollEvent(){
   if(!S.agent)return null;
   if((S.evNext||0)>(S.tw||0))return null;
   if(RF()>=EV_CHANCE)return null;
-  const pool=evEligible();
+  /* Son büyük olayın üstünden yeterli zaman geçmediyse bu hafta yalnızca küçükler çıkar. */
+  const smallOnly=(S.evBig||0)+EV_BIGGAP>(S.tw||0);
+  let pool=evEligible(smallOnly);
+  if(!pool.length&&smallOnly)pool=evEligible(false);
   if(!pool.length)return null;
   let tot=pool.reduce((s,e)=>s+e.w,0),x=RF()*tot,ev=pool[pool.length-1];
   for(const e of pool){x-=e.w;if(x<=0){ev=e;break;}}
@@ -3363,7 +3766,8 @@ function rollEvent(){
     if(!cands.length)return null;
     pid=cands[R(0,cands.length-1)].id;
   }
-  S.evNext=(S.tw||0)+EV_GAP+R(0,3);
+  S.evNext=(S.tw||0)+EV_GAP+R(0,1);
+  if(!evSmall(ev))S.evBig=(S.tw||0);
   return {id:ev.id,pid};
 }
 function evById(id){return EVENTS.find(e=>e.id===id);}
@@ -3371,13 +3775,112 @@ function evById(id){return EVENTS.find(e=>e.id===id);}
 function applyEff(r,c){
   const out=[];
   if(r.cash){S.cash=Math.round((S.cash+r.cash)*10)/10;out.push({k:'cash',v:r.cash});}
-  if(r.rep){S.rep=clamp(S.rep+r.rep,0,100);out.push({k:'rep',v:r.rep});}
+  if(r.rep){repEvent(r.rep);out.push({k:'rep',v:r.rep});}
   if(c.p){
     if(r.morale){moraleEvent(c.p,r.morale);out.push({k:'morale',v:r.morale});}
     if(r.trust){trustEvent(c.p,r.trust);out.push({k:'trust',v:r.trust});}
     if(r.form){c.p.form=stat(c.p.form+r.form,5);out.push({k:'form',v:r.form});}
+    /* oyuncuya iliştirilen kalıcı bayrak (şimdilik: geleceği bir fona satıldı) */
+    if(r.flag)c.p[r.flag]=1;
   }
+  /* Ajansın kalıcı değiştiricileri: komisyon oranı, müşteri kapasitesi, gider katsayısı.
+     Kalıcı oldukları için ekranda ayrıca gösterilir (bkz. evChoose). */
+  if(r.ag){S.ag=S.ag||{};
+    Object.keys(r.ag).forEach(k=>{S.ag[k]=+((S.ag[k]||0)+r.ag[k]).toFixed(3);out.push({k:'ag_'+k,v:r.ag[k]});});}
   return out;
+}
+
+/* js/skills.js — yetenek ağacı.
+   Yetenek puanı itibardan gelir: her SK_PER itibar bir puan. Puanlar harcandıkça
+   S.skills içine yazılır; etkiler tek bir yardımcıdan (skillBonus) okunur, böylece
+   yeni yetenek eklemek için sadece SKILLS dizisine kayıt yazmak yeterli.
+
+   Yeni yetenek eklerken:
+     id     : benzersiz kısa ad
+     br     : dal ('neg' | 'scout' | 'biz')
+     tier   : 1..3 — bir üst kademe, alt kademe alınmadan açılmaz
+     cost   : kaç puan
+     eff    : {anahtar: değer} — skillBonus(anahtar) bunları toplar
+   Kullanılan anahtarlar: comm (komisyon oranı), neg (pazarlık kabul şansı),
+   trust (güven kazancı çarpanı), pitch (imza şansı), scout (keşif indirimi),
+   cost (haftalık gider indirimi), cap (müşteri kapasitesi), val (değer artışı). */
+
+const SK_PER=10;                 // her 10 itibar → 1 yetenek puanı
+const SK_BRANCH=[
+  ['neg',  {tr:'Masa',   en:'The Table'},   {tr:'Pazarlık, sözleşme ve ilişki.',      en:'Negotiation, contracts and relationships.'}],
+  ['scout',{tr:'Saha',   en:'The Field'},   {tr:'Keşif ağı, yetenek bulma ve gelişim.',en:'Scouting, spotting talent and development.'}],
+  ['biz',  {tr:'Ajans',  en:'The Agency'},  {tr:'Para, gider ve kapasite.',            en:'Money, overheads and capacity.'}]
+];
+const SKILLS=[
+/* --- MASA --- */
+{id:'neg1',br:'neg',tier:1,cost:1,eff:{neg:0.06},
+ n:{tr:'Hazırlıklı Git',en:'Come Prepared'},
+ d:{tr:'Masaya rakamlarla oturursun. Sözleşme görüşmelerinde kabul şansı +%6.',
+    en:'You arrive with the numbers. +6% acceptance in contract talks.'}},
+{id:'neg2',br:'neg',tier:2,cost:2,eff:{trust:0.35},
+ n:{tr:'Sözünü Tutan Adam',en:'A Man of His Word'},
+ d:{tr:'Oyuncular sana daha çabuk ısınır. Kazanılan güvenin %35 fazlası yazılır.',
+    en:'Players warm to you faster. Trust you earn counts 35% more.'}},
+{id:'neg3',br:'neg',tier:3,cost:3,eff:{neg:0.08,comm:0.02},
+ n:{tr:'Odadaki En İyi',en:'Best in the Room'},
+ d:{tr:'Kabul şansı +%8 ve komisyon oranın +2 puan.',
+    en:'+8% acceptance and +2 points on your commission rate.'}},
+/* --- SAHA --- */
+{id:'sco1',br:'scout',tier:1,cost:1,eff:{scout:0.20},
+ n:{tr:'Tanıdık Ağı',en:'People Who Owe You'},
+ d:{tr:'Keşif ağı kurmak %20 daha ucuz.',en:'Building a scouting network costs 20% less.'}},
+{id:'sco2',br:'scout',tier:2,cost:2,eff:{pitch:0.07},
+ n:{tr:'Doğru Kapıyı Çal',en:'Knock on the Right Door'},
+ d:{tr:'Temsilcilik görüşmelerinde imza şansı +%7.',en:'+7% chance in representation meetings.'}},
+{id:'sco3',br:'scout',tier:3,cost:3,eff:{val:0.08},
+ n:{tr:'Vitrine Çıkar',en:'Put Him in the Window'},
+ d:{tr:'Müşterilerini doğru maçlarda gösterirsin: piyasa değerleri %8 daha yüksek.',
+    en:'You get your clients seen in the right games — their market value runs 8% higher.'}},
+/* --- AJANS --- */
+{id:'biz1',br:'biz',tier:1,cost:1,eff:{cost:0.20},
+ n:{tr:'Sıkı Bütçe',en:'Lean Office'},
+ d:{tr:'Haftalık giderin %20 azalır.',en:'Your weekly overhead drops 20%.'}},
+{id:'biz2',br:'biz',tier:2,cost:2,eff:{cap:1},
+ n:{tr:'Ortak Al',en:'Take On a Partner'},
+ d:{tr:'Bir müşteri daha taşıyabilirsin.',en:'You can carry one more client.'}},
+{id:'biz3',br:'biz',tier:3,cost:3,eff:{comm:0.02,cost:0.15},
+ n:{tr:'Adın Yeter',en:'Your Name Is Enough'},
+ d:{tr:'Komisyon oranın +2 puan, giderin %15 daha azalır.',
+    en:'+2 points on your commission rate and 15% less overhead.'}}
+];
+/* ===== puan muhasebesi ===== */
+function skillsTaken(){return (S&&S.skills)||[];}
+/* Kazanılan puan ulaşılan en yüksek itibardan sayılır: bir kez hak ettiğin puan
+   sonradan itibar kaybetsen de elinden alınmaz. Alt sınır harcanan puandır —
+   repMax'ın olmadığı eski kayıtlarda bile kimse puan borcuna düşmesin. */
+function skillEarned(){
+  if(!S)return 0;
+  return Math.max(Math.floor(Math.max(S.rep||0,S.repMax||0)/SK_PER),skillSpent());
+}
+function skillSpent(){return skillsTaken().reduce((s,id)=>{const k=SKILLS.find(x=>x.id===id);return s+(k?k.cost:0);},0);}
+function skillPoints(){return skillEarned()-skillSpent();}
+function hasSkill(id){return skillsTaken().indexOf(id)>=0;}
+/* Bir kademe, aynı daldaki bir alt kademe alınmadan açılmaz. */
+function skillLocked(sk){
+  if(sk.tier===1)return null;
+  const prev=SKILLS.filter(x=>x.br===sk.br&&x.tier===sk.tier-1);
+  return prev.some(x=>hasSkill(x.id))?null:'tier';
+}
+function skillBuy(id){
+  const sk=SKILLS.find(x=>x.id===id);
+  if(!sk||hasSkill(id))return;
+  if(skillLocked(sk)){toast(t('skLockedT'));return;}
+  if(skillPoints()<sk.cost){toast(t('skNoPoints'));return;}
+  S.skills=skillsTaken().concat([id]);
+  toast(t('skUnlocked').replace('{n}',sk.n[L]));
+  save();render();
+}
+/* Etkilerin tek okuma noktası — oyunun geri kalanı buradan geçer. */
+function skillBonus(key){
+  return skillsTaken().reduce((s,id)=>{
+    const k=SKILLS.find(x=>x.id===id);
+    return s+((k&&k.eff&&k.eff[key])||0);
+  },0);
 }
 
 /* js/sfx.js — arayüz sesi.
@@ -3445,14 +3948,33 @@ if(typeof document!=='undefined'&&document.addEventListener){
 
 /* js/actions.js — oyuncu aksiyonları: sözleşme pazarlığı, transfer teklifleri, temsilcilik görüşmesi, keşif satın alma */
 /* ================= NEGOTIATION ================= */
+/* Son 5 maçın ortalama reytingi kulübün cömertliğini doğrudan belirler:
+   iyi oynayan zam alır, kötü oynayan almaz. 5 maçı dolmamışsa nötr. */
+function negPerf(p){
+  const l5=last5Avg(p);
+  if(!l5)return 1;
+  return clamp(1+(l5-6.80)*0.16,0.88,1.40);
+}
 function clubMaxWage(p){
   const tm=teamOf(p);
   /* Kulübün cömertliği görüşmenin gerekçesine bağlı: sözleşmesi biten oyuncuyu
      kaybetmemek için para verir, formda olanı ödüllendirir, düşük maaşlıyı hizaya
      çeker. Gerekçesiz masaya oturmaz zaten (bkz. renewBlock). */
   const reason=renewReason(p);
-  const lever=reason==='expiring'?1.10:reason==='form'?1.04:reason==='underpaid'?0.98:0.88;
-  return marketWage(p.r)*(0.85+(p.form-50)/250+(S.rep/500))*(0.8+tm.bud*0.35)*lever;
+  const lever=reason==='expiring'?1.12:reason==='form'?1.10:reason==='underpaid'?1.02:0.90;
+  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p);
+  /* Yenileme masasında kulüp mevcut maaşın altını teklif etmez — kimse zam
+     görüşmesine indirim beklentisiyle oturmaz. İstisnası yaşlanan oyuncu:
+     30'unu geçmişse kulübün eli rahatlar, 32'yi geçmişse kesinti isteyebilir. */
+  const floor=p.age<=30?1.06:p.age<=32?1.00:0.92;
+  return Math.max(base,p.wage*floor);
+}
+/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler. */
+function negChance(p,wage,patience){
+  const ratio=wage/negCtx.max;
+  const trustBonus=(trustOf(p)-55)/600;
+  return clamp(clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*patience/100)
+               +S.rep/500+trustBonus+skillBonus('neg'),0,1);
 }
 function openNeg(pid){
   const p=byId(pid);
@@ -3460,15 +3982,22 @@ function openNeg(pid){
   if(blk==='pending'){toast(t('contractPendingT'));return;}
   if(blk==='cooldown'){toast(t('renewCdMsg').replace('{w}',renewCd(p)));return;}
   if(blk==='noreason'){toast(t('renewNoReason'));return;}
-  negCtx={pid,round:1,max:clubMaxWage(p),patience:100,wage:Math.round(marketWage(p.r)),years:3,counter:null,
-    reason:renewReason(p)};
+  const max=clubMaxWage(p);
+  /* Açılış talebi kulübün ödeyebileceğinin biraz altında: masaya gerçekçi bir
+     rakamla oturursun, pazarlık payı yukarı doğru kalır. Formda bir oyuncuda bu
+     rakam ciddi bir zamdır; 33'ünü geçmiş oyuncuda kesinti olabilir — kulüpler
+     de öyle davranır. */
+  negCtx={pid,round:1,max,patience:100,wage:Math.max(1,Math.round(max*0.95)),
+    years:3,counter:null,reason:renewReason(p)};
   renderNeg();
 }
 function renderNeg(){
   const p=byId(negCtx.pid),tm=teamOf(p);
-  const ratio=negCtx.wage/negCtx.max;
-  const mood=clamp(Math.round(140-ratio*100)*negCtx.patience/100,0,100);
+  const mood=Math.round(negChance(p,negCtx.wage,negCtx.patience)*100);
   const mc=mood>60?'var(--acc)':mood>30?'var(--warn)':'var(--bad)';
+  /* Kaydırıcı sınırları: aşağıda mevcut maaş, yukarıda kabul şansının sıfırlandığı yer */
+  const sMin=Math.max(1,Math.floor(Math.min(p.wage,negCtx.max)*0.9));
+  const sMax=Math.max(sMin+2,Math.ceil(negCtx.max*1.6));
   openModal(`
    <div class="row">${tmBadge(tm,42)}
      <div style="flex:1;min-width:0"><h2>${t('negotiate')}</h2>
@@ -3486,7 +4015,7 @@ function renderNeg(){
          <div class="num" style="font-size:15px;font-weight:800;color:var(--acc);margin-top:2px">${fmtK(negCtx.wage)}<span style="font-size:10px;opacity:.7">/${t('wk')}</span></div>
        </div>
      </div>
-     <input type="range" min="${Math.round(p.wage*0.9)}" max="${Math.round(negCtx.max*1.8)}" value="${negCtx.wage}"
+     <input type="range" min="${sMin}" max="${sMax}" value="${clamp(negCtx.wage,sMin,sMax)}"
         oninput="negCtx.wage=+this.value;renderNeg()">
      <div style="margin-top:12px"><b style="font-size:12.5px">${t('contractLen')}: <span class="num">${negCtx.years} ${t('yrs')}</span></b>
        <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()"></div>
@@ -3510,9 +4039,8 @@ function negSubmit(){
   const ratio=negCtx.wage/negCtx.max;
   /* accepting the club's own counter (or less) always seals the deal */
   const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02);
-  /* Sana güvenen oyuncu masada arkanda durur; güvenmeyen kendi hesabını yapar. */
-  const trustBonus=(trustOf(p)-55)/600;
-  const acc=meetsCounter?1:clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*negCtx.patience/100)+S.rep/500+trustBonus;
+  /* Ekrandaki çubukla birebir aynı hesap — gördüğün oran gerçek oran. */
+  const acc=meetsCounter?1:negChance(p,negCtx.wage,negCtx.patience);
   if(RF()<acc){
     /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar */
     S.pendC=S.pendC||[];
@@ -3525,7 +4053,9 @@ function negSubmit(){
   } else {
     negCtx.round++;negCtx.patience-=30;
     if(negCtx.round>3||ratio>1.7){
-      S.rep=clamp(S.rep-2,0,100);p.morale=clamp(p.morale-8,0,100);
+      /* Koptuktan sonra kulüp bir süre masaya dönmez. Bekleme olmasaydı oyuncu
+         her hafta yeniden deneyip eninde sonunda kabul ettirirdi. */
+      repEvent(-1.5);p.morale=clamp(p.morale-8,0,100);p.rnw=(S.tw||0)+14;
       toast(t('negFail'));closeModal();save();render();
     } else {
       const counter=Math.round(negCtx.max*(0.82+RF()*0.12));
@@ -3567,10 +4097,10 @@ function openTransfer(pid){
     if(tm.id===p.team)return false;
     /* bonservissiz oyuncuya kapı daha geniş: kulübün ödeyeceği bir bedel yok */
     if(free)return p.r>=teamStr(tm.id)-9-potBonus&&RF()<0.62+(p.form-50)/120;
-    return p.r>=teamStr(tm.id)-4-potBonus&&tm.bud*12>=marketValue(p.r)*0.5&&RF()<0.5+(p.form-50)/120;
+    return p.r>=teamStr(tm.id)-4-potBonus&&tm.bud*12>=valueOf(p)*0.5&&RF()<0.5+(p.form-50)/120;
   }).sort(()=>RF()-0.5).slice(0,6);
   if(!buyers.length){openModal(`<h2>${t('offerClubs')}</h2><div class="empty">${t('noInterest')}</div>`);return;}
-  const v=marketValue(p.r);
+  const v=valueOf(p);
   trSel=new Set();
   openModal(`
    <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${free?t('faSub'):t('value')+': '+fmtM(v)}</div>
@@ -3666,11 +4196,14 @@ function doTransfer(p,b,fee,quiet,terms){
   delete p.freeFor;
   /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
   const rate=commissionRate();
-  const cut=wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate));
-  const repGain=Math.round(2+Math.max(0,(b.str-oldTm.str)/4));
+  /* Geleceğini bir fona sattıysan (bkz. tpoOffer olayı) bu satıştan sana pay yok. */
+  const cut=p.tpo?0:(wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate)));
+  if(p.tpo)delete p.tpo;
+  const repGain=0.8+Math.max(0,(b.str-oldTm.str)/8);
   /* ödeme planı: komisyon taksitle gelir */
   const plan=terms.pay||1;
-  if(plan===1)S.cash+=cut;
+  if(!cut){/* fon aldı, sana bir şey kalmadı */}
+  else if(plan===1)S.cash+=cut;
   else{
     const part=Math.max(1,Math.round(cut/plan));
     S.cash+=part;
@@ -3679,10 +4212,10 @@ function doTransfer(p,b,fee,quiet,terms){
   }
   /* gol bonusu: eşik ne kadar yüksekse pay o kadar büyük */
   if(terms.gb)(S.deals=S.deals||[]).push({pid:p.id,tid:b.id,goals:terms.gb,
-    amt:Math.round(marketValue(p.r)*1000*(0.10+(terms.gb-10)*0.012)),se:S.season});
+    amt:Math.round(valueOf(p)*1000*(0.10+(terms.gb-10)*0.012)),se:S.season});
   /* sonraki satıştan pay klozu */
   if(terms.so)p.so={pct:terms.so};
-  S.rep=clamp(S.rep+repGain,0,100);
+  repEvent(repGain);
   pushNews('transfer',{n:p.n,pid:p.id,a:old,aid:oldTm.id,b:b.n,bid:b.id,f:fmtM(fee),k:fmtK(cut)},'good');
   if(!quiet){toast(t('transferDone'));closeModal();save();render();}
 }
@@ -3803,21 +4336,21 @@ function leaveMeeting(){
   closeModal();save();render();
 }
 function pitchCost(p){return 10+Math.round(Math.max(0,p.r-65)*2);}
-function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022,0.08,0.95);}
+function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch'),0.08,0.95);}
 function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
   p.agent='you';p.ignored=0;
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
   if(!S.clients.includes(p.id))S.clients.push(p.id);
-  S.rep=clamp(S.rep+1,0,100);
+  repEvent(0.4);
   pushNews('sign',{n:p.n,pid:p.id},'good');
   toast(t('pitchOk'));save();render();
 }
 function releaseClient(pid){
   const p=byId(pid);
   p.agent=null;S.clients=S.clients.filter(c=>c!==pid);
-  S.rep=clamp(S.rep-1,0,100);
+  repEvent(-0.8);
   save();render();
 }
 function inboxAction(i,yes){
@@ -4138,8 +4671,8 @@ dash(){
       <span style="color:${net>=0?'var(--acc)':'var(--bad)'}">· ${t('netLbl')} ${net>=0?'+':'−'}${fmtK(Math.abs(net))}</span>
     </div>
     <div class="agGrid">
-      <div class="agCell"><div class="v" style="color:var(--gold)">${S.rep}</div><div class="l">${t('rep')}</div>
-        <div class="repbar"><div style="width:${S.rep}%"></div></div></div>
+      <div class="agCell"><div class="v" style="color:var(--gold)">${Math.round(S.rep)}</div><div class="l">${t('rep')}</div>
+        <div class="repbar"><div style="width:${Math.round(S.rep)}%"></div></div></div>
       <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
       <div class="agCell"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
     </div>
@@ -4406,6 +4939,39 @@ team(id){
     return `<div class="sect" style="margin:16px 2px 8px">${t(lk)}</div>${listWrap(ps.map(p=>playerRow(p,{noBadge:true})).join(''))}`;
   }).join('')}`;
 },
+skills(){
+  const pts=skillPoints(), earned=skillEarned(), spent=skillSpent();
+  const card=sk=>{
+    const owned=hasSkill(sk.id), locked=skillLocked(sk), afford=pts>=sk.cost;
+    const state=owned?'owned':locked?'locked':afford?'open':'poor';
+    const col=owned?'var(--acc)':locked||!afford?'var(--txt3)':'var(--txt)';
+    return `<div class="pitem${owned?' mine':''}" style="align-items:flex-start;${owned||locked||!afford?'':'cursor:pointer'}"
+      ${owned||locked||!afford?'':`onclick="skillBuy('${sk.id}')"`}>
+      <div style="width:26px;flex-shrink:0;text-align:center;font-weight:800;font-size:11px;color:${col};padding-top:2px">
+        ${owned?'✓':locked?'🔒'.length?'—':'':sk.cost}</div>
+      <div class="pinfo">
+        <div class="pname" style="color:${col}">${sk.n[L]}</div>
+        <div class="psub" style="white-space:normal;line-height:1.45">${sk.d[L]}</div>
+        ${locked?`<div class="psub" style="color:var(--txt3)">${t('skTierLock')}</div>`:''}
+      </div>
+      ${owned?`<span class="tag g">${t('skOwned')}</span>`:`<span class="faint" style="font-size:10.5px">${sk.cost} ${t('skPt')}</span>`}
+    </div>`;
+  };
+  return `<h2 class="sec">${t('skills')}</h2>
+  <div class="card">
+    <div class="grid3">
+      <div class="stat"><div class="v" style="color:${pts>0?'var(--acc)':''}">${pts}</div><div class="l">${t('skAvail')}</div></div>
+      <div class="stat"><div class="v">${spent}</div><div class="l">${t('skSpent')}</div></div>
+      <div class="stat"><div class="v">${earned}</div><div class="l">${t('skTotal')}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="sub">${t('skHint').replace('{n}',SK_PER)}</div>
+  </div>
+  ${SK_BRANCH.map(([br,nm,ds])=>`
+    <div class="sect" style="margin:16px 2px 4px">${nm[L]}</div>
+    <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
+    ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
+},
 settings(){
   const cur=themeOf();
   /* önizleme karesi: temanın zemin / yüzey / vurgu renkleri.
@@ -4490,7 +5056,8 @@ player(id){
     <div class="divider"></div>
     <div class="grid3">
       <div class="stat"><div class="v" style="color:${rtAvg?(rtAvg>=7.2?'var(--acc)':rtAvg>=6.6?'var(--warn)':'var(--bad)'):'var(--txt3)'}">${rtAvg?rtAvg.toFixed(1):'—'}</div><div class="l">${t('avgRt')}</div></div>
-      <div class="stat"><div class="v">${fmtM(marketValue(p.r))}</div><div class="l">${t('value')}</div></div>
+      <div class="stat"><div class="v">${fmtM(valueOf(p))}${(()=>{const m=valueMult(p);
+        return m>=1.08?'<span style="color:var(--acc);font-size:11px"> ▲</span>':m<=0.93?'<span style="color:var(--bad);font-size:11px"> ▼</span>':'';})()}</div><div class="l">${t('value')}</div></div>
       <div class="stat"><div class="v">${p.pot}</div><div class="l">Pot</div></div>
     </div>
     <div class="divider"></div>
@@ -4576,13 +5143,14 @@ contract:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/></svg>',
 alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></svg>',
 gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>',
+skills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/></svg>',
 settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
 function emptyState(icon,title,sub){
   return `<div class="estate">${ICONS[icon]||ICONS.market}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;
 }
-const NAVS=['dash','clients','market','league','inbox'];
+const NAVS=['dash','clients','market','skills','league','inbox'];
 /* Kurulumda önce kıta, sonra ülke seçiliyor. Kıta değişince yalnızca ülke listesi
    yeniden yazılıyor — tam render yapsaydık kullanıcının yazdığı ad silinirdi. */
 let setupCon='eu';
@@ -4640,11 +5208,12 @@ function render(){
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
+  else if(c.v==='skills')t1=t('skills');
   else if(c.v!=='dash')t1=t(c.v);
   document.getElementById('hT1').textContent=t1;
   document.getElementById('hT2').textContent=t2;
   document.getElementById('hCash').textContent=fmtK(S.cash);
-  document.getElementById('hRep').textContent=S.rep;
+  document.getElementById('hRep').textContent=Math.round(S.rep);
   document.getElementById('hCashL').textContent=t('cash');
   document.getElementById('hRepL').textContent=t('rep');
   const bs=document.getElementById('btnSet');
@@ -4692,10 +5261,15 @@ function evChoose(i){
   const r=opt.eff(c)||{};
   const changes=applyEff(r,c);
   S.evCur=null;
-  const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form')};
+  const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form'),
+             ag_comm:t('commission'),ag_cap:t('capacity'),ag_cost:t('weeklyCost')};
   const chips=changes.map(x=>{
-    const good=x.v>0, val=x.k==='cash'?fmtK(Math.abs(x.v)):Math.abs(x.v);
-    return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${good?'+':'−'}${val}</span>`;
+    /* Kalıcı ajans değişiklikleri oran olarak yazılır; giderde artış kötü, azalış iyi. */
+    const isPct=x.k==='ag_comm'||x.k==='ag_cost';
+    const good=x.k==='ag_cost'?x.v<0:x.v>0;
+    const val=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?'%'+Math.round(Math.abs(x.v)*100):Math.abs(x.v);
+    const perm=x.k.indexOf('ag_')===0?' · '+t('permanent'):'';
+    return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${x.v>0?'+':'−'}${val}${perm}</span>`;
   }).join('');
   openModal(`<h2>${ev.ttl(c)[L]}</h2>
     <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>

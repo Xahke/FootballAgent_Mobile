@@ -2,3 +2,19 @@ node_modules/
 www/
 android/
 package-lock.json
+
+# --- public repo: bunlar asla commit'lenmemeli ---
+# Android imza anahtarı ve parolaları. Sızarsa uygulamanın sahte sürümü imzalanabilir.
+*.jks
+*.keystore
+key.properties
+keystore.properties
+local.properties
+
+# Reklam / analitik yapılandırmaları (AdMob, Firebase) — uygulama kimliği içerir
+google-services.json
+GoogleService-Info.plist
+
+# Ortam değişkenleri
+.env
+.env.*

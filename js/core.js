@@ -18,9 +18,34 @@ const marketValue=r=>{
   const v=2*Math.pow(1.145,r-60);
   return v<10?+v.toFixed(1):Math.round(v);   // küçük değerlerde ondalık, büyükte tam sayı
 };
+/* ===== oyuncunun güncel piyasa değeri =====
+   Güç tek başına yetmiyor: aynı güçte iki oyuncudan sezonu domine eden daha pahalı,
+   sönük geçen daha ucuz olmalı. Bu yüzden her oyuncunun bir değer çarpanı var ve
+   belirli maç aralıklarıyla sahadaki işine göre güncelleniyor (bkz. updateValue).
+
+   Beklenen puan oyuncunun seviyesinden türetiliyor — yoksa iyi oyuncular zaten
+   yüksek puan aldığı için sürekli değerlenir, kötüler sürekli değer kaybederdi. */
+const VAL={every:12, gain:0.18, lo:0.62, hi:1.60, revert:0.70};
+function expectedRating(r){return 6.10+(r-50)*0.045;}
+function valueMult(p){return p&&p.vm?p.vm:1;}
+function valueOf(p){const v=marketValue(p.r)*valueMult(p)*(1+(p.agent==='you'?skillBonus('val'):0));return +v.toFixed(v<10?1:0);}
+/* Her VAL.every maçta bir çalışır. Dönüşü: değer arttı mı azaldı mı (bildirim için). */
+function updateValue(p){
+  if(!p.rtN||p.rtN<VAL.every)return 0;
+  if((p.vmAt||0)+VAL.every>p.rtN)return 0;
+  p.vmAt=p.rtN;
+  const avg=p.rtSum/p.rtN;
+  const diff=avg-expectedRating(p.r);
+  const before=valueMult(p);
+  p.vm=+clamp(before+diff*VAL.gain,VAL.lo,VAL.hi).toFixed(3);
+  return p.vm-before;
+}
 /* Menajerlik komisyonu itibara bağlıdır: adı olmayan menajer düşük oranla çalışır,
    aranan menajer masaya kendi oranını koyar. */
-function commissionRate(){return +(0.05+(S.rep/100)*0.10).toFixed(3);}
+/* Ajansın kalıcı değiştiricileri. Yetenek ağacından gelen bonusun yanında,
+   olaylarda verdiğin kararlar da buraya yazar (bkz. applyEff). */
+function agMod(k){return (S&&S.ag&&S.ag[k])||0;}
+function commissionRate(){return +clamp(0.05+(S.rep/100)*0.10+skillBonus('comm')+agMod('comm'),0.03,0.25).toFixed(3);}
 function commissionPct(){return Math.round(commissionRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
 function tmBadge(tm,size){
@@ -182,7 +207,7 @@ function simCups(){
       S.cupHist=S.cupHist||{};
       (S.cupHist[cp.c]=S.cupHist[cp.c]||[]).push({se:S.season,tid:champ.id});
       if(S.cupHist[cp.c].length>20)S.cupHist[cp.c].shift();
-      if(S.clients.some(id=>byId(id).team===champ.id))S.rep=clamp(S.rep+3,0,100);
+      if(S.clients.some(id=>byId(id).team===champ.id))repEvent(1.5);
     }
   });
 }
@@ -221,13 +246,31 @@ function freeAgents(){return S.players.filter(p=>p.team<0);}
 /* Moralin tek giriş noktası. Maç performansı, transferler, sözleşmeler ve ileride
    eklenecek olaylar hep buradan geçsin — böylece morali etkileyen her şey tek yerde
    sınırlanır ve dengelenebilir. */
+/* ===== itibar =====
+   Kariyer boyu süren tek ilerleme çizgisi: müşteri kalitesini, kapasiteni ve
+   komisyon oranını o belirliyor. Bu yüzden tırmanışın uzun olması gerekiyor.
+
+   Azalan verim: yükseldikçe aynı iş daha az getirir. Adı olmayan menajer için
+   orta seviye bir transfer olaydır; adı olan için rutindir. Kayıplar tam değerde
+   işler — skandal her seviyede aynı zarar. */
+const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
+function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
+function repEvent(delta,raw){
+  if(!delta)return S.rep;
+  const d=delta>0&&!raw?delta*repFactor():delta;
+  S.rep=stat(S.rep+d,0);
+  /* Ulaşılan en yüksek itibar ayrıca tutuluyor: yetenek puanları buradan sayılır,
+     yoksa itibar düştüğünde harcanmış puanlar borca dönüşürdü. */
+  if(S.rep>(S.repMax||0))S.repMax=S.rep;
+  return S.rep;
+}
 /* ===== güven =====
    Oyuncuyla aranızdaki ilişki. Moralden ayrı: moral kulübünden ve sahadan gelir,
    güven senden. Olaylar, tuttuğun sözler ve pazarlıklar burayı hareket ettirir. */
 function trustOf(p){return p&&p.trust===undefined?55:(p?p.trust:0);}
 function trustEvent(p,delta){
   if(!p)return;
-  p.trust=stat(trustOf(p)+delta,0);
+  p.trust=stat(trustOf(p)+(delta>0?delta*(1+skillBonus('trust')):delta),0);
   return p.trust;
 }
 function trustLabel(v){return v>=75?'trHigh':v>=55?'trGood':v>=35?'trMid':'trLow';}
@@ -255,10 +298,12 @@ function weeklyCost(){
   const office=1+S.rep*0.03;
   const admin=S.clients.length*0.6;
   const scouts=(S.known||[]).reduce((s,i)=>s+scoutCost(i)*0.0025,0);
-  return Math.round((office+admin+scouts)*10)/10;
+  const cut=1-clamp(skillBonus('cost'),0,0.6);
+  /* agMod('cost') olaylardan gelen kalıcı gider farkı: büyük ofis artırır, sıkı yönetim azaltır */
+  return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
 }
 function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
-function maxClients(){return 2+Math.floor(S.rep/18);}
+function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap');}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,
@@ -306,7 +351,7 @@ function honeymoon(p){return (p.hm||0)>(S.tw||0);} // fresh deal — content for
 /* serbest oyuncular herkese açıktır; keşif ağı yalnızca kulüplü oyuncular için geçerli */
 function knownLg(i){return i<0||(S.known||[]).includes(i);}
 function lgAvgStr(i){const ts=S.teams.filter(tm=>tm.lg===i);return ts.reduce((s,tm)=>s+tm.str,0)/ts.length;}
-function scoutCost(i){return Math.round(30+Math.max(0,lgAvgStr(i)-40)*12);} // K
+function scoutCost(i){return Math.round((30+Math.max(0,lgAvgStr(i)-40)*12)*(1-clamp(skillBonus('scout'),0,0.6)));} // K
 function scoutPending(i){return (S.scout||[]).find(x=>x.lg===i);}
 function createAgent(fn,ln,nat,ag){
   S.agent={fn,ln,nat,agency:ag||(ln+(L==='tr'?' Menajerlik':' Management'))};

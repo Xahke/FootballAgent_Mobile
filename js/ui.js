@@ -295,8 +295,8 @@ dash(){
       <span style="color:${net>=0?'var(--acc)':'var(--bad)'}">· ${t('netLbl')} ${net>=0?'+':'−'}${fmtK(Math.abs(net))}</span>
     </div>
     <div class="agGrid">
-      <div class="agCell"><div class="v" style="color:var(--gold)">${S.rep}</div><div class="l">${t('rep')}</div>
-        <div class="repbar"><div style="width:${S.rep}%"></div></div></div>
+      <div class="agCell"><div class="v" style="color:var(--gold)">${Math.round(S.rep)}</div><div class="l">${t('rep')}</div>
+        <div class="repbar"><div style="width:${Math.round(S.rep)}%"></div></div></div>
       <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
       <div class="agCell"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
     </div>
@@ -563,6 +563,39 @@ team(id){
     return `<div class="sect" style="margin:16px 2px 8px">${t(lk)}</div>${listWrap(ps.map(p=>playerRow(p,{noBadge:true})).join(''))}`;
   }).join('')}`;
 },
+skills(){
+  const pts=skillPoints(), earned=skillEarned(), spent=skillSpent();
+  const card=sk=>{
+    const owned=hasSkill(sk.id), locked=skillLocked(sk), afford=pts>=sk.cost;
+    const state=owned?'owned':locked?'locked':afford?'open':'poor';
+    const col=owned?'var(--acc)':locked||!afford?'var(--txt3)':'var(--txt)';
+    return `<div class="pitem${owned?' mine':''}" style="align-items:flex-start;${owned||locked||!afford?'':'cursor:pointer'}"
+      ${owned||locked||!afford?'':`onclick="skillBuy('${sk.id}')"`}>
+      <div style="width:26px;flex-shrink:0;text-align:center;font-weight:800;font-size:11px;color:${col};padding-top:2px">
+        ${owned?'✓':locked?'🔒'.length?'—':'':sk.cost}</div>
+      <div class="pinfo">
+        <div class="pname" style="color:${col}">${sk.n[L]}</div>
+        <div class="psub" style="white-space:normal;line-height:1.45">${sk.d[L]}</div>
+        ${locked?`<div class="psub" style="color:var(--txt3)">${t('skTierLock')}</div>`:''}
+      </div>
+      ${owned?`<span class="tag g">${t('skOwned')}</span>`:`<span class="faint" style="font-size:10.5px">${sk.cost} ${t('skPt')}</span>`}
+    </div>`;
+  };
+  return `<h2 class="sec">${t('skills')}</h2>
+  <div class="card">
+    <div class="grid3">
+      <div class="stat"><div class="v" style="color:${pts>0?'var(--acc)':''}">${pts}</div><div class="l">${t('skAvail')}</div></div>
+      <div class="stat"><div class="v">${spent}</div><div class="l">${t('skSpent')}</div></div>
+      <div class="stat"><div class="v">${earned}</div><div class="l">${t('skTotal')}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="sub">${t('skHint').replace('{n}',SK_PER)}</div>
+  </div>
+  ${SK_BRANCH.map(([br,nm,ds])=>`
+    <div class="sect" style="margin:16px 2px 4px">${nm[L]}</div>
+    <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
+    ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
+},
 settings(){
   const cur=themeOf();
   /* önizleme karesi: temanın zemin / yüzey / vurgu renkleri.
@@ -647,7 +680,8 @@ player(id){
     <div class="divider"></div>
     <div class="grid3">
       <div class="stat"><div class="v" style="color:${rtAvg?(rtAvg>=7.2?'var(--acc)':rtAvg>=6.6?'var(--warn)':'var(--bad)'):'var(--txt3)'}">${rtAvg?rtAvg.toFixed(1):'—'}</div><div class="l">${t('avgRt')}</div></div>
-      <div class="stat"><div class="v">${fmtM(marketValue(p.r))}</div><div class="l">${t('value')}</div></div>
+      <div class="stat"><div class="v">${fmtM(valueOf(p))}${(()=>{const m=valueMult(p);
+        return m>=1.08?'<span style="color:var(--acc);font-size:11px"> ▲</span>':m<=0.93?'<span style="color:var(--bad);font-size:11px"> ▼</span>':'';})()}</div><div class="l">${t('value')}</div></div>
       <div class="stat"><div class="v">${p.pot}</div><div class="l">Pot</div></div>
     </div>
     <div class="divider"></div>
@@ -733,13 +767,14 @@ contract:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/></svg>',
 alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></svg>',
 gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>',
+skills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/></svg>',
 settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
 function emptyState(icon,title,sub){
   return `<div class="estate">${ICONS[icon]||ICONS.market}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</div>`;
 }
-const NAVS=['dash','clients','market','league','inbox'];
+const NAVS=['dash','clients','market','skills','league','inbox'];
 /* Kurulumda önce kıta, sonra ülke seçiliyor. Kıta değişince yalnızca ülke listesi
    yeniden yazılıyor — tam render yapsaydık kullanıcının yazdığı ad silinirdi. */
 let setupCon='eu';
@@ -797,11 +832,12 @@ function render(){
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
+  else if(c.v==='skills')t1=t('skills');
   else if(c.v!=='dash')t1=t(c.v);
   document.getElementById('hT1').textContent=t1;
   document.getElementById('hT2').textContent=t2;
   document.getElementById('hCash').textContent=fmtK(S.cash);
-  document.getElementById('hRep').textContent=S.rep;
+  document.getElementById('hRep').textContent=Math.round(S.rep);
   document.getElementById('hCashL').textContent=t('cash');
   document.getElementById('hRepL').textContent=t('rep');
   const bs=document.getElementById('btnSet');
@@ -849,10 +885,15 @@ function evChoose(i){
   const r=opt.eff(c)||{};
   const changes=applyEff(r,c);
   S.evCur=null;
-  const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form')};
+  const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form'),
+             ag_comm:t('commission'),ag_cap:t('capacity'),ag_cost:t('weeklyCost')};
   const chips=changes.map(x=>{
-    const good=x.v>0, val=x.k==='cash'?fmtK(Math.abs(x.v)):Math.abs(x.v);
-    return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${good?'+':'−'}${val}</span>`;
+    /* Kalıcı ajans değişiklikleri oran olarak yazılır; giderde artış kötü, azalış iyi. */
+    const isPct=x.k==='ag_comm'||x.k==='ag_cost';
+    const good=x.k==='ag_cost'?x.v<0:x.v>0;
+    const val=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?'%'+Math.round(Math.abs(x.v)*100):Math.abs(x.v);
+    const perm=x.k.indexOf('ag_')===0?' · '+t('permanent'):'';
+    return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${x.v>0?'+':'−'}${val}${perm}</span>`;
   }).join('');
   openModal(`<h2>${ev.ttl(c)[L]}</h2>
     <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>
