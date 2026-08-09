@@ -1371,7 +1371,6 @@ pitchNo:'Oyuncu teklifini geri çevirdi.',full:'Müşteri kapasiten dolu.',noCas
 freeAgents:'Temsilcisi Olmayan Oyuncular',
 seasonEnd:'Sezon Bitti',champion:'Şampiyonlar',topScorer:'Gol Kralı',newSeason:'Yeni Sezon',
 expiring:'Sözleşme bitiyor',wantsNew:'Yeni sözleşme istiyor',wantsOut:'Transfer istiyor',
-reset:'Oyunu Sıfırla',resetQ:'Tüm ilerleme silinsin mi?',
 commission:'Komisyon',signBonus:'İmza bedeli payı',avgRating:'Güç',
   capacity:'Kapasite',weeklyCost:'Haftalık gider',permanent:'kalıcı',
 hasAgent:'Bu oyuncunun menajeri var.',myClient:'Müşterin',
@@ -1455,6 +1454,13 @@ settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
 transfersSub:'Bu ligin kulüplerini ilgilendiren son transferler.',feeL:'Bonservis',
+mainMenu:'Ana Menü',slotsLbl:'Kayıt Yuvaları',slotN:'Yuva {n}',slotEmpty:'Boş yuva',
+slotEmptyHint:'Yeni kariyer başlat',slotNew:'Yeni Kariyer',slotContinue:'Devam Et',
+slotDelete:'Sil',slotDeleteQ:'{n} yuvasındaki kariyer silinecek. Bu geri alınamaz. Emin misin?',
+slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynanan',
+toMenu:'Ana Menüye Dön',toMenuQ:'Ana menüye dönülsün mü? İlerlemen kaydedildi.',
+appSet:'Uygulama',careerSet:'Kariyer',menuSub:'Bir yuva seç ve devam et.',
+newCareerT:'Yeni Kariyer',deleteCareer:'Kariyeri Sil',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -1473,7 +1479,6 @@ pitchNo:'The player turned you down.',full:'Client roster is full.',noCash:'Not 
 freeAgents:'Unrepresented Players',
 seasonEnd:'Season Over',champion:'Champions',topScorer:'Top Scorer',newSeason:'New Season',
 expiring:'Contract expiring',wantsNew:'Wants a new contract',wantsOut:'Wants a transfer',
-reset:'Reset Game',resetQ:'Delete all progress?',
 commission:'Commission',signBonus:'Signing fee cut',avgRating:'Rating',
   capacity:'Capacity',weeklyCost:'Weekly overhead',permanent:'permanent',
 hasAgent:'This player already has an agent.',myClient:'Your client',
@@ -1557,6 +1562,13 @@ settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',
 transfersSub:'Recent moves involving clubs in this league.',feeL:'Fee',
+mainMenu:'Main Menu',slotsLbl:'Save Slots',slotN:'Slot {n}',slotEmpty:'Empty slot',
+slotEmptyHint:'Start a new career',slotNew:'New Career',slotContinue:'Continue',
+slotDelete:'Delete',slotDeleteQ:'The career in slot {n} will be deleted. This cannot be undone. Are you sure?',
+slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last played',
+toMenu:'Back to Main Menu',toMenuQ:'Return to the main menu? Your progress has been saved.',
+appSet:'App',careerSet:'Career',menuSub:'Pick a slot to continue.',
+newCareerT:'New Career',deleteCareer:'Delete Career',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 let L='tr';
@@ -1636,6 +1648,108 @@ valDown:p=>`${lkP(p.pid,p.n)} has fallen short of expectations; his value has sl
 released:p=>`${lkT(p.tid,p.c)} released ${lkP(p.pid,p.n)}. Your client is now without a club — find him a new one.`,
 inDebt:p=>`Your balance has gone negative. Weekly costs are ${p.c} — win clients or scale back your scouting network.`}
 };
+
+/* js/saves.js — kayıt yuvaları ve cihaz tercihleri.
+
+   Neden ayrı bir katman:
+
+   1) Ana menü üç yuvayı da özetlemek zorunda, ama tam kayıt ~7000 oyuncu tutuyor.
+      Menüyü her açışta üç kaydı da ayrıştırmak telefonda gözle görülür bir
+      bekleme demekti. Bu yüzden her yazışta küçük bir özet ayrı bir anahtara
+      düşüyor; menü yalnızca onu okuyor. Yuva sayısı artarsa maliyet değişmez.
+
+   2) Tema, dil ve ses artık kayıttan bağımsız. Ana menüde açık bir kariyer yok —
+      S null — ama Ayarlar oradan da açılabilmeli. Cihaza ait olan bu üç tercih
+      PREFS'e taşındı. Kariyere ait olanlar (hafta raporu, olaylar) S'de kaldı.
+
+   Eski tek kayıtlı sürümden gelenler 1. yuvaya devredilir; kimsenin ilerlemesi
+   silinmez. */
+const SLOTS=3;
+const LEGACYKEY='menajerSaveV9';        // tek kayıtlı sürümün anahtarı
+const SLOTKEY=n=>'menajerSaveV9s'+n;
+const METAKEY='menajerMetaV1';
+const PREFKEY='menajerPrefsV1';
+/* 0 = açık kariyer yok (ana menüdeyiz). save() nereye yazacağını buradan bilir. */
+let curSlot=0;
+/* Kullanıcı depolamayı kapatmış ya da kota dolmuş olabilir — hiçbiri oyunu
+   çökertmemeli, kayıt sessizce başarısız olur. */
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+function jparse(s){try{return JSON.parse(s);}catch(e){return null;}}
+/* ================= CİHAZ TERCİHLERİ ================= */
+let PREFS=jparse(lsGet(PREFKEY))||{};
+function savePrefs(){lsSet(PREFKEY,JSON.stringify(PREFS));}
+function pref(k,d){return PREFS[k]===undefined?d:PREFS[k];}
+function setPref(k,v){PREFS[k]=v;savePrefs();}
+/* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı */
+if(PREFS.lang)L=PREFS.lang;
+/* ================= YUVA ÖZETLERİ ================= */
+function readMeta(){return jparse(lsGet(METAKEY))||{};}
+function writeMeta(m){lsSet(METAKEY,JSON.stringify(m));}
+function allMeta(){return readMeta();}                 // menü tek okumayla dönsün
+function slotMeta(n){return readMeta()['s'+n]||null;}
+function slotUsed(n){return !!slotMeta(n);}
+function anySlot(){const m=readMeta();for(let n=1;n<=SLOTS;n++)if(m['s'+n])return true;return false;}
+/* Özet menüde gösterilen her şeyi taşır; tam kaydı açmaya gerek kalmaz.
+   totalWeeks() global S'yi okuduğu için burada fikstürden yeniden hesaplanıyor —
+   bu fonksiyon her zaman kendisine verilen duruma bakmalı. */
+function metaOf(st){
+  const tw=(st.fx&&st.fx.length)?Math.max.apply(null,st.fx.map(f=>f.length)):st.week;
+  return {agent:st.agent?(st.agent.fn+' '+st.agent.ln):'',
+          agency:st.agent?st.agent.agency:'',
+          season:st.season,week:Math.min(st.week,tw),
+          cash:st.cash,rep:Math.round(st.rep),
+          clients:(st.clients||[]).length,
+          ts:Date.now()};
+}
+/* ================= YUVA İŞLEMLERİ ================= */
+/* Kayıt biçimi eski sürümle aynı: {S,PID}. Yalnızca anahtar yuvaya göre değişiyor. */
+function validSave(d){return !!(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEAGUES.length);}
+function saveToSlot(n){
+  if(!n||typeof S==='undefined'||!S)return false;
+  if(!lsSet(SLOTKEY(n),JSON.stringify({S,PID})))return false;
+  const m=readMeta();m['s'+n]=metaOf(S);writeMeta(m);
+  return true;
+}
+function loadSlot(n){
+  const d=jparse(lsGet(SLOTKEY(n)));
+  if(!validSave(d)){
+    /* özet var ama kayıt bozuk/eksik: yuvayı boş göster, menü yalan söylemesin */
+    const m=readMeta();if(m['s'+n]){delete m['s'+n];writeMeta(m);}
+    return false;
+  }
+  S=d.S;PID=d.PID;curSlot=n;
+  /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
+  L=PREFS.lang||S.lang||'tr';
+  return true;
+}
+function deleteSlot(n){
+  lsDel(SLOTKEY(n));
+  const m=readMeta();delete m['s'+n];writeMeta(m);
+  if(curSlot===n){curSlot=0;S=null;}
+}
+/* ================= ESKİ KAYDIN DEVRİ =================
+   Tek kayıtlı sürümden güncelleyen oyuncu ana menüde kariyerini 1. yuvada bulur.
+   Yazma başarısız olursa eski anahtar silinmez — ilerleme kaybolmaktansa iki kez
+   denenmesi yeğdir. */
+function migrateLegacy(){
+  const raw=lsGet(LEGACYKEY);
+  if(!raw)return false;
+  if(lsGet(SLOTKEY(1))){lsDel(LEGACYKEY);return false;}   // yuva zaten dolu
+  const d=jparse(raw);
+  if(!validSave(d)){lsDel(LEGACYKEY);return false;}
+  if(!lsSet(SLOTKEY(1),raw))return false;
+  const m=readMeta();m.s1=metaOf(d.S);writeMeta(m);
+  /* Cihaz tercihleri o güne dek kaydın içindeydi; ilk kez dışarı taşınıyor. */
+  if(PREFS.theme===undefined&&d.S.theme)PREFS.theme=d.S.theme;
+  if(PREFS.lang===undefined&&d.S.lang)PREFS.lang=d.S.lang;
+  if(PREFS.sfxOn===undefined&&d.S.sfxOn!==undefined)PREFS.sfxOn=d.S.sfxOn;
+  savePrefs();
+  if(PREFS.lang)L=PREFS.lang;
+  lsDel(LEGACYKEY);
+  return true;
+}
 
 /* js/data.js — statik veri: isim havuzları, kıtalar, ülkeler, ligler, takımlar, kupalar */
 /* ================= NAME POOLS ================= */
@@ -2468,6 +2582,13 @@ function startCareer(){
   const nat=document.getElementById('sel_nat').value;
   const ag=(document.getElementById('inp_ag').value||'').trim();
   if(!fn||!ln){toast(t('fillName'));return;}
+  /* Dünya ancak burada kuruluyor: yuva seçilip ad girilene kadar ~7000 oyuncu
+     üretmenin anlamı yok, kurulumdan geri dönmek de bedelsiz olsun. */
+  curSlot=pendSlot||1;
+  newGame();
+  /* Yığın createAgent'tan önce ayarlanıyor — o kendi içinde render() çağırıyor ve
+     aksi halde kurulum formu bir kare boyunca oyun çerçevesiyle çizilirdi. */
+  stack=[{v:'dash'}];lastSig=null;
   createAgent(fn,ln,nat,ag);
 }
 function buyScout(i){
@@ -3907,7 +4028,12 @@ function audio(){
   try{AC=new Ctx();}catch(e){AC=false;return null;}
   return AC;
 }
-function sfxOn(){return typeof S!=='undefined'&&S&&S.sfxOn!==false;}
+/* Ses cihaz tercihi: ana menüde açık bir kariyer yokken de çalışmalı. Tercih hiç
+   yazılmamışsa bu değişiklikten önceki kayıtların ayarına düşülür. */
+function sfxOn(){
+  if(typeof PREFS!=='undefined'&&PREFS&&PREFS.sfxOn!==undefined)return PREFS.sfxOn!==false;
+  return typeof S!=='undefined'&&!!S&&S.sfxOn!==false;
+}
 /* Darbe bir kez üretilip saklanıyor; her dokunuşta yeniden hesaplanmasına gerek yok. */
 function clickBuffer(ac){
   if(BUF)return BUF;
@@ -4381,6 +4507,41 @@ function cur(){return stack[stack.length-1];}
 function navTo(v){stack=[{v}];render();}
 function pushV(v,id){stack.push({v,id});render();}
 function back(){if(stack.length>1){stack.pop();render();}}
+/* ================= ANA MENÜ =================
+   Kabuk (menü / yeni kariyer / menüden açılan ayarlar) ile oyun arasındaki tek
+   ayrım S: açık kariyer yoksa S null'dır. render() bunu görüp üst çubuğu ve alt
+   gezinmeyi kapatır, böylece "hangi ekrandayız" durumunu ayrıca tutmak gerekmez. */
+let pendSlot=0;                     // yeni kariyerin yazılacağı yuva
+function toMenu(){
+  if(curSlot&&S)saveToSlot(curSlot);
+  S=null;curSlot=0;pendSlot=0;
+  modalQueue=[];closeModal();
+  stack=[{v:'menu'}];lastSig=null;
+  render();
+}
+function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
+function openSlot(n){
+  if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
+  stack=[{v:'dash'}];lastSig=null;
+  render();
+  /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
+  if(S.evCur&&S.agent)showEvent(S.evCur);
+}
+function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
+function askDeleteSlot(n){
+  if(!confirm(t('slotDeleteQ').replace('{n}',n)))return;
+  deleteSlot(n);toast(t('slotDeleted'));render();
+}
+/* Oyun içinden silme: deleteSlot zaten S'yi ve curSlot'u boşaltıyor, bu yüzden
+   toMenu() çağrılmıyor — o kaydetmeye çalışıp silineni geri yazardı. */
+function askDeleteCareer(){
+  if(!curSlot)return;
+  if(!confirm(t('slotDeleteQ').replace('{n}',curSlot)))return;
+  deleteSlot(curSlot);
+  modalQueue=[];closeModal();
+  stack=[{v:'menu'}];lastSig=null;pendSlot=0;
+  toast(t('slotDeleted'));render();
+}
 /* ================= TEMALAR =================
    Her tema css/themes/*.css içinde ayrı bir stylesheet; tools/build-themes.js
    hepsini html[data-theme="ad"] altına kapsamlayıp css/style.css'i üretir. */
@@ -4399,7 +4560,10 @@ const THEMES=[
      en:'The original: deep navy, emerald accent, soft shadows.'}}
 ];
 const DEFTHEME='dosya';
-function themeOf(){return (S&&S.theme)||DEFTHEME;}
+/* Tema artık cihaz tercihi (PREFS): ana menüde açık bir kariyer yokken de
+   uygulanabilmeli. S.theme yalnızca bu değişiklikten önce yapılmış kayıtlar için
+   geri düşüş — okuma sırası prefs → kayıt → varsayılan. */
+function themeOf(){return pref('theme',null)||(S&&S.theme)||DEFTHEME;}
 function applyTheme(){
   const id=themeOf();
   const th=THEMES.find(x=>x.id===id)||THEMES[0];
@@ -4410,7 +4574,7 @@ function applyTheme(){
 }
 function setTheme(id){
   if(!THEMES.some(x=>x.id===id))return;
-  S.theme=id;applyTheme();save();render();
+  setPref('theme',id);applyTheme();render();
 }
 /* ================= UI HELPERS ================= */
 function toast(msg){
@@ -4596,6 +4760,48 @@ function cupView(){
   return `${conChips}${cupChips}${body}`;
 }
 const VIEWS={
+/* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
+   Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
+menu(){
+  const m=allMeta(),rows=[];
+  for(let n=1;n<=SLOTS;n++){
+    const s=m['s'+n];
+    if(s){
+      const when=s.ts?' · '+new Date(s.ts).toLocaleDateString(L):'';
+      rows.push(`<div class="pitem" onclick="openSlot(${n})">
+        <div class="pinfo">
+          <div class="pname">${esc(s.agent)||t('slotN').replace('{n}',n)}</div>
+          <div class="psub">${esc(s.agency)}${when}</div>
+          <div class="psub">${t('season')} ${s.season} · ${t('week')} ${s.week} · ${fmtK(s.cash)} · ${t('rep')} ${s.rep} · ${t('clients')} ${s.clients}</div>
+        </div>
+        <button class="btn s" style="width:auto;min-height:34px;padding:0 12px;font-size:12.5px"
+          onclick="event.stopPropagation();askDeleteSlot(${n})">${t('slotDelete')}</button>
+      </div>`);
+    }else{
+      rows.push(`<div class="pitem" onclick="newCareerSlot(${n})">
+        <div class="pinfo">
+          <div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
+          <div class="psub">${t('slotEmptyHint')}</div>
+        </div>
+        <span class="trk">+</span>
+      </div>`);
+    }
+  }
+  return `
+  <div class="hero" style="margin-top:10px">
+    <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
+    <div class="hname">Menajer</div>
+    <div class="hsub">${t('menuSub')}</div>
+  </div>
+  <div class="sect">${t('slotsLbl')}</div>
+  ${listWrap(rows.join(''))}
+  ${listWrap(`<div class="pitem" onclick="pushV('settings')">
+    <div class="pinfo"><div class="pname">${t('settings')}</div>
+    <div class="psub">${t('appearance')} · ${t('langLbl')}</div></div>
+    <span class="trk">›</span></div>`)}
+  <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
+},
+setup(){return setupHtml();},
 dash(){
   const inc=weeklyIncome(),net=weeklyNet();
   /* agenda: everything that needs my attention */
@@ -4972,8 +5178,12 @@ skills(){
     <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
     ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
 },
+/* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
+   ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
+   iki yere kopyalanmasın diye ayrı bir "menü ayarları" görünümü yok. */
 settings(){
   const cur=themeOf();
+  const ing=!!(S&&S.agent);
   /* önizleme karesi: temanın zemin / yüzey / vurgu renkleri.
      Renkler satır içi veriliyor — aktif temanın değişkenlerinden bağımsız olmalı. */
   const swatch=th=>`<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;
@@ -4989,6 +5199,14 @@ settings(){
     <div class="pinfo"><div class="pname">${th.n[L]}${th.id===cur?'<span class="star">★</span>':''}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${th.d[L]}</div></div>
     <span class="trk${th.id===cur?' on':''}">${th.id===cur?'✓':''}</span></div>`).join(''))}
+  <div class="sect">${t('langLbl')}</div>
+  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
+    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
+    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
+  <button class="ftoggle ${pref('sfxOn',true)!==false?'on':''}" onclick="setPref('sfxOn',${pref('sfxOn',true)===false});render()">
+    <span class="sw"></span>${t('sfxSetting')}</button>
+  <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
+  ${!ing?'':`
   <div class="sect">${t('gameplayLbl')}</div>
   <button class="ftoggle ${S.wkRepOn!==false?'on':''}" onclick="S.wkRepOn=${S.wkRepOn===false};save();render()">
     <span class="sw"></span>${t('wkRepSetting')}</button>
@@ -4996,20 +5214,15 @@ settings(){
   <button class="ftoggle ${S.evOn!==false?'on':''}" onclick="S.evOn=${S.evOn===false};save();render()">
     <span class="sw"></span>${t('evSetting')}</button>
   <div class="sub" style="margin:-4px 2px 12px">${t('evHint')}</div>
-  <button class="ftoggle ${S.sfxOn!==false?'on':''}" onclick="S.sfxOn=${S.sfxOn===false};save();render()">
-    <span class="sw"></span>${t('sfxSetting')}</button>
-  <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
-  <div class="sect">${t('langLbl')}</div>
-  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
-    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
-    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
   <div class="sect">${t('dataLbl')}</div>
   <div class="card">
+    <div class="kv"><span class="k">${t('slotN').replace('{n}',curSlot)}</span><span class="v">${esc(S.agent.agency)}</span></div>
     <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</span></div>
     <div class="kv"><span class="k">${t('clients')}</span><span class="v">${S.clients.length}/${maxClients()}</span></div>
     <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
   </div>
-  <button class="btn d" onclick="if(confirm(t('resetQ'))){localStorage.removeItem('menajerSaveV9');location.reload()}">${t('reset')}</button>`;
+  <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
+  <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}`;
 },
 player(id){
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
@@ -5188,21 +5401,38 @@ function setupHtml(){
   <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
 }
 let lastSig=null;
+/* Üst çubukta yalnızca oyun içinde anlamlı olan parçalar. Kabukta gizleniyorlar;
+   dört temada ayrı kural tanımlamak yerine tek yerden kapatmak yeterli. */
+function showChrome(on){
+  const bn=document.getElementById('btnNext');
+  if(bn)bn.style.display=on?'':'none';
+  const st=document.querySelectorAll?document.querySelectorAll('.hstat'):[];
+  Array.prototype.forEach.call(st,e=>{e.style.display=on?'':'none';});
+}
 function render(){
   applyTheme();
   document.documentElement.lang=L;   // ekran okuyucu ve tarayıcı doğru dili görsün
-  if(!S.agent){
-    document.getElementById('hT1').textContent='Menajer';
-    document.getElementById('hT2').textContent=t('setupTitle');
-    document.getElementById('hBack').classList.remove('show');
+  const c=cur();
+  /* Açık kariyer yoksa kabuktayız: ana menü, yeni kariyer ya da menüden açılan
+     ayarlar. Ayrı bir ekran durumu tutmuyoruz — S'nin kendisi bu ayrımı taşıyor. */
+  if(!S||!S.agent){
+    document.getElementById('hBack').classList.toggle('show',stack.length>1);
     const b0=document.getElementById('btnSet');
-    if(b0)b0.classList.remove('show'); // kariyer başlamadan ayar yok
+    if(b0)b0.classList.remove('show');   // ayarlara menüden giriliyor
+    showChrome(false);
+    document.getElementById('hT1').textContent=c.v==='settings'?t('settings'):'Menajer';
+    document.getElementById('hT2').textContent=
+      c.v==='setup'?t('setupTitle'):c.v==='menu'?t('mainMenu'):'';
     document.getElementById('nav').innerHTML='';
-    document.getElementById('view').innerHTML=setupHtml();
-    fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
+    const vw0=document.getElementById('view');
+    vw0.innerHTML=(VIEWS[c.v]||VIEWS.menu)(c.id);
+    if(c.v==='setup')fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
+    if(vw0.classList){vw0.classList.remove('vin');void (vw0.offsetWidth||0);vw0.classList.add('vin');}
+    const sig0='shell:'+c.v;
+    if(sig0!==lastSig){lastSig=sig0;if(window.scrollTo)window.scrollTo(0,0);}
     return;
   }
-  const c=cur();
+  showChrome(true);
   document.getElementById('hBack').classList.toggle('show',stack.length>1);
   let t1='Menajer',t2=t('season')+' '+S.season+' · '+t('week')+' '+Math.min(S.week,totalWeeks());
   if(c.v==='team')t1=S.teams[c.id].n;
@@ -5335,23 +5565,27 @@ function showSeasonModal(champs){
      <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
    </div>`),300);
 }
-function toggleLang(){L=L==='tr'?'en':'tr';S.lang=L;save();render();}
-function setLang(lc){if(lc!==L){L=lc;S.lang=L;save();}render();}
-
-/* js/main.js — kayıt/yükleme ve başlatma */
-/* ================= SAVE ================= */
-function save(){try{localStorage.setItem('menajerSaveV9',JSON.stringify({S,PID}));}catch(e){}}
-function load(){
-  try{
-    const d=JSON.parse(localStorage.getItem('menajerSaveV9'));
-    if(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEAGUES.length){S=d.S;PID=d.PID;L=S.lang||'tr';return true;}
-  }catch(e){}
-  return false;
+/* Dil de cihaz tercihi; kayda da yazılıyor ki kayıt başka bir cihaza taşınırsa
+   kendi dilini yanında getirsin. Okumada prefs önce gelir. */
+function toggleLang(){setLangTo(L==='tr'?'en':'tr');}
+function setLang(lc){if(lc!==L)setLangTo(lc);else render();}
+function setLangTo(lc){
+  L=lc;setPref('lang',lc);
+  if(S){S.lang=lc;save();}
+  render();
 }
-if(!load())newGame();
-render();
-/* Karar verilmemiş bir olay varsa geri getir — kapatıp açarak atlanamamalı. */
-if(S.evCur&&S.agent)showEvent(S.evCur);
+
+/* js/main.js — kayıt yönlendirmesi ve başlatma.
+   Yuva işlemlerinin kendisi js/saves.js içinde; burada yalnızca oyunun her yerden
+   çağırdığı save() ve açılış var. */
+/* ================= SAVE ================= */
+/* Açık kariyer yoksa (ana menü) yazacak bir şey yok — çağrı sessizce düşer,
+   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz. */
+function save(){if(curSlot&&S)saveToSlot(curSlot);}
+/* ================= AÇILIŞ ================= */
+migrateLegacy();          // tek kayıtlı sürümden gelen ilerleme 1. yuvaya
+stack=[{v:'menu'}];
+render();                 // S null: render kabuk dalına girer, ana menü açılır
 /* Çevrimdışı çalışma. file:// ile açıldığında service worker kaydı yapılamaz —
    tek dosya sürümü (dist/menajer.html) zaten kendi kendine yeterli olduğu için sorun değil.
    Capacitor içinde de kaydetmiyoruz: varlıklar zaten uygulamaya gömülü, service worker

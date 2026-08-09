@@ -5,6 +5,41 @@ function cur(){return stack[stack.length-1];}
 function navTo(v){stack=[{v}];render();}
 function pushV(v,id){stack.push({v,id});render();}
 function back(){if(stack.length>1){stack.pop();render();}}
+/* ================= ANA MENÜ =================
+   Kabuk (menü / yeni kariyer / menüden açılan ayarlar) ile oyun arasındaki tek
+   ayrım S: açık kariyer yoksa S null'dır. render() bunu görüp üst çubuğu ve alt
+   gezinmeyi kapatır, böylece "hangi ekrandayız" durumunu ayrıca tutmak gerekmez. */
+let pendSlot=0;                     // yeni kariyerin yazılacağı yuva
+function toMenu(){
+  if(curSlot&&S)saveToSlot(curSlot);
+  S=null;curSlot=0;pendSlot=0;
+  modalQueue=[];closeModal();
+  stack=[{v:'menu'}];lastSig=null;
+  render();
+}
+function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
+function openSlot(n){
+  if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
+  stack=[{v:'dash'}];lastSig=null;
+  render();
+  /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
+  if(S.evCur&&S.agent)showEvent(S.evCur);
+}
+function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
+function askDeleteSlot(n){
+  if(!confirm(t('slotDeleteQ').replace('{n}',n)))return;
+  deleteSlot(n);toast(t('slotDeleted'));render();
+}
+/* Oyun içinden silme: deleteSlot zaten S'yi ve curSlot'u boşaltıyor, bu yüzden
+   toMenu() çağrılmıyor — o kaydetmeye çalışıp silineni geri yazardı. */
+function askDeleteCareer(){
+  if(!curSlot)return;
+  if(!confirm(t('slotDeleteQ').replace('{n}',curSlot)))return;
+  deleteSlot(curSlot);
+  modalQueue=[];closeModal();
+  stack=[{v:'menu'}];lastSig=null;pendSlot=0;
+  toast(t('slotDeleted'));render();
+}
 /* ================= TEMALAR =================
    Her tema css/themes/*.css içinde ayrı bir stylesheet; tools/build-themes.js
    hepsini html[data-theme="ad"] altına kapsamlayıp css/style.css'i üretir. */
@@ -23,7 +58,10 @@ const THEMES=[
      en:'The original: deep navy, emerald accent, soft shadows.'}}
 ];
 const DEFTHEME='dosya';
-function themeOf(){return (S&&S.theme)||DEFTHEME;}
+/* Tema artık cihaz tercihi (PREFS): ana menüde açık bir kariyer yokken de
+   uygulanabilmeli. S.theme yalnızca bu değişiklikten önce yapılmış kayıtlar için
+   geri düşüş — okuma sırası prefs → kayıt → varsayılan. */
+function themeOf(){return pref('theme',null)||(S&&S.theme)||DEFTHEME;}
 function applyTheme(){
   const id=themeOf();
   const th=THEMES.find(x=>x.id===id)||THEMES[0];
@@ -34,7 +72,7 @@ function applyTheme(){
 }
 function setTheme(id){
   if(!THEMES.some(x=>x.id===id))return;
-  S.theme=id;applyTheme();save();render();
+  setPref('theme',id);applyTheme();render();
 }
 /* ================= UI HELPERS ================= */
 function toast(msg){
@@ -220,6 +258,48 @@ function cupView(){
   return `${conChips}${cupChips}${body}`;
 }
 const VIEWS={
+/* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
+   Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
+menu(){
+  const m=allMeta(),rows=[];
+  for(let n=1;n<=SLOTS;n++){
+    const s=m['s'+n];
+    if(s){
+      const when=s.ts?' · '+new Date(s.ts).toLocaleDateString(L):'';
+      rows.push(`<div class="pitem" onclick="openSlot(${n})">
+        <div class="pinfo">
+          <div class="pname">${esc(s.agent)||t('slotN').replace('{n}',n)}</div>
+          <div class="psub">${esc(s.agency)}${when}</div>
+          <div class="psub">${t('season')} ${s.season} · ${t('week')} ${s.week} · ${fmtK(s.cash)} · ${t('rep')} ${s.rep} · ${t('clients')} ${s.clients}</div>
+        </div>
+        <button class="btn s" style="width:auto;min-height:34px;padding:0 12px;font-size:12.5px"
+          onclick="event.stopPropagation();askDeleteSlot(${n})">${t('slotDelete')}</button>
+      </div>`);
+    }else{
+      rows.push(`<div class="pitem" onclick="newCareerSlot(${n})">
+        <div class="pinfo">
+          <div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
+          <div class="psub">${t('slotEmptyHint')}</div>
+        </div>
+        <span class="trk">+</span>
+      </div>`);
+    }
+  }
+  return `
+  <div class="hero" style="margin-top:10px">
+    <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
+    <div class="hname">Menajer</div>
+    <div class="hsub">${t('menuSub')}</div>
+  </div>
+  <div class="sect">${t('slotsLbl')}</div>
+  ${listWrap(rows.join(''))}
+  ${listWrap(`<div class="pitem" onclick="pushV('settings')">
+    <div class="pinfo"><div class="pname">${t('settings')}</div>
+    <div class="psub">${t('appearance')} · ${t('langLbl')}</div></div>
+    <span class="trk">›</span></div>`)}
+  <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
+},
+setup(){return setupHtml();},
 dash(){
   const inc=weeklyIncome(),net=weeklyNet();
   /* agenda: everything that needs my attention */
@@ -596,8 +676,12 @@ skills(){
     <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
     ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
 },
+/* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
+   ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
+   iki yere kopyalanmasın diye ayrı bir "menü ayarları" görünümü yok. */
 settings(){
   const cur=themeOf();
+  const ing=!!(S&&S.agent);
   /* önizleme karesi: temanın zemin / yüzey / vurgu renkleri.
      Renkler satır içi veriliyor — aktif temanın değişkenlerinden bağımsız olmalı. */
   const swatch=th=>`<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;
@@ -613,6 +697,14 @@ settings(){
     <div class="pinfo"><div class="pname">${th.n[L]}${th.id===cur?'<span class="star">★</span>':''}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${th.d[L]}</div></div>
     <span class="trk${th.id===cur?' on':''}">${th.id===cur?'✓':''}</span></div>`).join(''))}
+  <div class="sect">${t('langLbl')}</div>
+  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
+    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
+    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
+  <button class="ftoggle ${pref('sfxOn',true)!==false?'on':''}" onclick="setPref('sfxOn',${pref('sfxOn',true)===false});render()">
+    <span class="sw"></span>${t('sfxSetting')}</button>
+  <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
+  ${!ing?'':`
   <div class="sect">${t('gameplayLbl')}</div>
   <button class="ftoggle ${S.wkRepOn!==false?'on':''}" onclick="S.wkRepOn=${S.wkRepOn===false};save();render()">
     <span class="sw"></span>${t('wkRepSetting')}</button>
@@ -620,20 +712,15 @@ settings(){
   <button class="ftoggle ${S.evOn!==false?'on':''}" onclick="S.evOn=${S.evOn===false};save();render()">
     <span class="sw"></span>${t('evSetting')}</button>
   <div class="sub" style="margin:-4px 2px 12px">${t('evHint')}</div>
-  <button class="ftoggle ${S.sfxOn!==false?'on':''}" onclick="S.sfxOn=${S.sfxOn===false};save();render()">
-    <span class="sw"></span>${t('sfxSetting')}</button>
-  <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
-  <div class="sect">${t('langLbl')}</div>
-  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
-    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
-    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
   <div class="sect">${t('dataLbl')}</div>
   <div class="card">
+    <div class="kv"><span class="k">${t('slotN').replace('{n}',curSlot)}</span><span class="v">${esc(S.agent.agency)}</span></div>
     <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</span></div>
     <div class="kv"><span class="k">${t('clients')}</span><span class="v">${S.clients.length}/${maxClients()}</span></div>
     <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
   </div>
-  <button class="btn d" onclick="if(confirm(t('resetQ'))){localStorage.removeItem('menajerSaveV9');location.reload()}">${t('reset')}</button>`;
+  <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
+  <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}`;
 },
 player(id){
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
@@ -812,21 +899,38 @@ function setupHtml(){
   <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
 }
 let lastSig=null;
+/* Üst çubukta yalnızca oyun içinde anlamlı olan parçalar. Kabukta gizleniyorlar;
+   dört temada ayrı kural tanımlamak yerine tek yerden kapatmak yeterli. */
+function showChrome(on){
+  const bn=document.getElementById('btnNext');
+  if(bn)bn.style.display=on?'':'none';
+  const st=document.querySelectorAll?document.querySelectorAll('.hstat'):[];
+  Array.prototype.forEach.call(st,e=>{e.style.display=on?'':'none';});
+}
 function render(){
   applyTheme();
   document.documentElement.lang=L;   // ekran okuyucu ve tarayıcı doğru dili görsün
-  if(!S.agent){
-    document.getElementById('hT1').textContent='Menajer';
-    document.getElementById('hT2').textContent=t('setupTitle');
-    document.getElementById('hBack').classList.remove('show');
+  const c=cur();
+  /* Açık kariyer yoksa kabuktayız: ana menü, yeni kariyer ya da menüden açılan
+     ayarlar. Ayrı bir ekran durumu tutmuyoruz — S'nin kendisi bu ayrımı taşıyor. */
+  if(!S||!S.agent){
+    document.getElementById('hBack').classList.toggle('show',stack.length>1);
     const b0=document.getElementById('btnSet');
-    if(b0)b0.classList.remove('show'); // kariyer başlamadan ayar yok
+    if(b0)b0.classList.remove('show');   // ayarlara menüden giriliyor
+    showChrome(false);
+    document.getElementById('hT1').textContent=c.v==='settings'?t('settings'):'Menajer';
+    document.getElementById('hT2').textContent=
+      c.v==='setup'?t('setupTitle'):c.v==='menu'?t('mainMenu'):'';
     document.getElementById('nav').innerHTML='';
-    document.getElementById('view').innerHTML=setupHtml();
-    fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
+    const vw0=document.getElementById('view');
+    vw0.innerHTML=(VIEWS[c.v]||VIEWS.menu)(c.id);
+    if(c.v==='setup')fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
+    if(vw0.classList){vw0.classList.remove('vin');void (vw0.offsetWidth||0);vw0.classList.add('vin');}
+    const sig0='shell:'+c.v;
+    if(sig0!==lastSig){lastSig=sig0;if(window.scrollTo)window.scrollTo(0,0);}
     return;
   }
-  const c=cur();
+  showChrome(true);
   document.getElementById('hBack').classList.toggle('show',stack.length>1);
   let t1='Menajer',t2=t('season')+' '+S.season+' · '+t('week')+' '+Math.min(S.week,totalWeeks());
   if(c.v==='team')t1=S.teams[c.id].n;
@@ -959,5 +1063,12 @@ function showSeasonModal(champs){
      <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
    </div>`),300);
 }
-function toggleLang(){L=L==='tr'?'en':'tr';S.lang=L;save();render();}
-function setLang(lc){if(lc!==L){L=lc;S.lang=L;save();}render();}
+/* Dil de cihaz tercihi; kayda da yazılıyor ki kayıt başka bir cihaza taşınırsa
+   kendi dilini yanında getirsin. Okumada prefs önce gelir. */
+function toggleLang(){setLangTo(L==='tr'?'en':'tr');}
+function setLang(lc){if(lc!==L)setLangTo(lc);else render();}
+function setLangTo(lc){
+  L=lc;setPref('lang',lc);
+  if(S){S.lang=lc;save();}
+  render();
+}

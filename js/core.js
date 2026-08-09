@@ -368,6 +368,13 @@ function startCareer(){
   const nat=document.getElementById('sel_nat').value;
   const ag=(document.getElementById('inp_ag').value||'').trim();
   if(!fn||!ln){toast(t('fillName'));return;}
+  /* Dünya ancak burada kuruluyor: yuva seçilip ad girilene kadar ~7000 oyuncu
+     üretmenin anlamı yok, kurulumdan geri dönmek de bedelsiz olsun. */
+  curSlot=pendSlot||1;
+  newGame();
+  /* Yığın createAgent'tan önce ayarlanıyor — o kendi içinde render() çağırıyor ve
+     aksi halde kurulum formu bir kare boyunca oyun çerçevesiyle çizilirdi. */
+  stack=[{v:'dash'}];lastSig=null;
   createAgent(fn,ln,nat,ag);
 }
 function buyScout(i){

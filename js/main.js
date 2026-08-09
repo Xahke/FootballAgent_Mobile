@@ -1,18 +1,15 @@
 'use strict';
-/* js/main.js — kayıt/yükleme ve başlatma */
+/* js/main.js — kayıt yönlendirmesi ve başlatma.
+   Yuva işlemlerinin kendisi js/saves.js içinde; burada yalnızca oyunun her yerden
+   çağırdığı save() ve açılış var. */
 /* ================= SAVE ================= */
-function save(){try{localStorage.setItem('menajerSaveV9',JSON.stringify({S,PID}));}catch(e){}}
-function load(){
-  try{
-    const d=JSON.parse(localStorage.getItem('menajerSaveV9'));
-    if(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEAGUES.length){S=d.S;PID=d.PID;L=S.lang||'tr';return true;}
-  }catch(e){}
-  return false;
-}
-if(!load())newGame();
-render();
-/* Karar verilmemiş bir olay varsa geri getir — kapatıp açarak atlanamamalı. */
-if(S.evCur&&S.agent)showEvent(S.evCur);
+/* Açık kariyer yoksa (ana menü) yazacak bir şey yok — çağrı sessizce düşer,
+   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz. */
+function save(){if(curSlot&&S)saveToSlot(curSlot);}
+/* ================= AÇILIŞ ================= */
+migrateLegacy();          // tek kayıtlı sürümden gelen ilerleme 1. yuvaya
+stack=[{v:'menu'}];
+render();                 // S null: render kabuk dalına girer, ana menü açılır
 /* Çevrimdışı çalışma. file:// ile açıldığında service worker kaydı yapılamaz —
    tek dosya sürümü (dist/menajer.html) zaten kendi kendine yeterli olduğu için sorun değil.
    Capacitor içinde de kaydetmiyoruz: varlıklar zaten uygulamaya gömülü, service worker

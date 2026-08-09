@@ -23,7 +23,12 @@ function audio(){
   try{AC=new Ctx();}catch(e){AC=false;return null;}
   return AC;
 }
-function sfxOn(){return typeof S!=='undefined'&&S&&S.sfxOn!==false;}
+/* Ses cihaz tercihi: ana menüde açık bir kariyer yokken de çalışmalı. Tercih hiç
+   yazılmamışsa bu değişiklikten önceki kayıtların ayarına düşülür. */
+function sfxOn(){
+  if(typeof PREFS!=='undefined'&&PREFS&&PREFS.sfxOn!==undefined)return PREFS.sfxOn!==false;
+  return typeof S!=='undefined'&&!!S&&S.sfxOn!==false;
+}
 /* Darbe bir kez üretilip saklanıyor; her dokunuşta yeniden hesaplanmasına gerek yok. */
 function clickBuffer(ac){
   if(BUF)return BUF;
