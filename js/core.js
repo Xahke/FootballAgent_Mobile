@@ -47,6 +47,10 @@ function updateValue(p){
 function agMod(k){return (S&&S.ag&&S.ag[k])||0;}
 function commissionRate(){return +clamp(0.05+(S.rep/100)*0.10+skillBonus('comm')+agMod('comm'),0.03,0.25).toFixed(3);}
 function commissionPct(){return Math.round(commissionRate()*100);}
+/* Bonservisten aldığın pay ayrı bir oran: sözleşme imza payını değil yalnızca
+   transferi büyütür. skillBonus('fee') buradan okunur, ekranda da bu oran yazar. */
+function transferRate(){return +clamp(commissionRate()*(1+skillBonus('fee')),0.03,0.35).toFixed(3);}
+function transferPct(){return Math.round(transferRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
 function tmBadge(tm,size){
   const s=size||36, f=Math.round(s*0.28);
@@ -257,11 +261,18 @@ const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
 function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
 function repEvent(delta,raw){
   if(!delta)return S.rep;
-  const d=delta>0&&!raw?delta*repFactor():delta;
+  /* skillBonus('repg') — yetenek ağacının itibar kazancına tek dokunduğu yer.
+     Kayıplara uygulanmıyor: skandal her seviyede aynı zarar. */
+  const gain=delta>0?delta*(1+skillBonus('repg')):delta;
+  const d=delta>0&&!raw?gain*repFactor():gain;
+  const before=agentLevel();
   S.rep=stat(S.rep+d,0);
   /* Ulaşılan en yüksek itibar ayrıca tutuluyor: yetenek puanları buradan sayılır,
      yoksa itibar düştüğünde harcanmış puanlar borca dönüşürdü. */
   if(S.rep>(S.repMax||0))S.repMax=S.rep;
+  /* Seviye atlama haftanın sonunda gösterilecek; burada yalnızca sayılıyor. */
+  const up=agentLevel()-before;
+  if(up>0)S.lvUp=(S.lvUp||0)+up;
   return S.rep;
 }
 /* ===== güven =====
@@ -276,7 +287,10 @@ function trustEvent(p,delta){
 function trustLabel(v){return v>=75?'trHigh':v>=55?'trGood':v>=35?'trMid':'trLow';}
 function moraleEvent(p,delta){
   if(!p)return;
-  p.morale=stat(p.morale+delta,0);
+  /* skillBonus('mor') — yalnız kendi müşterinin moral kayıplarını yumuşatır.
+     Kazançlara dokunmuyor: iyi haberin değeri menajerine göre değişmez. */
+  const d=(delta<0&&p.agent==='you')?delta*(1-clamp(skillBonus('mor'),0,0.6)):delta;
+  p.morale=stat(p.morale+d,0);
   return p.morale;
 }
 /* Form ve moral kesirli katkılarla besleniyor; tek ondalıkta tutuluyor ki kayıt
@@ -383,7 +397,9 @@ function buyScout(i){
   if(S.cash<cost){toast(t('noCash'));return;}
   S.cash-=cost;
   S.scout=S.scout||[];
-  S.scout.push({lg:i,done:(S.tw||0)+R(4,8)});
+  /* skillBonus('net') — ağın kurulma süresini kısaltan tek yer. En az iki hafta
+     kalıyor: anında açılan bir keşif ağı kararı kararsızlaştırırdı. */
+  S.scout.push({lg:i,done:(S.tw||0)+Math.max(2,R(4,8)-Math.round(skillBonus('net')))});
   save();openScout();
 }
 function openScout(){

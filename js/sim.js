@@ -228,6 +228,7 @@ function nextWeek(){
     /* pazarlık şartları kabulü etkiler: taksit +, gol bonusu +, sonraki satış payı - */
     acc+=clauseAcc(o.pay,o.gb,o.so);
     acc+=(o.fix===1?0.08:o.fix===2?0.18:0);   // aracıya ödenen para kapıları aralar
+    acc+=skillBonus('bid');                   // kulüplerle kurduğun ilişkinin tek okuma yeri
     if(isFree(p))acc=Math.max(acc,0.55);       // bonservissiz oyuncuda kulübün riski düşük
     acc=clamp(acc,0.05,0.97);
     if(RF()<acc){
@@ -298,6 +299,9 @@ function nextWeek(){
   /* Sezon biterse şampiyonluk özeti öncelikli. Rapor ve olay sıraya girer. */
   if(!seasonOver){
     if(S.wkRepOn!==false&&S.wkRep.length)pushModal(()=>showWeekReport(repWeek));
+    /* Seviye atladıysan sıraya girer. Sezon özeti sırayı temizlerse S.lvUp
+       duruyor olacağı için haber kaybolmaz, bir hafta sonra gelir. */
+    if(S.lvUp)pushModal(()=>showLevelUp());
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
@@ -413,6 +417,10 @@ function endSeason(){
       if(p.r<lvl-9)dev=Math.max(0,dev-3);      // buried at a club too big for him
       if(p.r>lvl+6)dev=Math.max(0,dev-1);      // no challenge left at this level
       if(p.form>65)dev+=1;
+      /* skillBonus('dev') — müşterinin gelişimine dokunan tek yer. Gelişim tam
+         sayı ilerlediği için bonus olasılık olarak veriliyor: ya bir puan fazla
+         gelişir ya gelişmez, arada kesir birikmez. */
+      if(p.agent==='you'&&RF()<skillBonus('dev'))dev+=1;
     }
     const oldR=p.r;
     p.r=dev>0?clamp(p.r+dev,35,Math.min(p.pot,96)):clamp(p.r+dev,35,96);

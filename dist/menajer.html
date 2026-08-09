@@ -36,6 +36,9 @@ html[data-theme="saha"]{
   --sh:0 2px 10px rgba(3,7,15,.45);
   --sh-el:0 6px 22px rgba(3,7,15,.55);
   --tap:.15s cubic-bezier(.3,.7,.4,1);
+
+   
+  --sk-hub:var(--txt2); --sk-tb:#4d9fff; --sk-fd:#1ec97e; --sk-ag:#e9bc5a; --sk-nw:#b07cf0;
 }
 html[data-theme="saha"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="saha"]{scrollbar-width:thin;scrollbar-color:var(--sur3) transparent}
@@ -347,6 +350,76 @@ html[data-theme="saha"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="saha"] .zone1{color:var(--gold)}
 html[data-theme="saha"] .zone2{color:var(--blue)}
 html[data-theme="saha"] .zoneR{color:var(--bad)}
+html[data-theme="saha"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="saha"] .skring0{flex-shrink:0}
+html[data-theme="saha"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="saha"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="saha"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="saha"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="saha"] .sklvT{flex:1;min-width:0}
+html[data-theme="saha"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="saha"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="saha"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="saha"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="saha"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="saha"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="saha"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="saha"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="saha"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="saha"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="saha"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="saha"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="saha"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="saha"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="saha"] .sknode{cursor:pointer}
+html[data-theme="saha"] .sknode .skhit{fill:transparent}
+html[data-theme="saha"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="saha"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="saha"] .sknode .skico{color:var(--txt3)}
+html[data-theme="saha"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="saha"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="saha"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="saha"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="saha"] .sknode.lock .skico{opacity:.4}
+html[data-theme="saha"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="saha"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="saha"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="saha"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="saha"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="saha"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__saha 2.4s ease-out infinite}
+html[data-theme="saha"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="saha"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="saha"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="saha"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="saha"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="saha"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="saha"] .sknode.just .skdisc{animation:skPop__saha .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="saha"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__saha .7s ease-out 1}
+@keyframes skHalo__saha{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__saha{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__saha{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="saha"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="saha"] .skmark svg{width:22px;height:22px}
+html[data-theme="saha"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="saha"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="saha"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="saha"] .skwrap{box-shadow:var(--sh)}
+html[data-theme="saha"] .sknode.owned .skdisc{filter:drop-shadow(0 0 6px var(--skc))}
 @media (max-width:374px){html[data-theme="saha"] main{padding:12px 10px 18px}
 html[data-theme="saha"] .agCash{font-size:23px}
 html[data-theme="saha"] .statusRow{gap:6px}
@@ -377,6 +450,9 @@ html[data-theme="gazete"]{
   --tap:.12s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#3a5a76; --sk-fd:#1f6b4a; --sk-ag:#7d6320; --sk-nw:#a3271c;
 }
 html[data-theme="gazete"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="gazete"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -674,6 +750,76 @@ html[data-theme="gazete"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="gazete"] .zone1{color:var(--txt)}
 html[data-theme="gazete"] .zone2{color:var(--txt2)}
 html[data-theme="gazete"] .zoneR{color:var(--bad)}
+html[data-theme="gazete"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="gazete"] .skring0{flex-shrink:0}
+html[data-theme="gazete"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="gazete"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="gazete"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="gazete"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="gazete"] .sklvT{flex:1;min-width:0}
+html[data-theme="gazete"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="gazete"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="gazete"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="gazete"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="gazete"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="gazete"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="gazete"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="gazete"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="gazete"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="gazete"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="gazete"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="gazete"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="gazete"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="gazete"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="gazete"] .sknode{cursor:pointer}
+html[data-theme="gazete"] .sknode .skhit{fill:transparent}
+html[data-theme="gazete"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="gazete"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="gazete"] .sknode .skico{color:var(--txt3)}
+html[data-theme="gazete"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="gazete"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="gazete"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="gazete"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="gazete"] .sknode.lock .skico{opacity:.4}
+html[data-theme="gazete"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="gazete"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="gazete"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="gazete"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="gazete"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="gazete"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__gazete 2.4s ease-out infinite}
+html[data-theme="gazete"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="gazete"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="gazete"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="gazete"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="gazete"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="gazete"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="gazete"] .sknode.just .skdisc{animation:skPop__gazete .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="gazete"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__gazete .7s ease-out 1}
+@keyframes skHalo__gazete{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__gazete{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__gazete{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="gazete"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="gazete"] .skmark svg{width:22px;height:22px}
+html[data-theme="gazete"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="gazete"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="gazete"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="gazete"] .skring0 .lv{font-family:var(--serif)}
+html[data-theme="gazete"] .skchipT b{font-family:var(--serif)}
 @media (max-width:374px){html[data-theme="gazete"] main{padding:14px 12px 20px}
 html[data-theme="gazete"] .agCash{font-size:32px}
 html[data-theme="gazete"] .hstat .l{display:none}}
@@ -702,6 +848,9 @@ html[data-theme="terminal"]{
   --tap:.12s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#5f8fb5; --sk-fd:#4f9c6b; --sk-ag:#a8863c; --sk-nw:#b06a7e;
 }
 html[data-theme="terminal"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="terminal"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -1003,6 +1152,75 @@ html[data-theme="terminal"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="terminal"] .zone1{color:var(--txt)}
 html[data-theme="terminal"] .zone2{color:var(--txt2)}
 html[data-theme="terminal"] .zoneR{color:var(--bad)}
+html[data-theme="terminal"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="terminal"] .skring0{flex-shrink:0}
+html[data-theme="terminal"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="terminal"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="terminal"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="terminal"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="terminal"] .sklvT{flex:1;min-width:0}
+html[data-theme="terminal"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="terminal"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="terminal"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="terminal"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="terminal"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="terminal"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="terminal"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="terminal"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="terminal"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="terminal"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="terminal"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="terminal"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="terminal"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="terminal"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="terminal"] .sknode{cursor:pointer}
+html[data-theme="terminal"] .sknode .skhit{fill:transparent}
+html[data-theme="terminal"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="terminal"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="terminal"] .sknode .skico{color:var(--txt3)}
+html[data-theme="terminal"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="terminal"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="terminal"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="terminal"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="terminal"] .sknode.lock .skico{opacity:.4}
+html[data-theme="terminal"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="terminal"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="terminal"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="terminal"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="terminal"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="terminal"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__terminal 2.4s ease-out infinite}
+html[data-theme="terminal"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="terminal"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="terminal"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="terminal"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="terminal"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="terminal"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="terminal"] .sknode.just .skdisc{animation:skPop__terminal .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="terminal"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__terminal .7s ease-out 1}
+@keyframes skHalo__terminal{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__terminal{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__terminal{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="terminal"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="terminal"] .skmark svg{width:22px;height:22px}
+html[data-theme="terminal"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="terminal"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="terminal"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="terminal"] .skring0 .lv,html[data-theme="terminal"] .sknode .skbadge text{font-family:var(--mono)}
 @media (max-width:374px){html[data-theme="terminal"] main{padding:12px 10px 18px}
 html[data-theme="terminal"] .agCash{font-size:29px}
 html[data-theme="terminal"] .hstat .l{display:none}}
@@ -1030,6 +1248,9 @@ html[data-theme="dosya"]{
   --sh:none; --sh-el:none;
   --tap:.14s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#2f5d7c; --sk-fd:#1c6b52; --sk-ag:#8a6a24; --sk-nw:#7a4657;
 }
 html[data-theme="dosya"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="dosya"]{scrollbar-width:thin;scrollbar-color:var(--n4) transparent}
@@ -1327,6 +1548,74 @@ html[data-theme="dosya"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="dosya"] .zone1{color:var(--txt)}
 html[data-theme="dosya"] .zone2{color:var(--txt2)}
 html[data-theme="dosya"] .zoneR{color:var(--bad)}
+html[data-theme="dosya"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="dosya"] .skring0{flex-shrink:0}
+html[data-theme="dosya"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="dosya"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="dosya"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="dosya"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="dosya"] .sklvT{flex:1;min-width:0}
+html[data-theme="dosya"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="dosya"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="dosya"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="dosya"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="dosya"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="dosya"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="dosya"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="dosya"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="dosya"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="dosya"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="dosya"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="dosya"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="dosya"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="dosya"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="dosya"] .sknode{cursor:pointer}
+html[data-theme="dosya"] .sknode .skhit{fill:transparent}
+html[data-theme="dosya"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="dosya"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="dosya"] .sknode .skico{color:var(--txt3)}
+html[data-theme="dosya"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="dosya"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="dosya"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="dosya"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="dosya"] .sknode.lock .skico{opacity:.4}
+html[data-theme="dosya"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="dosya"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="dosya"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="dosya"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="dosya"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="dosya"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__dosya 2.4s ease-out infinite}
+html[data-theme="dosya"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="dosya"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="dosya"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="dosya"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="dosya"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="dosya"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="dosya"] .sknode.just .skdisc{animation:skPop__dosya .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="dosya"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__dosya .7s ease-out 1}
+@keyframes skHalo__dosya{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__dosya{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__dosya{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="dosya"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="dosya"] .skmark svg{width:22px;height:22px}
+html[data-theme="dosya"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="dosya"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="dosya"] .nbadge.acc{background:var(--acc);color:var(--accT)}
 @media (max-width:374px){html[data-theme="dosya"] main{padding:14px 12px 20px}
 html[data-theme="dosya"] .agCash{font-size:33px}
 html[data-theme="dosya"] .pitem{padding:12px 12px}
@@ -1445,11 +1734,15 @@ faDealHint:'Bonservis ödenmeyeceği için kulüpler daha istekli. Komisyonun ko
 freeAgentsF:'Kulüpsüz oyuncular',costLbl:'Gider',netLbl:'Net',
 fixerL:'Aracı Ücreti',fixLow:'Ölçülü — kabul şansı +%8',fixHigh:'Yüklü — kabul şansı +%18',
 fixerHint:'Seçtiğin her kulüp için peşin ödenir; anlaşma büyüdükçe pahalanır.',
-skills:'Yetenek',skAvail:'Kullanılabilir',skSpent:'Harcanan',skTotal:'Toplam',skPt:'puan',
-skOwned:'Açık',skTierLock:'Önce bu daldaki bir alt kademeyi aç.',
-skHint:'Her {n} itibar bir yetenek puanı kazandırır. Puanlar geri alınamaz — dalını seçerken düşün.',
-skLockedT:'Önce alt kademeyi açman gerekiyor.',skNoPoints:'Yeterli yetenek puanın yok.',
-skUnlocked:'{n} açıldı.',
+skills:'Yetenek',skAvail:'Kullanılabilir',skSpent:'Harcanan',skTotal:'Toplam',skPt:'puan',skPts:'puan',
+skOwned:'Açık',skPp:'puan',skLevel:'Seviye',skLvShort:'SV',skNext:'Sonraki seviye',skMaxLv:'En yüksek seviye',
+skHint:'Her seviye bir yetenek puanı, her {n}. seviye bir puan daha getirir. Puanlar geri alınamaz.',
+skTreeHint:'Merkezden başla, dört yoldan birini yürü: bir düğüm ancak ona bağlı bir düğüm açıksa alınabilir.',
+skLockedT:'Önce buna bağlı bir düğümü açman gerekiyor.',skNoPoints:'Yeterli yetenek puanın yok.',
+skUnlocked:'{n} açıldı.',skUnlockBtn:'Aç',skEffects:'Etkiler',skReq:'Gereken',
+skNeedPts:'{n} puan gerekiyor',skReqLock:'Bağlı bir düğümü önce açmalısın.',
+skLvUp:'Seviye atladın',skLvUpB:'Ajansın büyüdü. Yetenek ağacında harcayacak {n} puanın var.',
+skOpenTree:'Ağacı Aç',skBranchProg:'{a}/{b} düğüm',
 settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
@@ -1553,11 +1846,15 @@ faDealHint:'With no fee to pay, clubs are keener. Your commission comes from the
 freeAgentsF:'Free agents',costLbl:'Costs',netLbl:'Net',
 fixerL:'Intermediary Fee',fixLow:'Modest — +8% acceptance',fixHigh:'Heavy — +18% acceptance',
 fixerHint:'Paid up front for every club you select; scales with the size of the deal.',
-skills:'Skills',skAvail:'Available',skSpent:'Spent',skTotal:'Earned',skPt:'pt',
-skOwned:'Unlocked',skTierLock:'Unlock a lower tier in this branch first.',
-skHint:'Every {n} reputation earns you a skill point. Points can\'t be refunded — choose your branch carefully.',
-skLockedT:'You need to unlock the tier below first.',skNoPoints:'Not enough skill points.',
-skUnlocked:'{n} unlocked.',
+skills:'Skills',skAvail:'Available',skSpent:'Spent',skTotal:'Earned',skPt:'pt',skPts:'pts',
+skOwned:'Unlocked',skPp:'pts',skLevel:'Level',skLvShort:'LV',skNext:'Next level',skMaxLv:'Max level',
+skHint:'Every level earns a skill point, and every {n}th level earns one more. Points can\'t be refunded.',
+skTreeHint:'Start at the centre and walk one of the four roads: a node opens only next to one you already hold.',
+skLockedT:'You need to unlock a connected node first.',skNoPoints:'Not enough skill points.',
+skUnlocked:'{n} unlocked.',skUnlockBtn:'Unlock',skEffects:'Effects',skReq:'Requires',
+skNeedPts:'Needs {n} pts',skReqLock:'Unlock a connected node first.',
+skLvUp:'Level up',skLvUpB:'Your agency has grown. You have {n} points to spend on the skill tree.',
+skOpenTree:'Open the Tree',skBranchProg:'{a}/{b} nodes',
 settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',
@@ -2261,6 +2558,10 @@ function updateValue(p){
 function agMod(k){return (S&&S.ag&&S.ag[k])||0;}
 function commissionRate(){return +clamp(0.05+(S.rep/100)*0.10+skillBonus('comm')+agMod('comm'),0.03,0.25).toFixed(3);}
 function commissionPct(){return Math.round(commissionRate()*100);}
+/* Bonservisten aldığın pay ayrı bir oran: sözleşme imza payını değil yalnızca
+   transferi büyütür. skillBonus('fee') buradan okunur, ekranda da bu oran yazar. */
+function transferRate(){return +clamp(commissionRate()*(1+skillBonus('fee')),0.03,0.35).toFixed(3);}
+function transferPct(){return Math.round(transferRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
 function tmBadge(tm,size){
   const s=size||36, f=Math.round(s*0.28);
@@ -2471,11 +2772,18 @@ const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
 function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
 function repEvent(delta,raw){
   if(!delta)return S.rep;
-  const d=delta>0&&!raw?delta*repFactor():delta;
+  /* skillBonus('repg') — yetenek ağacının itibar kazancına tek dokunduğu yer.
+     Kayıplara uygulanmıyor: skandal her seviyede aynı zarar. */
+  const gain=delta>0?delta*(1+skillBonus('repg')):delta;
+  const d=delta>0&&!raw?gain*repFactor():gain;
+  const before=agentLevel();
   S.rep=stat(S.rep+d,0);
   /* Ulaşılan en yüksek itibar ayrıca tutuluyor: yetenek puanları buradan sayılır,
      yoksa itibar düştüğünde harcanmış puanlar borca dönüşürdü. */
   if(S.rep>(S.repMax||0))S.repMax=S.rep;
+  /* Seviye atlama haftanın sonunda gösterilecek; burada yalnızca sayılıyor. */
+  const up=agentLevel()-before;
+  if(up>0)S.lvUp=(S.lvUp||0)+up;
   return S.rep;
 }
 /* ===== güven =====
@@ -2490,7 +2798,10 @@ function trustEvent(p,delta){
 function trustLabel(v){return v>=75?'trHigh':v>=55?'trGood':v>=35?'trMid':'trLow';}
 function moraleEvent(p,delta){
   if(!p)return;
-  p.morale=stat(p.morale+delta,0);
+  /* skillBonus('mor') — yalnız kendi müşterinin moral kayıplarını yumuşatır.
+     Kazançlara dokunmuyor: iyi haberin değeri menajerine göre değişmez. */
+  const d=(delta<0&&p.agent==='you')?delta*(1-clamp(skillBonus('mor'),0,0.6)):delta;
+  p.morale=stat(p.morale+d,0);
   return p.morale;
 }
 /* Form ve moral kesirli katkılarla besleniyor; tek ondalıkta tutuluyor ki kayıt
@@ -2597,7 +2908,9 @@ function buyScout(i){
   if(S.cash<cost){toast(t('noCash'));return;}
   S.cash-=cost;
   S.scout=S.scout||[];
-  S.scout.push({lg:i,done:(S.tw||0)+R(4,8)});
+  /* skillBonus('net') — ağın kurulma süresini kısaltan tek yer. En az iki hafta
+     kalıyor: anında açılan bir keşif ağı kararı kararsızlaştırırdı. */
+  S.scout.push({lg:i,done:(S.tw||0)+Math.max(2,R(4,8)-Math.round(skillBonus('net')))});
   save();openScout();
 }
 function openScout(){
@@ -2854,6 +3167,7 @@ function nextWeek(){
     /* pazarlık şartları kabulü etkiler: taksit +, gol bonusu +, sonraki satış payı - */
     acc+=clauseAcc(o.pay,o.gb,o.so);
     acc+=(o.fix===1?0.08:o.fix===2?0.18:0);   // aracıya ödenen para kapıları aralar
+    acc+=skillBonus('bid');                   // kulüplerle kurduğun ilişkinin tek okuma yeri
     if(isFree(p))acc=Math.max(acc,0.55);       // bonservissiz oyuncuda kulübün riski düşük
     acc=clamp(acc,0.05,0.97);
     if(RF()<acc){
@@ -2924,6 +3238,9 @@ function nextWeek(){
   /* Sezon biterse şampiyonluk özeti öncelikli. Rapor ve olay sıraya girer. */
   if(!seasonOver){
     if(S.wkRepOn!==false&&S.wkRep.length)pushModal(()=>showWeekReport(repWeek));
+    /* Seviye atladıysan sıraya girer. Sezon özeti sırayı temizlerse S.lvUp
+       duruyor olacağı için haber kaybolmaz, bir hafta sonra gelir. */
+    if(S.lvUp)pushModal(()=>showLevelUp());
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
@@ -3039,6 +3356,10 @@ function endSeason(){
       if(p.r<lvl-9)dev=Math.max(0,dev-3);      // buried at a club too big for him
       if(p.r>lvl+6)dev=Math.max(0,dev-1);      // no challenge left at this level
       if(p.form>65)dev+=1;
+      /* skillBonus('dev') — müşterinin gelişimine dokunan tek yer. Gelişim tam
+         sayı ilerlediği için bonus olasılık olarak veriliyor: ya bir puan fazla
+         gelişir ya gelişmez, arada kesir birikmez. */
+      if(p.agent==='you'&&RF()<skillBonus('dev'))dev+=1;
     }
     const oldR=p.r;
     p.r=dev>0?clamp(p.r+dev,35,Math.min(p.pot,96)):clamp(p.r+dev,35,96);
@@ -3911,98 +4232,305 @@ function applyEff(r,c){
   return out;
 }
 
-/* js/skills.js — yetenek ağacı.
-   Yetenek puanı itibardan gelir: her SK_PER itibar bir puan. Puanlar harcandıkça
-   S.skills içine yazılır; etkiler tek bir yardımcıdan (skillBonus) okunur, böylece
-   yeni yetenek eklemek için sadece SKILLS dizisine kayıt yazmak yeterli.
+/* js/skills.js — yetenek ağacı (merkezden dört yöne açılan düğüm ağı).
 
-   Yeni yetenek eklerken:
-     id     : benzersiz kısa ad
-     br     : dal ('neg' | 'scout' | 'biz')
-     tier   : 1..3 — bir üst kademe, alt kademe alınmadan açılmaz
-     cost   : kaç puan
-     eff    : {anahtar: değer} — skillBonus(anahtar) bunları toplar
-   Kullanılan anahtarlar: comm (komisyon oranı), neg (pazarlık kabul şansı),
-   trust (güven kazancı çarpanı), pitch (imza şansı), scout (keşif indirimi),
-   cost (haftalık gider indirimi), cap (müşteri kapasitesi), val (değer artışı). */
+   Ağaç bir ızgara üzerinde duruyor: merkezde ajansın kendisi (hub), ondan dört
+   yöne birer dal. Her dal ilk düğümden sonra ikiye ayrılıyor, iki kol üçüncü
+   halkada ilerliyor ve dördüncü halkada tek bir taçta birleşiyor. Bir düğüm,
+   ona bağlı düğümlerden en az biri açılmadan alınamaz — yani ağaçta yürümek
+   zorundasın, istediğin yeri seçemezsin.
 
-const SK_PER=10;                 // her 10 itibar → 1 yetenek puanı
+   Neden koordinat yerine (dal, halka, yan) tutuluyor:
+   dalın yönü SK_BRANCH'te yazıyor; düğüm yalnızca "kaçıncı halka" ve "hangi kol"
+   olduğunu biliyor. Yeni bir dal eklemek için SK_BRANCH'e bir yön yazmak yeterli,
+   hiçbir koordinatı elle hesaplamak gerekmiyor (bkz. skPos).
+
+   Yeni düğüm eklerken:
+     id   : benzersiz kısa ad
+     br   : dal ('tb' | 'fd' | 'ag' | 'nw')
+     d    : halka — merkezden uzaklık (1..4)
+     s    : yan — dalın ekseninden sapma (-1 sol kol, 0 orta, +1 sağ kol)
+     cost : kaç puan
+     req  : önkoşul id'leri — biri açıksa düğüm açılabilir
+     eff  : {anahtar: değer} — skillBonus(anahtar) bunları toplar
+
+   Etki anahtarları SK_KEY'de tanımlı; her anahtarın oyunda tam olarak bir okuma
+   yeri var (bkz. CLAUDE.md). Yeni anahtar eklemek = SK_KEY'e satır + tek okuma yeri. */
+
+/* ===== seviye eğrisi =====
+   Puan artık doğrudan itibardan değil seviyeden geliyor. İlk seviyeler hızlı
+   gelsin ki ağaç daha ilk sezonda hareket etsin; sonrakiler açılsın ki uzun bir
+   kariyer bile dört dalı birden bitiremesin. Bir seviye = 1 puan, her dördüncü
+   seviye bir puan daha. Dört dalın tamamı 32 puan tutuyor: kimse hepsini alamaz,
+   herkes seçmek zorunda. */
+const LV={a:3.2, b:0.62, max:30, bonus:4};
+function repForLevel(l){const k=Math.max(0,l-1);return Math.round(LV.a*k+LV.b*k*k);}
+/* Seviye ulaşılan en yüksek itibardan sayılır: bir kez hak ettiğin seviye,
+   sonradan itibar kaybetsen de elinden alınmaz. */
+function repTotal(){return S?Math.max(S.rep||0,S.repMax||0):0;}
+function agentLevel(st){
+  const r=st===undefined?repTotal():st;
+  let l=1;
+  while(l<LV.max&&r>=repForLevel(l+1))l++;
+  return l;
+}
+function levelPoints(l){return (l-1)+Math.floor(l/LV.bonus);}
+/* Bir sonraki seviyeye kalan yol — arayüzdeki halka bunu gösteriyor. */
+function levelProgress(){
+  const l=agentLevel(),r=repTotal();
+  if(l>=LV.max)return {lv:l,cur:0,need:0,pct:1};
+  const lo=repForLevel(l),hi=repForLevel(l+1);
+  return {lv:l,cur:r-lo,need:hi-lo,pct:Math.max(0,Math.min(1,(r-lo)/(hi-lo)))};
+}
+
+/* ===== etki anahtarları ===== */
+/* f: nasıl yazılacağı — pct yüzde artış, pctD yüzde düşüş, pp puan, wk hafta, flat sayı */
+const SK_KEY={
+  neg  :{f:'pct', n:{tr:'Kabul şansı',       en:'Acceptance'}},
+  wage :{f:'pct', n:{tr:'Maaş tavanı',       en:'Wage ceiling'}},
+  trust:{f:'pct', n:{tr:'Güven kazancı',     en:'Trust gained'}},
+  comm :{f:'pp',  n:{tr:'Komisyon oranı',    en:'Commission rate'}},
+  scout:{f:'pctD',n:{tr:'Keşif bedeli',      en:'Scouting cost'}},
+  net  :{f:'wk',  n:{tr:'Ağ kurulum süresi', en:'Network setup'}},
+  dev  :{f:'pct', n:{tr:'Gelişim şansı',     en:'Development'}},
+  val  :{f:'pct', n:{tr:'Piyasa değeri',     en:'Market value'}},
+  pitch:{f:'pct', n:{tr:'İmza şansı',        en:'Signing chance'}},
+  cost :{f:'pctD',n:{tr:'Haftalık gider',    en:'Weekly overhead'}},
+  cap  :{f:'flat',n:{tr:'Müşteri kapasitesi',en:'Client slots'}},
+  repg :{f:'pct', n:{tr:'İtibar kazancı',    en:'Reputation gain'}},
+  fee  :{f:'pct', n:{tr:'Transfer komisyonu',en:'Transfer cut'}},
+  bid  :{f:'pct', n:{tr:'Teklif kabulü',     en:'Bid acceptance'}},
+  mor  :{f:'pctD',n:{tr:'Moral kaybı',       en:'Morale losses'}}
+};
+function skEffLabel(k,v){
+  const m=SK_KEY[k];
+  if(!m)return '';
+  const n=m.n[L];
+  if(m.f==='flat')return n+' +'+v;
+  if(m.f==='wk')return n+' −'+v+' '+t('wk');
+  if(m.f==='pp')return n+' +'+Math.round(v*100)+' '+t('skPp');
+  const pct=Math.round(v*100);
+  const sign=m.f==='pctD'?'−':'+';
+  return n+' '+sign+(L==='tr'?'%'+pct:pct+'%');
+}
+
+/* ===== dallar =====
+   dir: ızgaradaki yön vektörü. Yan kollar bu vektörün dikine açılır, yani yeni
+   bir dalı çapraz bir yöne koymak da mümkün — hiçbir yerde yön varsayılmıyor. */
+const SK_HUB='hub';
 const SK_BRANCH=[
-  ['neg',  {tr:'Masa',   en:'The Table'},   {tr:'Pazarlık, sözleşme ve ilişki.',      en:'Negotiation, contracts and relationships.'}],
-  ['scout',{tr:'Saha',   en:'The Field'},   {tr:'Keşif ağı, yetenek bulma ve gelişim.',en:'Scouting, spotting talent and development.'}],
-  ['biz',  {tr:'Ajans',  en:'The Agency'},  {tr:'Para, gider ve kapasite.',            en:'Money, overheads and capacity.'}]
+ {id:'tb',dir:[0,-1],
+  n:{tr:'Masa',  en:'The Table'},
+  d:{tr:'Sözleşme, pazarlık ve oyuncuyla aranızdaki güven.',
+     en:'Contracts, negotiation and the trust between you and your client.'}},
+ {id:'fd',dir:[1,0],
+  n:{tr:'Saha',  en:'The Field'},
+  d:{tr:'Keşif ağı, yetenek bulma ve oyuncunun gelişimi.',
+     en:'Scouting networks, spotting talent and developing it.'}},
+ {id:'ag',dir:[0,1],
+  n:{tr:'Ajans', en:'The Agency'},
+  d:{tr:'Para, gider, kapasite ve adının duyulması.',
+     en:'Money, overheads, capacity and getting your name out.'}},
+ {id:'nw',dir:[-1,0],
+  n:{tr:'Ağ',    en:'The Network'},
+  d:{tr:'Kulüp ilişkileri, transfer masası ve müşterini elde tutmak.',
+     en:'Club relations, the transfer table and keeping your clients.'}}
 ];
+/* ===== düğümler ===== */
 const SKILLS=[
-/* --- MASA --- */
-{id:'neg1',br:'neg',tier:1,cost:1,eff:{neg:0.06},
+/* --- merkez --- */
+{id:SK_HUB,br:null,d:0,s:0,cost:0,req:[],eff:{},
+ n:{tr:'Ajans',en:'The Agency'},
+ dsc:{tr:'Her şey burada başlıyor. Dört yöne giden yollardan birini seç — hepsini birden yürüyemezsin.',
+      en:'Everything starts here. Pick one of the four roads out — you cannot walk them all.'}},
+
+/* --- MASA (yukarı) --- */
+{id:'tb1',br:'tb',d:1,s:0,cost:1,req:[SK_HUB],eff:{neg:0.05},
  n:{tr:'Hazırlıklı Git',en:'Come Prepared'},
- d:{tr:'Masaya rakamlarla oturursun. Sözleşme görüşmelerinde kabul şansı +%6.',
-    en:'You arrive with the numbers. +6% acceptance in contract talks.'}},
-{id:'neg2',br:'neg',tier:2,cost:2,eff:{trust:0.35},
+ dsc:{tr:'Masaya rakamlarla oturuyorsun; kulüp itiraz edecek yer bulamıyor.',
+      en:'You sit down with the numbers in hand. The club has nowhere to push back.'}},
+{id:'tb2',br:'tb',d:2,s:-1,cost:1,req:['tb1'],eff:{wage:0.05},
+ n:{tr:'Rakamları Bil',en:'Know the Numbers'},
+ dsc:{tr:'Kulübün bütçesinde gerçekte ne kadar yer olduğunu biliyorsun — tavan yükseliyor.',
+      en:'You know what is really left in the club\'s budget. The ceiling moves up.'}},
+{id:'tb3',br:'tb',d:2,s:1,cost:1,req:['tb1'],eff:{trust:0.25},
  n:{tr:'Sözünü Tutan Adam',en:'A Man of His Word'},
- d:{tr:'Oyuncular sana daha çabuk ısınır. Kazanılan güvenin %35 fazlası yazılır.',
-    en:'Players warm to you faster. Trust you earn counts 35% more.'}},
-{id:'neg3',br:'neg',tier:3,cost:3,eff:{neg:0.08,comm:0.02},
+ dsc:{tr:'Verdiğin sözü tutuyorsun; oyuncular sana daha çabuk ısınıyor.',
+      en:'You keep your promises, and players warm to you faster.'}},
+{id:'tb4',br:'tb',d:3,s:-1,cost:1,req:['tb2'],eff:{neg:0.05,wage:0.04},
+ n:{tr:'Uzun Anlaşma',en:'The Long Deal'},
+ dsc:{tr:'Kulübe bugünü değil beş yılı anlatıyorsun. Kalem daha kolay hareket ediyor.',
+      en:'You sell them five years, not one. The pen moves more easily.'}},
+{id:'tb5',br:'tb',d:3,s:1,cost:2,req:['tb3'],eff:{trust:0.30,mor:0.15},
+ n:{tr:'Telefonu Aç',en:'Always Pick Up'},
+ dsc:{tr:'Kötü haftalarda da telefondasın. Müşterin sarsıldığında daha az düşüyor.',
+      en:'You answer in the bad weeks too. When a client is shaken, he falls less far.'}},
+{id:'tb6',br:'tb',d:4,s:0,cost:2,req:['tb4','tb5'],eff:{neg:0.07,comm:0.015},
  n:{tr:'Odadaki En İyi',en:'Best in the Room'},
- d:{tr:'Kabul şansı +%8 ve komisyon oranın +2 puan.',
-    en:'+8% acceptance and +2 points on your commission rate.'}},
-/* --- SAHA --- */
-{id:'sco1',br:'scout',tier:1,cost:1,eff:{scout:0.20},
+ dsc:{tr:'Masada kimse seni geçemiyor — ve kimse oranını da tartışmıyor.',
+      en:'Nobody out-negotiates you. Nobody argues about your rate, either.'}},
+
+/* --- SAHA (sağ) --- */
+{id:'fd1',br:'fd',d:1,s:0,cost:1,req:[SK_HUB],eff:{scout:0.15},
  n:{tr:'Tanıdık Ağı',en:'People Who Owe You'},
- d:{tr:'Keşif ağı kurmak %20 daha ucuz.',en:'Building a scouting network costs 20% less.'}},
-{id:'sco2',br:'scout',tier:2,cost:2,eff:{pitch:0.07},
+ dsc:{tr:'Her ligde sana borcu olan biri var. Keşif ağı kurmak ucuzluyor.',
+      en:'In every league somebody owes you a favour. Networks cost less to build.'}},
+{id:'fd2',br:'fd',d:2,s:-1,cost:1,req:['fd1'],eff:{net:2},
+ n:{tr:'Sahada Adamın Var',en:'Boots on the Ground'},
+ dsc:{tr:'Gözcülerin çoktan orada. Yeni bir ağ haftalar önce çalışmaya başlıyor.',
+      en:'Your people are already there. A new network comes online weeks earlier.'}},
+{id:'fd3',br:'fd',d:2,s:1,cost:1,req:['fd1'],eff:{pitch:0.05},
  n:{tr:'Doğru Kapıyı Çal',en:'Knock on the Right Door'},
- d:{tr:'Temsilcilik görüşmelerinde imza şansı +%7.',en:'+7% chance in representation meetings.'}},
-{id:'sco3',br:'scout',tier:3,cost:3,eff:{val:0.08},
+ dsc:{tr:'Oyuncuya babası üzerinden mi, arkadaşı üzerinden mi gidileceğini biliyorsun.',
+      en:'You know whether to go through the father or the best friend.'}},
+{id:'fd4',br:'fd',d:3,s:-1,cost:1,req:['fd2'],eff:{scout:0.20},
+ n:{tr:'Ucuz Gözler',en:'Cheap Eyes'},
+ dsc:{tr:'Maçları senin yerine izleyen gençler var; hiçbiri pahalı değil.',
+      en:'Young scouts watch the games for you, and none of them are expensive.'}},
+{id:'fd5',br:'fd',d:3,s:1,cost:2,req:['fd3'],eff:{dev:0.35},
+ n:{tr:'Antrenman Planı',en:'The Training Plan'},
+ dsc:{tr:'Müşterine kendi çalışma programını yaptırıyorsun. Sezon sonunda fark görülüyor.',
+      en:'Your clients train to your plan. By the end of a season it shows.'}},
+{id:'fd6',br:'fd',d:4,s:0,cost:2,req:['fd4','fd5'],eff:{val:0.06,dev:0.20},
  n:{tr:'Vitrine Çıkar',en:'Put Him in the Window'},
- d:{tr:'Müşterilerini doğru maçlarda gösterirsin: piyasa değerleri %8 daha yüksek.',
-    en:'You get your clients seen in the right games — their market value runs 8% higher.'}},
-/* --- AJANS --- */
-{id:'biz1',br:'biz',tier:1,cost:1,eff:{cost:0.20},
+ dsc:{tr:'Müşterini doğru maçlarda, doğru gözlerin önünde oynatıyorsun.',
+      en:'You get your client seen in the right games, by the right people.'}},
+
+/* --- AJANS (aşağı) --- */
+{id:'ag1',br:'ag',d:1,s:0,cost:1,req:[SK_HUB],eff:{cost:0.15},
  n:{tr:'Sıkı Bütçe',en:'Lean Office'},
- d:{tr:'Haftalık giderin %20 azalır.',en:'Your weekly overhead drops 20%.'}},
-{id:'biz2',br:'biz',tier:2,cost:2,eff:{cap:1},
+ dsc:{tr:'Küçük ofis, az masraf. Haftalık giderin geriliyor.',
+      en:'Small office, small bills. Your weekly overhead drops.'}},
+{id:'ag2',br:'ag',d:2,s:-1,cost:1,req:['ag1'],eff:{cap:1},
  n:{tr:'Ortak Al',en:'Take On a Partner'},
- d:{tr:'Bir müşteri daha taşıyabilirsin.',en:'You can carry one more client.'}},
-{id:'biz3',br:'biz',tier:3,cost:3,eff:{comm:0.02,cost:0.15},
+ dsc:{tr:'Yükü paylaşacak birini buldun. Bir müşteri daha taşıyabilirsin.',
+      en:'You found someone to share the load. One more client fits.'}},
+{id:'ag3',br:'ag',d:2,s:1,cost:1,req:['ag1'],eff:{cost:0.15},
+ n:{tr:'İyi Bir Muhasebeci',en:'A Good Accountant'},
+ dsc:{tr:'Parayı nereye kaçırdığını gösteren biri. Giderin bir kez daha geriliyor.',
+      en:'Someone who shows you where the money leaks. Overhead drops again.'}},
+{id:'ag4',br:'ag',d:3,s:-1,cost:1,req:['ag2'],eff:{cap:1},
+ n:{tr:'İkinci Ofis',en:'Second Office'},
+ dsc:{tr:'Başka bir şehirde bir oda, bir masa, bir telefon. Portföy büyüyor.',
+      en:'A room, a desk and a phone in another city. The roster grows.'}},
+{id:'ag5',br:'ag',d:3,s:1,cost:2,req:['ag3'],eff:{repg:0.15},
+ n:{tr:'Basınla Ara',en:'Court the Press'},
+ dsc:{tr:'Doğru gazetecilerle yemek yiyorsun. Yaptığın her iş daha çok duyuluyor.',
+      en:'You have lunch with the right journalists. Everything you do lands louder.'}},
+{id:'ag6',br:'ag',d:4,s:0,cost:2,req:['ag4','ag5'],eff:{comm:0.02,cost:0.15},
  n:{tr:'Adın Yeter',en:'Your Name Is Enough'},
- d:{tr:'Komisyon oranın +2 puan, giderin %15 daha azalır.',
-    en:'+2 points on your commission rate and 15% less overhead.'}}
+ dsc:{tr:'Artık kapıları adın açıyor; pazarlık ettiğin tek şey kendi oranın.',
+      en:'Your name opens the doors now. The only thing you negotiate is your own rate.'}},
+
+/* --- AĞ (sol) --- */
+{id:'nw1',br:'nw',d:1,s:0,cost:1,req:[SK_HUB],eff:{bid:0.05},
+ n:{tr:'Telefon Defteri',en:'The Little Black Book'},
+ dsc:{tr:'Her kulüpte doğrudan arayabileceğin bir numara var. Teklifler dikkate alınıyor.',
+      en:'At every club there is a number you can call directly. Your bids get read.'}},
+{id:'nw2',br:'nw',d:2,s:-1,cost:1,req:['nw1'],eff:{fee:0.06},
+ n:{tr:'Aracının Aracısı',en:'Friends of Friends'},
+ dsc:{tr:'Anlaşmanın içinde senin payını büyütecek bir kalem hep bulunuyor.',
+      en:'There is always a line in the deal that makes your share bigger.'}},
+{id:'nw3',br:'nw',d:2,s:1,cost:1,req:['nw1'],eff:{mor:0.20},
+ n:{tr:'Kapıyı Aralık Tut',en:'Keep the Door Open'},
+ dsc:{tr:'Kızgın müşteri seni değil, kapıyı buluyor. Moral kayıpları hafifliyor.',
+      en:'An angry client finds the door, not you. Morale hits land softer.'}},
+{id:'nw4',br:'nw',d:3,s:-1,cost:1,req:['nw2'],eff:{bid:0.06},
+ n:{tr:'Sıcak Hat',en:'The Hotline'},
+ dsc:{tr:'Sportif direktörler telefonunu ilk turda açıyor.',
+      en:'Sporting directors pick up on the first ring.'}},
+{id:'nw5',br:'nw',d:3,s:1,cost:2,req:['nw3'],eff:{pitch:0.06,mor:0.15},
+ n:{tr:'Yıldız Muamelesi',en:'Star Treatment'},
+ dsc:{tr:'Müşterin kendini portföyün en önemli adamı gibi hissediyor — çünkü öyle davranıyorsun.',
+      en:'Your client feels like the most important man on your books, because you treat him that way.'}},
+{id:'nw6',br:'nw',d:4,s:0,cost:2,req:['nw4','nw5'],eff:{fee:0.10,bid:0.04},
+ n:{tr:'Büyük Anlaşma',en:'The Big One'},
+ dsc:{tr:'Artık transferi sen kuruyorsun, kulüpler yalnızca imzalıyor.',
+      en:'You build the transfer now. The clubs only sign it.'}}
 ];
+
+/* ===== yerleşim =====
+   Izgara birimi SK_GEO.unit; merkez (0,0). Dalın yönü (ax,ay) ise yan kollar
+   bu vektörün dikine (-ay,ax) açılıyor. Böylece dört yön de tek formülle çiziliyor. */
+const SK_GEO={unit:100, r:34, rBig:39, rHub:46, hit:47, pad:66};
+function skBranch(id){return SK_BRANCH.find(b=>b.id===id)||null;}
+function skPos(sk){
+  const b=skBranch(sk.br);
+  if(!b)return {x:0,y:0};
+  const [ax,ay]=b.dir;
+  return {x:(ax*sk.d-ay*sk.s)*SK_GEO.unit, y:(ay*sk.d+ax*sk.s)*SK_GEO.unit};
+}
+function skById(id){return SKILLS.find(x=>x.id===id)||null;}
+function skRadius(sk){return sk.id===SK_HUB?SK_GEO.rHub:sk.d>=4?SK_GEO.rBig:SK_GEO.r;}
+/* Ağacın kapladığı alan düğümlerden hesaplanıyor — yeni bir dal eklendiğinde
+   görünüm kutusu kendiliğinden büyüsün. */
+function skViewBox(){
+  let m=0;
+  SKILLS.forEach(sk=>{const p=skPos(sk);m=Math.max(m,Math.abs(p.x),Math.abs(p.y));});
+  const h=m+SK_GEO.pad;
+  return [-h,-h,h*2,h*2].join(' ');
+}
+/* Çizilecek yollar: her düğüm önkoşullarına bir çizgiyle bağlanır. */
+function skEdges(){
+  const out=[];
+  SKILLS.forEach(sk=>{
+    (sk.req||[]).forEach(rid=>{
+      const from=skById(rid);
+      if(from)out.push({a:from,b:sk});
+    });
+  });
+  return out;
+}
+
 /* ===== puan muhasebesi ===== */
-function skillsTaken(){return (S&&S.skills)||[];}
-/* Kazanılan puan ulaşılan en yüksek itibardan sayılır: bir kez hak ettiğin puan
-   sonradan itibar kaybetsen de elinden alınmaz. Alt sınır harcanan puandır —
-   repMax'ın olmadığı eski kayıtlarda bile kimse puan borcuna düşmesin. */
-function skillEarned(){
-  if(!S)return 0;
-  return Math.max(Math.floor(Math.max(S.rep||0,S.repMax||0)/SK_PER),skillSpent());
+/* Eski kayıtlarda dal/kademe düzeninde dokuz yetenek vardı; karşılıkları yeni
+   ağaçta duruyor. Kimse ilerlemesini kaybetmesin diye okurken çevriliyor. */
+const SK_LEGACY={neg1:'tb1',neg2:'tb3',neg3:'tb6',sco1:'fd1',sco2:'fd3',sco3:'fd6',
+                 biz1:'ag1',biz2:'ag2',biz3:'ag6'};
+function skillsTaken(){
+  const raw=(S&&S.skills)||[];
+  const out=[];
+  raw.forEach(id=>{
+    const n=SK_LEGACY[id]||id;
+    if(skById(n)&&out.indexOf(n)<0)out.push(n);
+  });
+  return out;
 }
-function skillSpent(){return skillsTaken().reduce((s,id)=>{const k=SKILLS.find(x=>x.id===id);return s+(k?k.cost:0);},0);}
+function hasSkill(id){return id===SK_HUB||skillsTaken().indexOf(id)>=0;}
+function skillSpent(){return skillsTaken().reduce((s,id)=>{const k=skById(id);return s+(k?k.cost:0);},0);}
+/* Alt sınır harcanan puandır — eğri değişse bile kimse puan borcuna düşmesin. */
+function skillEarned(){return S?Math.max(levelPoints(agentLevel()),skillSpent()):0;}
 function skillPoints(){return skillEarned()-skillSpent();}
-function hasSkill(id){return skillsTaken().indexOf(id)>=0;}
-/* Bir kademe, aynı daldaki bir alt kademe alınmadan açılmaz. */
-function skillLocked(sk){
-  if(sk.tier===1)return null;
-  const prev=SKILLS.filter(x=>x.br===sk.br&&x.tier===sk.tier-1);
-  return prev.some(x=>hasSkill(x.id))?null:'tier';
+/* Bir düğüm, bağlı olduğu düğümlerden biri açılmadan alınamaz. */
+function skillLocked(sk){return (sk.req||[]).some(id=>hasSkill(id))?null:'req';}
+/* Düğümün durumu — arayüz de, satın alma da aynı yerden okuyor. */
+function skillState(sk){
+  if(hasSkill(sk.id))return 'owned';
+  if(skillLocked(sk))return 'lock';
+  return skillPoints()>=sk.cost?'open':'poor';
 }
+/* Son açılan düğüm: arayüz bunu bir kez animasyonla çizip unutur. */
+let skJustTaken=null;
 function skillBuy(id){
-  const sk=SKILLS.find(x=>x.id===id);
+  const sk=skById(id);
   if(!sk||hasSkill(id))return;
   if(skillLocked(sk)){toast(t('skLockedT'));return;}
   if(skillPoints()<sk.cost){toast(t('skNoPoints'));return;}
   S.skills=skillsTaken().concat([id]);
+  skJustTaken=id;
   toast(t('skUnlocked').replace('{n}',sk.n[L]));
-  save();render();
+  closeModal();save();render();
 }
 /* Etkilerin tek okuma noktası — oyunun geri kalanı buradan geçer. */
 function skillBonus(key){
   return skillsTaken().reduce((s,id)=>{
-    const k=SKILLS.find(x=>x.id===id);
+    const k=skById(id);
     return s+((k&&k.eff&&k.eff[key])||0);
   },0);
 }
+/* Dal ilerlemesi: arayüzdeki "3/6" rozeti. */
+function branchTaken(br){return SKILLS.filter(sk=>sk.br===br&&hasSkill(sk.id)).length;}
+function branchTotal(br){return SKILLS.filter(sk=>sk.br===br).length;}
 
 /* js/sfx.js — arayüz sesi.
    Ses dosyası yok: Web Audio ile anlık sentezleniyor, böylece tek dosya çıktısı ve
@@ -4062,7 +4590,7 @@ function click(){
 const SFX={tap(){if(sfxOn())click();}};
 /* Tek yakalayıcı: her tıklanabilir öğe otomatik ses çıkarır. Tek tek onclick'lere
    ses eklenmediği için bir dokunuşta birden fazla ses çalma ihtimali de yok. */
-const SFX_SEL='button,.pitem,.dchoice,.lnk,.ftoggle,.trk,.stCard,.matchrow .tn,tr.click,.chips button,.tabs button';
+const SFX_SEL='button,.pitem,.dchoice,.lnk,.ftoggle,.trk,.stCard,.matchrow .tn,tr.click,.chips button,.tabs button,.sknode';
 if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',e=>{
     if(!sfxOn())return;
@@ -4088,7 +4616,8 @@ function clubMaxWage(p){
      çeker. Gerekçesiz masaya oturmaz zaten (bkz. renewBlock). */
   const reason=renewReason(p);
   const lever=reason==='expiring'?1.12:reason==='form'?1.10:reason==='underpaid'?1.02:0.90;
-  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p);
+  /* skillBonus('wage') — kulübün ödeyebileceği tavanı yükselten tek yer. */
+  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p)*(1+skillBonus('wage'));
   /* Yenileme masasında kulüp mevcut maaşın altını teklif etmez — kimse zam
      görüşmesine indirim beklentisiyle oturmaz. İstisnası yaşlanan oyuncu:
      30'unu geçmişse kulübün eli rahatlar, 32'yi geçmişse kesinti isteyebilir. */
@@ -4233,11 +4762,11 @@ function openTransfer(pid){
    <div class="sub" style="margin-top:6px">${t('pickClubs')}</div>
    ${free?`<div class="negbox"><b>${t('freeFee')}</b>
      <div class="sub" style="margin-top:6px">${t('faDealHint')}</div>
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()}</div></div>`
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()}</div></div>`
    :`<div class="negbox"><b>${t('askFee')}: <span style="color:var(--acc)" id="feeV">${fmtM(v)}</span></b>
      <input type="range" min="${Math.round(v*7)}" max="${Math.round(v*18)}" value="${Math.round(v*10)}" id="feeR"
        oninput="document.getElementById('feeV').textContent=fmtM(this.value/10)">
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()} · ${t('repScales')}</div>
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()} · ${t('repScales')}</div>
    </div>
    <div class="sect">${t('clauses')}</div>`}
    <div class="fgrid" style="margin-bottom:4px;${free?'display:none':''}">
@@ -4321,7 +4850,7 @@ function doTransfer(p,b,fee,quiet,terms){
   p.yrs=R(2,4);p.morale=clamp(Math.max(p.morale+30,70),0,100);p.ignored=0;p.hm=(S.tw||0)+8;p.form=clamp(p.form+5,0,100);
   delete p.freeFor;
   /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
-  const rate=commissionRate();
+  const rate=transferRate();
   /* Geleceğini bir fona sattıysan (bkz. tpoOffer olayı) bu satıştan sana pay yok. */
   const cut=p.tpo?0:(wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate)));
   if(p.tpo)delete p.tpo;
@@ -5146,37 +5675,32 @@ team(id){
   }).join('')}`;
 },
 skills(){
-  const pts=skillPoints(), earned=skillEarned(), spent=skillSpent();
-  const card=sk=>{
-    const owned=hasSkill(sk.id), locked=skillLocked(sk), afford=pts>=sk.cost;
-    const state=owned?'owned':locked?'locked':afford?'open':'poor';
-    const col=owned?'var(--acc)':locked||!afford?'var(--txt3)':'var(--txt)';
-    return `<div class="pitem${owned?' mine':''}" style="align-items:flex-start;${owned||locked||!afford?'':'cursor:pointer'}"
-      ${owned||locked||!afford?'':`onclick="skillBuy('${sk.id}')"`}>
-      <div style="width:26px;flex-shrink:0;text-align:center;font-weight:800;font-size:11px;color:${col};padding-top:2px">
-        ${owned?'✓':locked?'🔒'.length?'—':'':sk.cost}</div>
-      <div class="pinfo">
-        <div class="pname" style="color:${col}">${sk.n[L]}</div>
-        <div class="psub" style="white-space:normal;line-height:1.45">${sk.d[L]}</div>
-        ${locked?`<div class="psub" style="color:var(--txt3)">${t('skTierLock')}</div>`:''}
-      </div>
-      ${owned?`<span class="tag g">${t('skOwned')}</span>`:`<span class="faint" style="font-size:10.5px">${sk.cost} ${t('skPt')}</span>`}
-    </div>`;
-  };
+  const pts=skillPoints(), spent=skillSpent(), earned=skillEarned();
+  /* Künyedeki ok dalın yön vektöründen türetiliyor — yeni bir dal eklendiğinde
+     burada elle yazılacak bir şey kalmasın. */
+  const arrow=d=>({'0,-1':'↑','1,0':'→','0,1':'↓','-1,0':'←',
+                   '1,-1':'↗','1,1':'↘','-1,1':'↙','-1,-1':'↖'})[d.join(',')]||'•';
+  const legend=SK_BRANCH.map(b=>{
+    const got=branchTaken(b.id), tot=branchTotal(b.id);
+    return `<div class="skchip${got?' on':''}" style="--skc:var(--sk-${b.id})">
+      <span class="skdot">${arrow(b.dir)}</span>
+      <div class="skchipT"><b>${b.n[L]}</b>
+      <span>${t('skBranchProg').replace('{a}',got).replace('{b}',tot)}</span></div></div>`;
+  }).join('');
   return `<h2 class="sec">${t('skills')}</h2>
-  <div class="card">
+  ${skLevelCard()}
+  <div class="skleg">${legend}</div>
+  <div class="skwrap">${skTreeSvg()}</div>
+  <div class="card tight" style="padding:14px">
+    <div class="sub" style="line-height:1.5">${t('skTreeHint')}</div>
+    <div class="divider" style="margin:12px -14px"></div>
     <div class="grid3">
       <div class="stat"><div class="v" style="color:${pts>0?'var(--acc)':''}">${pts}</div><div class="l">${t('skAvail')}</div></div>
       <div class="stat"><div class="v">${spent}</div><div class="l">${t('skSpent')}</div></div>
       <div class="stat"><div class="v">${earned}</div><div class="l">${t('skTotal')}</div></div>
     </div>
-    <div class="divider"></div>
-    <div class="sub">${t('skHint').replace('{n}',SK_PER)}</div>
   </div>
-  ${SK_BRANCH.map(([br,nm,ds])=>`
-    <div class="sect" style="margin:16px 2px 4px">${nm[L]}</div>
-    <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
-    ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
+  <div class="sub" style="margin:0 2px 8px">${t('skHint').replace('{n}',LV.bonus)}</div>`;
 },
 /* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
    ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
@@ -5342,6 +5866,126 @@ player(id){
   :`<div class="empty" style="padding:18px">${t('hasAgent')}</div>`}`;
 }
 };
+/* ================= YETENEK AĞACI =================
+   Ağaç tek bir SVG: kenarlar altta, düğümler üstte. Yerleşim skills.js'ten
+   geliyor (skPos/skEdges/skViewBox), burada yalnızca çizim var — yeni bir dal
+   eklendiğinde bu dosyada hiçbir şey değişmiyor.
+
+   Düğüm rozetleri dalın simgesini taşıyor; 24 ayrı ikon yerine dört dal simgesi
+   yönle birlikte okunuyor. Simgeler uygulamanın geri kalanıyla aynı ailede. */
+const SKICONS={
+ hub:'<path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/>',
+ tb :'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>',
+ fd :'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/>',
+ ag :'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9"/><path d="M14.8 9.2c-.6-.8-1.7-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1 1.7 2.8 2c1.8.3 2.8 1 2.8 2s-1.2 2-2.8 2c-1.1 0-2.2-.4-2.8-1.2"/>',
+ nw :'<circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/>'
+};
+/* Seviye halkası: dolan yay bir sonraki seviyeye kalan yolu gösteriyor. */
+function skLevelRing(size){
+  const lp=levelProgress(), r=size/2-5, c=2*Math.PI*r;
+  return `<svg class="skring0" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle class="skTrk" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="4"/>
+    <circle class="skBar" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="4"
+      stroke-linecap="round" stroke-dasharray="${(lp.pct*c).toFixed(1)} ${c.toFixed(1)}"
+      transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text class="lv" x="${size/2}" y="${size/2+2}">${lp.lv}</text>
+    <text class="lb" x="${size/2}" y="${size/2+17}">${t('skLvShort')}</text></svg>`;
+}
+function skLevelCard(){
+  const lp=levelProgress(), pts=skillPoints();
+  const nxt=lp.need
+    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLowerCase()}`
+    : t('skMaxLv');
+  return `<div class="card sklvc">
+    ${skLevelRing(74)}
+    <div class="sklvT">
+      <div class="sklvP"><b class="num${pts?' hot':''}">${pts}</b> <span>${t('skPts')}</span></div>
+      <div class="sub" style="margin-top:2px">${nxt}</div>
+    </div>
+  </div>`;
+}
+/* Ağacın kendisi. skJustTaken burada bir kez okunup siliniyor: açılış
+   animasyonu yalnızca açıldığı anda oynasın, her yeniden çizimde değil. */
+function skTreeSvg(){
+  const just=skJustTaken; skJustTaken=null;
+  const edges=skEdges().map(e=>{
+    const a=skPos(e.a), b=skPos(e.b);
+    const on=hasSkill(e.a.id)&&hasSkill(e.b.id);
+    const near=!on&&(hasSkill(e.a.id)||hasSkill(e.b.id));
+    const br=e.b.br||e.a.br;
+    return `<line class="skedge ${on?'on':near?'near':'off'}" style="--skc:var(--sk-${br})"
+      x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`;
+  }).join('');
+  const nodes=SKILLS.map(sk=>{
+    const p=skPos(sk), r=skRadius(sk), st=skillState(sk);
+    const ico=SKICONS[sk.br||'hub']||SKICONS.hub;
+    const is=Math.round(r*1.05);
+    const badge=st==='owned'
+      ? `<g class="skbadge ok" transform="translate(${(r*0.72).toFixed(0)},${(r*0.72).toFixed(0)})">
+           <circle r="14"/><path d="M-5 0l3.5 3.5L5.5 -3.5"/></g>`
+      : st==='lock'?''
+      : `<g class="skbadge" transform="translate(${(r*0.72).toFixed(0)},${(r*0.72).toFixed(0)})">
+           <circle r="14"/><text y="6">${sk.cost}</text></g>`;
+    return `<g class="sknode ${st}${just===sk.id?' just':''}" style="--skc:var(--sk-${sk.br||'hub'})"
+       transform="translate(${p.x},${p.y})" onclick="skOpen('${sk.id}')" role="button"
+       aria-label="${esc(sk.n[L])}">
+      <circle class="skhit" r="${SK_GEO.hit}"/>
+      <circle class="skburst" r="${r}"/>
+      <circle class="skdisc" r="${r}"/>
+      <circle class="skedgeR" r="${r}"/>
+      <svg class="skico" viewBox="0 0 24 24" x="${-is/2}" y="${-is/2}" width="${is}" height="${is}"
+        fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        stroke-linejoin="round">${ico}</svg>
+      ${badge}</g>`;
+  }).join('');
+  return `<svg class="sktree" viewBox="${skViewBox()}" preserveAspectRatio="xMidYMid meet"
+    role="img" aria-label="${esc(t('skills'))}">
+    <g class="skedges">${edges}</g><g class="sknodes">${nodes}</g></svg>`;
+}
+/* Düğüm kartı: ne yaptığı, neye bağlı olduğu ve açılabiliyorsa düğmesi. */
+function skOpen(id){
+  const sk=skById(id);
+  if(!sk)return;
+  const st=skillState(sk), br=skBranch(sk.br);
+  const effs=Object.keys(sk.eff||{}).map(k=>
+    `<span class="tag ${st==='owned'?'g':'n'}">${skEffLabel(k,sk.eff[k])}</span>`).join('');
+  const reqs=(sk.req||[]).map(r=>skById(r)).filter(Boolean).map(x=>x.n[L]).join(' · ');
+  const foot=
+    st==='owned' ? `<div class="skfoot"><span class="tag g">${t('skOwned')}</span></div>`
+   :st==='open'  ? `<button class="btn p" onclick="skillBuy('${sk.id}')">${t('skUnlockBtn')} · ${sk.cost} ${sk.cost>1?t('skPts'):t('skPt')}</button>`
+   :st==='poor'  ? `<button class="btn" disabled>${t('skNeedPts').replace('{n}',sk.cost)}</button>`
+   : `<button class="btn" disabled>${t('skReqLock')}</button>`;
+  openModal(`
+   <div class="row" style="align-items:flex-start">
+     <div class="skmark ${st}" style="--skc:var(--sk-${sk.br||'hub'})">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">${SKICONS[sk.br||'hub']||SKICONS.hub}</svg></div>
+     <div style="flex:1;min-width:0">
+       <h2>${sk.n[L]}</h2>
+       <div class="sub">${br?br.n[L]:t('agency')}${sk.cost?' · '+sk.cost+' '+(sk.cost>1?t('skPts'):t('skPt')):''}</div>
+     </div>
+   </div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${sk.dsc[L]}</span></div>
+   ${effs?`<div class="sect" style="margin-top:14px">${t('skEffects')}</div><div>${effs}</div>`:''}
+   ${reqs&&st!=='owned'?`<div class="sub" style="margin-top:10px">${t('skReq')}: ${reqs}</div>`:''}
+   <div style="margin-top:16px">${foot}</div>`);
+}
+/* Seviye atlama: haftanın sonunda sıraya giren küçük kutlama. */
+function showLevelUp(){
+  /* Gösterecek bir şey yoksa sırayı kilitlemeden bir sonrakine geç: modal
+     kuyruğu yalnızca closeModal ile ilerlediği için sessizce dönmek olmaz. */
+  if(!S||!S.lvUp){runNextModal();return;}
+  S.lvUp=0;save();
+  const pts=skillPoints();
+  openModal(`<div style="text-align:center;padding:6px 0 2px">
+    <div class="sklvBig">${skLevelRing(96)}</div>
+    <h2 style="margin-top:10px">${t('skLvUp')}</h2>
+    <div class="sub" style="margin:6px auto 0;max-width:300px;line-height:1.5">
+      ${t('skLvUpB').replace('{n}',pts)}</div>
+    <button class="btn p" style="margin-top:18px" onclick="closeModal();navTo('skills')">${t('skOpenTree')}</button>
+    <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('gotIt')}</button>
+  </div>`);
+}
 /* ================= RENDER ================= */
 const ICONS={
 dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
@@ -5454,9 +6098,11 @@ function render(){
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;
   const base=stack[0].v;
+  /* Harcanmamış yetenek puanı da rozet taşır — ağaç açık bir puanla beklemesin. */
+  const badge=v=>v==='inbox'?unread:v==='skills'?skillPoints():0;
   document.getElementById('nav').innerHTML=`<div class="navin">${NAVS.map(v=>
     `<button class="${base===v&&stack.length===1?'on':''}" onclick="navTo('${v}')">
-     <span class="icw">${ICONS[v]}</span>${t(v)}${v==='inbox'&&unread?`<span class="nbadge">${unread>9?'9+':unread}</span>`:''}</button>`).join('')}</div>`;
+     <span class="icw">${ICONS[v]}</span>${t(v)}${badge(v)?`<span class="nbadge${v==='skills'?' acc':''}">${badge(v)>9?'9+':badge(v)}</span>`:''}</button>`).join('')}</div>`;
   const vw=document.getElementById('view');
   vw.innerHTML=VIEWS[c.v](c.id);
   if(vw.classList){vw.classList.remove('vin');void (vw.offsetWidth||0);vw.classList.add('vin');}

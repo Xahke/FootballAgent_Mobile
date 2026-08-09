@@ -15,7 +15,8 @@ function clubMaxWage(p){
      çeker. Gerekçesiz masaya oturmaz zaten (bkz. renewBlock). */
   const reason=renewReason(p);
   const lever=reason==='expiring'?1.12:reason==='form'?1.10:reason==='underpaid'?1.02:0.90;
-  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p);
+  /* skillBonus('wage') — kulübün ödeyebileceği tavanı yükselten tek yer. */
+  const base=marketWage(p.r)*(0.90+(S.rep/500))*(0.8+tm.bud*0.35)*lever*negPerf(p)*(1+skillBonus('wage'));
   /* Yenileme masasında kulüp mevcut maaşın altını teklif etmez — kimse zam
      görüşmesine indirim beklentisiyle oturmaz. İstisnası yaşlanan oyuncu:
      30'unu geçmişse kulübün eli rahatlar, 32'yi geçmişse kesinti isteyebilir. */
@@ -160,11 +161,11 @@ function openTransfer(pid){
    <div class="sub" style="margin-top:6px">${t('pickClubs')}</div>
    ${free?`<div class="negbox"><b>${t('freeFee')}</b>
      <div class="sub" style="margin-top:6px">${t('faDealHint')}</div>
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()}</div></div>`
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()}</div></div>`
    :`<div class="negbox"><b>${t('askFee')}: <span style="color:var(--acc)" id="feeV">${fmtM(v)}</span></b>
      <input type="range" min="${Math.round(v*7)}" max="${Math.round(v*18)}" value="${Math.round(v*10)}" id="feeR"
        oninput="document.getElementById('feeV').textContent=fmtM(this.value/10)">
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${commissionPct()} · ${t('repScales')}</div>
+     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()} · ${t('repScales')}</div>
    </div>
    <div class="sect">${t('clauses')}</div>`}
    <div class="fgrid" style="margin-bottom:4px;${free?'display:none':''}">
@@ -248,7 +249,7 @@ function doTransfer(p,b,fee,quiet,terms){
   p.yrs=R(2,4);p.morale=clamp(Math.max(p.morale+30,70),0,100);p.ignored=0;p.hm=(S.tw||0)+8;p.form=clamp(p.form+5,0,100);
   delete p.freeFor;
   /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
-  const rate=commissionRate();
+  const rate=transferRate();
   /* Geleceğini bir fona sattıysan (bkz. tpoOffer olayı) bu satıştan sana pay yok. */
   const cut=p.tpo?0:(wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate)));
   if(p.tpo)delete p.tpo;

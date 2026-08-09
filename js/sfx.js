@@ -57,7 +57,7 @@ function click(){
 const SFX={tap(){if(sfxOn())click();}};
 /* Tek yakalayıcı: her tıklanabilir öğe otomatik ses çıkarır. Tek tek onclick'lere
    ses eklenmediği için bir dokunuşta birden fazla ses çalma ihtimali de yok. */
-const SFX_SEL='button,.pitem,.dchoice,.lnk,.ftoggle,.trk,.stCard,.matchrow .tn,tr.click,.chips button,.tabs button';
+const SFX_SEL='button,.pitem,.dchoice,.lnk,.ftoggle,.trk,.stCard,.matchrow .tn,tr.click,.chips button,.tabs button,.sknode';
 if(typeof document!=='undefined'&&document.addEventListener){
   document.addEventListener('click',e=>{
     if(!sfxOn())return;

@@ -644,37 +644,32 @@ team(id){
   }).join('')}`;
 },
 skills(){
-  const pts=skillPoints(), earned=skillEarned(), spent=skillSpent();
-  const card=sk=>{
-    const owned=hasSkill(sk.id), locked=skillLocked(sk), afford=pts>=sk.cost;
-    const state=owned?'owned':locked?'locked':afford?'open':'poor';
-    const col=owned?'var(--acc)':locked||!afford?'var(--txt3)':'var(--txt)';
-    return `<div class="pitem${owned?' mine':''}" style="align-items:flex-start;${owned||locked||!afford?'':'cursor:pointer'}"
-      ${owned||locked||!afford?'':`onclick="skillBuy('${sk.id}')"`}>
-      <div style="width:26px;flex-shrink:0;text-align:center;font-weight:800;font-size:11px;color:${col};padding-top:2px">
-        ${owned?'✓':locked?'🔒'.length?'—':'':sk.cost}</div>
-      <div class="pinfo">
-        <div class="pname" style="color:${col}">${sk.n[L]}</div>
-        <div class="psub" style="white-space:normal;line-height:1.45">${sk.d[L]}</div>
-        ${locked?`<div class="psub" style="color:var(--txt3)">${t('skTierLock')}</div>`:''}
-      </div>
-      ${owned?`<span class="tag g">${t('skOwned')}</span>`:`<span class="faint" style="font-size:10.5px">${sk.cost} ${t('skPt')}</span>`}
-    </div>`;
-  };
+  const pts=skillPoints(), spent=skillSpent(), earned=skillEarned();
+  /* Künyedeki ok dalın yön vektöründen türetiliyor — yeni bir dal eklendiğinde
+     burada elle yazılacak bir şey kalmasın. */
+  const arrow=d=>({'0,-1':'↑','1,0':'→','0,1':'↓','-1,0':'←',
+                   '1,-1':'↗','1,1':'↘','-1,1':'↙','-1,-1':'↖'})[d.join(',')]||'•';
+  const legend=SK_BRANCH.map(b=>{
+    const got=branchTaken(b.id), tot=branchTotal(b.id);
+    return `<div class="skchip${got?' on':''}" style="--skc:var(--sk-${b.id})">
+      <span class="skdot">${arrow(b.dir)}</span>
+      <div class="skchipT"><b>${b.n[L]}</b>
+      <span>${t('skBranchProg').replace('{a}',got).replace('{b}',tot)}</span></div></div>`;
+  }).join('');
   return `<h2 class="sec">${t('skills')}</h2>
-  <div class="card">
+  ${skLevelCard()}
+  <div class="skleg">${legend}</div>
+  <div class="skwrap">${skTreeSvg()}</div>
+  <div class="card tight" style="padding:14px">
+    <div class="sub" style="line-height:1.5">${t('skTreeHint')}</div>
+    <div class="divider" style="margin:12px -14px"></div>
     <div class="grid3">
       <div class="stat"><div class="v" style="color:${pts>0?'var(--acc)':''}">${pts}</div><div class="l">${t('skAvail')}</div></div>
       <div class="stat"><div class="v">${spent}</div><div class="l">${t('skSpent')}</div></div>
       <div class="stat"><div class="v">${earned}</div><div class="l">${t('skTotal')}</div></div>
     </div>
-    <div class="divider"></div>
-    <div class="sub">${t('skHint').replace('{n}',SK_PER)}</div>
   </div>
-  ${SK_BRANCH.map(([br,nm,ds])=>`
-    <div class="sect" style="margin:16px 2px 4px">${nm[L]}</div>
-    <div class="sub" style="margin:0 2px 8px">${ds[L]}</div>
-    ${listWrap(SKILLS.filter(s2=>s2.br===br).sort((a,b)=>a.tier-b.tier).map(card).join(''))}`).join('')}`;
+  <div class="sub" style="margin:0 2px 8px">${t('skHint').replace('{n}',LV.bonus)}</div>`;
 },
 /* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
    ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
@@ -840,6 +835,126 @@ player(id){
   :`<div class="empty" style="padding:18px">${t('hasAgent')}</div>`}`;
 }
 };
+/* ================= YETENEK AĞACI =================
+   Ağaç tek bir SVG: kenarlar altta, düğümler üstte. Yerleşim skills.js'ten
+   geliyor (skPos/skEdges/skViewBox), burada yalnızca çizim var — yeni bir dal
+   eklendiğinde bu dosyada hiçbir şey değişmiyor.
+
+   Düğüm rozetleri dalın simgesini taşıyor; 24 ayrı ikon yerine dört dal simgesi
+   yönle birlikte okunuyor. Simgeler uygulamanın geri kalanıyla aynı ailede. */
+const SKICONS={
+ hub:'<path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/>',
+ tb :'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>',
+ fd :'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5V7"/><path d="M20.5 12H17"/>',
+ ag :'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9"/><path d="M14.8 9.2c-.6-.8-1.7-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1 1.7 2.8 2c1.8.3 2.8 1 2.8 2s-1.2 2-2.8 2c-1.1 0-2.2-.4-2.8-1.2"/>',
+ nw :'<circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/>'
+};
+/* Seviye halkası: dolan yay bir sonraki seviyeye kalan yolu gösteriyor. */
+function skLevelRing(size){
+  const lp=levelProgress(), r=size/2-5, c=2*Math.PI*r;
+  return `<svg class="skring0" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle class="skTrk" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="4"/>
+    <circle class="skBar" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="4"
+      stroke-linecap="round" stroke-dasharray="${(lp.pct*c).toFixed(1)} ${c.toFixed(1)}"
+      transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text class="lv" x="${size/2}" y="${size/2+2}">${lp.lv}</text>
+    <text class="lb" x="${size/2}" y="${size/2+17}">${t('skLvShort')}</text></svg>`;
+}
+function skLevelCard(){
+  const lp=levelProgress(), pts=skillPoints();
+  const nxt=lp.need
+    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLowerCase()}`
+    : t('skMaxLv');
+  return `<div class="card sklvc">
+    ${skLevelRing(74)}
+    <div class="sklvT">
+      <div class="sklvP"><b class="num${pts?' hot':''}">${pts}</b> <span>${t('skPts')}</span></div>
+      <div class="sub" style="margin-top:2px">${nxt}</div>
+    </div>
+  </div>`;
+}
+/* Ağacın kendisi. skJustTaken burada bir kez okunup siliniyor: açılış
+   animasyonu yalnızca açıldığı anda oynasın, her yeniden çizimde değil. */
+function skTreeSvg(){
+  const just=skJustTaken; skJustTaken=null;
+  const edges=skEdges().map(e=>{
+    const a=skPos(e.a), b=skPos(e.b);
+    const on=hasSkill(e.a.id)&&hasSkill(e.b.id);
+    const near=!on&&(hasSkill(e.a.id)||hasSkill(e.b.id));
+    const br=e.b.br||e.a.br;
+    return `<line class="skedge ${on?'on':near?'near':'off'}" style="--skc:var(--sk-${br})"
+      x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`;
+  }).join('');
+  const nodes=SKILLS.map(sk=>{
+    const p=skPos(sk), r=skRadius(sk), st=skillState(sk);
+    const ico=SKICONS[sk.br||'hub']||SKICONS.hub;
+    const is=Math.round(r*1.05);
+    const badge=st==='owned'
+      ? `<g class="skbadge ok" transform="translate(${(r*0.72).toFixed(0)},${(r*0.72).toFixed(0)})">
+           <circle r="14"/><path d="M-5 0l3.5 3.5L5.5 -3.5"/></g>`
+      : st==='lock'?''
+      : `<g class="skbadge" transform="translate(${(r*0.72).toFixed(0)},${(r*0.72).toFixed(0)})">
+           <circle r="14"/><text y="6">${sk.cost}</text></g>`;
+    return `<g class="sknode ${st}${just===sk.id?' just':''}" style="--skc:var(--sk-${sk.br||'hub'})"
+       transform="translate(${p.x},${p.y})" onclick="skOpen('${sk.id}')" role="button"
+       aria-label="${esc(sk.n[L])}">
+      <circle class="skhit" r="${SK_GEO.hit}"/>
+      <circle class="skburst" r="${r}"/>
+      <circle class="skdisc" r="${r}"/>
+      <circle class="skedgeR" r="${r}"/>
+      <svg class="skico" viewBox="0 0 24 24" x="${-is/2}" y="${-is/2}" width="${is}" height="${is}"
+        fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        stroke-linejoin="round">${ico}</svg>
+      ${badge}</g>`;
+  }).join('');
+  return `<svg class="sktree" viewBox="${skViewBox()}" preserveAspectRatio="xMidYMid meet"
+    role="img" aria-label="${esc(t('skills'))}">
+    <g class="skedges">${edges}</g><g class="sknodes">${nodes}</g></svg>`;
+}
+/* Düğüm kartı: ne yaptığı, neye bağlı olduğu ve açılabiliyorsa düğmesi. */
+function skOpen(id){
+  const sk=skById(id);
+  if(!sk)return;
+  const st=skillState(sk), br=skBranch(sk.br);
+  const effs=Object.keys(sk.eff||{}).map(k=>
+    `<span class="tag ${st==='owned'?'g':'n'}">${skEffLabel(k,sk.eff[k])}</span>`).join('');
+  const reqs=(sk.req||[]).map(r=>skById(r)).filter(Boolean).map(x=>x.n[L]).join(' · ');
+  const foot=
+    st==='owned' ? `<div class="skfoot"><span class="tag g">${t('skOwned')}</span></div>`
+   :st==='open'  ? `<button class="btn p" onclick="skillBuy('${sk.id}')">${t('skUnlockBtn')} · ${sk.cost} ${sk.cost>1?t('skPts'):t('skPt')}</button>`
+   :st==='poor'  ? `<button class="btn" disabled>${t('skNeedPts').replace('{n}',sk.cost)}</button>`
+   : `<button class="btn" disabled>${t('skReqLock')}</button>`;
+  openModal(`
+   <div class="row" style="align-items:flex-start">
+     <div class="skmark ${st}" style="--skc:var(--sk-${sk.br||'hub'})">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">${SKICONS[sk.br||'hub']||SKICONS.hub}</svg></div>
+     <div style="flex:1;min-width:0">
+       <h2>${sk.n[L]}</h2>
+       <div class="sub">${br?br.n[L]:t('agency')}${sk.cost?' · '+sk.cost+' '+(sk.cost>1?t('skPts'):t('skPt')):''}</div>
+     </div>
+   </div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${sk.dsc[L]}</span></div>
+   ${effs?`<div class="sect" style="margin-top:14px">${t('skEffects')}</div><div>${effs}</div>`:''}
+   ${reqs&&st!=='owned'?`<div class="sub" style="margin-top:10px">${t('skReq')}: ${reqs}</div>`:''}
+   <div style="margin-top:16px">${foot}</div>`);
+}
+/* Seviye atlama: haftanın sonunda sıraya giren küçük kutlama. */
+function showLevelUp(){
+  /* Gösterecek bir şey yoksa sırayı kilitlemeden bir sonrakine geç: modal
+     kuyruğu yalnızca closeModal ile ilerlediği için sessizce dönmek olmaz. */
+  if(!S||!S.lvUp){runNextModal();return;}
+  S.lvUp=0;save();
+  const pts=skillPoints();
+  openModal(`<div style="text-align:center;padding:6px 0 2px">
+    <div class="sklvBig">${skLevelRing(96)}</div>
+    <h2 style="margin-top:10px">${t('skLvUp')}</h2>
+    <div class="sub" style="margin:6px auto 0;max-width:300px;line-height:1.5">
+      ${t('skLvUpB').replace('{n}',pts)}</div>
+    <button class="btn p" style="margin-top:18px" onclick="closeModal();navTo('skills')">${t('skOpenTree')}</button>
+    <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('gotIt')}</button>
+  </div>`);
+}
 /* ================= RENDER ================= */
 const ICONS={
 dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
@@ -952,9 +1067,11 @@ function render(){
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;
   const base=stack[0].v;
+  /* Harcanmamış yetenek puanı da rozet taşır — ağaç açık bir puanla beklemesin. */
+  const badge=v=>v==='inbox'?unread:v==='skills'?skillPoints():0;
   document.getElementById('nav').innerHTML=`<div class="navin">${NAVS.map(v=>
     `<button class="${base===v&&stack.length===1?'on':''}" onclick="navTo('${v}')">
-     <span class="icw">${ICONS[v]}</span>${t(v)}${v==='inbox'&&unread?`<span class="nbadge">${unread>9?'9+':unread}</span>`:''}</button>`).join('')}</div>`;
+     <span class="icw">${ICONS[v]}</span>${t(v)}${badge(v)?`<span class="nbadge${v==='skills'?' acc':''}">${badge(v)>9?'9+':badge(v)}</span>`:''}</button>`).join('')}</div>`;
   const vw=document.getElementById('view');
   vw.innerHTML=VIEWS[c.v](c.id);
   if(vw.classList){vw.classList.remove('vin');void (vw.offsetWidth||0);vw.classList.add('vin');}

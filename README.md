@@ -44,6 +44,10 @@ that nobody is watching. That's your opening.
   pays later.
 - **Keep him.** Morale comes from his club and the pitch. **Trust** comes from you.
   Events force you to choose between the money and the relationship.
+- **Specialise.** Reputation levels you up, and every level buys a node on a skill
+  tree that runs out from your agency in four directions — the table, the field,
+  the agency, the network. A node only opens next to one you already hold, and the
+  four branches cost more than any career can earn. You will not finish them all.
 
 Your commission scales with reputation — 5% when nobody knows you, up to 15% once
 your name opens doors.

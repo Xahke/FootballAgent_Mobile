@@ -24,6 +24,9 @@
   --sh:none; --sh-el:none;
   --tap:.14s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+  /* yetenek ağacı: dört dal, dört mürekkep tonu — merkez nötr */
+  --sk-hub:var(--n7); --sk-tb:#2f5d7c; --sk-fd:#1c6b52; --sk-ag:#8a6a24; --sk-nw:#7a4657;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scrollbar-width:thin;scrollbar-color:var(--n4) transparent}
@@ -361,6 +364,90 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 
 /* ===================== YARDIMCILAR ===================== */
 .zone1{color:var(--txt)} .zone2{color:var(--txt2)} .zoneR{color:var(--bad)}
+
+/* ===================== YETENEK AĞACI =====================
+   Ağaç bir SVG; renkler --sk-* değişkenlerinden, biçim aşağıdan geliyor.
+   Düğümün durumu (owned / open / poor / lock) tek sınıfla taşınıyor. */
+.sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+.skring0{flex-shrink:0}
+.skring0 .skTrk{stroke:var(--line2)}
+.skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+.skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+.sklvT{flex:1;min-width:0}
+.sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.sklvP b.hot{color:var(--acc)}
+.sklvP span{font-size:12.5px;color:var(--txt3)}
+.sklvBig{display:flex;justify-content:center}
+
+/* dal künyeleri — ok işareti ağaçtaki yönü söyler */
+.skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+.skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+.skchip.on .skdot{background:var(--skc);color:var(--sur)}
+.skchipT{min-width:0;line-height:1.25}
+.skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+
+/* ağaç */
+.skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+.sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+.skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+.skedge.near{stroke-dasharray:2 16}
+.skedge.on{stroke:var(--skc);stroke-width:9}
+.sknode{cursor:pointer}
+.sknode .skhit{fill:transparent}
+.sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+.sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+.sknode .skico{color:var(--txt3)}
+.sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+.sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+.sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+.sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+
+.sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+.sknode.lock .skico{opacity:.4}
+/* açılabilir ama puan yetmiyor: yol görünür, düğüm sönük */
+.sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+/* açılabilir: dalın rengini alır ve yavaşça nefes alır */
+.sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+.sknode.open .skico{color:var(--skc)}
+.sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+.sknode.open .skbadge text{fill:var(--sur)}
+.sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo 2.4s ease-out infinite}
+/* açık: dolu düğüm, ters renkte simge */
+.sknode.owned .skdisc{fill:var(--skc)}
+.sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+.sknode.owned .skico{color:var(--sur)}
+.sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+.sknode.owned .skbadge path{stroke:var(--skc)}
+.sknode:active .skdisc{opacity:.72}
+/* yeni açılan düğüm bir kez patlar — sıra .open'dan sonra, o kazansın diye */
+.sknode.just .skdisc{animation:skPop .5s cubic-bezier(.2,1.5,.4,1)}
+.sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst .7s ease-out 1}
+@keyframes skHalo{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* düğüm kartı */
+.skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+.skmark svg{width:22px;height:22px}
+.skmark.owned{background:var(--skc);color:var(--sur)}
+.skfoot{display:flex;justify-content:center;padding:6px 0}
+.nbadge.acc{background:var(--acc);color:var(--accT)}
+
 
 @media (max-width:374px){
   main{padding:14px 12px 20px}

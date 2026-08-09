@@ -23,6 +23,9 @@ html[data-theme="saha"]{
   --sh:0 2px 10px rgba(3,7,15,.45);
   --sh-el:0 6px 22px rgba(3,7,15,.55);
   --tap:.15s cubic-bezier(.3,.7,.4,1);
+
+   
+  --sk-hub:var(--txt2); --sk-tb:#4d9fff; --sk-fd:#1ec97e; --sk-ag:#e9bc5a; --sk-nw:#b07cf0;
 }
 html[data-theme="saha"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="saha"]{scrollbar-width:thin;scrollbar-color:var(--sur3) transparent}
@@ -334,6 +337,76 @@ html[data-theme="saha"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="saha"] .zone1{color:var(--gold)}
 html[data-theme="saha"] .zone2{color:var(--blue)}
 html[data-theme="saha"] .zoneR{color:var(--bad)}
+html[data-theme="saha"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="saha"] .skring0{flex-shrink:0}
+html[data-theme="saha"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="saha"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="saha"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="saha"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="saha"] .sklvT{flex:1;min-width:0}
+html[data-theme="saha"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="saha"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="saha"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="saha"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="saha"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="saha"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="saha"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="saha"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="saha"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="saha"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="saha"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="saha"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="saha"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="saha"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="saha"] .sknode{cursor:pointer}
+html[data-theme="saha"] .sknode .skhit{fill:transparent}
+html[data-theme="saha"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="saha"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="saha"] .sknode .skico{color:var(--txt3)}
+html[data-theme="saha"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="saha"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="saha"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="saha"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="saha"] .sknode.lock .skico{opacity:.4}
+html[data-theme="saha"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="saha"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="saha"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="saha"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="saha"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="saha"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__saha 2.4s ease-out infinite}
+html[data-theme="saha"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="saha"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="saha"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="saha"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="saha"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="saha"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="saha"] .sknode.just .skdisc{animation:skPop__saha .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="saha"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__saha .7s ease-out 1}
+@keyframes skHalo__saha{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__saha{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__saha{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="saha"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="saha"] .skmark svg{width:22px;height:22px}
+html[data-theme="saha"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="saha"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="saha"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="saha"] .skwrap{box-shadow:var(--sh)}
+html[data-theme="saha"] .sknode.owned .skdisc{filter:drop-shadow(0 0 6px var(--skc))}
 @media (max-width:374px){html[data-theme="saha"] main{padding:12px 10px 18px}
 html[data-theme="saha"] .agCash{font-size:23px}
 html[data-theme="saha"] .statusRow{gap:6px}
@@ -364,6 +437,9 @@ html[data-theme="gazete"]{
   --tap:.12s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#3a5a76; --sk-fd:#1f6b4a; --sk-ag:#7d6320; --sk-nw:#a3271c;
 }
 html[data-theme="gazete"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="gazete"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -661,6 +737,76 @@ html[data-theme="gazete"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="gazete"] .zone1{color:var(--txt)}
 html[data-theme="gazete"] .zone2{color:var(--txt2)}
 html[data-theme="gazete"] .zoneR{color:var(--bad)}
+html[data-theme="gazete"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="gazete"] .skring0{flex-shrink:0}
+html[data-theme="gazete"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="gazete"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="gazete"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="gazete"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="gazete"] .sklvT{flex:1;min-width:0}
+html[data-theme="gazete"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="gazete"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="gazete"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="gazete"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="gazete"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="gazete"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="gazete"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="gazete"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="gazete"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="gazete"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="gazete"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="gazete"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="gazete"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="gazete"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="gazete"] .sknode{cursor:pointer}
+html[data-theme="gazete"] .sknode .skhit{fill:transparent}
+html[data-theme="gazete"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="gazete"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="gazete"] .sknode .skico{color:var(--txt3)}
+html[data-theme="gazete"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="gazete"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="gazete"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="gazete"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="gazete"] .sknode.lock .skico{opacity:.4}
+html[data-theme="gazete"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="gazete"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="gazete"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="gazete"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="gazete"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="gazete"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__gazete 2.4s ease-out infinite}
+html[data-theme="gazete"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="gazete"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="gazete"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="gazete"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="gazete"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="gazete"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="gazete"] .sknode.just .skdisc{animation:skPop__gazete .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="gazete"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__gazete .7s ease-out 1}
+@keyframes skHalo__gazete{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__gazete{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__gazete{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="gazete"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="gazete"] .skmark svg{width:22px;height:22px}
+html[data-theme="gazete"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="gazete"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="gazete"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="gazete"] .skring0 .lv{font-family:var(--serif)}
+html[data-theme="gazete"] .skchipT b{font-family:var(--serif)}
 @media (max-width:374px){html[data-theme="gazete"] main{padding:14px 12px 20px}
 html[data-theme="gazete"] .agCash{font-size:32px}
 html[data-theme="gazete"] .hstat .l{display:none}}
@@ -689,6 +835,9 @@ html[data-theme="terminal"]{
   --tap:.12s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#5f8fb5; --sk-fd:#4f9c6b; --sk-ag:#a8863c; --sk-nw:#b06a7e;
 }
 html[data-theme="terminal"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="terminal"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -990,6 +1139,75 @@ html[data-theme="terminal"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="terminal"] .zone1{color:var(--txt)}
 html[data-theme="terminal"] .zone2{color:var(--txt2)}
 html[data-theme="terminal"] .zoneR{color:var(--bad)}
+html[data-theme="terminal"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="terminal"] .skring0{flex-shrink:0}
+html[data-theme="terminal"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="terminal"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="terminal"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="terminal"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="terminal"] .sklvT{flex:1;min-width:0}
+html[data-theme="terminal"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="terminal"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="terminal"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="terminal"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="terminal"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="terminal"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="terminal"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="terminal"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="terminal"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="terminal"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="terminal"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="terminal"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="terminal"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="terminal"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="terminal"] .sknode{cursor:pointer}
+html[data-theme="terminal"] .sknode .skhit{fill:transparent}
+html[data-theme="terminal"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="terminal"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="terminal"] .sknode .skico{color:var(--txt3)}
+html[data-theme="terminal"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="terminal"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="terminal"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="terminal"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="terminal"] .sknode.lock .skico{opacity:.4}
+html[data-theme="terminal"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="terminal"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="terminal"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="terminal"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="terminal"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="terminal"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__terminal 2.4s ease-out infinite}
+html[data-theme="terminal"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="terminal"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="terminal"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="terminal"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="terminal"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="terminal"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="terminal"] .sknode.just .skdisc{animation:skPop__terminal .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="terminal"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__terminal .7s ease-out 1}
+@keyframes skHalo__terminal{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__terminal{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__terminal{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="terminal"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="terminal"] .skmark svg{width:22px;height:22px}
+html[data-theme="terminal"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="terminal"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="terminal"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="terminal"] .skring0 .lv,html[data-theme="terminal"] .sknode .skbadge text{font-family:var(--mono)}
 @media (max-width:374px){html[data-theme="terminal"] main{padding:12px 10px 18px}
 html[data-theme="terminal"] .agCash{font-size:29px}
 html[data-theme="terminal"] .hstat .l{display:none}}
@@ -1017,6 +1235,9 @@ html[data-theme="dosya"]{
   --sh:none; --sh-el:none;
   --tap:.14s ease;
   --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+   
+  --sk-hub:var(--n7); --sk-tb:#2f5d7c; --sk-fd:#1c6b52; --sk-ag:#8a6a24; --sk-nw:#7a4657;
 }
 html[data-theme="dosya"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="dosya"]{scrollbar-width:thin;scrollbar-color:var(--n4) transparent}
@@ -1314,6 +1535,74 @@ html[data-theme="dosya"] .toast.show{opacity:1;transform:translate(-50%,0)}
 html[data-theme="dosya"] .zone1{color:var(--txt)}
 html[data-theme="dosya"] .zone2{color:var(--txt2)}
 html[data-theme="dosya"] .zoneR{color:var(--bad)}
+html[data-theme="dosya"] .sklvc{display:flex;align-items:center;gap:16px;padding:16px 18px}
+html[data-theme="dosya"] .skring0{flex-shrink:0}
+html[data-theme="dosya"] .skring0 .skTrk{stroke:var(--line2)}
+html[data-theme="dosya"] .skring0 .skBar{stroke:var(--acc);transition:stroke-dasharray .45s ease}
+html[data-theme="dosya"] .skring0 .lv{fill:var(--txt);font-size:26px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+html[data-theme="dosya"] .skring0 .lb{fill:var(--txt3);font-size:9px;font-weight:600;text-anchor:middle;letter-spacing:.1em}
+html[data-theme="dosya"] .sklvT{flex:1;min-width:0}
+html[data-theme="dosya"] .sklvP b{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .sklvP b.hot{color:var(--acc)}
+html[data-theme="dosya"] .sklvP span{font-size:12.5px;color:var(--txt3)}
+html[data-theme="dosya"] .sklvBig{display:flex;justify-content:center}
+html[data-theme="dosya"] .skleg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+html[data-theme="dosya"] .skchip{display:flex;align-items:center;gap:9px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:9px 11px;min-height:48px}
+html[data-theme="dosya"] .skchip .skdot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:var(--skc);
+  box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="dosya"] .skchip.on .skdot{background:var(--skc);color:var(--sur)}
+html[data-theme="dosya"] .skchipT{min-width:0;line-height:1.25}
+html[data-theme="dosya"] .skchipT b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+html[data-theme="dosya"] .skchipT span{font-size:11px;color:var(--txt3);font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .skwrap{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px;margin-bottom:14px}
+html[data-theme="dosya"] .sktree{display:block;width:100%;height:auto;touch-action:manipulation}
+html[data-theme="dosya"] .skedge{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round}
+html[data-theme="dosya"] .skedge.near{stroke-dasharray:2 16}
+html[data-theme="dosya"] .skedge.on{stroke:var(--skc);stroke-width:9}
+html[data-theme="dosya"] .sknode{cursor:pointer}
+html[data-theme="dosya"] .sknode .skhit{fill:transparent}
+html[data-theme="dosya"] .sknode .skdisc{fill:var(--sur);transform-box:fill-box;transform-origin:center}
+html[data-theme="dosya"] .sknode .skedgeR{fill:none;stroke:var(--line2);stroke-width:3}
+html[data-theme="dosya"] .sknode .skico{color:var(--txt3)}
+html[data-theme="dosya"] .sknode .skburst{fill:none;stroke:none;transform-box:fill-box;transform-origin:center;
+  pointer-events:none}
+html[data-theme="dosya"] .sknode .skbadge circle{fill:var(--sur);stroke:var(--line2);stroke-width:2}
+html[data-theme="dosya"] .sknode .skbadge text{fill:var(--txt2);font-size:18px;font-weight:700;text-anchor:middle;
+  font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .sknode .skbadge path{fill:none;stroke:var(--acc);stroke-width:2.8;stroke-linecap:round;
+  stroke-linejoin:round}
+html[data-theme="dosya"] .sknode.lock .skedgeR{stroke:var(--line);stroke-width:2;stroke-dasharray:4 7}
+html[data-theme="dosya"] .sknode.lock .skico{opacity:.4}
+html[data-theme="dosya"] .sknode.poor .skedgeR{stroke:var(--line2);stroke-width:3;stroke-dasharray:9 6}
+html[data-theme="dosya"] .sknode.open .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="dosya"] .sknode.open .skico{color:var(--skc)}
+html[data-theme="dosya"] .sknode.open .skbadge circle{fill:var(--skc);stroke:var(--skc)}
+html[data-theme="dosya"] .sknode.open .skbadge text{fill:var(--sur)}
+html[data-theme="dosya"] .sknode.open .skburst{stroke:var(--skc);stroke-width:3;animation:skHalo__dosya 2.4s ease-out infinite}
+html[data-theme="dosya"] .sknode.owned .skdisc{fill:var(--skc)}
+html[data-theme="dosya"] .sknode.owned .skedgeR{stroke:var(--skc);stroke-width:4}
+html[data-theme="dosya"] .sknode.owned .skico{color:var(--sur)}
+html[data-theme="dosya"] .sknode.owned .skbadge circle{fill:var(--sur);stroke:var(--skc)}
+html[data-theme="dosya"] .sknode.owned .skbadge path{stroke:var(--skc)}
+html[data-theme="dosya"] .sknode:active .skdisc{opacity:.72}
+html[data-theme="dosya"] .sknode.just .skdisc{animation:skPop__dosya .5s cubic-bezier(.2,1.5,.4,1)}
+html[data-theme="dosya"] .sknode.just .skburst{stroke:var(--skc);stroke-width:4;animation:skBurst__dosya .7s ease-out 1}
+@keyframes skHalo__dosya{0%{transform:scale(1);stroke-opacity:.5}
+  70%,100%{transform:scale(1.42);stroke-opacity:0}}
+@keyframes skBurst__dosya{from{transform:scale(1);stroke-opacity:.9}to{transform:scale(2.1);stroke-opacity:0}}
+@keyframes skPop__dosya{0%{transform:scale(.55)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+html[data-theme="dosya"] .skmark{width:44px;height:44px;border-radius:var(--r-s);flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:var(--skc);box-shadow:inset 0 0 0 1.5px var(--skc)}
+html[data-theme="dosya"] .skmark svg{width:22px;height:22px}
+html[data-theme="dosya"] .skmark.owned{background:var(--skc);color:var(--sur)}
+html[data-theme="dosya"] .skfoot{display:flex;justify-content:center;padding:6px 0}
+html[data-theme="dosya"] .nbadge.acc{background:var(--acc);color:var(--accT)}
 @media (max-width:374px){html[data-theme="dosya"] main{padding:14px 12px 20px}
 html[data-theme="dosya"] .agCash{font-size:33px}
 html[data-theme="dosya"] .pitem{padding:12px 12px}
