@@ -67,7 +67,8 @@ const SK_KEY={
   repg :{f:'pct', n:{tr:'İtibar kazancı',    en:'Reputation gain'}},
   fee  :{f:'pct', n:{tr:'Transfer komisyonu',en:'Transfer cut'}},
   bid  :{f:'pct', n:{tr:'Teklif kabulü',     en:'Bid acceptance'}},
-  mor  :{f:'pctD',n:{tr:'Moral kaybı',       en:'Morale losses'}}
+  mor  :{f:'pctD',n:{tr:'Moral kaybı',       en:'Morale losses'}},
+  loy  :{f:'pctD',n:{tr:'Ayartma riski',     en:'Poaching risk'}}
 };
 function skEffLabel(k,v){
   const m=SK_KEY[k];
@@ -206,10 +207,10 @@ const SKILLS=[
  n:{tr:'Sıcak Hat',en:'The Hotline'},
  dsc:{tr:'Sportif direktörler telefonunu ilk turda açıyor.',
       en:'Sporting directors pick up on the first ring.'}},
-{id:'nw5',br:'nw',d:3,s:1,cost:2,req:['nw3'],eff:{pitch:0.06,mor:0.15},
+{id:'nw5',br:'nw',d:3,s:1,cost:2,req:['nw3'],eff:{pitch:0.06,mor:0.15,loy:0.20},
  n:{tr:'Yıldız Muamelesi',en:'Star Treatment'},
- dsc:{tr:'Müşterin kendini portföyün en önemli adamı gibi hissediyor — çünkü öyle davranıyorsun.',
-      en:'Your client feels like the most important man on your books, because you treat him that way.'}},
+ dsc:{tr:'Müşterin kendini portföyün en önemli adamı gibi hissediyor — çünkü öyle davranıyorsun. Rakip ajansın telefonu boşuna çalıyor.',
+      en:'Your client feels like the most important man on your books, because you treat him that way. Rival agencies call for nothing.'}},
 {id:'nw6',br:'nw',d:4,s:0,cost:2,req:['nw4','nw5'],eff:{fee:0.10,bid:0.04},
  n:{tr:'Büyük Anlaşma',en:'The Big One'},
  dsc:{tr:'Artık transferi sen kuruyorsun, kulüpler yalnızca imzalıyor.',

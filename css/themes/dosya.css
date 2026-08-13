@@ -27,6 +27,9 @@
 
   /* yetenek ağacı: dört dal, dört mürekkep tonu — merkez nötr */
   --sk-hub:var(--n7); --sk-tb:#2f5d7c; --sk-fd:#1c6b52; --sk-ag:#8a6a24; --sk-nw:#7a4657;
+
+  /* keşif haritası: soğuk gri deniz, açık kara */
+  --map-sea:#e7edf1; --map-land:#dbe1e6; --map-fog:#e9edf0; --map-coast:#c2cad2;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scrollbar-width:thin;scrollbar-color:var(--n4) transparent}
@@ -284,7 +287,7 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .agCash{font-size:40px;font-weight:600;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--txt);
   line-height:1;margin-top:20px}
 .agCash small{font-size:13.5px;color:var(--acc);font-weight:500;letter-spacing:-.01em;margin-left:10px}
-.agGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:20px;border-top:1px solid var(--line);
+.agGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:20px;border-top:1px solid var(--line);
   padding-top:14px}
 .agCell{background:none;border-radius:0;padding:0 12px;text-align:right;border-right:1px solid var(--line)}
 .agCell:first-child{padding-left:0}
@@ -448,6 +451,65 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .skfoot{display:flex;justify-content:center;padding:6px 0}
 .nbadge.acc{background:var(--acc);color:var(--accT)}
 
+
+/* ===================== KEŞİF HARİTASI =====================
+   Kamera tek bir grubun transform'unu değiştiriyor; kaydırma ve yakınlaştırma
+   sırasında hiçbir şey yeniden çizilmiyor. Bölge renkleri yalnız ilerlemeyi
+   anlatır — coğrafi bir kısıt yok, her bölge alınabilir. */
+.mapwrap{position:relative;background:var(--map-sea);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;line-height:0;
+  height:clamp(280px,52vh,460px);touch-action:none}
+.mapsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none}
+.mapsvg:active{cursor:grabbing}
+.mapsea{fill:var(--map-sea)}
+/* oyunun bölgesi olmayan ülkeler: zemin, geri çekilsin */
+.mapland{fill:var(--map-land);stroke:var(--map-coast);stroke-width:1.2;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.mapterr{stroke:var(--map-coast);stroke-width:1.4;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;transition:fill-opacity .2s ease}
+/* --- durumlar: full > partial > scouting > open --- */
+/* fog: oyunda ligi olmayan bölge — bugünkü veriyle oluşmuyor, ileriye dönük */
+.mapterr.fog{fill:var(--map-fog)}
+.mapmark.fog .mk{stroke:var(--map-coast);stroke-opacity:.5}
+.mapmark.fog .mkdot{fill:var(--map-coast);fill-opacity:.4}
+.mapkey.fog i{background:var(--map-fog)}
+.mapterr.open{fill:var(--acc);fill-opacity:.16;stroke:var(--map-coast)}
+.mapterr.partial{fill:var(--acc);fill-opacity:.62;stroke:var(--acc);stroke-width:1.8}
+.mapterr.full{fill:var(--acc);fill-opacity:.95;stroke:var(--acc);stroke-width:1.8}
+.mapterr.scouting{fill:var(--warn);fill-opacity:.55;stroke:var(--warn);stroke-width:1.8;
+  stroke-dasharray:4 3}
+/* --- işaretler: kamerayla birlikte ölçekleniyor (bkz. mapMarkScale) --- */
+.mapmark .mk{fill:none;stroke-width:9}
+.mapmark .mkdot{fill:none}
+.mapmark.open .mk{stroke:var(--map-coast);stroke-opacity:.8}
+.mapmark.open .mkdot{fill:var(--map-coast);fill-opacity:.65}
+.mapmark.partial .mk,.mapmark.full .mk{stroke:var(--accT);stroke-opacity:.9}
+.mapmark.partial .mkdot,.mapmark.full .mkdot{fill:var(--accT)}
+.mapmark.scouting .mk{stroke:var(--warn)}
+.mapmark.scouting .mkdot{fill:var(--warn)}
+
+/* yakınlaştırma düğmeleri */
+.mapzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;
+  line-height:1}
+.mapzoom button{width:38px;height:38px;border-radius:var(--r-s);background:var(--sur);
+  border:1px solid var(--line2);color:var(--txt);font-size:17px;font-weight:600;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;
+  box-shadow:var(--sh)}
+.mapzoom button:active{background:var(--sur3)}
+
+/* gösterge */
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 12px}
+.mapkey{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt3)}
+.mapkey b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+.mapkey i{width:11px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px var(--map-coast)}
+.mapkey.full i{background:var(--acc)}
+.mapkey.partial i{background:var(--acc);opacity:.62}
+.mapkey.scouting i{background:var(--warn);opacity:.6}
+.mapkey.open i{background:var(--acc);opacity:.18}
+/* panodaki keşif hücresi haritaya götürüyor */
+.agCell.tap{cursor:pointer}
 
 @media (max-width:374px){
   main{padding:14px 12px 20px}

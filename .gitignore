@@ -3,6 +3,10 @@ www/
 android/
 package-lock.json
 
+# Natural Earth kaynağının yerel kopyası. Üretilen js/worldgeo.js depoda
+# durduğu için oyunun buna ihtiyacı yok; yalnız yeniden üretirken indirilir.
+tools/.geocache/
+
 # --- public repo: bunlar asla commit'lenmemeli ---
 # Android imza anahtarı ve parolaları. Sızarsa uygulamanın sahte sürümü imzalanabilir.
 *.jks

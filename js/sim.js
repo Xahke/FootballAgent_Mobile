@@ -264,6 +264,9 @@ function nextWeek(){
     } else p.ignored=0;
     if(p.yrs===1&&S.week%6===0)pushNews('expire',{n:p.n,pid:p.id,y:1},'warn');
   });
+  /* Rakip ajanslar transfer piyasasından önce hareket eder: bu hafta imzaladıkları
+     oyuncu piyasa listesinden düşmüş olur, gördüğün liste gerçeği söyler. */
+  simRivals();
   simTransfers();
   S.wkRep=[];        // bu haftanın müşteri raporu sıfırdan toplanır
   const repWeek=S.week;
@@ -274,9 +277,13 @@ function nextWeek(){
   if(S.rep>=35&&RF()<0.10+S.rep/400){
     const cands=S.players.filter(p=>p.agent==='rival'&&p.r>=70&&profileOf(p)<=repCap()&&knownLg(teamOf(p).lg));
     if(cands.length&&S.clients.length<maxClients()){
-      const p=cands[R(0,cands.length-1)];
-      p.agent=null;
-      pushNews('firedRival',{n:p.n,pid:p.id,r:p.r},'act',{type:'sign',pid:p.id});
+      /* Menajerinden kopan oyuncu rastgele seçilmiyor: yüksek komisyonla çalışan ve
+         müşterisini tutamayan ajanslar daha sık kaybeder (bkz. RIV_ARCH.loyal). */
+      const p=pickWeighted(cands,x=>{const r=rivalOf(x);return r?1/Math.max(0.3,rivalArch(r).loyal):1;});
+      const r=rivalOf(p);
+      p.agent=null;delete p.ra;
+      if(r)r.lost=(r.lost||0)+1;
+      pushNews('firedRival',{n:p.n,pid:p.id,r:p.r,a:r?rivalName(r):'',ri:r?r.id:undefined},'act',{type:'sign',pid:p.id});
     }
   }
   if(S.clients.length&&RF()<0.15){
@@ -302,6 +309,10 @@ function nextWeek(){
     /* Seviye atladıysan sıraya girer. Sezon özeti sırayı temizlerse S.lvUp
        duruyor olacağı için haber kaybolmaz, bir hafta sonra gelir. */
     if(S.lvUp)pushModal(()=>showLevelUp());
+    /* Ayartma kararı olaydan önce sıraya girer: haftanın en ağır kararı, arkasına
+       rastgele bir olay eklenmeden verilsin. Sezon biterse S.poach duruyor olacağı
+       için karar kaybolmaz, bir hafta sonra gelir. */
+    if(S.poach&&S.poach.at<=(S.tw||0))pushModal(()=>showPoach());
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
@@ -472,6 +483,10 @@ function endSeason(){
     S.players=S.players.filter(p=>!ids.has(p.id));
   }
   rebalanceSquads();
+  /* Kadrolar oturduktan sonra: rakip ajansların itibarı portföylerine göre kayar ve
+     yükselen/sönen oyuncular yeniden paylaşılır. Kadro dengesinden önce çalışsaydı
+     bu sezon doğan gençleri göremezdi. */
+  rivalSeason();
   S.teams.forEach(tm=>{tm.pts=0;tm.w=0;tm.d=0;tm.l=0;tm.gf=0;tm.ga=0;});
   buildAllFixtures();
   S.finals={};

@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Menajer">
 <title>Menajer</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 /* OTOMATİK ÜRETİLDİ — bu dosyayı elle düzenleme.
    Kaynak: css/themes/saha.css, css/themes/gazete.css, css/themes/terminal.css, css/themes/dosya.css
@@ -39,6 +42,9 @@ html[data-theme="saha"]{
 
    
   --sk-hub:var(--txt2); --sk-tb:#4d9fff; --sk-fd:#1ec97e; --sk-ag:#e9bc5a; --sk-nw:#b07cf0;
+
+   
+  --map-sea:#070c17; --map-land:#131d33; --map-fog:#0e1526; --map-coast:#23314e;
 }
 html[data-theme="saha"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="saha"]{scrollbar-width:thin;scrollbar-color:var(--sur3) transparent}
@@ -275,7 +281,7 @@ html[data-theme="saha"] .agHero .agSub{font-size:10.5px;color:var(--txt3);font-w
 html[data-theme="saha"] .agCash{font-size:26px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--acc);
   line-height:1;margin-top:12px}
 html[data-theme="saha"] .agCash small{font-size:11px;color:var(--txt2);font-weight:700;letter-spacing:0;margin-left:7px}
-html[data-theme="saha"] .agGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;position:relative;z-index:1}
+html[data-theme="saha"] .agGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;position:relative;z-index:1}
 html[data-theme="saha"] .agCell{background:rgba(255,255,255,.035);border-radius:11px;padding:9px 8px;text-align:center}
 html[data-theme="saha"] .agCell .v{font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums}
 html[data-theme="saha"] .agCell .l{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:800;margin-top:2px}
@@ -420,6 +426,52 @@ html[data-theme="saha"] .skfoot{display:flex;justify-content:center;padding:6px 
 html[data-theme="saha"] .nbadge.acc{background:var(--acc);color:var(--accT)}
 html[data-theme="saha"] .skwrap{box-shadow:var(--sh)}
 html[data-theme="saha"] .sknode.owned .skdisc{filter:drop-shadow(0 0 6px var(--skc))}
+html[data-theme="saha"] .mapwrap{position:relative;background:var(--map-sea);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;line-height:0;
+  height:clamp(280px,52vh,460px);touch-action:none}
+html[data-theme="saha"] .mapsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none}
+html[data-theme="saha"] .mapsvg:active{cursor:grabbing}
+html[data-theme="saha"] .mapsea{fill:var(--map-sea)}
+html[data-theme="saha"] .mapland{fill:var(--map-land);stroke:var(--map-coast);stroke-width:1.2;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html[data-theme="saha"] .mapterr{stroke:var(--map-coast);stroke-width:1.4;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;transition:fill-opacity .2s ease}
+html[data-theme="saha"] .mapterr.fog{fill:var(--map-fog)}
+html[data-theme="saha"] .mapmark.fog .mk{stroke:var(--map-coast);stroke-opacity:.5}
+html[data-theme="saha"] .mapmark.fog .mkdot{fill:var(--map-coast);fill-opacity:.4}
+html[data-theme="saha"] .mapkey.fog i{background:var(--map-fog)}
+html[data-theme="saha"] .mapterr.open{fill:var(--acc);fill-opacity:.16;stroke:var(--map-coast)}
+html[data-theme="saha"] .mapterr.partial{fill:var(--acc);fill-opacity:.62;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="saha"] .mapterr.full{fill:var(--acc);fill-opacity:.95;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="saha"] .mapterr.scouting{fill:var(--warn);fill-opacity:.55;stroke:var(--warn);stroke-width:1.8;
+  stroke-dasharray:4 3}
+html[data-theme="saha"] .mapmark .mk{fill:none;stroke-width:9}
+html[data-theme="saha"] .mapmark .mkdot{fill:none}
+html[data-theme="saha"] .mapmark.open .mk{stroke:var(--map-coast);stroke-opacity:.8}
+html[data-theme="saha"] .mapmark.open .mkdot{fill:var(--map-coast);fill-opacity:.65}
+html[data-theme="saha"] .mapmark.partial .mk,html[data-theme="saha"] .mapmark.full .mk{stroke:var(--accT);stroke-opacity:.9}
+html[data-theme="saha"] .mapmark.partial .mkdot,html[data-theme="saha"] .mapmark.full .mkdot{fill:var(--accT)}
+html[data-theme="saha"] .mapmark.scouting .mk{stroke:var(--warn)}
+html[data-theme="saha"] .mapmark.scouting .mkdot{fill:var(--warn)}
+html[data-theme="saha"] .mapzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;
+  line-height:1}
+html[data-theme="saha"] .mapzoom button{width:38px;height:38px;border-radius:var(--r-s);background:var(--sur);
+  border:1px solid var(--line2);color:var(--txt);font-size:17px;font-weight:600;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;
+  box-shadow:var(--sh)}
+html[data-theme="saha"] .mapzoom button:active{background:var(--sur3)}
+html[data-theme="saha"] .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 12px}
+html[data-theme="saha"] .mapkey{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt3)}
+html[data-theme="saha"] .mapkey b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .mapkey i{width:11px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px var(--map-coast)}
+html[data-theme="saha"] .mapkey.full i{background:var(--acc)}
+html[data-theme="saha"] .mapkey.partial i{background:var(--acc);opacity:.62}
+html[data-theme="saha"] .mapkey.scouting i{background:var(--warn);opacity:.6}
+html[data-theme="saha"] .mapkey.open i{background:var(--acc);opacity:.18}
+html[data-theme="saha"] .agCell.tap{cursor:pointer}
+html[data-theme="saha"] .mapterr.full{filter:drop-shadow(0 0 5px var(--acc))}
 @media (max-width:374px){html[data-theme="saha"] main{padding:12px 10px 18px}
 html[data-theme="saha"] .agCash{font-size:23px}
 html[data-theme="saha"] .statusRow{gap:6px}
@@ -453,6 +505,9 @@ html[data-theme="gazete"]{
 
    
   --sk-hub:var(--n7); --sk-tb:#3a5a76; --sk-fd:#1f6b4a; --sk-ag:#7d6320; --sk-nw:#a3271c;
+
+   
+  --map-sea:#e5dfd1; --map-land:#dcd5c5; --map-fog:#ebe6da; --map-coast:#bfb7a4;
 }
 html[data-theme="gazete"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="gazete"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -678,7 +733,7 @@ html[data-theme="gazete"] .agHero .agSub{font-size:12.5px;color:var(--txt3);font
 html[data-theme="gazete"] .agCash{font-family:var(--serif);font-size:38px;font-weight:700;letter-spacing:-.03em;
   font-variant-numeric:tabular-nums;color:var(--txt);line-height:1;margin-top:18px}
 html[data-theme="gazete"] .agCash small{font-family:var(--sans);font-size:13px;color:var(--acc);font-weight:600;letter-spacing:0;margin-left:9px}
-html[data-theme="gazete"] .agGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:18px;
+html[data-theme="gazete"] .agGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:18px;
   border-top:1px solid var(--line);padding-top:12px}
 html[data-theme="gazete"] .agCell{background:none;border-radius:0;padding:0 12px;text-align:right;border-right:1px solid var(--line)}
 html[data-theme="gazete"] .agCell:last-child{border-right:none;padding-right:0}
@@ -820,6 +875,52 @@ html[data-theme="gazete"] .skfoot{display:flex;justify-content:center;padding:6p
 html[data-theme="gazete"] .nbadge.acc{background:var(--acc);color:var(--accT)}
 html[data-theme="gazete"] .skring0 .lv{font-family:var(--serif)}
 html[data-theme="gazete"] .skchipT b{font-family:var(--serif)}
+html[data-theme="gazete"] .mapwrap{position:relative;background:var(--map-sea);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;line-height:0;
+  height:clamp(280px,52vh,460px);touch-action:none}
+html[data-theme="gazete"] .mapsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none}
+html[data-theme="gazete"] .mapsvg:active{cursor:grabbing}
+html[data-theme="gazete"] .mapsea{fill:var(--map-sea)}
+html[data-theme="gazete"] .mapland{fill:var(--map-land);stroke:var(--map-coast);stroke-width:1.2;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html[data-theme="gazete"] .mapterr{stroke:var(--map-coast);stroke-width:1.4;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;transition:fill-opacity .2s ease}
+html[data-theme="gazete"] .mapterr.fog{fill:var(--map-fog)}
+html[data-theme="gazete"] .mapmark.fog .mk{stroke:var(--map-coast);stroke-opacity:.5}
+html[data-theme="gazete"] .mapmark.fog .mkdot{fill:var(--map-coast);fill-opacity:.4}
+html[data-theme="gazete"] .mapkey.fog i{background:var(--map-fog)}
+html[data-theme="gazete"] .mapterr.open{fill:var(--acc);fill-opacity:.16;stroke:var(--map-coast)}
+html[data-theme="gazete"] .mapterr.partial{fill:var(--acc);fill-opacity:.62;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="gazete"] .mapterr.full{fill:var(--acc);fill-opacity:.95;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="gazete"] .mapterr.scouting{fill:var(--warn);fill-opacity:.55;stroke:var(--warn);stroke-width:1.8;
+  stroke-dasharray:4 3}
+html[data-theme="gazete"] .mapmark .mk{fill:none;stroke-width:9}
+html[data-theme="gazete"] .mapmark .mkdot{fill:none}
+html[data-theme="gazete"] .mapmark.open .mk{stroke:var(--map-coast);stroke-opacity:.8}
+html[data-theme="gazete"] .mapmark.open .mkdot{fill:var(--map-coast);fill-opacity:.65}
+html[data-theme="gazete"] .mapmark.partial .mk,html[data-theme="gazete"] .mapmark.full .mk{stroke:var(--accT);stroke-opacity:.9}
+html[data-theme="gazete"] .mapmark.partial .mkdot,html[data-theme="gazete"] .mapmark.full .mkdot{fill:var(--accT)}
+html[data-theme="gazete"] .mapmark.scouting .mk{stroke:var(--warn)}
+html[data-theme="gazete"] .mapmark.scouting .mkdot{fill:var(--warn)}
+html[data-theme="gazete"] .mapzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;
+  line-height:1}
+html[data-theme="gazete"] .mapzoom button{width:38px;height:38px;border-radius:var(--r-s);background:var(--sur);
+  border:1px solid var(--line2);color:var(--txt);font-size:17px;font-weight:600;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;
+  box-shadow:var(--sh)}
+html[data-theme="gazete"] .mapzoom button:active{background:var(--sur3)}
+html[data-theme="gazete"] .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 12px}
+html[data-theme="gazete"] .mapkey{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt3)}
+html[data-theme="gazete"] .mapkey b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .mapkey i{width:11px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px var(--map-coast)}
+html[data-theme="gazete"] .mapkey.full i{background:var(--acc)}
+html[data-theme="gazete"] .mapkey.partial i{background:var(--acc);opacity:.62}
+html[data-theme="gazete"] .mapkey.scouting i{background:var(--warn);opacity:.6}
+html[data-theme="gazete"] .mapkey.open i{background:var(--acc);opacity:.18}
+html[data-theme="gazete"] .agCell.tap{cursor:pointer}
+html[data-theme="gazete"] .mapland,html[data-theme="gazete"] .mapterr{stroke-width:1.1}
 @media (max-width:374px){html[data-theme="gazete"] main{padding:14px 12px 20px}
 html[data-theme="gazete"] .agCash{font-size:32px}
 html[data-theme="gazete"] .hstat .l{display:none}}
@@ -851,6 +952,9 @@ html[data-theme="terminal"]{
 
    
   --sk-hub:var(--n7); --sk-tb:#5f8fb5; --sk-fd:#4f9c6b; --sk-ag:#a8863c; --sk-nw:#b06a7e;
+
+   
+  --map-sea:#0e1013; --map-land:#191c21; --map-fog:#15181c; --map-coast:#2c3138;
 }
 html[data-theme="terminal"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="terminal"]{scrollbar-width:thin;scrollbar-color:var(--n3) transparent}
@@ -1079,7 +1183,7 @@ html[data-theme="terminal"] .agHero .agSub{font-family:var(--mono);font-size:10.
 html[data-theme="terminal"] .agCash{font-family:var(--mono);font-size:34px;font-weight:600;letter-spacing:-.045em;color:var(--txt);
   line-height:1;margin-top:16px}
 html[data-theme="terminal"] .agCash small{font-family:var(--mono);font-size:12px;color:var(--acc);font-weight:500;letter-spacing:-.02em;margin-left:9px}
-html[data-theme="terminal"] .agGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:16px;border-top:1px solid var(--line);
+html[data-theme="terminal"] .agGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:16px;border-top:1px solid var(--line);
   padding-top:11px}
 html[data-theme="terminal"] .agCell{background:none;border-radius:0;padding:0 10px;text-align:right;border-right:1px solid var(--line)}
 html[data-theme="terminal"] .agCell:first-child{padding-left:0}
@@ -1221,6 +1325,51 @@ html[data-theme="terminal"] .skmark.owned{background:var(--skc);color:var(--sur)
 html[data-theme="terminal"] .skfoot{display:flex;justify-content:center;padding:6px 0}
 html[data-theme="terminal"] .nbadge.acc{background:var(--acc);color:var(--accT)}
 html[data-theme="terminal"] .skring0 .lv,html[data-theme="terminal"] .sknode .skbadge text{font-family:var(--mono)}
+html[data-theme="terminal"] .mapwrap{position:relative;background:var(--map-sea);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;line-height:0;
+  height:clamp(280px,52vh,460px);touch-action:none}
+html[data-theme="terminal"] .mapsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none}
+html[data-theme="terminal"] .mapsvg:active{cursor:grabbing}
+html[data-theme="terminal"] .mapsea{fill:var(--map-sea)}
+html[data-theme="terminal"] .mapland{fill:var(--map-land);stroke:var(--map-coast);stroke-width:1.2;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html[data-theme="terminal"] .mapterr{stroke:var(--map-coast);stroke-width:1.4;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;transition:fill-opacity .2s ease}
+html[data-theme="terminal"] .mapterr.fog{fill:var(--map-fog)}
+html[data-theme="terminal"] .mapmark.fog .mk{stroke:var(--map-coast);stroke-opacity:.5}
+html[data-theme="terminal"] .mapmark.fog .mkdot{fill:var(--map-coast);fill-opacity:.4}
+html[data-theme="terminal"] .mapkey.fog i{background:var(--map-fog)}
+html[data-theme="terminal"] .mapterr.open{fill:var(--acc);fill-opacity:.16;stroke:var(--map-coast)}
+html[data-theme="terminal"] .mapterr.partial{fill:var(--acc);fill-opacity:.62;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="terminal"] .mapterr.full{fill:var(--acc);fill-opacity:.95;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="terminal"] .mapterr.scouting{fill:var(--warn);fill-opacity:.55;stroke:var(--warn);stroke-width:1.8;
+  stroke-dasharray:4 3}
+html[data-theme="terminal"] .mapmark .mk{fill:none;stroke-width:9}
+html[data-theme="terminal"] .mapmark .mkdot{fill:none}
+html[data-theme="terminal"] .mapmark.open .mk{stroke:var(--map-coast);stroke-opacity:.8}
+html[data-theme="terminal"] .mapmark.open .mkdot{fill:var(--map-coast);fill-opacity:.65}
+html[data-theme="terminal"] .mapmark.partial .mk,html[data-theme="terminal"] .mapmark.full .mk{stroke:var(--accT);stroke-opacity:.9}
+html[data-theme="terminal"] .mapmark.partial .mkdot,html[data-theme="terminal"] .mapmark.full .mkdot{fill:var(--accT)}
+html[data-theme="terminal"] .mapmark.scouting .mk{stroke:var(--warn)}
+html[data-theme="terminal"] .mapmark.scouting .mkdot{fill:var(--warn)}
+html[data-theme="terminal"] .mapzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;
+  line-height:1}
+html[data-theme="terminal"] .mapzoom button{width:38px;height:38px;border-radius:var(--r-s);background:var(--sur);
+  border:1px solid var(--line2);color:var(--txt);font-size:17px;font-weight:600;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;
+  box-shadow:var(--sh)}
+html[data-theme="terminal"] .mapzoom button:active{background:var(--sur3)}
+html[data-theme="terminal"] .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 12px}
+html[data-theme="terminal"] .mapkey{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt3)}
+html[data-theme="terminal"] .mapkey b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .mapkey i{width:11px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px var(--map-coast)}
+html[data-theme="terminal"] .mapkey.full i{background:var(--acc)}
+html[data-theme="terminal"] .mapkey.partial i{background:var(--acc);opacity:.62}
+html[data-theme="terminal"] .mapkey.scouting i{background:var(--warn);opacity:.6}
+html[data-theme="terminal"] .mapkey.open i{background:var(--acc);opacity:.18}
+html[data-theme="terminal"] .agCell.tap{cursor:pointer}
 @media (max-width:374px){html[data-theme="terminal"] main{padding:12px 10px 18px}
 html[data-theme="terminal"] .agCash{font-size:29px}
 html[data-theme="terminal"] .hstat .l{display:none}}
@@ -1251,6 +1400,9 @@ html[data-theme="dosya"]{
 
    
   --sk-hub:var(--n7); --sk-tb:#2f5d7c; --sk-fd:#1c6b52; --sk-ag:#8a6a24; --sk-nw:#7a4657;
+
+   
+  --map-sea:#e7edf1; --map-land:#dbe1e6; --map-fog:#e9edf0; --map-coast:#c2cad2;
 }
 html[data-theme="dosya"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html[data-theme="dosya"]{scrollbar-width:thin;scrollbar-color:var(--n4) transparent}
@@ -1476,7 +1628,7 @@ html[data-theme="dosya"] .agHero .agSub{font-size:12.5px;color:var(--txt3);font-
 html[data-theme="dosya"] .agCash{font-size:40px;font-weight:600;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--txt);
   line-height:1;margin-top:20px}
 html[data-theme="dosya"] .agCash small{font-size:13.5px;color:var(--acc);font-weight:500;letter-spacing:-.01em;margin-left:10px}
-html[data-theme="dosya"] .agGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:20px;border-top:1px solid var(--line);
+html[data-theme="dosya"] .agGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:20px;border-top:1px solid var(--line);
   padding-top:14px}
 html[data-theme="dosya"] .agCell{background:none;border-radius:0;padding:0 12px;text-align:right;border-right:1px solid var(--line)}
 html[data-theme="dosya"] .agCell:first-child{padding-left:0}
@@ -1616,6 +1768,51 @@ html[data-theme="dosya"] .skmark svg{width:22px;height:22px}
 html[data-theme="dosya"] .skmark.owned{background:var(--skc);color:var(--sur)}
 html[data-theme="dosya"] .skfoot{display:flex;justify-content:center;padding:6px 0}
 html[data-theme="dosya"] .nbadge.acc{background:var(--acc);color:var(--accT)}
+html[data-theme="dosya"] .mapwrap{position:relative;background:var(--map-sea);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-bottom:12px;line-height:0;
+  height:clamp(280px,52vh,460px);touch-action:none}
+html[data-theme="dosya"] .mapsvg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none}
+html[data-theme="dosya"] .mapsvg:active{cursor:grabbing}
+html[data-theme="dosya"] .mapsea{fill:var(--map-sea)}
+html[data-theme="dosya"] .mapland{fill:var(--map-land);stroke:var(--map-coast);stroke-width:1.2;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html[data-theme="dosya"] .mapterr{stroke:var(--map-coast);stroke-width:1.4;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;transition:fill-opacity .2s ease}
+html[data-theme="dosya"] .mapterr.fog{fill:var(--map-fog)}
+html[data-theme="dosya"] .mapmark.fog .mk{stroke:var(--map-coast);stroke-opacity:.5}
+html[data-theme="dosya"] .mapmark.fog .mkdot{fill:var(--map-coast);fill-opacity:.4}
+html[data-theme="dosya"] .mapkey.fog i{background:var(--map-fog)}
+html[data-theme="dosya"] .mapterr.open{fill:var(--acc);fill-opacity:.16;stroke:var(--map-coast)}
+html[data-theme="dosya"] .mapterr.partial{fill:var(--acc);fill-opacity:.62;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="dosya"] .mapterr.full{fill:var(--acc);fill-opacity:.95;stroke:var(--acc);stroke-width:1.8}
+html[data-theme="dosya"] .mapterr.scouting{fill:var(--warn);fill-opacity:.55;stroke:var(--warn);stroke-width:1.8;
+  stroke-dasharray:4 3}
+html[data-theme="dosya"] .mapmark .mk{fill:none;stroke-width:9}
+html[data-theme="dosya"] .mapmark .mkdot{fill:none}
+html[data-theme="dosya"] .mapmark.open .mk{stroke:var(--map-coast);stroke-opacity:.8}
+html[data-theme="dosya"] .mapmark.open .mkdot{fill:var(--map-coast);fill-opacity:.65}
+html[data-theme="dosya"] .mapmark.partial .mk,html[data-theme="dosya"] .mapmark.full .mk{stroke:var(--accT);stroke-opacity:.9}
+html[data-theme="dosya"] .mapmark.partial .mkdot,html[data-theme="dosya"] .mapmark.full .mkdot{fill:var(--accT)}
+html[data-theme="dosya"] .mapmark.scouting .mk{stroke:var(--warn)}
+html[data-theme="dosya"] .mapmark.scouting .mkdot{fill:var(--warn)}
+html[data-theme="dosya"] .mapzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;
+  line-height:1}
+html[data-theme="dosya"] .mapzoom button{width:38px;height:38px;border-radius:var(--r-s);background:var(--sur);
+  border:1px solid var(--line2);color:var(--txt);font-size:17px;font-weight:600;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;
+  box-shadow:var(--sh)}
+html[data-theme="dosya"] .mapzoom button:active{background:var(--sur3)}
+html[data-theme="dosya"] .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 12px}
+html[data-theme="dosya"] .mapkey{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--txt3)}
+html[data-theme="dosya"] .mapkey b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .mapkey i{width:11px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px var(--map-coast)}
+html[data-theme="dosya"] .mapkey.full i{background:var(--acc)}
+html[data-theme="dosya"] .mapkey.partial i{background:var(--acc);opacity:.62}
+html[data-theme="dosya"] .mapkey.scouting i{background:var(--warn);opacity:.6}
+html[data-theme="dosya"] .mapkey.open i{background:var(--acc);opacity:.18}
+html[data-theme="dosya"] .agCell.tap{cursor:pointer}
 @media (max-width:374px){html[data-theme="dosya"] main{padding:14px 12px 20px}
 html[data-theme="dosya"] .agCash{font-size:33px}
 html[data-theme="dosya"] .pitem{padding:12px 12px}
@@ -1639,6 +1836,7 @@ html[data-theme="dosya"] .hstat .l{display:none}}
 <div class="modal" id="modal" onclick="if(event.target===this)dismissModal()"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 <script>
+'use strict';
 'use strict';
 /* js/i18n.js — çeviriler (TR/EN), haber şablonları ve haber-içi linkler */
 /* ================= I18N ================= */
@@ -1686,6 +1884,9 @@ setupTitle:'Kariyerine Başla',fname:'Ad',lname:'Soyad',contL:'Kıta',natL:'Uyru
 startBtn:'Kariyere Başla',
 setupHint:'Memleketinin futbolunu tanıyorsun — ağın orada kurulu. Diğer ligleri tanımak için ilerleyen dönemde para harcayıp keşif ağları kuracaksın.',
 scoutNet:'Keşif Ağı',scoutBuild:'Ağ Kur',scoutPendingT:'kuruluyor',scoutLock:'Bu ligde keşif ağın yok',
+mapFull:'Ağın var',mapPartial:'Genişletilebilir',mapOpen:'Keşfedilmemiş',mapFog:'Ligi yok',mapRecentre:'Haritayı ortala',
+mapHint:'Koyu bölgelerde ağın kurulu. Soluk olanların ligleri henüz keşfedilmedi — paran yettiği sürece dünyanın herhangi bir yerinde ağ kurabilirsin.',
+mapListTmp:'liste',
 scoutLockShort:'ağ yok',knownLbl:'tanıdığın lig',fillName:'Ad ve soyad gerekli.',
 meeting:'Temsilcilik Görüşmesi',meetPick:'Ne söyleyeceksin?',finalBtn:'Teklifini Sun',
 mcUnhappy:'Kulübünde mutsuz — hızlı bir çıkış yolu arıyor.',
@@ -1754,6 +1955,13 @@ slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynana
 toMenu:'Ana Menüye Dön',toMenuQ:'Ana menüye dönülsün mü? İlerlemen kaydedildi.',
 appSet:'Uygulama',careerSet:'Kariyer',menuSub:'Bir yuva seç ve devam et.',
 newCareerT:'Yeni Kariyer',deleteCareer:'Kariyeri Sil',
+rivals:'Rakip Ajanslar',
+rivalsSub:'Dünyada tek menajer sen değilsin. Kimin kime çalıştığını, kimin senden hesabı olduğunu buradan görürsün.',
+rivalRankT:'İtibar Sıralaması',rankLbl:'Sıralaman',charLbl:'Karakter',portfolio:'Portföy',
+notableCl:'Dikkat Çeken Müşteriler',noNotable:'Bildiğin liglerde dikkat çeken müşterisi yok.',
+relLbl:'Aranız',relHot:'Husumetli',relTense:'Gergin',relCalm:'Nötr',
+wonFrom:'Senden aldığı',lostTo:'Sana kaptırdığı',
+chaseTag:'yarışta',chaseWith:'{a} da görüşüyor',poachT:'Müşterine göz koydular',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -1798,6 +2006,9 @@ setupTitle:'Start Your Career',fname:'First Name',lname:'Last Name',contL:'Conti
 startBtn:'Start Career',
 setupHint:'You know your homeland\'s football — your network starts there. To learn other leagues, you\'ll invest in scouting networks as you earn.',
 scoutNet:'Scouting Network',scoutBuild:'Build Network',scoutPendingT:'building',scoutLock:'No scouting network in this league',
+mapFull:'Network active',mapPartial:'Expandable',mapOpen:'Uncharted',mapFog:'No leagues',mapRecentre:'Recentre the map',
+mapHint:'Solid regions are yours. Faint ones are still unscouted — you can build a network anywhere in the world you can afford.',
+mapListTmp:'list',
 scoutLockShort:'no network',knownLbl:'league(s) known',fillName:'First and last name required.',
 meeting:'Representation Meeting',meetPick:'What do you say?',finalBtn:'Make Your Offer',
 mcUnhappy:'Unhappy at his club — looking for a quick way out.',
@@ -1866,6 +2077,13 @@ slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last 
 toMenu:'Back to Main Menu',toMenuQ:'Return to the main menu? Your progress has been saved.',
 appSet:'App',careerSet:'Career',menuSub:'Pick a slot to continue.',
 newCareerT:'New Career',deleteCareer:'Delete Career',
+rivals:'Rival Agencies',
+rivalsSub:'You are not the only agent in the world. Who works for whom, and who has a score to settle with you.',
+rivalRankT:'Reputation Ranking',rankLbl:'Your rank',charLbl:'Character',portfolio:'Roster',
+notableCl:'Notable Clients',noNotable:'No notable clients in the leagues you know.',
+relLbl:'Standing',relHot:'Hostile',relTense:'Tense',relCalm:'Neutral',
+wonFrom:'Taken from you',lostTo:'Lost to you',
+chaseTag:'contested',chaseWith:'{a} is talking to him too',poachT:'They are after your client',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 let L='tr';
@@ -1877,11 +2095,19 @@ const lkP=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('player',${id
 const lkT=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('team',${id})">${n}</span>`:n;
 const lkL=(i,n)=>i!==undefined?`<span class="lnk" onclick="goLg(${i})">${n}</span>`:n;
 const lkC=(ci,n)=>ci!==undefined?`<span class="lnk" onclick="goCup(${ci})">${n}</span>`:n;
+/* Rakip ajans adı → ajans sayfası. Çok eski kayıtlarda ajans olmayabilir; o zaman
+   haber yine okunabilir olsun diye düz metne düşüyor. */
+const lkR=(ri,n)=>ri!==undefined&&n?`<span class="lnk" onclick="pushV('rival',${ri})">${n}</span>`:(n||'');
 const NEWS={
 tr:{goal:p=>`${lkP(p.pid,p.n)} bu hafta ${p.g} gol attı. Formu yükseliyor.`,
 sign:p=>`${lkP(p.pid,p.n)} artık senin müşterin.`,
 transfer:p=>`${lkP(p.pid,p.n)}, ${lkT(p.aid,p.a)} → ${lkT(p.bid,p.b)} (${p.f}). Komisyonun: ${p.k}`,
-firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} güç) menajerini kovdu ve seninle çalışmak istiyor.`,
+firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} güç) ${p.a?lkR(p.ri,p.a)+' ile yollarını ayırdı':'menajerini kovdu'} ve seninle çalışmak istiyor.`,
+chaseOn:p=>`${lkR(p.ri,p.a)}, ${lkP(p.pid,p.n)} ile görüşmeye başladı. Onu istiyorsan beklemenin âlemi yok.`,
+chaseLost:p=>`${lkP(p.pid,p.n)} ${lkR(p.ri,p.a)} ile anlaştı. Geç kaldın.`,
+poachWarn:p=>`${lkR(p.ri,p.a)} müşterin ${lkP(p.pid,p.n)} ile temasa geçmiş. Önümüzdeki haftalarda masaya oturacaklar.`,
+poached:p=>`${lkP(p.pid,p.n)} seninle yollarını ayırdı — artık ${lkR(p.ri,p.a)} ile çalışıyor.`,
+poachHeld:p=>`${lkP(p.pid,p.n)} kalmaya karar verdi. ${lkR(p.ri,p.a)} eli boş döndü.`,
 unhappyMsg:p=>`${lkP(p.pid,p.n)} mevcut maaşından memnun değil. Yeni sözleşme görüşmesi bekliyor.`,
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} kulübünde mutsuz, transfer istiyor.`,
 expire:p=>`${lkP(p.pid,p.n)} sözleşmesinin bitmesine ${p.y} sezon kaldı. Harekete geç.`,
@@ -1914,7 +2140,12 @@ inDebt:p=>`Kasan eksiye düştü. Haftalık giderin ${p.c}; ya müşteri kazan y
 en:{goal:p=>`${lkP(p.pid,p.n)} scored ${p.g} this week. Form is rising.`,
 sign:p=>`${lkP(p.pid,p.n)} is now your client.`,
 transfer:p=>`${lkP(p.pid,p.n)}: ${lkT(p.aid,p.a)} → ${lkT(p.bid,p.b)} (${p.f}). Your cut: ${p.k}`,
-firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} rated) fired his agent and wants to work with you.`,
+firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} rated) ${p.a?'has parted ways with '+lkR(p.ri,p.a):'fired his agent'} and wants to work with you.`,
+chaseOn:p=>`${lkR(p.ri,p.a)} has started talking to ${lkP(p.pid,p.n)}. If you want him, waiting won't help.`,
+chaseLost:p=>`${lkP(p.pid,p.n)} has signed with ${lkR(p.ri,p.a)}. You were too slow.`,
+poachWarn:p=>`${lkR(p.ri,p.a)} has made contact with your client ${lkP(p.pid,p.n)}. They'll be at the table within weeks.`,
+poached:p=>`${lkP(p.pid,p.n)} has left you — he's with ${lkR(p.ri,p.a)} now.`,
+poachHeld:p=>`${lkP(p.pid,p.n)} decided to stay. ${lkR(p.ri,p.a)} went home empty-handed.`,
 unhappyMsg:p=>`${lkP(p.pid,p.n)} is unhappy with his wage. He expects new contract talks.`,
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} is unhappy at his club and wants a transfer.`,
 expire:p=>`${lkP(p.pid,p.n)}'s contract expires in ${p.y} season(s). Act now.`,
@@ -2510,6 +2741,826 @@ const POS=['KL','DF','OS','FV'];
 const POSL={tr:{KL:'KL',DF:'DF',OS:'OS',FV:'FV'},en:{KL:'GK',DF:'DF',OS:'MF',FV:'FW'}};
 const POSFULL={tr:{KL:'Kaleci',DF:'Defans',OS:'Orta Saha',FV:'Forvet'},en:{KL:'Goalkeeper',DF:'Defender',OS:'Midfielder',FV:'Forward'}};
 
+/* js/worldgeo.js — ÜRETİLMİŞ DOSYA, elle düzenleme.
+   Kaynak: Natural Earth 1:110m map units (kamu malı).
+   Üretmek için: node tools/build-geo.js
+
+   GEO.vb    görünüm kutusu [x,y,w,h]
+   GEO.t[c]  bölge: d = SVG yolu (çok altyol), bb = [x0,y0,x1,y1], a = [x,y] işaret
+   GEO.ctx   oyunun bölgesi olmayan ülkeler — tek yol, tek zemin katmanı
+   Delikler için yollar fill-rule="evenodd" ile çizilmeli. */
+const GEO={
+vb:[-1757,-999,3753,1713],
+t:{
+"TR":{a:[344,-493],bb:[265,-529,464,-450],d:"M464-467l-4 2-4-3-13-2-4 2-17 2-11 4-9 0-6-2-11 3-3-2 0 7-5 6-4-6 3-5-6 1-9-3-7 8-15 1-9-7-12 0-2 5-7 1-10-6-12 0-7-12-8-7 4-10-7-6 10-12 15-1 3-9 20 2 11-8 11-4 17 0 19 9 16 4 11-2 9 2 11-7 11-1 11 7 2 4 0 6 9 3 4 4-6 3 5 15-1 4 7 10zM265-526l10-3 8 1 2 5 10 4-2 3-12 1-11 10-4-6 4-11-5-4z"},
+"EN":{a:[-9,-652],bb:[-56,-696,16,-626],d:"M-33-644l8-2 0-2-4-3 0-9 3-2-3-5 1-7-6-8 16-14 8 14 6 2 8 18 12 3-1 7-5 4 4 6-9 6-13 0-16 4-4-3-7 6-9-1-7 4-5-2 15-13 8-3z"},
+"ES":{a:[-37,-497],bb:[-95,-549,31,-452],d:"M-77-466l-1-5 4-4 1-4-3-3 3-9-4-7 5-1 0-6 2-2 0-10 5-3-3-6-5-1-2 2-6 0-3-6-8 5 1-9-4-5 15-9 36 4 25 0 4 4 18 6 4-3 11 6 12-2 1 8-10 8-13 3-11 21 4 7-6 6-2 8-8 2-7 10-23 0-7 4-4 5-5-1-4-4-3-8-9-1z"},
+"DE":{a:[93,-645],bb:[57,-686,144,-593],d:"M132-672l3 7-2 3 6 10 0 5 5 7-5 2-2-2-12 8-7 2 3 9 11 8-3 6-3 2 2 8-1 2-3-3-12 2-9-1-1 4-5-4-3 1-11-4-2 3-8 0 1-9 5-8-14-3-5-3 0-5-2-3 1-8-2-13 6 0 2-4 2-11-2-4 2-3 7 0 2 2 6-6-3-11 7 2 6-2 0 4 10 3 0 4 10-2 5-3 15 8z"},
+"IT":{a:[106,-567],bb:[67,-591,189,-460],d:"M103-588l6 1 1-2 9-2 3 4 14 3 2 12-8-2-8 4 0 10 4 6 10 7 5 10 12 10 8 0 3 3-3 2 18 8 9 7 1 2-2 5-6-6-9-2-3 8 7 4-1 7-4 1-5 10-4 1 4-13-8-13-5-2-3-5-7-3-4-5-8 0-18-14-7-7-4-13-13-5-5 2-5 5-4 1 1-5-6-2-3-9 4-4-4-5 1-3 9 2 5-4 2 2 5-1 2-5 7 2 4-2 1-5zM152-480l8-1-3 10 2 4-2 7-8-5-20-8 1-6 12 1 10-2zM89-514l5-4 6 9-1 16-4 0-4 4-4-3-1-16-3-7 6 1z"},
+"FR":{a:[22,-591],bb:[-45,-640,97,-520],d:"M60-620l5 3 14 3-5 8-1 9-3 2-4-1 0 3-7 7 0 5 5-2 4 6-1 3 4 5-4 4 3 9 6 2-1 5-9 7-20-3-15 4-1 7-12 2-11-6-4 3-18-6-4-4 5-8 2-24-17-20-15-4-1-9 13-3 16 3-3-14 9 6 23-10 3-10 8-2 1 4 5 0 11 11 5-1 11 6 3 0zM88-536l7-4 2 10-3 10-5-3-3-8 2-5z"},
+"NL":{a:[51,-657],bb:[32,-669,67,-636],d:"M65-668l2 4-2 11-2 4-6 0 2 13-12-8-8 2-7-1 4-3 8-18 13-5 8 1z"},
+"PT":{a:[-86,-491],bb:[-98,-531,-65,-463],d:"M-92-526l8-5 3 6 6 0 2-2 5 1 3 6-5 3 0 10-2 2 0 6-5 1 4 7-3 9 3 3-1 4-4 4 1 5-5 3-5-2-5 1 1-17-5-1-2-5 1-8 4-5 4-12 0-6-3-8z"},
+"BR":{a:[-541,141],bb:[-819,-66,-385,425],d:"M-562 425l-4-7 4-6-7-9-22-15-4 0-12-9-7 1 22-29 15-12-1-10-6-8-5 3 2-15-1-7-4-2-4 2-4-1-6-20-8-3-4 2-12-2-1-17-3-7 3-3-2-7 3-6 1-9-3-8-7-4 0-12-21-1-6-14 3 0-3-17-7-3-7 0-5-4-7-2-5-5-12-2-13-12-1-22-14 2-15 10-2 4-14-1-6 2-5-2-1-19-8 8-10-1-5-6-7-1 2-5-6-8-5-11 2-3 0-5 7-4-2-6 3-5 0-6 13-8 9-3 1-2 10 1 5-40-2-7-5-5 0-9 7-2 2 1 0-4-6-2 0-8 21 1 4-5 3 4 2 8 2-2 6 7 9-1 2-4 13-5 1-5 8-4 0-2-10-1 0-17-5-3 10 0 9 4 3-3 21-7 4-5-2-3 6-1 3 3-2 5 4 2 2 6-3 5-2 10 4 13 6 5 6 1 1-2 9-3 3-4 15 2 1-2-2-3 2-4 4 2 5-2 11 6 4-4 4 4 5-1 5-5 3-9 7-11 4-1 8 29 6 2 0 9-8 10 3 4 20 2 0 13 9-9 32 13 6 7-2 7 13-4 22 7 16-1 17 11 14 14 18 4 4 4 6 23-4 21-20 26-7 14-8 11-2 0-3 9 2 24-3 28-3 5-1 16-10 17-1 13-9 5-2 8-11 0-17 5-7 5-12 4-12 10-8 12-1 10 3 7-2 19-7 7-9 22-14 16-3 11-6 8z"},
+"AR":{a:[-680,384],bb:[-749,275,-577,689],d:"M-649 658l15 15 15 7 14 3-2 6-8 0-7-4-15 0-12-27zM-614 380l-2 23 3 13-2 2 1 15 15 11 1 8 8 6 0 6-6 16-14 7-20 2-12-1 4 8 0 9 4 6-5 5-10 1-11-4-3 3 5 12 8 4 5-4 4 7-8 4-6 7 3 13-1 6-9 1-6 6 1 9 12 9 11 2 0 11-9 7-1 15-7 5-2 5 8 13 10 7-14-3-24-1-7-7-4-9-6 0-5-4-6-13 5-5 1-8-4-6 1-11-2-16-4-7 4-3-8-7 2-5-6-5-8-14 4-3-7-15-2-13 0-11 5-4-9-24 5-8-3-11 4-12-3-12-3-2-10-22 4-12-3-13 2-11 5-12 7-8-4-5 1-4-3-21 11-6 2-13-1-3 7-11 15 3 7 9 3-10 13 0 24 23 9 2 14 10 12 4 2 6-8 19 11 4 13 1 8-2 8-9 1-11 5-3 6 8 1 10-15 12-22 29z"},
+"US":{a:[-1042,-491],bb:[-1737,-869,-666,-238],d:"M-1192-614l269 0 2-5 3 0-1 7 2 2 23 6 8-1 14 3 10-4 27 18 0 5 3 1 2-2 1 5 2 0 1 2-2 2 8 6-4 22-17 18-1 3 3 2 44-14 0-8 5-2 19 0 20-15 6-2 33 0 2-3 9-3 12-15 10-9 2 3 8-2 3 4-6 16 5 11-25 11-11 3-11 11-2 6 1 7 5 0 0-5 2 3-2 4-31 5-10 4 16-3 2 3-15 3-7 0 1-1-4 3 3 1-5 9-11 9 0-3-2 0-2-4 0 7 2 2-1 5-13 15 4-9-4-5 2-10-3 5 0 8-7-2 6 4-3 12 3 1-2 17-9 9-12 4-9 7-5 1-7 5-2 4-14 8-14 14-4 9 0 8 1 11 4 9-1 5 2 15-3 13-4 8-4 2-5-2-1-5-3-3-8-26 4-8-2-7-6-10-4-2-13 5-4-6-6-3-30 1-5 2 0 8 2 3-3 1-3-2-5 3-7-1-7-6-10 1-7-3-16 4-12 10-12 5-7 6-4 6-2 8 0 11-4 0-14-7-2-6 0-8-5-8-6-16-6-5-9 1-9 10-8-4-4-4-3-13-11-14-18 0-2 5-29 0-35-15 1-3-26 3 1-7-4-7-5-1 0-4-5-1-3-3-9-1-2-2 1-7-4-13-1-17 2-3-3-4-3-11 3-10-1-7 8-10 7-20 11-12 16-22 15-36 12 5-2 11 4-3 8-20zM-1695-253l3 3 1 5-11 7-2-2 0-8 3-3 1-4 5 2zM-1700-261l-5 2-2-4 5 0 2 2zM-1707-266l-6 1 1-2 5 1zM-1719-273l3 5-1 1-4-1-1-3 3-2zM-1732-279l0 3-2 1-3-3 3-2 2 1zM-1471-749l5 1-4 4-8 2-5-5 12-2zM-1385-721l6 1 0 3-28 10-1-3 4-5 19-6zM-1129-852l-48 40-70 63 8 1 5 3 2 5 0 8 28-11 0 11 4 6-5 21 9 8-7 7-10 6-1-5-5-3 7-11-3-9 5-11-22-1-7-3-7-13-18-6-13 1-12-5-5-5-12 2-7 8-19 3-24 7 6-7 16-11 14-4 0-3-55 23 1 5-17 9-28 8-8 5-21 6-9 6-16 5-6-1-37 11-20 4 1-2 16-6 30-10 13-1 9-5 21-7 16-7 23-15-14 3-1-2-9 4 0-6-7 5 3-6-14 5-5-1 13-11-1-4-14 2-1-5-3-3 8-6 0-5 37-19 11 1 14-5 5 1 11-4 5-5-3-2 12-4-17 2-6 3-4-3-13 2-9-3 2-5-2-6 45-10 6 0-8 6 18-1 2-6-4-4 2-6-2-4-6-4 12-5 15-1 17-5 9-5 16-5 32-6 6 1 20-5 9 2-1 4 6-2 13 1-4 2 9 2 10-1 12 3 14 1 4 2 13-2 15 5zM-1467-788l2 2 7-1 3 3 6 2-11 3-4-2 0-2-10-1 7-4z"},
+"MX":{a:[-1112,-316],bb:[-1238,-412,-945,-183],d:"M-1238-409l26-3-1 3 35 15 29 0 2-5 18 0 11 14 3 13 4 4 8 4 9-10 9-1 6 5 6 16 5 8 0 8 2 6 14 7 4 0-10 20-5 23 4 22 11 23 11 4 4 5 10-4 24-5 7-6 4-7 2-10 3-4 20-6 16-1 2 3-1 6-7 7-4 8 2 2-6 15-2-3-3 0-7 8-3-1 0 2-20 0-1 7-5 0 10 11-1 4-14 0-7 10 1 3-2 6-11-13-13-8-7 1-9 5-6 1-33-13-11-6-11-9-16-5-4-6-11-7-4-8-2-6 4-1 0-4 3-3-2-15-3-6-7-13-10-10-3-8-8-5-1-3 3-8-5-2-4-7-1-8-5-1-8-13-3-14 1-14-6-5-3 1-5-4-4 5-2 16 8 16 2 1 0 5 2 0 0 8 9 14 0 11 4 12-1 6 5 1 7 11-1 2-5 5-2 0-2-8-12-13-5-3 2-16-10-10-2 2-1-3-6-3-5-8 6 0 5-5 2-5-6-9-5-4-5-26 0-11z"},
+"SA":{a:[485,-296],bb:[371,-404,605,-206],d:"M373-369l13 2 4-4 2-5 8-1 1-5 4-2-13-12 23-8 13 3 17 9 33 25 30 2 3 6 7 0 6 11 16 12 0 10 2 4 4 3 3 8 4 2 3-1 8 21 33 6 2-3 6 9-5 25-32 13-31 5-10 6-7 13-5 2-3-4-17-2-15 1-5-3-2 6 1 5-4 4-2-5-4-4-1-5-6-4-10-21-8-9-5-2-8-12-2-16-7-14-5-5-6-2-7-17-4-3-18-28-6 0 2-16z"},
+"JP":{a:[1445,-455],bb:[1364,-572,1469,-390],d:"M1458-493l-3 13 7 13 2 10 5 6-1 9-11 6-18 1-9 14-9-5-4-9-17 3-10 6-13 0 15 9 1 21-4 6-7-5-2-11-9-4-7-9 8-4 3-8 7-6 4-9 19-3 13 2-1-22 10 6 12-17-1-16-10-14-1-8 9-2 17 17 5 10zM1448-552l4-5 11 14-12 3-1 12-22-8 4 13-11 1-10-13-1-9 10-1-11-27 20 13 19 7zM1394-421l3-7 6 1 3-5 8 3 4 4-3 7-6-4-4 3 0 8-9-4-2-6z"},
+"NAF":{a:[28,-345],bb:[-185,-470,401,-240],d:"M101-381l-5-23-7-5 0-3-9-7-1-10 6-7 3-10-2-12 1-7 12-5 7 2 0 6 8-4 1 2-5 6 0 6 4 3-1 11-6 6 2 7 5 0 3 6 4 2 0 10-8 8-7 4 0 11-5 3zM-93-345l0-18 18-9 19-5 4-7 13-5 0-9 6-1 5-5 14-2 2-5-3-2-4-21-4-8 10-7 12-2 6-5 10-4 18-3 17-1 5 2 10-5 11 0 4 3 7-1-1 7 2 12-3 10-6 7 1 10 9 7 0 3 7 5 9 34 0 22-2 7 2 8-5 5 7 9 5 12 5-2 8 6 5 8-37 24-31 24-15 6-12 1-1-8-12-5-2-6-113-86zM-23-442l4 8 4 21 3 2-2 5-14 2-5 5-6 1 0 9-13 5-4 7-19 5-18 9 0 15-2 0 0 7-6 0-4 3-18 0-3 10-4 1-5 15-16 14-4 17-6 11-24 1 0-6 5-4 7-19 6-8 4-2 3-8 0-6 4-8 8-5 7-13 6-5 10-1 23-22-2-16 6-18 7-8 18-11 11-21 8 0 6 6 10-1 15 3zM401-277l-129 0-5-91-4-10 3-8-3-5 4-6 14 0 26 9 8-4 4-4 10-1 7 2 4 6 2-4 17 4 5-4 9 22-3 5-1 10-5 8-9-9-9-18-1 1 5 13 26 46 11 14-2 2 0 8 16 14z"},
+"WAF":{a:[83,-121],bb:[-194,-314,346,167],d:"M326 57l0 18 2 7 7 7 5 16-4-1-18 3-3 8 2 6-4 27 11 7 3-2 0 14-8 0-8-13-9-1-2-7-7 4-9-2-3-5-7-2-5 1-1-4-4-1-19 2 1-15-4-4-1-8 2-8-2-4 0-8-14 0 1-5-5 0-1 2-7 1-4 10-7-1-11 2-6-10-6-17-33 0-11 3-2-4 3-2 0-5 2-3 4-3 3 1 4-4 6 0 1 3 4 3 16-19-1-10 5-12 5-7 8-6 3-13-1-7 4-19 3-6 2-17 4-6 6-4 16 9 17 3 4-8 5 1 13-6 8 2 1-3 5-1 15 2 4-2 6 11 5 1 3-2 6 1 6-3 2 6 10 8 0 15 4 1-3 5-5 3-4 7-6 30-3 3 0 8-2 1-1 7 3 5 1 16zM-184-171l-4-10-6-4 5-3 8-15 4-4 6 1 5-3 6 0 12 7 14 18 0 8 3 7 4 4 1 5-1 4-8-1 0 2-11-3-25-1-3 2-4-1-6 2-2-9 10 0 9-5 5 3 5 0 4-3-2-3-7 2-4-4-4 1-2 3-12 0zM-127-156l0-9-4-4-3-7 0-8 4-2 2-8 11 4 6-3 4 1 2-3 44 0 3-9-2-1-10-109 17 0 73 55 2 6 12 5 1 8 12-1 0 29-6 8-1 8-25 3-4 5-14 0-3-2-16 7-2 4-9 5-1 4-5 2-5-1-3 3-2 8-9 11 1 4-3 5 0 8-7 3-2-5-5 1-2 3-8 0-3-2-2 2-3-4 0-4-3 0 0-4 3-3-9-12-8 3-3 3-5-1-5-4-4 2-1-4zM30-79l0-28 2-8 9-12-1-3 2-5-3-7 2-16 3-5 1-7 3-3 12-1 11 4 4 5 6 0 5-3 13 7 6-1 6-5 10-1 6 0 9 4 8-7 3 1 7 13 2 0 5 5-2 6-9 10-4 15-3 3-2 8-6 6-5 16-7 4-7-5-4 0-6 8-4 0-8 21-11 5-4-1-5 3-9-1-6-7-3-10-8-8-18 0zM160-162l4 8 1 17 6 11-14 0-3 6 7 7 5 2 5 14-7 16-3 3 0 18 10 18 5 4 2 9-1 7-18-6-52-1 2-10-5-8-5-2-2-6-3-2 3-12 5-12 4 0 6-8 4 0 7 5 7-4 5-16 6-6 2-8 3-3 4-15 9-10 2-6-5-5 1-4 3-1zM0-139l-1 4 5 7 1 19 3 4-3 12 1 6 6 12-34 16-10-4 1-5-5-11 3-14 5-10-5-28 1-7 24 0 3-2 5 1zM-89-128l2-2 3 2 8 0 2-3 5-1 2 5 7-3 5 2 2 4 5 3 4-3 5-1 8 4 3 18-5 10-3 14 5 11-1 5-20-2-13 2-7 4-14 4 2-17-11-9 2-6-1-6 3-9-1-3 5-3-2-10-3-5 1-4 2-1z"}
+},
+ctx:"M1976 202l-1 6-16 6 0-5 17-7zM1951 220l4-2 2 4-3 6-13 0 0-5 10-3zM377 12l41 27 1 7 16 13-5 15 0 7 7 5-3 21 12 23-9 7-34 10-21-2-9-27-33-13-5-16-7-7-2-25 15-15-3-12 4-9-4-7 39-2zM-93-348l-1 23-35-1 0 32-11 1-1 25-42 0-3 4 1-5 24-1 10-28 16-14 12-26 28-3 2-7zM-1192-614l-15-17-14-5 3-11 7-7-8-6 6-9-5-9 22-19-9-8 5-21-4-17-28 11-2-13-13-4 118-103 26 8 53-11 16-2 1 4 16-7 4 1 3 9 19-7-8 8 18-5 49 10 6 6-17 5 13 2 32-3 3 7 14-6-4-4 8-4 18-2 7 9 10-1 10 5 26-2 5-6 9-2 9 4-8 10 31-19-9-11 11-12 16-7 13 6 0 12-11 5 13 2-9 11 18-8 4 6-8 8 2 8 27-17 9-12 22 2 7 6-13 11-3 11-34 9-7-3-27 19-15 8-12 0-16 13-11 1-36 22-19 22 12 2-5 20 15-2 39 23 25 2-10 22 0 14 9 11 20-16 4-19-3-7 17-5 24-16 4-8-1-10-6-9 17-12 10-28 7-3 22 4 8-3 14 11 0 4 15 1-10 24 8 2 3 7 16-7 23-18 11 39-7 8 15 13 19 7 0 10 9 6-4 14-50 23-61 0-11 9-15 5-35 28 9-2 22-17 24-10 15-1 6 6-12 8-1 23 11 6 17-2 14-14-2 9 5 5-15 8-24 7-25 14-7-1 2-10 21-11-28 2-4-7 6-16-3-4-8 2-2-3-22 24-11 6-33 0-26 17-19 0-5 2 0 8-41 14-6-3 18-20 4-22-8-6-2-9-5 1 0-5-27-18-10 4-22-2-23-6-1-9-5 5-269 0zM-727-773l9-5 12 0-15 9-6-4zM-614-884l-4-5 7-5 17 1 8 6-1 3-27 0zM-698-769l5-3 5 3-11 5 1-5zM-700-906l-8 4-17-4 23-6 2 6zM-675-930l-16 0 1-3 18 2-3 1zM-682-941l5 3-22 3 5-7 12 1zM-665-900l-28-5 8-10-3-4-19-4 22-3 19 3 3 3-6 4 8 4 50-2 15 5-21 8-48 1zM-792-936l8 2-23 5-6-3 21-4zM-781-942l6 2-22 2 16-4zM-531-642l-17 18 7-4 6 2-5 5 22 4-6 9 8-2 0 14-7 11-10-2 5-10-3-2-14 11-6-1 9-5-9-3-29 0-1-4 8-4-4-3 27-27 8-7 14-3-3 3zM-707-803l14 8-2 5 6-1 4 4-10 3-11-2-2-5-28 11 1-6-12 1 11-6 17-19 5 1-1 5 5-2 3 3zM-610-879l10-4 21 10-3 4 17-2 3 6 17 4 5 14-17 5 26 10 7 10 12 0-6 8-21 12-16-15-11 2-5 6 16 14 0 12-7 8-26-12 13 16-1 4-36-11-8-5 5-4-19-11-1 3-26 2-5-4 11-8 34-1-1-4 24-16 0-9-23-9 7-2-5-7-10-4-22 4-27-2-30-8 13-5-12 0 7-10 26-13 22-3-11 6 0 7 14-8 23-5 5 11-7 7 18-3zM-715-898l28 3-46 19-9 0 9-14 18-8zM-903-917l47-13 22-1-21 10-27 5-21-1zM-1240-675l9-1-13 14 0 9-4 0-2-14 6-10 4 2zM-737-946l27 4 0 5-2 4-34-5 11-2-6-3 4-3zM-1202-608l-6 2-13-6-5-12-9-2 2-7 3-3 20 6 8 22zM-916-901l27 3 7 7-89 26 1-4-12-5 39-19 0-6 27-2zM-796-914l16-1-15 9-51 6-12 0 24-8-43 0 34-12 16 3 5 6 12 0 2-9 17-2-5 8zM-817-887l4 4-11 17 18 10-5 5-14 1 2 4-6 4-25-5-66 7 1-5-17-2-1-8 44-4-42-2 0-4 23-4-22-2 25-12 28-6 6 2-10 5 21-4 5 6 14-6 4 4-5 10 9-4 5-11 15 0zM-774-883l-2-7 14-5 7 3 15-2-13 8 7 4-10 10-23 3-13-12 3-3 15 1zM-812-892l14 2-14 6-4-7 4-1zM-717-922l-5 9-12 7-13 1-7-2 7-5-13 0 9-7 34-3zM-656-957l31-5 3 4 19 3-1 5 5 3-33 10-27 0-3-4 12-6-12 0-4-7 10-3zM-613-967l48-6 12 3 33-6 111 4-39 6-8 2 15 0-52 13-44 5 9 1-7 1 2 5-44 14 12 0-2 2-25 6-62-3 20-7 3-6 20 3-3-6-10-2 25-5 5-4-6-3 2-5 37-1-39-1-15-7 2-3zM-618-828l-17 4 9-12 13 2-5 6zM-773-850l2 4-8 4-16-2-7-5 19-8 10 7zM-623-625l16 2 8 8-17-4-7-6zM-629-590l1 6 16 1-10 6-11-5-1-4 5-4zM847-617l-4 8-8 2 5 12-3 5-21-4 2 22-21 8 16 22-5 3 3 7-13-6-36-1-16-5-5 3 1 7-24-2-1 5-15 11-2 9-8-6-13 0-5-11-5 0-3-12-15-9-28 3-13-12-30-14-23 7 12 46-22-13-15 7-3-13-12-4-15-18 10 1-2-9 17 0-5-20-19-2-18 8-6-2-9-15-7 1-10-9 4-25 12 7-2-9 16-13 15 0 37 13 8-5 15 0 15 6 1-4 14 1 0-6-18-8 7-6-3-3 7-3-9-8 2-5 34-4 31-12 17 2 9 13 8-3 14 4 2 7 9-1 18-11-2 3 53 40 2-6 16 7 12-3 29 16 12-1 9 7zM569-519l-12-46 23-7 30 14 13 12 28-3 15 9 3 12 5 0 5 11 13 0 8 6 2-9 15-11 4 1-6 8 29 8-10 9-12-1-2-9-13 3-4 15-9-1-1 6 9 3 4 9-2 13-15-3-1-7-28-12-22-15-12-15-11 1-8-12-16-7-14 11 3 7-11 0zM1565 33l40 16 13 12 1 8 18 8 2 6-10 2 1 8 10 8 6 14 6-1-1 6 9 2-4 2 11 5-2 4-30-6-18-26-14-5-17 8 1 9-9 4-18-2 5-82zM1694 46l4 4-2 10-5-12-19-14 4-3 18 15zM1678 73l-19 6-14-7 1-4 16 1 2-6 2 7 7-1 9-9 0-8 6 0 2 9-4 8-8 4zM1565 33l-5 82-9-11-11-2-17 4 13-14-6-24-47-23-7 7-3-10-8-7 20-4-1-3-16 0-4-8-10-2-4-6 21-7 17 5 4 25 11 7 10-13 13-8 10 0 29 12zM1383 112l1 6-8 10-10 2 6-13 11-5zM1487 87l5-19 1 10-6 9zM1308-52l-6 11 9 12-2 6 13 12-13 1-4 20-11 9-5 31-2-4-12 6-5-8-13-5-13 5-4-6-16-1-2-17-5-3-7-22 1-12 7-8 9 15 15-1 11-8 11 4 9-3 13-36 22 2zM1436 35l12 4 4 10-9-6-23 0 2-7 14-1zM1408 48l-8-3-2-5 12-1 2 5-4 4zM1420-27l1 7 7 1 1 5 0 11-6-1 3 14-3 1-8-24 5-14zM1365-11l13-1 11-9 2 3-9 13-47 2-2 10 10 11 6-6 21-4-1 6-5-2-15 12 18 35-1 8-6 4-4-5 6-10-11 5-3-3 2-5-8-8 1-12-8 4 1 33-8 1-4-3 4-12-2-12-4 0-4-9 15-42 9-9 23 5zM1330 129l-14-9 10-2 10 7-1 4-5 0zM1343 107l18-5-2 7-32 2 0-5 16 1zM1309 105l7-1 2 5-26 5 4-8 9-4 4 3zM1202 81l2 4 21 1 3-5 20 6 3 9 17 2 13 7-13 5-56-13-13 1-20-6-1-5-10-1 8-12 26 7zM1159 14l5 15 9 2 5 8-5 35-12 0-23-21-35-55-8-21-37-40-1-6 24 3 36 40 12 0 9 8 16 17-5 10 10 5zM-649 658l12 27 15 0-1 5-6 4-29-7-46-26 40 14 2-13 6-5 7 1zM-762 221l14 23-2 12 14 32 8-2 1 3-2 13-11 6 2 25 4 5-12 20 1 24-4 12 16 36-4 12 3 11-5 8 9 24-5 4 2 24 7 15-4 3 14 19-2 5 8 7-4 3 9 40-6 13 6 13 11 4 11 16 33 3-8 0-10 7 3 11-4 1-41-19-7-8 0-7-9-8-9-21-1-12 7-9-16-4 5-11-4-20 13 4-4-26-8-3 2 16-7-2-7-41 3-8-11-27 4 0 4-59-7-19-3-26 4-15-2-79-7-38 8-10zM462 21l-7-10 0-46 12-18 8 0 9-9 15-1 38-48 4-8-1-25 24-7-5 35-20 49-22 31-38 32-17 25zM435 59l-16-13-1-7-41-27 0-13 12-23-12-29 14-16 6 2 4 11 8 0 14 11 16 2 13-11 5 5 7 0-9 14 0 46 7 10-15 11-12 27zM272-103l-12-10 0-14-12-20-2-12-4 1 6-30 5-9 9 1-2-56 13 0-1-25 129 0 9 43 10 8-16 13-4 42-16 34-5 3-3 25-3-21-6-5-1-18-5-1 0 3-7 0 4 12-11 16-6 1-9-7-12 11-24-1-11-12-8 2-5 17-8 4 8 5zM260-246l2 50-9-1-5 9-6 30 4-1 7 19-13 7-8 14-10 6-14 0 1 4-10 10-14 5-5-4-2 4-9 1 2-4-5-14-12-9 3-6 14 0-6-11-4-31-7 0 0-8-5-5 5-16 13-12 6-47-9-12-3-20 11-6 88 48zM-783-248l-4 14 2 7-24 0-6-4 2-4 18 3 4-3-4-10-7-2 3-3 16 2zM-785-227l-2-7 6-16 17 3 17 13-5 5-5-3-15 3-1-3-9 11-3-6zM1407-867l2-4 13 7-15-3zM485-582l-3 7-9 2-7 13 26 35-6 8-27-17-58-12-36-22 6-2 7-10-7-5 14-5-1-3-8 2-1-5 13-5-1-20-20-4-8-6-20-2-4-8-8 0 0-7-7-6-18 2-7-11 12-4-21-17-1-9-14-1-12-6-6-13-5-2 3-4-5-11 3-9 9-6-10-6 24-26-15-8 2-8-10-8 4-9-13-13 6-8-15-7 0-7 26-9 38 9 42 17 3 7-20 9-39-9-6 2 16 8 6 16 19 6 0-5-7-5 4-4 23 7 6-3-8-8 16-10 17 4 2-7-10-7 2-6-8-7 24 3 7 6-10 2 2 6 8 3 12-2-1-7 39-14 7 0-5 7 10 1 29-8 13 6 6-7-12-6 2-4 26 3 49 16 2-6-13-8-10-1-12-16 8-9-1-9 4-2 22 2 6 6-2 8 8 3 15 22 13 7 1 7-7 15 10 2 9-7 3-10-9-6-1-8-9 0-6-6-1-11-16-8 9-7-7-7 12 5 4 10 10 2-9-8 25-4 19 6-23-20 46-3-11-5 3-6 36-6-1-3 27 1 10-5 14 0-1-8 12-3 36 11 25-2 23 4 15 9-20 11 30 2 11 7 11-5 26 2 8 5 34 1-9-7 30 1 70 29-7-11 19 4 46-1-19-9 4-4 79 6 48 14 47 0 38 15 8-3 45 1 28 10 5-4-20-11 77 7 18 5 66 43-5 5-12-1 42 18 9 8-19-3-19 10-7 15 4 5-23-8-12 9-9-4-3 5-13-2 7 20 19 7 18 17-8 0 7 10 10 5-11 6 10 14-11 3 9 12-3 11-63-52-13-16-5-13 11-2 1-27 5-9-13-16-9 1 6 9-7 13-24-14-18 4 0 19 15 7-29 4-8-8-16-2-5 6-55 1-17 51 16 1 11 8 11 2 1-6 11 1 25 13 33 57-2 17 3 9-10 36-9 7-16-6-8 9 1 5-7-9 5 0-7-15-9-11 5-4 14 2-9-41-19 9-15 0-12-12-17-9-19-3-44-37-29-8-22 3-3 5 12 10-2 17 4 5-9 8-39-9-9 8-19 5-22-2-23-12-29 3-17-6-7-9-37-9-2 12 8 8-5 8-55-13-25 16-12 3-9-7-12 1-29-16-12 3-16-7-2 6-53-40 2-3-18 11-9 1-2-7-14-4-8 3-9-13-17-2-31 12-34 4-2 5 9 8-7 3 3 3-7 6 18 8 0 6-14-1-1 4-15-6-15 0-8 5-37-13-15 0-16 13 2 9-12-7-4 25 10 9 7-1 9 15 6 2zM637-960l12-2 45 11 9 9-37-2-40-11 11-5zM718-946l25 5 3 4-36 4-2-13 10 0zM1020-917l56 5 6 8-37 2-25-7-7-6 7-2zM1103-910l23 3-3 4-13-1-24-7 17 1zM1069-890l2-4 8-1 21 7-31-2zM307-957l45-1-24 5-8-2 2-2-15 0zM212-678l-29-2 2-5 12-4 14 4 1 7zM407-894l13-9-4-4 33-11 45-6 9 3-44 12-18 10-12 19 6 9 20 8-31 0-4-5-16-2-4-6 7-2-3-6 11-8-8-2zM1339-671l65 57-17-4 7 18 25 21-13-7 0 9-45-61-29-28 4-6-9-5 3-2 9 8zM-1441-825l-11 6 2 3 10-8 20 2 1 10-30 6-22 13-7 0-8-8 5-4-18-1 9-8-14 3-15 10 65-43 13 19zM-1410-865l-12 1 13-7 14 3-15 3zM331-577l2-3 20 10 10-1-1 5-23 9-6-3 1-5-12-4 11-6-2-2zM-850-337l13-1-1 4-12 2 0-5zM-836-340l7 6-3 9-4-15zM-845-317l3 0 3 11-4 8-5-11 3-8zM-582 649l9-8 9 3 4-4 10 5-13 8-6-4-6 5-7-5zM105-950l12-3 34 10-17 4-10 16-8 0-17-5 6-4-26-10-6-8 18-3 14 3zM189-953l-9 5-19 1-42-8 38-3 32 5zM177-933l-15 4-13-2 4-3-5-3 14-1 15 5zM-309-972l57-7 75 0 39 6-75 4 65 3-9 5 51-6 20 1 3 4-55 8 16 0-17 13-2 10 7 6-24 4 12 4 0 8-8 1 8 9-17 1 8 4-3 3-22 2 8 7-1 4-14-4-5 3 19 9 1 8-15 2-13-10 1 7-11 5 32 1-47 18-34 4-24 15-51 14-10 6-9 16-17 9 1 8-15 21-13 1-10-10-18 0-17-31 2-17-8-10 7-8-4-4 14-13 14-4 11-13-24 7-8-3 3-7 6-6 22 3-16-10-13-1 13-10-7-21-8-4 3-4-15-6-54 1-13-9 36-3-41-7 64-12 5-4-16-3 48-9 1-3 65-1 21-4 35 6-13-4 3-3zM671 610l13 7-5 6-15 1 7-14zM1383 112l11-6 16 0-26 12-1-6zM175 359l5-6 6 9 11 3 16-7 2-47 9 14 1 12 7-1 20-18 9 5 16-2 17-25 26-18 19 2 7 26-3 19-8-1-5 12 6 7 6-1 3-6 8 0-5 20-29 36-29 26-17 5-2 4-34-1-31 12-13-9-4-19 4-2 0-10-18-39zM310 364l-4-4-6 3-12 13 7 9 13-7 5-10-3-4zM310 364l3 4-5 10-13 7-7-9 12-13 6-3 4 4zM-614 380l7-1 38 24 7 9-4 6 4 7-3 8-10 7-32-7-7-7 0-46zM-768 138l14 1 17-14 14-2 1 22 13 12 43 16 3 11 0 6-3 0 6 14 21 1 0 12 7 4 3 8-4 15 2 7-3 3-12-11-29 4-6 33-15-3-3 10-7-9-15-3-7 11-8 2-14-32 2-12-14-23 5-13-6-20 4-6 2-24-11-20zM-776 54l-10-1-23 13-1 17-7 4-2 8 11 19-2 5 22 8 8-8 1 19 11 0 11 20-2 24-4 6 6 20-8 20-5 3-12-7-1-6-53-34-6-10 2-4-44-80-17-13 4-5-6-12 3-9 9-8-2 13 10 0 4 6 6-5 9-19 13-5 12-13 2-18 3-1 16 15 7 13 25-1 8 6-7 13 9 7zM-743-16l-2 2-5-12-4 5-21-1 0 8 6 2 0 4-9 1 0 9 7 12-5 40-9-7 7-13-8-6-25 1-7-13-16-15-13-6-13 0-16-12 5-16 6-1 9-14-4-3 3-23-6-17 8-9-3-7 21-12 3-15 15-8 8 1 23-15 1 8-8 2-11 15-5 16 6 1 2 18 6 8 20 0 8 11 22 0-6 20 6 15-6 7 7 7 3 12zM-856-109l1 9-8 9-5-10 3-4-11-8-14 9 4 9-5 4-5 0-2-7-5 1-2-5-14-1 4-9-2-7 4-1 3 7 6-1 3 4 21-11 12 3 12 9zM-913-120l-4 1 2 7-4 9-18-22-3-2-1 7-8-7 3-8-3-2 4-4 18 6 3-3 11 18zM-924-138l-3 3-20-4-19-23 7-2 4-9 7-4 3 3 11-12 5 2 15-5-12 46 2 5zM-914-189l-15 5-5-2-11 12-3-3-7 4-1 6-6 4-5-5 0-7-8 1-8-7 3-8 15-11 32-1 19 12zM-983-181l8 7 8-1-2 10-23-8 9-8zM-1015-183l8-19 14 0 1-4-10-11 5 0 1-7 20 0-4 24 11 2-11 9-3 8-9 8-13-2-10-8zM-976-224l8-8 4 1-5 23-11 8 4-24zM-674-65l2 3-4 5-24 10-19-4 5 3 0 17 10 3-24 18-9 1-16-26 6-7-6-15 6-20-22 0-8-11-20 0-6-8-2-18-6-1 5-16 11-15 8-2-7 4 2 13-5 7 4 10 4-1 3-9-3-14 14-5-1-6 4-4 4 9 7 0 7 11 22-1 6 6 8 1 7-7 27-1-9 4 3 6 9 1 8 6 1 10 10 3-9 7 3 9-10 5-3 9 7 10zM-628-24l-9-1-13 9-12-6-4-13 5-15-6-8 2-5-9-2-7-10 3-9 10-5-3-9 9-7 8 4 6 15 14 11-2 11-7 3-1 10 16 27zM-605-29l-16-3-1 9-6-1-16-27 1-10 7-3 2-11 24-1 12 4-6 10 0 9 5 7-6 17zM-573-52l-15 25-17-2 6-17-5-7 0-9 6-10 11 4 14 16zM-837 2l-2 18-12 13-13 5-9 19-6 5-4-6-10 0 7-23-2-5-4 6-7-6 0-15 4-2 5-21 14-7 16 12 13 0 10 7zM-725-233l7 4-17 3 1-7 9 0zM-848-233l14 8-12 2-11-6 9-4zM-892-292l17 1 14 9 10-1 18 16 10 3-2 3 16 6-16 5-24 0 9-7-15-7-1-8-33-7-4-3 5-3-11 0-15 9-10 1 9-9 23-8zM339 280l-19-2-15-8-3-12-16-15-9-20 19 3 16-19 12-10 9-2 0 5 9-1 18 11-4 45-17 25zM320 278l-26 18-17 25-16 2-9-5-20 18-7 1-1-12-9-14 1-36 11-1 2-44 25-5 4 5 19-7 9 20 16 15 3 12 15 8zM215 311l-2 47-16 7-11-3-6-9-5 6-12-18-8-63-26-51 0-9 19-5 6 6 46-1 8 6 26 2 29-8 12 3-17 9-4-5-25 5-2 44-11 1-1 36zM-186-264l3-4 42 0 1-25 11-1 0-32 35 1 1-20 40 31-17 0 12 110-3 9-44 0-12 5-11-4-6 10-14-18-12-7-17 2-4 4 3-50-8-11zM30-79l-9 2-3-38-9-17 1-6 17-16 13 7 2 12-12 28 0 28zM161-288l3 20 9 12-6 47-13 12-5 16 5 5 0 8 7 0-5 11-12-14-8 7-15-4-22 7-13-7-11 3-15-9-12 1-8 26-9-7-7 4 0-9-13-3-7-26 36-8 7-16 0-29 15-6 68-48 17 5 7 7 7-5zM10-138l-1 6 9 17 3 38-9 2-7-18 3-12-4-23-5-7 1-4 10 1zM-151-158l24 2 1 4 4-2 10 5 9-6 5 3 6 9-3 7 6 8-3 5 5 15-5 3 0 8-10 5-6-15-8 2-7-21-14 2-10 12-20-27 5-6 9-2 2-11zM-184-156l33-2-2 11-9 2-5 6-11-6-6-11zM-93-97l-2 16 11 9-2 17-14-6-27-24 14-21 5-1 6 15 9-5zM-147-112l10-12 14-2 7 21 3-1-14 21-11-6-9-21zM-60-130l2-17 11-19 13-4 22-18 16 0 7 26 13 3 0 9-14 12-42 0 1 17-8-4-9 4-12-9zM304-66l-33 2-18 5-4 8-17-3-16-9-10 10-1 9-15-3-12 18-17-31-1-9 9-24 9-1 2-4 5 4 14-5 10-10-1-4 14 0 10-6 8-14 13-7 7 13 0 14 18 15 15 23 11 9zM205-44l-10 53-13 13-5 12 1 10-16 19-5-6-10 4-7-5-8 7-9-13 9-7-5-8 12-5 1-5 6 6 9 0 4-6 0-18-5-7 5-15-11-2-3-12 32 7 13-25 15 3zM125-28l20-1 3 12 11 2-5 15 6 17-5 14-9 0-6-6-1 5-12 5 5 8-9 7-19-23-6-17 7-23 20 0 0-15zM107-29l18 1 0 15-20 0 2-16zM340 105l28 17-1 34-7 16 6 4-34 10 1 9-9 2-12 10-16 19-19-3-7-5-16 2-14-18 2-40 23 0-1-25 5 5 12 1 3 5 9 2 7-4 2 7 9 1 8 13 8 0 0-14-3 2-11-7 2-33 3-8 22-2zM362 116l11 2 6 10 2 43 4 0 8 13 0 16-9 11-7-7 2-20-19-12 7-16 3-24-2-10-6-6zM382 145l32 0 32-15 3 55-16 25-23 11-30 28-2 9 9 20-3 25-33 21 4 6-2 6-8 0 1-30-7-26 17-25 4-45-18-11-9 1-1-14 34-10 13 8-2 20 7 7 9-11 0-16-8-13-4 0-3-17 4-9zM345 336l-3 6-6 1-6-7 5-12 8 1 2 11zM144 60l-9 13-3-10 8-7 4 4zM137 77l44-3 12 27 18-1 4-10 8-3 5 0-1 5 14 0 4 47 19-2 1 4 0 21-23 0-2 40 14 18-20 6-26-2-8-6-46 1-6-6-19 5 0-19 5-17 18-40-10-27 5-7-10-31zM338 30l3 12-15 15-4-21 7 1 3-7 6 0zM377-411l-1 4-4-2-2 8 3 2-2 5 4-2 1 5-3 20-9-22 6-23 8-3-1 8zM378-419l-8 3 7-20 8 6-7 11zM546 157l9 34-2 7-2 3-3-7-2 4 0 14-37 102-19 8-14-8-6-37 16-33-4-25 6-15 21-6 16-14 4-7-2-5 5 1 11-22 3 6zM375-396l-4 2 1-15 4 2-1 11zM-184-171l12 0 6-4 13 5-33 5 2-6zM376-407l1-4 13 5 19-14 6 16-23 8 13 12-5 7-8 1-6 9-13-2 3-38zM558-305l3 3 24-1 19-25 6 15-6 0 2 10-5 2-4 18-33-6-6-16zM549-311l-1-9 5-8 5 11-2 7-7-1zM512-377l6 18-20-7 6-12 8 1zM415-404l-6-16 21-13 0-24 13-13 21 3 10 15 7 3 2 8-6 14 9 12 14 7 7 9 0 9 11 14-14-2-6 12-20-1-33-25-30-12zM599-286l2-15 5-2-2-10 6 0 12 13 15 4 13 15-12 24-7 2 0 17-12 4 0 7-14 5 1 5-5 4-18 4-15-30 32-13 5-25-6-9zM607-323l-3-5 3-4 0 9zM1837 200l5 7-4 2-1-9zM1833 197l0-13 5 4 0 10-5-1zM1132-153l-4-15 6-11 24-1 10 5 4-8 10 4 4 24-18 10 6 7-21 6-9-2-12-19zM1158-180l-24 1-6 11 4 15-20-6 1-10-10 0-5 53 7 0 8 23 19 15-3 5-7 1-2-6-9-6-2 3-19-24-1 7-2-7 12-45-8-24-11-16 6-13-21-29 4-2 4-14 7 0 12-9 5 4 2 8 7 0 1 25 11-8 20-1 22 33-2 16zM1182-179l-10-4-4 8-10-5 2-16-22-33-20 1-11 8-1-25-7 0-7-12 9-13 7 4-4-15 6-2 15 22 13 0 6 11-9 8 14 7 30 35 4 9-1 12zM1092-257l-12 9-7 0-4 14-4 2 21 29-6 13 11 16 8 24-9 25-4-40-14-37-7-11-17 15-14-4 2-15-4-12-10-19-15-12-3-10 4 2-1-9 5-3-1-23 8 3 4-10 1-24 12-9 8 2-1-14 6-1 11 10 4 20-8 11 1 14 11-2 5 12 7 2-1 11 8 5 6 2 7-4 1 5-9 13zM1153-132l21-6-6-7 18-10-1-15-6-30-30-35-14-7 9-8-6-11-13 0-15-22 24-4 8-7 16 7 0 8 6 5 12 3-13 11-8 20 42 48 8 23 0 22-41 39-5-8 3-9-9-7zM1320-533l3 3-5-1-2 8 6 9-15 14 2 7 13 11-11 1-1 6-11-2-3 3-8-5 2-7-4-11-13-5 13-23 16 4-5-7 12-5 0-7 11 7zM1305-475l17-10 23 22 7 15-1 7-23 8-17-29 6-2-12-11zM850-618l34-18 55 13 5-8-8-8 2-12 37 9 7 9 17 6 29-3 23 12 22 2 19-5 9-8 14 5 11-1 1 21 6 6 15 0 5-5 26 17-22 0-8 12-18 11-18-3-1 8 9 9-8 10-10 5-15 0-23 11-48-13-45-1-19-19-22-9-27-4-6-5-3-14-11-10-28-11-6-9zM1043-355l1 14-8-2-12 9-1 24-4 10-8-3 1 23-5 3-8-20-3 0-1 8-7-7 11-18-28-4-2-9-15-6-2 9 9 7-8 9 7 3-1 8 6 9 2 15-21 3 2 9-4 8-15 8-28 31 1 6-20 8 1 70-6 0-4 10 3 4-10 4-7 12-11-12-23-48-6-24-12-17-16-68-15 8-8-2-16-15 4-4-3-5-14-11 6-8 24 0-14-27-7-6 9-13 13 1 21-39-2-9 7-7-10-6-12-20 4-5 28 1 7-10 15 14 2 11 6 6 1 6-8-1 6 14 29 16-7 18 38 18 15 1 7 7 31 4-3-19 6-2 4 12 11 5 24-2-6-11 8-2 19-17 9 3 7-5 6 7-2 6 12 2zM1007-277l1 9-4-2 3 10-15-26-10-1 0 12-14-2-9-20 1-8-7-3 8-9-9-7 2-9 15 6 2 9 28 4-11 18 7 7 1-8 3 0 8 20zM984-349l6 11-24 2-12-7 10-13 20 7zM945-351l3 19-31-4-7-7-15-1-38-18 2-12 9-9 52 28 25 4zM813-446l-7 10-28-1-4 5 12 20 10 6-7 7 2 9-21 39-13-1-9 13 7 6 14 27-24 0-6 8-9-3-13-19-52 5 2-15 14-7-7-7-2-11-11-6-11-14 18 6 17 0 23-7-2-11 5-7 23-7-2-8 9-11-6-8 10 1 2-5 2-10-6-12 4-5 33-8 15 16 18 5zM689-470l29 3 2-6 7-1 3-10 10 7 1 11 6 4 12-9 18 0 3 4-33 8-4 5 6 12-4 15-10-1 6 8-9 11 2 8-23 7-5 7 2 11-23 7-17 0-18-6 7-12-2-8-9-2-7-18 3-7-5-2 2-24 19 3 1-6 13-6 0-10 8-2 0-5 9 4zM704-467l2-13-4-9-9-3 1-6 9 1 4-15 13-3-1 6 7 3-2 4-12-2 1 7 43 1 6 12 10 1 5 12-18 0-12 9-6-4-1-11-10-7-3 10-7 1-2 6-4-3-10 3zM717-531l1-5 6-2 18 4-1-7 5-3 16 5 36 1 13 9-14 6-2 5-12 2-1 8-12-2-14 8 0 6-19 2-24-3-1-7 22-1 10-9-29-8 6-8-4-1zM532-525l15-7 17 13 16 0-3-7 14-11 16 7 8 12 11-1 12 15 22 15 28 12 1 7-9-4 0 5-8 2 0 10-13 6-1 6-7 1-12-4-3-11-8 0-14-11-22-8-18 1-6 7-9 2-5-22-9-4 1-9-7 0 0-11 11 3 7-4-13-14-8 3 1 9-5-8zM518-376l-11-14 0-9-7-9-14-7-9-12 6-14-2-8-7-3-17-25-4-19 6-3 9 10 11 2 14-11 4 4-3 6 10 6 5 9 19 9 15 3 16-4 15-12 11-2 29 9 14 11 8 0 3 11-2 24 5 2-3 7 7 18 9 2 2 8-7 12 11 14 11 6 2 11 7 7-14 7-2 15-46-9-6-15-6-2-18 8-14-4-22-13-19-29-5 2-8-4-3 5zM377-411l2-14 6-5-8-6-2-9 7-18 29 1 28-6-9 11 0 24-40 27-13-5zM479-487l-4 0-6-9-23-10-2-10 13-2 7 5 5 7-2 4 10 6 2 9zM250-851l-19 6 1-8-11-4-12 3-8 13-20-2-10-6-9 4 0 7-16-2-1 6-8 0-22 35 1 8-9 0-4 11 2 15 6 5-2 14-10 14-7-7-16 14-12 2-13-6-8-38 46-29 32-36 32-22 30-4 10-8 28-2 27 8-9 3 11 6zM99-732l10-14 2-14-6-5-2-15 4-11 9 0-1-8 22-35 8 0 1-6 16 2 0-7 5-1 25 13 8 21-14 3-7 7 2 7-27 19-4 16 17 14-7 13-9 3-5 31-11-2-5 10-10 0-21-41zM259-700l12 6 14 1 1 9 21 17-12 4 7 11-8 1-2 9-51-7-17 4-5-11 6-3-5-14 18-5 1-7 7-3-2-6 15-6zM302-652l18-2 7 6 0 7 8 0 4 8 20 2 8 6 20 4 1 20-9 1-3 9-31 10 2 7-14-6-2 3-18-4-1-5-9 2-9 15-9 0-5-2 5-12 11 1-16-21-12-5-25 9-17-4-4 3-7-7 6-7-3-6 7-10 5-1-6-14 17-4 51 7-1-6 11-4zM220-673l5 14-6 3 11 21-12 15 3 6-12-6-26 1-14-12-14 0 1-4-8-1-9-11-7-25 32-13 10 5 43 3 3 4zM166-603l-1 5-5 0-2 12-14 3-22-4-3-4-10 4-16-4 4-6 5 4 1-4 21-1 3 3-1-10 6-8 8 4 8-6 17 6 1 6zM215-607l7 7-6 2-8 17-25 7-24-14 1-10 5 0 1-5 9 4 24-10 16 2zM260-605l8-3 17 8 11 18-11-1-5 12-3-16-17-18zM280-571l14 2 1 4-8 1-1 15-13-6-17 6-26-1-3-10-12-2-15-17 8-2 8-17 10-5 17 4 17-6 17 18 3 16zM244-694l2 6-7 3-1 7-18 5-8-5-1-7-14-4-3-10 34-4 16 9zM248-715l5 2 6 13-15 6-16-9-34 4 2-16 8-4 9 9 7 0 0-9 7-2 21 6zM249-739l-3 9 5 11-3 4-21-6-7 2 0-7-10-3-1-7 10-3 30 0zM227-556l3 6 26 1 17-6 13 6-7 14 4 7-18 2 0 7-9 1-7-5-16 4-1-9-6-4 5-11-7-10 3-3zM275-444l-1 4-15 1-13-5 1-5 7 4 15 0 0 3 6-2zM233-519l16-4 7 5 9-1 0-7 5 4-4 9-12-2-12 4 8 7-11 2-6-7-2 3 9 13-4 3 12 9 1 8-10-4 4 7-7 1 5 11-16-5-18-35 7-15 19-6zM214-513l-7 15-9-8-3-24 4-6 9 6 2 14 4 3zM163-583l20 9 3-2 7 8-4 5-30-5-2 5 29 29-25-12-13-20-6-2-3 5-3-4 0-4 16 0 4-9 7-3zM94-596l-1 5 10 3-5 7-7-2-2 5-7-1-5 4-9-2-4-6-5 2 7-15 17-4 11 4zM58-628l2 8-5-1 3-7zM59-636l-4 15-14-4-17-15 23-4 12 8zM-58-673l1 9-7 10-18 8-13-2 9-13-5-12 21-15-1 13 13 2zM1805 265l11 14-5 3-11-9-11-20 5 0 11 12zM1792 132l2 4-7 0-3-8 8 4zM1788 121l-2 2-7-11-1-7 10 16zM1779 124l-11-1-1-7 12 8zM1768 101l2 6-18-14 16 8zM1741 88l4 4-7-2-3-7 6 5zM1717 67l12 15-2 4-7-4-4-19 1 4zM1810 504l-33 20-1-5 14-10 1-7-7-5 3-5 10-4 13-18 3-11-2-25 5-1 8 11-6 24 6-9-2 13 5 4 20-2-18 18-8 0-11 12zM1703 547l61-38-3 10 11-5-5 11-32 20-1 6-20 5-25 20-21 9-21-5 15-14 41-19zM1505 513l6 1-23 29-2-4-12 9-8-1 10-35 13 5 16-4zM1335 405l-24 10-11 11-40 1-24 14-15-1-13-10 3-7 9-5 7-20 2-27-8-43 4 6-1-12 7 9-4-24 14-33 0 9 6-8 25-15 8 1 18-9 21-4 19-19 2-12 10-11 3 11 5-2-3-6 4-6 5 2 3-9 16-17 16-5 13 13 14 1-2-7 16-23 8-5 15-1 0-6-7-4 6-2 31 14 13-5 5 6-13 13 1 5-9 16 46 34 8-5 14-29 5-33 12-22 9 49 7-5 8 10 1 50 23 18 3 25 5-3 3 6 3-2-1 13 15 23-9 47-21 33-21 18-46 55-20 4-29 16-11-8 5-7-21 12-25-10-3-8 4-16-2-5-9-1 6-6 2-10-9 9-11 2 20-20 3-9-29 25-6-5 3-7-7-14 4-3-26-14-58 9zM906-95l-1 13-14 7-6-10-3-18 4-21 8 7 12 22zM1198-229l-10-4-2-11 5-5 18-4 3 5-5 13-9 6zM811-532l-3-7 5-3-16-22 21-8-2-22 21 4 3-5-5-12 8-2 7-9 6 9 28 11 11 10 3 14 6 5 27 4 22 9 19 19 45 1 48 13 23-11 15 0 18-15-9-9 1-8 18 3 18-11 8-12 22 0-26-17-5 5-15 0-6-6-1-21 14 5 9-8-4-5 2-17-12-10 3-5 22-3 29 8 44 37 19 3 17 9 12 12 15 0 19-9 9 41-14-2-5 4 9 11 7 15-5 0 4 6-11-7 0 7-12 5 5 7-16-4-13 23-27 13 2-6-4-5 4-8-9-7-14 13-2 9-10 0-3 6 32 20 7-9 18 5 5 7-13 3-11 22 14 7 30 33 4 10-6 3 13 11 1 20-6 1-14 45-26 22-12 2-6 6-4-5-5 7-25 8-2 13-6 1-4-9 2-5-32-5-6-5 0-8-16-7-8 7-19 1-11 5 4 15-5-1-3-8-7 4-14-7 1-11-7-2-5-12-11 2-1-14 8-11-4-20-11-10-18-1 2-6-6-7-7 5-9-3-19 17-8 2-20-7-10 13-3-10-31-2-42-24-10-4-4 3-29-16-6-14 8 1-1-6-6-6-2-11-15-14-18-5-18-20-5-12-10-1-6-12 0-6 14-8 12 2 1-8 12-2 16-14zM1318-307l-5 31-11-20 10-22 6 4 0 7zM92-686l-13 0-5-19 4-6 18-7-1 13 5 1-11 12 3 6zM114-700l3 6-5 10-12-12 14-4zM-58-673l-13-2 1-13 8-1 9 8-5 8zM-121-817l-2 7 8 7-12 9-33 9-34-5 9-5-17-5 15-2 0-4-17-2 7-7 13-2 12 8 13-6 10 3 15-6 13 1zM470-526l16 9 6-8 14 15 9 4-8 1-3 23-10-6 3-6-4-4-14 11-2-9-10-6 2-4-12-12 16 2-3-10zM475-487l-16-12 10 3 6 9zM401-546l58 12 15 16-15-2-15 4-11-7-11 1-4-14-17-10zM1332-160l-6-9 9 0 4 5-1 10-6-6zM1356-126l2-11 6-1 0 9 6-12 1 12-10 16-7-9 2-4zM1399-106l3 16-3 11-5-13-5 7 4 9-2 6-14-7-4-10 3-6-7-6-3 6-6-1-7 7-2-3 3-11 13-8 4 5 8-3 2-6 7 0-1-10 9 6 3 11zM1311-117l-14 12 23-38 3 10-12 16zM1339-229l4 14-1 10-6 5 0 10 4 10 10 0 15 7 3 15-14-12-2 4-8-7-16-1 3-9-3-3-1 5-9-13-2-12 5 4-1-31 19 4zM1347-144l-2-6 14 4 1 6-11 9-2-13zM1385-153l4 14-9-3 5 12-5 3-8-18 7 1-1-4-8-10 11 0 4 5zM1109-81l2-3 9 6 2 6 13-5 7 8 5 8 2 26 9 19-8 1-24-20-9-15-8-31zM1308-52l-22-2-13 36-9 3-11-4-11 8-15 1-7-7-2-8 8 4 8-2 2-11 18-5 13-18 5 7 3-5 5 1 0-15 13-18 5 0 7 12 17 7-1 5-7 1 2 6-8 4zM1280-69l0 15-5-1-3 5-5-7 13-12zM136-584l25-4 2 5-7 3-4 9-16 0 0-13zM231-845l0 7 15 7-6 8 13 13-4 9 10 8-2 8 15 8-24 26-45 8-15-10 0-11-6-11 10-13 22-15-18-14-4-16-25-13 4-3 10 6 20 2 8-13 12-3 11 4-1 8zM219-615l-6 9-14-3-16 6 0 3-12 0-7-8 15-12 8-1 5 4 17-3 10 5zM144-640l12 5-1 4 14 0 13 11-17 11-17-6-8 6-19-12-3-9 26-10zM401-181l3-32 16-13 11 26 44 40-8 2-17-20-10-5-10-2-6 3-7-6-3 9-13-2zM-634 254l4 24 24 3 6 20 12 1-2 33-8 9-21 1-11-4 8-19-2-6-35-16-22-20 6-33 29-4 12 11zM568-239l15 30-8 3-2 10-28 11-9 9-31 8-9 8-17 1-11-32 3-1-1-14 5-15 37 4 3 4 22-21 31-5zM343-442l18-7-5 8-13-1zM343-442l13 2-10 5-8-6 5-1zM272-277l1 25-13 0 0 6-88-48-18 11-7-7-17-5-13-14-5 2-12-21 5-5 0-37-4-11 5-3 0-11 15-12 0-10 40 11 6 11 36 14 10-9-3-9 10-12 22 1 4 5 18 4 3 4-4 6 3 5-3 8 4 10 5 91zM529-101l-30 38-15 1-9 9-8 0-3 4-7 0-5-5-13 11-16-2-14-11-8 0-16-27-13-14-7-1 11-11 3-25 16-24 6-23 13 2 3-9 7 6 6-3 20 7 17 20-7 12 1 7 12 2-3 4 13 18 37 14 9 0zM467-158l8-2 3 4 0 5-7 3 5 4-3 7-12-2-1-7 7-12zM540-144l1 25-12 18-9 0-37-14-13-18 6-11 12 13 52-13zM377 12l-49 5 4-25 14-20-4-1 0-15 5-4 7 3 17-3 6-5 6 8 6 21-12 23 0 13zM338 14l3 15-9 1-3 7-7-1 3-16 13-6zM187-536l-22-17-8-10 2-5 34 5-2 5 5 5-1 6-7 4-1 7zM226-532l6 4 1 9-19 6-4-3 0-12 16-4zM186-576l14-3 15 17 12 2-3 7 7 10-3 10-10 2 2-5-11-8-5 6-11-9 3-6-5-5 2-5-4 0 4-5-7-8zM203-535l-4-1-3 10-10-8 7-13 12 8-2 4zM209-526l-6-9 6-9 11 8-11 10zM-682-135l9-2-1 10-11 0 3-8zM-29-667l3 5-3 11 4 5-22 0-3-4 10-4-5-7 2-7 14 1zM-18-696l-16 14-11-2-2-12-5 6-4-17 11-22 18 0-10 13 19-2-2 10-9 10 11 2zM342-44l-12-14-20 3-32-43-14-10 8-4 5-17 8-2 11 12 24 1 12-11 9 7 6-1 11-16-4-12 7 0 0-3 5 1 1 18 6 5 3 11-2 14-5 0-4 7 7 1 13 14 6 14-20 21-17 3-7-3-5 4z"
+};
+
+/* js/atlas.js — keşif ağı haritası.
+
+   Oyunun keşif birimi lig; harita ise BÖLGE gösteriyor. 22 lig 16 bölgeye
+   düşüyor (altı ülkenin iki kademesi var, bkz. LEAGUES[].ctry). Bir bölgenin
+   işareti tektir, satın alma ligler üzerinden yürür.
+
+   ===== tek doğruluk kaynağı =====
+   Bölge durumu hiçbir yerde saklanmıyor. S.known lig indekslerini tutmaya devam
+   ediyor — kayıt biçimi bu — ve buradaki her şey ondan türetiliyor. Bu dosya
+   duruma yazmaz, yalnız okur.
+
+   ===== coğrafya oynanışı kısıtlamaz =====
+   Harita saf bir sunum katmanı. Keşfedilmemiş her lig, parası yetiyorsa,
+   dünyanın neresinde olursa olsun satın alınabilir; komşuluk koşulu yok.
+   Bu yüzden "ulaşılamaz bölge" diye bir durum da yok — olsaydı ekran yalan
+   söylerdi. Bölge renkleri yalnızca ne kadar ilerlediğini anlatıyor:
+
+     full     bölgedeki tüm ligler keşfedildi
+     partial  bir kısmı keşfedildi, alınacak lig kaldı
+     scouting bölgede ağ kurulumu sürüyor
+     open     hiçbir ligi keşfedilmedi — alınmayı bekliyor
+
+   Kamera (kaydırma/yakınlaştırma) modül değişkeninde duruyor, S'ye yazılmıyor:
+   oturuma ait bir görünüm ayarı, kaydın parçası değil. */
+
+/* ===== lig ↔ bölge =====
+   Bölge listesi LEAGUES'ten türetiliyor: veri iki yerde durmasın. */
+let ATL_CACHE=null;
+function atlCache(){
+  if(ATL_CACHE)return ATL_CACHE;
+  const byTerr={}, order=[];
+  LEAGUES.forEach((l,i)=>{
+    if(!byTerr[l.ctry]){byTerr[l.ctry]=[];order.push(l.ctry);}
+    byTerr[l.ctry].push(i);
+  });
+  ATL_CACHE={byTerr,order};
+  return ATL_CACHE;
+}
+function terrList(){return atlCache().order;}
+function terrOf(i){const l=LEAGUES[i];return l?l.ctry:null;}
+function terrLeagues(c){return atlCache().byTerr[c]||[];}
+function terrName(c){return CTRYS[c]?CTRYS[c][L]:c;}
+
+/* ===== türetilmiş durum ===== */
+function terrDiscovered(c){return terrLeagues(c).some(i=>knownLg(i));}
+function terrRemaining(c){return terrLeagues(c).filter(i=>!knownLg(i));}
+/* "Açık" = alınacak ligi var. Coğrafi bir koşul değil. */
+function terrOpen(c){return terrRemaining(c).length>0;}
+function terrScouting(c){return terrLeagues(c).some(i=>scoutPending(i));}
+/* Sıra önemli. fog en sonda duruyor ve bugünkü veriyle hiç çalışmıyor: on altı
+   bölgenin hepsinin en az bir ligi var. Yine de duruyor — haritada karşılığı olup
+   oyunda hiç ligi olmayan bir bölge eklenirse (ya da GEO'da öksüz bir şekil
+   kalırsa) o bölge yeşile boyanmak yerine nötr kalsın. */
+function terrState(c){
+  if(terrScouting(c))return 'scouting';
+  const total=terrLeagues(c).length;
+  if(!total)return 'fog';                       // ilerleyecek bir şeyi yok
+  if(!terrRemaining(c).length)return 'full';    // hepsi keşfedildi
+  return terrDiscovered(c)?'partial':'open';    // bir kısmı / hiçbiri
+}
+/* Bir ligin ağı şu anda kurulabilir mi? Arayüz bunu sorar; parayı buyScout
+   kendi kontrol eder, burada kasaya bakılmıyor. */
+function canScout(i){return !!LEAGUES[i]&&!knownLg(i)&&!scoutPending(i);}
+
+/* ================= ÇİZİM =================
+   Coğrafya js/worldgeo.js'ten geliyor (üretilmiş dosya). */
+function atlasHasGeo(){return typeof GEO!=='undefined'&&GEO&&GEO.t;}
+function atlasMapSvg(){
+  if(!atlasHasGeo())return '';
+  const vb=GEO.vb;
+  const terrs=terrList().filter(c=>GEO.t[c]).map(c=>
+    `<path class="mapterr ${terrState(c)}" d="${GEO.t[c].d}" fill-rule="evenodd"/>`).join('');
+  const marks=terrList().filter(c=>GEO.t[c]).map(c=>{
+    const a=GEO.t[c].a;
+    return `<g class="mapmark ${terrState(c)}" data-t="${c}" data-x="${a[0]}" data-y="${a[1]}"
+       transform="translate(${a[0]},${a[1]})">
+      <circle class="mk" r="30"/><circle class="mkdot" r="11"/></g>`;
+  }).join('');
+  /* Kamera tek bir grubu dönüştürüyor: kaydırma ve yakınlaştırma sırasında
+     SVG yeniden kurulmuyor, yalnız bu transform yazılıyor. */
+  return `<svg class="mapsvg" id="mapSvg" viewBox="${vb.join(' ')}"
+    preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(t('scoutNet'))}">
+    <rect class="mapsea" x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}"/>
+    <g id="mapCam">
+      <path class="mapland" d="${GEO.ctx}" fill-rule="evenodd"/>
+      <g class="mapterrs">${terrs}</g>
+      <g class="mapmarks" id="mapMarks">${marks}</g>
+    </g>
+  </svg>`;
+}
+function atlasLegend(){
+  const cnt={};
+  terrList().forEach(c=>{const s=terrState(c);cnt[s]=(cnt[s]||0)+1;});
+  const item=(st,lbl)=>cnt[st]?`<span class="mapkey ${st}"><i></i>${lbl} <b>${cnt[st]}</b></span>`:'';
+  return `<div class="maplegend">
+    ${item('full',t('mapFull'))}${item('partial',t('mapPartial'))}
+    ${item('scouting',t('scoutPendingT'))}${item('open',t('mapOpen'))}${item('fog',t('mapFog'))}
+  </div>`;
+}
+function atlasView(){
+  if(!atlasHasGeo())
+    return `<h2 class="sec">${t('scoutNet')}</h2><div class="card"><div class="empty">—</div></div>`;
+  const known=(S.known||[]).length;
+  return `<h2 class="sec">${t('scoutNet')}</h2>
+  <div class="mapwrap" id="mapWrap">
+    ${atlasMapSvg()}
+    <div class="mapzoom">
+      <button onclick="mapZoom(1)" aria-label="+">+</button>
+      <button onclick="mapZoom(-1)" aria-label="−">−</button>
+      <button onclick="mapHome()" aria-label="${esc(t('mapRecentre'))}">⌂</button>
+    </div>
+  </div>
+  ${atlasLegend()}
+  <div class="card tight" style="padding:14px">
+    <div class="kv"><span class="k">${t('knownLbl')}</span>
+      <span class="v">${known}/${LEAGUES.length}</span></div>
+    <div class="kv"><span class="k">${t('cash')}</span><span class="v">${fmtK(S.cash)}</span></div>
+  </div>
+  <div class="sub" style="margin:0 2px 10px">${t('mapHint')}</div>
+  <!-- GEÇİCİ: satın alma paneli 6. adımda gelecek. O gelene kadar mevcut liste
+       erişilebilir kalsın ki ağ kurma özelliği kaybolmasın. -->
+  <button class="btn b" onclick="openScout()">${t('scoutBuild')} · ${t('mapListTmp')}</button>`;
+}
+
+/* ================= KAMERA =================
+   Yalnız modül değişkeni: kayda yazılmıyor, kariyerle taşınmıyor.
+   Dönüşüm doğrudan DOM'a yazılıyor; her harekette görünümü yeniden çizmek
+   telefonda gözle görülür bir takılma demek. */
+let CAM={x:0,y:0,k:1};
+const CAM_K={min:1,max:12};
+/* Ev çerçevesi bir ülkeyi yapıştırmasın: en az bu kadar genişlik gösterilsin,
+   böylece komşuları da görünür ve nereye gidebileceğin belli olur. */
+const CAM_SPAN=1000;
+function mapSvgEl(){return document.getElementById('mapSvg');}
+function mapCamEl(){return document.getElementById('mapCam');}
+/* Ekranda gerçekten görünen viewBox penceresi. preserveAspectRatio="meet"
+   kutuyu ortalayıp boşluk bıraktığı için görünen alan viewBox'tan geniş
+   olabiliyor; sınırlama bunu bilmek zorunda. */
+function mapWindow(){
+  const vb=GEO.vb, el=mapSvgEl();
+  const r=el&&el.getBoundingClientRect?el.getBoundingClientRect():null;
+  if(!r||!r.width||!r.height)return {x:vb[0],y:vb[1],w:vb[2],h:vb[3],sc:1};
+  const sc=Math.min(r.width/vb[2],r.height/vb[3])||1;
+  const w=r.width/sc, h=r.height/sc;
+  return {x:vb[0]+(vb[2]-w)/2, y:vb[1]+(vb[3]-h)/2, w:w, h:h, sc:sc, rect:r};
+}
+/* Harita tamamen ekrandan çıkmasın. Kural "içerik pencereyi tümüyle örtsün"
+   değil "en az yarısı görünsün": kuzeydeki Hollanda ya da güneydeki Arjantin
+   ancak haritanın kenarının ötesinde bir miktar boşluk gösterilerek ortalanabilir.
+   O boşluk boş değil — deniz katmanı kameranın dışında ve tüm görünümü kaplıyor,
+   yani haritanın dışı okyanus olarak çiziliyor. */
+const CAM_KEEP=0.5;
+function mapClamp(){
+  CAM.k=Math.max(CAM_K.min,Math.min(CAM_K.max,CAM.k));
+  const vb=GEO.vb, w=mapWindow();
+  const axis=(camv,vb0,vbLen,win0,winLen)=>{
+    const keep=Math.min(vbLen*CAM.k,winLen)*CAM_KEEP;
+    const lo=win0+keep-CAM.k*(vb0+vbLen);
+    const hi=win0+winLen-keep-CAM.k*vb0;
+    return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,camv));
+  };
+  CAM.x=axis(CAM.x,vb[0],vb[2],w.x,w.w);
+  CAM.y=axis(CAM.y,vb[1],vb[3],w.y,w.h);
+}
+/* İşaretler haritayla birlikte büyümesin: uzakta küçük nokta, yakında okunur
+   bir işaret. Üs 1 olsaydı ekran boyutu sabit kalır, 0 olsaydı harita kadar
+   büyürdü; arası ikisini de vermiyor ama ikisine de yaklaşıyor. */
+function mapMarkScale(){
+  const g=document.getElementById('mapMarks');
+  if(!g||!g.children)return;
+  const s=Math.pow(CAM.k,-0.45);
+  Array.prototype.forEach.call(g.children,el=>{
+    if(!el.getAttribute)return;
+    el.setAttribute('transform',
+      'translate('+el.getAttribute('data-x')+','+el.getAttribute('data-y')+') scale('+s.toFixed(3)+')');
+  });
+}
+function mapApply(){
+  const g=mapCamEl();
+  if(g&&g.setAttribute)
+    g.setAttribute('transform','translate('+CAM.x.toFixed(1)+' '+CAM.y.toFixed(1)+') scale('+CAM.k.toFixed(4)+')');
+  mapMarkScale();
+}
+/* Ekran noktası → viewBox koordinatı */
+function mapToVb(sx,sy){
+  const w=mapWindow();
+  if(!w.rect)return {x:0,y:0};
+  return {x:w.x+(sx-w.rect.left)/w.sc, y:w.y+(sy-w.rect.top)/w.sc};
+}
+/* Verilen ekran noktası sabit kalacak şekilde yakınlaştır. */
+function mapZoomAt(factor,sx,sy){
+  const v=(sx===undefined)?null:mapToVb(sx,sy);
+  const p=v||(function(){const w=mapWindow();return {x:w.x+w.w/2,y:w.y+w.h/2};})();
+  const lx=(p.x-CAM.x)/CAM.k, ly=(p.y-CAM.y)/CAM.k;
+  CAM.k=Math.max(CAM_K.min,Math.min(CAM_K.max,CAM.k*factor));
+  CAM.x=p.x-lx*CAM.k;
+  CAM.y=p.y-ly*CAM.k;
+  mapClamp();mapApply();
+}
+function mapZoom(dir){mapZoomAt(dir>0?1.45:1/1.45);}
+function mapFitWorld(){CAM.k=1;CAM.x=0;CAM.y=0;mapClamp();mapApply();}
+/* Ekranı oyuncunun kendi bölgesine çerçevele. Hiç ağı yoksa dünya. */
+function mapHome(){
+  if(!atlasHasGeo())return;
+  const own=terrList().filter(c=>GEO.t[c]&&terrDiscovered(c));
+  if(!own.length){mapFitWorld();return;}
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  own.forEach(c=>{const b=GEO.t[c].bb;
+    x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3]);});
+  const cx=(x0+x1)/2, cy=(y0+y1)/2;
+  /* dar bölgeleri en az CAM_SPAN genişliğinde bir alana yay */
+  const w=mapWindow();
+  const spanX=Math.max(x1-x0,CAM_SPAN), spanY=Math.max(y1-y0,CAM_SPAN*(w.h/w.w));
+  CAM.k=Math.min(w.w/spanX,w.h/spanY);
+  CAM.k=Math.max(CAM_K.min,Math.min(CAM_K.max,CAM.k));
+  CAM.x=w.x+w.w/2-CAM.k*cx;
+  CAM.y=w.y+w.h/2-CAM.k*cy;
+  mapClamp();mapApply();
+}
+/* Olay bağlama. render() her çizimden sonra çağırıyor: innerHTML eski
+   dinleyicileri sildiği için yeniden bağlanmak zorunda. */
+function mapMount(){
+  const el=mapSvgEl();
+  if(!el||!el.addEventListener)return;
+  mapApply();
+  const pts=new Map();
+  let base=null, drag=null;
+  const two=()=>{const a=[...pts.values()];return {d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),
+    mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2};};
+  el.addEventListener('pointerdown',e=>{
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(el.setPointerCapture)try{el.setPointerCapture(e.pointerId);}catch(_){}
+    if(pts.size===1)drag={x:e.clientX,y:e.clientY,ox:CAM.x,oy:CAM.y};
+    else if(pts.size===2){const m=two();base={d:m.d,k:CAM.k,p:mapToVb(m.mx,m.my)};drag=null;}
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const w=mapWindow();
+    if(pts.size>=2&&base){
+      const m=two();
+      if(base.d>6){
+        const lx=(base.p.x-CAM.x)/CAM.k, ly=(base.p.y-CAM.y)/CAM.k;
+        CAM.k=Math.max(CAM_K.min,Math.min(CAM_K.max,base.k*(m.d/base.d)));
+        /* iki parmağın ortası hangi noktayı tutuyorsa orada kalsın */
+        const now=mapToVb(m.mx,m.my);
+        CAM.x=now.x-lx*CAM.k;CAM.y=now.y-ly*CAM.k;
+        mapClamp();mapApply();
+      }
+      return;
+    }
+    if(!drag)return;
+    CAM.x=drag.ox+(e.clientX-drag.x)/w.sc;
+    CAM.y=drag.oy+(e.clientY-drag.y)/w.sc;
+    mapClamp();mapApply();
+  });
+  const up=e=>{
+    pts.delete(e.pointerId);
+    if(pts.size<2)base=null;
+    if(pts.size===0)drag=null;
+  };
+  el.addEventListener('pointerup',up);
+  el.addEventListener('pointercancel',up);
+  el.addEventListener('wheel',e=>{
+    e.preventDefault();
+    mapZoomAt(e.deltaY<0?1.18:1/1.18,e.clientX,e.clientY);
+  },{passive:false});
+}
+
+/* js/rivals.js — rakip menajer ajansları.
+
+   Oyunun geri kalanında "rakip menajer" yalnızca bir bayraktı: p.agent==='rival'
+   olan oyuncu piyasadan gizleniyordu, arkasında kimse yoktu. Burada o bayrağın
+   arkasına adlı ajanslar konuyor — her birinin bir karakteri, bir itibarı ve
+   seninle bir ilişkisi var. Kaç tane olduğu RIV_ARCH'ın uzunluğu: her arketipten
+   bir tane, bugün on dört.
+
+   Üç davranış:
+     1) arka plan piyasası — rakipler kendi başlarına oyuncu imzalar ve kaybeder
+     2) imza yarışı       — piyasadaki bir oyuncu için seninle yarışırlar
+     3) ayartma           — mevcut müşterine göz koyarlar
+
+   Neden portföy saklanmıyor: kayıt biçimi yalnızca oyuncudaki p.ra (ajans id'si).
+   Kimin kaç müşterisi olduğu her zaman oyuncu listesinden türetiliyor — atlas.js'in
+   S.known'dan bölge durumu türetmesiyle aynı gerekçe: iki yerde tutulan şey er geç
+   birbirini tutmaz.
+
+   Eski kayıtlar: S.rivals yoksa ensureRivals() kuruyor, p.ra yoksa rivalOf() null
+   dönüyor ve arayüz eski "Rakip menajer" metnine düşüyor. Hiçbir alan zorunlu değil. */
+
+/* ================= DENGE =================
+   Rakipler kulüpten oyuncu almıyor, yalnızca temsil bayrağını çeviriyor; kadro
+   dengesi ve yaş piramidi etkilenmiyor. Etkiledikleri tek havuz piyasa ekranının
+   beslendiği temsilcisiz oyuncu havuzu: signRate onu daraltır, loseRate genişletir.
+   İkisi birbirine yakın kalmalı, yoksa piyasa birkaç sezonda boşalır. */
+const RIV={
+  /* Ajans sayısı burada tutulmuyor: RIV_ARCH.length kadar ajans var, her arketipten
+     bir tane. tuneN ise aşağıdaki haftalık oranların ölçüldüğü ajans sayısı — kadro
+     büyüdüğünde oranlar rivScale() ile bölünüyor ki dünyaya düşen toplam yük sabit
+     kalsın. Ajans eklemek dünyayı hızlandırmamalı, yalnızca çeşitlendirmeli. */
+  tuneN:6,
+  /* Adlı ajansın sahiplendiği profil eşiği. 72 iken rakip menajerli ~2.550 oyuncunun
+     yalnızca %17'sinin arkasında bir ad vardı; oyuncu ekranların çoğunda yine isimsiz
+     "Rakip menajer" görüyordu. 64 bunu ~%43'e çıkarıyor — ajans sayısı ikiye
+     katlandığı için ajans başına portföy yine eskisi kadar (~75). */
+  notable:64,
+  /* Aşağıdaki üç oran tuneN ajans içindir; ajans başına düşen pay rivScale() ile
+     bulunur, dünyaya düşen toplam sabit kalır. */
+  signRate:0.10,        // haftalık imza olasılığı (arketiple ölçeklenir)
+  loseRate:0.10,        // haftalık müşteri kaybı olasılığı
+  worth:64,             // rakiplerin ayartmaya değer bulduğu müşteri profili
+  reach:8,              // yarış hedefi itibarının kaç puan üstüne kadar çıkabilir
+  /* Sıklık ölçülerek ayarlandı: 0.22'de sezonda ~29 yarış bildirimi çıkıyordu, iki
+     haftada bir. Haber değerini kaybediyordu; 0.10 sezonda ~13 veriyor. */
+  chaseW:0.10,          // haftalık yeni yarış açma olasılığı
+  chaseMax:3,           // aynı anda açık yarış sayısı tavanı
+  chaseLen:[3,6],       // yarışın kaç hafta sürdüğü
+  chasePen:0.13,        // yarış varken imza şansından düşen pay (arketiple ölçeklenir)
+  poachGap:9,           // iki ayartma girişimi arasında en az bu kadar hafta
+  poachWarn:[2,3],      // tehdidi duyduktan kaç hafta sonra karar masaya gelir
+  /* Yeni imzalanan müşteriye kimse hemen yaklaşmaz. Bu koruma olmadan kayıp
+     kendini besliyordu: müşteriyi kaybeden menajer yerine taze güvenli (dolayısıyla
+     kolay ayartılır) birini alıyor, o da gidiyordu. Ölçüldü: 12 sezonda itibar
+     70'ten 4'e iniyordu — bu bir karar değil, çıkışsız bir sarmaldı. */
+  poachGrace:10,        // imzadan sonra ayartmaya kapalı hafta sayısı
+  poachRep:1.5,         // müşteriyi kaptırmanın itibar bedeli
+  poachBase:0.34, poachArch:0.10,
+  repGap:200, trustDiv:200, morDiv:320,
+  repMove:0.25          // sezon sonu itibarın hedefe yaklaşma payı
+};
+/* Haftalık oranların ajans sayısına göre bölümü. Ajans başına oran sabit kalsaydı
+   altıdan on dörde çıkmak dünyanın hızını 2,3 katına çıkarırdı — yeni menajerin ilk
+   sezonu buna dayanmaz. İtibarı 5'e sabitlenmiş menajerle altı tohumda ölçüldü, iki
+   sezonda ekrana düşen yarış bildirimi: 6 ajans 20,7 · 14 ajans 18,0 · bölme olmadan
+   14 ajans 31,5. (Kat farkının 2,3 değil ~1,5 çıkması chaseMax tavanının devreye
+   girmesinden; tavan olmasa fark tam katına çıkardı.) */
+function rivScale(){const n=(S&&S.rivals&&S.rivals.length)||RIV.tuneN;return RIV.tuneN/n;}
+
+/* ================= ARKETİPLER =================
+   Davranış kodu tek; karakter veridir. Katsayılar birbirine göre okunur, mutlak
+   değerleri RIV'deki oranlarla çarpılır.
+     poach : müşterine göz koyma sıklığı
+     chase : piyasada oyuncu kovalama sıklığı ve yarışta ne kadar zorlayacağı
+     youth : hedef seçiminde gençlik/potansiyel ağırlığı
+     elite : hedef seçiminde güç/değer ağırlığı
+     vet   : hedef seçiminde tecrübeli (29+) oyuncu ağırlığı — varsayılan 0
+     comm  : oyuncudan aldığı komisyon (yüksekse oyuncu memnuniyetsizdir)
+     loyal : kendi müşterisini elde tutma gücü
+     size  : portföy büyüklüğü eğilimi — butik ajansın az müşterisi olması bu
+             katsayıdan geliyor, yoksa paylaşım ajans sayısına bölünür ve hepsi aynı olurdu
+     home  : kendi bölgesindeki oyuncuya verdiği ağırlık (varsayılan 1.6)
+     away  : bölgesi dışındaki oyuncuya verdiği ağırlık (varsayılan 1)
+
+   home/away önceden claimWeight içinde 'family' id'sine bakan bir if'ti; veriye
+   taşındı, yoksa yeni bir bölgesel arketip eklemek kod değiştirmeyi gerektirirdi. */
+const RIV_ARCH=[
+ {id:'shark',   poach:1.5, chase:0.9, youth:0.2, elite:1.3, comm:0.22, loyal:0.6, size:0.9, rep:[45,70],
+  n:{tr:'Vurguncu',en:'The Shark'},
+  dsc:{tr:'Yüksek komisyonla çalışır, yıldızın peşinden gider ve kimseye sormadan telefon açar. Müşterisi de aynı hızla kapıyı bulur.',
+       en:'Works on a fat percentage, chases the stars and calls anyone without asking. His clients leave just as fast.'}},
+ {id:'youth',   poach:0.5, chase:1.4, youth:1.6, elite:0.3, comm:0.10, loyal:1.1, size:1.1, rep:[20,45],
+  n:{tr:'Fidanlık',en:'The Nursery'},
+  dsc:{tr:'On altı yaşındakileri toplar, on yıl bekler. Yıldızlarla işi yok — yıldızı kendi yetiştirir.',
+       en:'Signs sixteen-year-olds and waits a decade. No interest in stars — he grows his own.'}},
+ {id:'boutique',poach:1.0, chase:0.4, youth:0.3, elite:1.6, comm:0.15, loyal:1.4, size:0.3, rep:[50,80],
+  n:{tr:'Butik Ajans',en:'The Boutique'},
+  dsc:{tr:'Az sayıda, çok pahalı isim. Kapısı herkese açık değil; bir oyuncuyu istiyorsa sebebi vardır.',
+       en:'A handful of very expensive names. The door isn\'t open to everyone — if he wants a player, there\'s a reason.'}},
+ {id:'corp',    poach:1.1, chase:1.2, youth:0.8, elite:1.0, comm:0.13, loyal:0.9, size:2.2, rep:[55,85],
+  n:{tr:'Kurumsal Grup',en:'The Corporation'},
+  dsc:{tr:'Dört kıtada ofisi, basında adamı var. Kalabalık bir portföy taşır; kimse tek tek ilgilenmez ama kapılar açıktır.',
+       en:'Offices on four continents and friends in the press. A crowded roster — nobody gets personal attention, but every door opens.'}},
+ {id:'family',  poach:0.3, chase:0.8, youth:0.9, elite:0.5, comm:0.07, loyal:1.5, size:0.45, rep:[15,40],
+  home:3.5, away:0.15,
+  n:{tr:'Aile Ajansı',en:'The Family Firm'},
+  dsc:{tr:'Kendi şehrinden çıkmaz, düşük komisyonla çalışır, kimsenin müşterisine göz dikmez. Bıraktığı oyuncu da olmaz.',
+       en:'Never leaves his own city, works for a small cut and covets nobody\'s client. He rarely loses one either.'}},
+ {id:'fixer',   poach:1.2, chase:1.1, youth:0.6, elite:0.7, comm:0.18, loyal:0.8, size:1.3, rep:[30,60],
+  n:{tr:'Aracı',en:'The Fixer'},
+  dsc:{tr:'Her kulüpte bir tanıdığı, her masada bir payı var. Orta seviye oyuncuyu çok taşır; ikna etmek için parayı masaya koyar.',
+       en:'A contact at every club and a slice of every table. Moves a lot of mid-level players and puts money on the table to persuade.'}},
+ /* Aşağıdakiler piyasayı kalabalıklaştırmak için eklendi. Tek ölçüt şuydu: her biri
+    hedef seçiminde ya da davranışında yukarıdakilerden en az bir eksende ayrılsın —
+    yoksa yeni ajans yalnızca yeni bir ad olurdu. Saldırganlık ortalaması bilerek
+    aşağı çekildi (poach ortalaması 0.93 → 0.88), erken oyun ezilmesin. */
+ {id:'expro',   poach:0.6, chase:1.0, youth:1.0, elite:0.7, comm:0.09, loyal:1.3, size:0.8, rep:[30,60],
+  n:{tr:'Eski Futbolcu',en:'The Ex-Pro'},
+  dsc:{tr:'Sahayı içeriden bilir, soyunma odasının dilini konuşur. Az komisyon ister; oyuncular ona kolay güvenir, kolay bırakmaz.',
+       en:'He knows the game from the inside and speaks the dressing room\'s language. Asks for little, and players trust him easily.'}},
+ {id:'lawyer',  poach:0.9, chase:0.7, youth:0.2, elite:1.1, vet:1.1, comm:0.16, loyal:1.35, size:0.7, rep:[40,70],
+  n:{tr:'Sözleşme Avukatı',en:'The Lawyer'},
+  dsc:{tr:'Oyuncuyla değil sözleşmeyle ilgilenir. Kariyerinin son büyük imzasını arayan tecrübelilere maddelerin arasından yol açar.',
+       en:'He cares about the contract, not the player. Finds the veterans chasing one last big deal a way through the small print.'}},
+ {id:'media',   poach:1.4, chase:1.0, youth:0.4, elite:1.5, comm:0.20, loyal:0.7, size:0.5, rep:[45,75],
+  n:{tr:'Medya Menajeri',en:'The Publicist'},
+  dsc:{tr:'Oyuncuyu değil imajını satar. Kamera önündeki isimlerin peşinde; kameranın söndüğü gün ilgisi de söner.',
+       en:'He sells the image, not the player. Chases the names the cameras follow — and loses interest the day they look away.'}},
+ {id:'pipeline',poach:0.6, chase:1.3, youth:1.3, elite:0.5, comm:0.12, loyal:0.9, size:1.4, rep:[25,55],
+  home:2.0, away:0.7,
+  n:{tr:'Transfer Hattı',en:'The Pipeline'},
+  dsc:{tr:'Kendi bölgesinden Avrupa\'ya oyuncu taşır. Tek tek isimlerle değil, akan bir hatla ilgilenir.',
+       en:'He moves players from his own region to Europe. Not interested in names one by one — only in keeping the line flowing.'}},
+ {id:'free',    poach:0.4, chase:1.5, youth:0.2, elite:0.4, vet:1.6, comm:0.08, loyal:0.6, size:1.5, rep:[15,45],
+  n:{tr:'Bonservis Simsarı',en:'The Free-Agent Broker'},
+  dsc:{tr:'Sözleşmesi bitenlerin listesini herkesten önce alır. Kapıda bekleyen kalabalık bir portföyü var; kaybettiğine de üzülmez.',
+       en:'He gets the list of expiring contracts before anyone else. A crowded roster of men waiting by the phone — and no tears when one leaves.'}},
+ {id:'fund',    poach:1.3, chase:1.2, youth:1.1, elite:1.2, comm:0.19, loyal:0.8, size:1.6, rep:[50,85],
+  n:{tr:'Yatırım Fonu',en:'The Fund'},
+  dsc:{tr:'Oyuncuya kariyer değil portföy kalemi diye bakar. Yükselecek ismi erken alır, zirvede satar; komisyonu da ona göredir.',
+       en:'He sees a position, not a career. Buys the name on the way up and sells it at the peak — and prices himself accordingly.'}},
+ {id:'journey', poach:0.7, chase:1.4, youth:0.5, elite:0.4, vet:0.7, comm:0.11, loyal:0.7, size:1.8, rep:[20,50],
+  n:{tr:'Gezgin Menajer',en:'The Journeyman\'s Agent'},
+  dsc:{tr:'Kimsenin uğraşmadığı orta direk oyuncuyu taşır; yüzlercesini tanır, hiçbirini uzun tutamaz. İşi hacimden çıkar.',
+       en:'He carries the squad players nobody else bothers with — knows hundreds, keeps none for long. The money is in the volume.'}},
+ {id:'oldhand', poach:0.8, chase:0.5, youth:0.3, elite:1.4, vet:0.8, comm:0.14, loyal:1.5, size:0.4, rep:[60,90],
+  n:{tr:'Eski Tüfek',en:'The Old Hand'},
+  dsc:{tr:'Otuz yıldır bu işte. Yeni müşteri aramaz, müşteri onu arar; elindekini de kimseye kaptırmaz.',
+       en:'Thirty years in the game. He doesn\'t look for clients, they look for him — and nobody takes one off him.'}}
+];
+function archById(id){return RIV_ARCH.find(a=>a.id===id)||RIV_ARCH[0];}
+/* Listede ajansın ne aradığını tek kelimeyle söyleyen etiket. Saklanmıyor, katsayılardan
+   türetiliyor — arketipin sayıları değişirse etiket kendiliğinden doğru kalır. Metin
+   burada, RIV_ARCH'ın adları gibi iki dilli; STR'ye girmiyor ki arketip verisi tek
+   dosyada kalsın. */
+function archFocus(a){
+  if((a.vet||0)>=1)          return {tr:'Tecrübeli oyuncu',en:'Veterans'};
+  if(a.size<=0.4)            return {tr:'Seçilmiş birkaç isim',en:'A select few'};
+  if((a.home||1.6)>=2.2)     return {tr:'Kendi bölgesi',en:'Its own region'};
+  if(a.youth>=1.2)           return {tr:'Genç yetenek',en:'Young talent'};
+  if(a.elite>=1.3)           return {tr:'Yıldız oyuncu',en:'Star players'};
+  if(a.size>=1.4)            return {tr:'Geniş portföy',en:'Volume'};
+  return {tr:'Orta seviye',en:'Mid-tier'};
+}
+
+/* Ajans adı saklanmıyor, üretiliyor: iki dilde de doğru olsun diye ek ayrı tutuluyor
+   (bkz. lgName — aynı gerekçe). Adlar soyadı havuzundan geliyor, gerçek bir ajans
+   markasına yaklaşmıyor. */
+const RIV_SFX={
+  mg:{tr:'Menajerlik',   en:'Management'},
+  gr:{tr:'Spor Grup',    en:'Sports Group'},
+  pt:{tr:'ve Ortakları', en:'& Partners'},
+  aj:{tr:'Ajans',        en:'Agency'}
+};
+const RIV_SFXK=Object.keys(RIV_SFX);
+function rivalName(r){
+  if(!r)return '';
+  const sfx=RIV_SFX[r.sfx]||RIV_SFX.mg;
+  return r.base+' '+sfx[L];
+}
+
+/* ================= KURULUŞ ================= */
+/* Ajansın yuva bölgesi hangi uyruğun soyadını kullanacağını belirliyor: Batı Afrika'da
+   kurulu bir ajansın adı da oradan gelsin. pickNat core.js'te ve yalnızca çağrı
+   anında okunuyor — dosya sırası bir bağ getirmiyor. */
+function rivNatOf(ctry){
+  const lg=LEAGUES.find(l=>l.ctry===ctry);
+  const d=lg?lg.nat:'en';
+  /* pickNat kullanılmıyor: o %38 ihtimalle yabancı uyruk döndürüyor ve Suudi
+     Arabistan merkezli ajansın adı Fransızca çıkabiliyordu. Ajans yerlidir; yalnızca
+     bölgesel havuzlar (af/afN) tek bir ülkeye indirilir. */
+  if(d==='af')return AFR[R(0,AFR.length-1)];
+  if(d==='afN')return NAF[R(0,NAF.length-1)];
+  return d;
+}
+/* Tek bir ajans kaydı. id dışarıdan veriliyor: kadroya sonradan eklenen ajansın
+   id'si dizideki yeri olmalı, yoksa eski kayıtlardaki p.ra başka birini gösterir. */
+function makeRival(a,id,ctry,used){
+  const nat=rivNatOf(ctry);
+  let base=NATS[nat].l[0];
+  /* aynı soyadı iki ajansa düşmesin — oyuncu adları zaten aynı havuzdan geliyor.
+     Deneme sayısı sınırlı: küçük bir soyadı havuzu döngüyü kilitlemesin. */
+  for(let k=0;k<40;k++){
+    const b=NATS[nat].l[R(0,NATS[nat].l.length-1)];
+    if(!used[b]){base=b;break;}
+  }
+  used[base]=1;
+  return {id,base,sfx:RIV_SFXK[R(0,RIV_SFXK.length-1)],arch:a.id,ctry,
+          rep:R(a.rep[0],a.rep[1]),rel:0,won:0,lost:0};
+}
+/* Ajansların yuva bölgeleri: her ajans ayrı bir bölgede kurulsun ki harita üzerinde
+   de dağılmış görünsünler. RIV_ARCH bölge sayısını (16) geçerse baştan sarılır. */
+function rivCtrys(){return Object.keys(CTRYS).sort(()=>RF()-0.5);}
+function newRivals(){
+  /* Her arketipten bir tane: on dört ajans on dört ayrı karakter demek. Aynı
+     arketipten iki tane olsaydı oyuncu ikisini birbirinden ayıramazdı. */
+  const ctrys=rivCtrys(),used={};
+  return RIV_ARCH.map((a,i)=>makeRival(a,i,ctrys[i%ctrys.length],used));
+}
+/* Kadro eksikse tamamla. Yeni ajans dizinin sonuna ekleniyor: mevcut id'ler yerinde
+   kalır, dolayısıyla eski kayıttaki her p.ra hâlâ aynı ajansı gösterir. Yeni gelenler
+   portföysüz başlamaz — RIV.notable eşiği de düştüğü için claimNotable() bu turda
+   sahipsiz kalmış oyuncuları dağıtırken onlar da payını alır. */
+function growRivals(){
+  const have={};S.rivals.forEach(r=>have[r.arch]=1);
+  const used={};S.rivals.forEach(r=>used[r.base]=1);
+  const free=rivCtrys().filter(c=>!S.rivals.some(r=>r.ctry===c));
+  let k=0;
+  RIV_ARCH.forEach(a=>{
+    if(have[a.id])return;
+    const ctry=free.length?free[k++%free.length]:rivCtrys()[0];
+    S.rivals.push(makeRival(a,S.rivals.length,ctry,used));
+  });
+  RIVCNT=null;
+}
+/* Her giriş kapısında çağrılır: yeni oyun, eski kayıt, bozuk kayıt. Kurulum bir kez
+   olur; kadro tamsa hiçbir şey yapmaz. */
+function ensureRivals(){
+  if(!S)return;
+  if(!S.rivals||!S.rivals.length){
+    S.rivals=newRivals();
+    claimNotable();
+  } else if(S.rivals.length<RIV_ARCH.length){
+    growRivals();
+    claimNotable();
+  }
+  S.chase=S.chase||[];
+}
+function rivalById(i){return (S&&S.rivals&&S.rivals[i])||null;}
+/* Oyuncunun ajansı — yoksa null. p.ra taşımayan eski kayıtlar için de doğru cevap. */
+function rivalOf(p){
+  if(!p||p.agent!=='rival'||p.ra===undefined)return null;
+  return rivalById(p.ra);
+}
+function rivalArch(r){return archById(r&&r.arch);}
+/* Portföy türetiliyor, saklanmıyor. Hafta içinde değişmediği için sonuç haftaya
+   göre bir kez sayılıyor: sıralama ekranı 7000 oyuncuyu her çizimde taramasın. */
+let RIVCNT=null;
+function rivalCounts(){
+  const key=(S.tw||0)+':'+(S.season||0)+':'+(S.week||0);
+  if(RIVCNT&&RIVCNT.key===key)return RIVCNT.v;
+  const v=(S.rivals||[]).map(()=>0);
+  S.players.forEach(p=>{if(p.ra!==undefined&&v[p.ra]!==undefined&&p.agent==='rival')v[p.ra]++;});
+  RIVCNT={key,v};
+  return v;
+}
+function rivalCount(i){return rivalCounts()[i]||0;}
+function rivalClients(i){return S.players.filter(p=>p.agent==='rival'&&p.ra===i);}
+/* Sıralama: sen de listedesin. Ekranda da, panelde gösterilen sıra da buradan okunur. */
+function rivalRank(){
+  const rows=(S.rivals||[]).map(r=>({r,rep:r.rep}));
+  rows.push({r:null,rep:S.rep});
+  rows.sort((a,b)=>b.rep-a.rep);
+  return rows;
+}
+function myRank(){return rivalRank().findIndex(x=>!x.r)+1;}
+
+/* ================= SAHİPLENME =================
+   Adlı bir ajans yalnızca dikkat çekici oyuncuyu alır: dünyada ~3000 rakip menajerli
+   oyuncu var, hepsini altı ajansa bölmek "butik ajans"ı anlamsız kılardı. Geri kalanı
+   isimsiz yerel menajerinde kalıyor — bugünkü davranışın aynısı. */
+function notable(p){
+  /* Genç kanadı dar tutuluyor: yalnızca "pot-r büyük" demek 16 yaşındaki her
+     oyuncuyu içeri alıyor ve butik ajansın portföyü yüzleri buluyordu. Gerçekten
+     adı duyulacak gençler aranıyor. */
+  return p.agent==='rival'&&
+    (profileOf(p)>=RIV.notable||(p.age<=21&&p.pot-p.r>=14&&p.pot>=RIV.notable+6));
+}
+/* Hangi ajans alır: arketip ağırlıkları + portföy eğilimi + yuva bölgesi yakınlığı. */
+function claimWeight(r,p){
+  const a=rivalArch(r);
+  const young=(p.age<=21&&p.pot-p.r>=10)?1:0;
+  const elite=Math.max(0,(p.r-72)/12);
+  /* Tecrübe ekseni: yıldızı ve genci kovalayan ajansların yanında kariyerinin
+     sonundaki oyuncuyla ilgilenen biri de olsun. vet taşımayan arketipte terim
+     sıfır, yani eski altı arketibin ağırlıkları değişmedi. */
+  const vet=p.age>=29?Math.min(1,(p.age-28)/3):0;
+  let w=(0.5+young*a.youth+elite*a.elite+vet*(a.vet||0))*a.size;
+  if(teamOf(p).lg>=0&&LEAGUES[teamOf(p).lg].ctry===r.ctry)w*=(a.home||1.6);
+  else w*=(a.away||1);   // aile ajansı kendi şehrinden çıkmaz, hat kendi bölgesinden besler
+  return Math.max(0.02,w);
+}
+function claimFor(p){
+  const rs=S.rivals||[];
+  if(!rs.length)return;
+  let tot=0;rs.forEach(r=>tot+=claimWeight(r,p));
+  let x=RF()*tot;
+  for(const r of rs){x-=claimWeight(r,p);if(x<=0){p.ra=r.id;return;}}
+  p.ra=rs[rs.length-1].id;
+}
+/* Bütün dünyayı tarayan tek geçiş: yeni oyunda ve her sezon sonunda çalışır.
+   Eşiğin altına düşen oyuncunun ajansı da düşer — yıldızlığı biten oyuncuyla
+   butik ajansın işi kalmaz. */
+function claimNotable(){
+  if(!S||!S.rivals)return;
+  S.players.forEach(p=>{
+    if(p.agent!=='rival'){if(p.ra!==undefined)delete p.ra;return;}
+    if(notable(p)){if(p.ra===undefined)claimFor(p);}
+    else if(p.ra!==undefined)delete p.ra;
+  });
+  RIVCNT=null;
+}
+
+/* ================= İMZA YARIŞI ================= */
+function chaseFor(pid){return (S.chase||[]).find(x=>x.pid===pid);}
+function chaseLeft(c){return Math.max(1,c.until-(S.tw||0));}
+/* pitchChance'in tek okuma yeri buradan besleniyor: rakip aynı oyuncuyla
+   görüşüyorsa oyuncunun kafası karışık, senin şansın düşük. */
+function chasePenalty(p){
+  const c=chaseFor(p.id);
+  if(!c)return 0;
+  const r=rivalById(c.ri);
+  return RIV.chasePen*(r?rivalArch(r).chase:1);
+}
+/* Rakiplerin ilgilendiği taban: bu eşiğin altındaki oyuncu ne yarışa ne de arka plan
+   imzasına konu olur. Yeni menajerin tutunduğu alt uç böylece kalabalık kalıyor. */
+function rivInterest(p){return p.agent===null&&profileOf(p)>=52;}
+/* Dünyayı baştan sona taramak yerine örnekle — market.js'in alıcı arama kalıbı.
+   7000 oyuncuyu her hafta birkaç kez filtrelemek telefonda görünür bir maliyet. */
+function rivSample(test,tries,want){
+  const out=[];
+  for(let i=0;i<tries&&out.length<want;i++){
+    const p=S.players[R(0,S.players.length-1)];
+    if(test(p)&&out.indexOf(p)<0)out.push(p);
+  }
+  return out;
+}
+/* Yarış yalnızca senin gördüğün liglerde ve senin uzanabileceğin seviyede açılır.
+   Göremediğin ya da imzalayamayacağın bir oyuncu için yarışmak yarış değil, dipnot:
+   ölçüldü, altı sezonda 88 yarışın yalnızca 5'i oyuncunun ekranına düşüyordu. */
+function chaseTarget(r){
+  const ceil=repCap()+RIV.reach;
+  const cands=rivSample(p=>rivInterest(p)&&!chaseFor(p.id)&&knownLg(teamOf(p).lg)
+                            &&profileOf(p)<=ceil,90,12);
+  if(!cands.length)return null;
+  return pickWeighted(cands,p=>claimWeight(r,p));
+}
+function openChase(r){
+  const p=chaseTarget(r);
+  if(!p)return;
+  S.chase.push({pid:p.id,ri:r.id,until:(S.tw||0)+R(RIV.chaseLen[0],RIV.chaseLen[1])});
+  /* Haber yalnızca itibarının yettiği oyuncu için. Kapasite koşulu bilerek yok:
+     kadron doluyken de kimin gittiğini bilmek istersin, üstelik bir müşteriyi
+     bırakıp o oyuncuya gitmek geçerli bir karar. */
+  if(profileOf(p)<=repCap())
+    pushNews('chaseOn',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'warn');
+}
+/* Süresi dolan yarışı rakip kazanır. Sen imzaladıysan kayıt zaten düşmüştür. */
+function resolveChases(){
+  (S.chase||[]).slice().forEach(c=>{
+    const p=byId(c.pid);
+    if(!p||p.agent!==null){S.chase=S.chase.filter(x=>x!==c);return;}
+    if(c.until>(S.tw||0))return;
+    S.chase=S.chase.filter(x=>x!==c);
+    const r=rivalById(c.ri);
+    if(!r)return;
+    p.agent='rival';
+    if(notable(p))p.ra=r.id;
+    RIVCNT=null;
+    if(knownLg(teamOf(p).lg)&&profileOf(p)<=repCap())
+      pushNews('chaseLost',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'bad');
+  });
+}
+
+/* ================= AYARTMA =================
+   Rakip önce duyulur, sonra masaya gelir: tehdit birkaç hafta birikir ki oyuncu
+   müşterisinin güvenine bakacak vakti olsun. */
+function poachChance(p,r){
+  const a=rivalArch(r);
+  /* İtibar farkı sınırlanıyor: rakipler 60-90 itibarla başlıyor, yeni menajer 5 ile.
+     Sınırsız bırakıldığında ilk sezonlarda her ayartma neredeyse kesin kayıpla
+     bitiyordu — ölçüldü: %60 kayıp, itibar altı sezon boyunca yerinde saydı. Fark
+     bir etken olmalı, tek etken değil. */
+  const gap=clamp((r.rep-S.rep)/RIV.repGap,-0.15,0.18);
+  /* skillBonus('loy') — ayartma riskine dokunan tek yer (bkz. SK_KEY.loy). */
+  return clamp(RIV.poachBase+a.poach*RIV.poachArch+gap
+    -(trustOf(p)-55)/RIV.trustDiv
+    -(p.morale-55)/RIV.morDiv
+    -clamp(skillBonus('loy'),0,0.6),0.05,0.90);
+}
+/* Hedef seçimi: güveni düşük, morali kırık ya da fazla değerli müşteri. Yeni imza
+   atmış oyuncuya kimse yaklaşmaz (honeymoon).
+
+   RIV.worth eşiği asıl koruma: büyük ajanslar alt ligdeki bir oyuncu için telefon
+   açmaz. Bu olmadan iki müşterilik yeni menajer sürekli ayartılıyor ve hiç
+   büyüyemiyordu. Ayartma, adın duyulduktan sonra başlayan bir sorun. */
+/* p.sa — müşterinin imzalandığı hafta. Yalnızca burada okunuyor; eski kayıtlarda
+   yok, o zaman koruma da yok (ilk ayartmadan sonra kendiliğinden oluşur). */
+function poachGraced(p){return (p.sa||0)+RIV.poachGrace>(S.tw||0);}
+function poachTarget(){
+  const cands=S.clients.map(byId).filter(p=>p&&!honeymoon(p)&&!poachGraced(p)&&
+    (profileOf(p)>=RIV.worth||(p.age<=21&&p.pot-p.r>=12))&&
+    (trustOf(p)<70||p.morale<50||p.r>=74));
+  if(!cands.length)return null;
+  return pickWeighted(cands,p=>1+Math.max(0,(70-trustOf(p))/20)+Math.max(0,(50-p.morale)/20)
+                                +Math.max(0,(p.r-72)/8));
+}
+function openPoach(){
+  const p=poachTarget();
+  if(!p)return;
+  const rs=(S.rivals||[]).filter(r=>rivalArch(r).poach>=0.5);
+  if(!rs.length)return;
+  const r=pickWeighted(rs,x=>rivalArch(x).poach*claimWeight(x,p));
+  S.poach={pid:p.id,ri:r.id,at:(S.tw||0)+R(RIV.poachWarn[0],RIV.poachWarn[1])};
+  S.poachAt=(S.tw||0)+RIV.poachGap;
+  pushNews('poachWarn',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'warn');
+}
+/* Masadaki üç seçenek. EVENTS ile aynı dil: her seçenek bir sonuç nesnesi döner,
+   uygulaması applyEff'ten geçer (bkz. poachChoose — js/ui.js).
+     d   : kaybetme olasılığına eklenen pay
+     eff : applyEff'in anladığı sonuç (cash/rep/trust/morale)
+   Karar burada duruyor çünkü denge verisi; çizimi arayüzün işi. */
+const POACH_OPT=[
+ {t:{tr:'Komisyonundan feda et',en:'Give up part of your cut'},
+  run:c=>({d:-0.35,
+    eff:{cash:-Math.max(30,Math.round(c.p.wage*10)),trust:10,morale:3},
+    msg:{tr:'Rakamı gösterdin. "Bu adam benim için ne kadar önemli, gör." Cebinden çıktı ama masada kaldı.',
+         en:'You showed him the number. "See how much you matter to me." It cost you, but he stayed at your table.'}})},
+ {t:{tr:'Yüz yüze konuş, ilişkiye güven',en:'Sit down with him and trust the relationship'},
+  run:c=>RF()<0.35+trustOf(c.p)/160
+    ?{d:-0.30,eff:{trust:8},
+      msg:{tr:'Uzun bir akşam yemeği. Anlattıklarını dinledi, sen de onunkileri. Aranızdaki bağ para istemedi.',
+           en:'A long dinner. He listened, and so did you. The bond held without money changing hands.'}}
+    :{d:-0.05,eff:{trust:-4},
+      msg:{tr:'Konuştunuz ama karşındaki zaten kararını vermiş gibiydi. Sözlerin havada kaldı.',
+           en:'You talked, but he seemed to have made his mind up already. Your words hung in the air.'}}},
+ {t:{tr:'Aldırma, işini yapmaya devam et',en:'Ignore it and get on with your work'},
+  run:()=>({d:0.12,eff:{},
+    msg:{tr:'Telefonu açmadın, konuyu hiç açmadın. Bazen doğru olan budur — bazen değil.',
+         en:'You didn\'t call and never raised it. Sometimes that\'s right — sometimes it isn\'t.'}})}
+];
+/* Müşteriyi kaybetmenin tek yolu: burada toplanıyor ki itibar kaybı ve haber
+   tek yerden geçsin. */
+function losePlayerTo(p,r){
+  p.agent='rival';
+  S.clients=S.clients.filter(c=>c!==p.id);
+  if(notable(p))p.ra=r.id;
+  r.won=(r.won||0)+1;
+  r.rel=clamp((r.rel||0)-12,-100,100);
+  RIVCNT=null;
+  /* Kayıp zaten müşteriyi, geliri ve kadro yerini götürüyor; itibar bedeli üçüncü
+     ceza olduğu için ölçülü tutuluyor (bkz. RIV.poachRep). */
+  repEvent(-RIV.poachRep);
+  pushNews('poached',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'bad');
+}
+
+/* ================= HAFTALIK MOTOR =================
+   nextWeek() içinden, transfer piyasasından önce çağrılır. */
+function simRivals(){
+  ensureRivals();
+  const rs=S.rivals||[];
+  if(!rs.length)return;
+  resolveChases();
+  /* Oranlar ajans başına değil dünya başına sabit: bkz. rivScale(). */
+  const sc=rivScale();
+  rs.forEach(r=>{
+    const a=rivalArch(r);
+    /* --- arka plan imzaları: piyasadaki temsilcisiz oyuncudan biri --- */
+    if(RF()<RIV.signRate*sc*a.chase){
+      const pool=rivSample(p=>rivInterest(p)&&!chaseFor(p.id),60,10);
+      if(pool.length){
+        const p=pickWeighted(pool,x=>claimWeight(r,x));
+        p.agent='rival';
+        if(notable(p))p.ra=r.id;
+        RIVCNT=null;
+      }
+    }
+    /* --- müşteri kaybı: sadık ajans daha az kaybeder --- */
+    if(RF()<RIV.loseRate*sc/Math.max(0.3,a.loyal)){
+      const mine=rivalClients(r.id);
+      if(mine.length){
+        const p=mine[R(0,mine.length-1)];
+        p.agent=null;delete p.ra;
+        RIVCNT=null;
+      }
+    }
+    /* --- yeni yarış --- */
+    if((S.chase||[]).length<RIV.chaseMax&&RF()<RIV.chaseW*sc*a.chase)openChase(r);
+  });
+  /* --- ayartma: aynı anda tek tehdit, aralarında bekleme var --- */
+  if(!S.poach&&S.clients.length&&(S.poachAt||0)<=(S.tw||0)&&RF()<0.30)openPoach();
+}
+/* Sezon sonu tek geçiş: itibar portföyün kalitesine doğru kayar, böylece sıralama
+   tablosu kariyer boyunca gerçekten hareket eder. Haftalık hesaplamak pahalı olurdu. */
+function rivalSeason(){
+  ensureRivals();
+  (S.rivals||[]).forEach(r=>{
+    const mine=rivalClients(r.id);
+    const top=mine.slice().sort((a,b)=>b.r-a.r).slice(0,10);
+    const q=top.length?top.reduce((s,p)=>s+p.r,0)/top.length:55;
+    /* hedef: portföy kalitesi + genişliği. Kimseyi taşımayan ajans sönüyor. */
+    const target=clamp((q-58)*2.6+Math.min(20,mine.length*0.6),5,120);
+    r.rep=Math.round(clamp(r.rep+(target-r.rep)*RIV.repMove,3,140)*10)/10;
+    /* husumet zamanla soğur — kimse on sezon boyunca aynı öfkeyi taşımaz */
+    if(r.rel)r.rel=Math.round(r.rel*0.75);
+  });
+  claimNotable();
+}
+
+'use strict';
 /* js/core.js — oyun durumu, yardımcılar, fikstür/kupa kurulumu, keşif ağı, ekonomi formülleri */
 /* ================= STATE / HELPERS ================= */
 let S=null, negCtx=null;
@@ -2646,6 +3697,7 @@ function releaseToFree(p){
 function regenPlayer(p){
   Object.assign(p,genPlayer(teamOf(p),p.pos,intakeAge()),{id:p.id});
   delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
+  delete p.ra;                         // artık başka bir insan; eski ajansıyla işi yok
 }
 function newGame(){
   PID=1;
@@ -2659,6 +3711,9 @@ function newGame(){
   });
   buildAllFixtures();
   seedCups();
+  /* Dünya kurulduktan sonra: rakip ajanslar ve dikkat çekici oyuncuların paylaşımı.
+     Oyuncular üretilmeden çağrılamaz, sahiplenecek kimse olmazdı. */
+  ensureRivals();
   pushNews('tut',{},'info');
 }
 const SEASONW=38;   // sezon uzunluğu hedefi (en kalabalık ligin çift devresi)
@@ -2905,6 +3960,7 @@ function startCareer(){
 function buyScout(i){
   const cost=scoutCost(i);
   if(knownLg(i)||scoutPending(i))return;
+  /* Coğrafi bir koşul yok: parası yeten her keşfedilmemiş lig alınabilir. */
   if(S.cash<cost){toast(t('noCash'));return;}
   S.cash-=cost;
   S.scout=S.scout||[];
@@ -3203,6 +4259,9 @@ function nextWeek(){
     } else p.ignored=0;
     if(p.yrs===1&&S.week%6===0)pushNews('expire',{n:p.n,pid:p.id,y:1},'warn');
   });
+  /* Rakip ajanslar transfer piyasasından önce hareket eder: bu hafta imzaladıkları
+     oyuncu piyasa listesinden düşmüş olur, gördüğün liste gerçeği söyler. */
+  simRivals();
   simTransfers();
   S.wkRep=[];        // bu haftanın müşteri raporu sıfırdan toplanır
   const repWeek=S.week;
@@ -3213,9 +4272,13 @@ function nextWeek(){
   if(S.rep>=35&&RF()<0.10+S.rep/400){
     const cands=S.players.filter(p=>p.agent==='rival'&&p.r>=70&&profileOf(p)<=repCap()&&knownLg(teamOf(p).lg));
     if(cands.length&&S.clients.length<maxClients()){
-      const p=cands[R(0,cands.length-1)];
-      p.agent=null;
-      pushNews('firedRival',{n:p.n,pid:p.id,r:p.r},'act',{type:'sign',pid:p.id});
+      /* Menajerinden kopan oyuncu rastgele seçilmiyor: yüksek komisyonla çalışan ve
+         müşterisini tutamayan ajanslar daha sık kaybeder (bkz. RIV_ARCH.loyal). */
+      const p=pickWeighted(cands,x=>{const r=rivalOf(x);return r?1/Math.max(0.3,rivalArch(r).loyal):1;});
+      const r=rivalOf(p);
+      p.agent=null;delete p.ra;
+      if(r)r.lost=(r.lost||0)+1;
+      pushNews('firedRival',{n:p.n,pid:p.id,r:p.r,a:r?rivalName(r):'',ri:r?r.id:undefined},'act',{type:'sign',pid:p.id});
     }
   }
   if(S.clients.length&&RF()<0.15){
@@ -3241,6 +4304,10 @@ function nextWeek(){
     /* Seviye atladıysan sıraya girer. Sezon özeti sırayı temizlerse S.lvUp
        duruyor olacağı için haber kaybolmaz, bir hafta sonra gelir. */
     if(S.lvUp)pushModal(()=>showLevelUp());
+    /* Ayartma kararı olaydan önce sıraya girer: haftanın en ağır kararı, arkasına
+       rastgele bir olay eklenmeden verilsin. Sezon biterse S.poach duruyor olacağı
+       için karar kaybolmaz, bir hafta sonra gelir. */
+    if(S.poach&&S.poach.at<=(S.tw||0))pushModal(()=>showPoach());
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
@@ -3411,6 +4478,10 @@ function endSeason(){
     S.players=S.players.filter(p=>!ids.has(p.id));
   }
   rebalanceSquads();
+  /* Kadrolar oturduktan sonra: rakip ajansların itibarı portföylerine göre kayar ve
+     yükselen/sönen oyuncular yeniden paylaşılır. Kadro dengesinden önce çalışsaydı
+     bu sezon doğan gençleri göremezdi. */
+  rivalSeason();
   S.teams.forEach(tm=>{tm.pts=0;tm.w=0;tm.d=0;tm.l=0;tm.gf=0;tm.ga=0;});
   buildAllFixtures();
   S.finals={};
@@ -3670,12 +4741,26 @@ function evCtx(pid){
   const p=pid!==undefined&&pid!==null?byId(pid):null;
   return {p,tm:p?teamOf(p):null,pid};
 }
+/* Olay metinlerinde geçen rakip ajans adı. Rakipler kurulmamışsa (çok eski kayıt)
+   eski isimsiz metne düşer — olay yine de anlamlıdır. */
+function evRivalName(c){
+  const rs=(S&&S.rivals)||[];
+  if(!rs.length)return L==='tr'?'başka bir menajer':'another agent';
+  /* Aynı olayın metni ve seçenekleri aynı ajansı görsün: oyuncunun id'sinden
+     türetilen sabit bir seçim, hafta içinde değişmez. */
+  const r=rs[((c&&c.p?c.p.id:0)+(S.tw||0))%rs.length];
+  return rivalName(r);
+}
 const EVENTS=[
 /* ================= MÜŞTERİYLE İLGİLİ ================= */
-{id:'rivalAgent',w:10,need:'client',
+/* Ayartma artık rakip ajanslar üzerinden kendi kanalında da işliyor (bkz. rivals.js).
+   Bu olay o kanalın hafif hali: kaybetme riski yok, yalnızca ilişkiyi yokluyor.
+   İkisi aynı anda taşmasın diye ağırlığı düşük tutuluyor. */
+{id:'rivalAgent',w:6,need:'client',
  ttl:()=>({tr:'Rakip menajer devrede',en:'A rival agent is circling'}),
- txt:c=>({tr:`Kulislerde bir isim dolaşıyor: ${c.p.n} ile başka bir menajer görüşmüş. Oyuncu sana bir şey söylemedi ama haber kulağına geldi.`,
-          en:`Word is going around that another agent has been meeting ${c.p.n}. He hasn't mentioned it to you, but you've heard.`}),
+ txt:c=>{const a=evRivalName(c);
+   return {tr:`Kulislerde bir isim dolaşıyor: ${c.p.n} ile ${a} görüşmüş. Oyuncu sana bir şey söylemedi ama haber kulağına geldi.`,
+           en:`Word is going around that ${a} has been meeting ${c.p.n}. He hasn't mentioned it to you, but you've heard.`};},
  opts:[
   {t:{tr:'Doğrudan sor, açık konuş',en:'Ask him straight out'},
    eff:c=>RF()<0.55+trustOf(c.p)/300
@@ -4300,7 +5385,8 @@ const SK_KEY={
   repg :{f:'pct', n:{tr:'İtibar kazancı',    en:'Reputation gain'}},
   fee  :{f:'pct', n:{tr:'Transfer komisyonu',en:'Transfer cut'}},
   bid  :{f:'pct', n:{tr:'Teklif kabulü',     en:'Bid acceptance'}},
-  mor  :{f:'pctD',n:{tr:'Moral kaybı',       en:'Morale losses'}}
+  mor  :{f:'pctD',n:{tr:'Moral kaybı',       en:'Morale losses'}},
+  loy  :{f:'pctD',n:{tr:'Ayartma riski',     en:'Poaching risk'}}
 };
 function skEffLabel(k,v){
   const m=SK_KEY[k];
@@ -4439,10 +5525,10 @@ const SKILLS=[
  n:{tr:'Sıcak Hat',en:'The Hotline'},
  dsc:{tr:'Sportif direktörler telefonunu ilk turda açıyor.',
       en:'Sporting directors pick up on the first ring.'}},
-{id:'nw5',br:'nw',d:3,s:1,cost:2,req:['nw3'],eff:{pitch:0.06,mor:0.15},
+{id:'nw5',br:'nw',d:3,s:1,cost:2,req:['nw3'],eff:{pitch:0.06,mor:0.15,loy:0.20},
  n:{tr:'Yıldız Muamelesi',en:'Star Treatment'},
- dsc:{tr:'Müşterin kendini portföyün en önemli adamı gibi hissediyor — çünkü öyle davranıyorsun.',
-      en:'Your client feels like the most important man on your books, because you treat him that way.'}},
+ dsc:{tr:'Müşterin kendini portföyün en önemli adamı gibi hissediyor — çünkü öyle davranıyorsun. Rakip ajansın telefonu boşuna çalıyor.',
+      en:'Your client feels like the most important man on your books, because you treat him that way. Rival agencies call for nothing.'}},
 {id:'nw6',br:'nw',d:4,s:0,cost:2,req:['nw4','nw5'],eff:{fee:0.10,bid:0.04},
  n:{tr:'Büyük Anlaşma',en:'The Big One'},
  dsc:{tr:'Artık transferi sen kuruyorsun, kulüpler yalnızca imzalıyor.',
@@ -4991,13 +6077,26 @@ function leaveMeeting(){
   closeModal();save();render();
 }
 function pitchCost(p){return 10+Math.round(Math.max(0,p.r-65)*2);}
-function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch'),0.08,0.95);}
+/* chasePenalty() — imza yarışının tek okuma yeri. Rakip aynı oyuncuyla görüşüyorsa
+   şans burada düşer; ekrandaki yüzde de aynı fonksiyondan geldiği için çubuk yine
+   gerçeği söyler. */
+function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch')-chasePenalty(p),0.08,0.95);}
 function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
-  p.agent='you';p.ignored=0;
+  p.agent='you';p.ignored=0;delete p.ra;
+  /* Yeni ilişkinin ilk haftalarında rakipler yaklaşmaz (bkz. RIV.poachGrace) */
+  p.sa=(S.tw||0);
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
   if(!S.clients.includes(p.id))S.clients.push(p.id);
+  /* Yarıştığın bir ajans varsa oyuncuyu onun elinden aldın: yarış kapanır, husumet
+     birikir. Rakipler bunu unutmuyor (bkz. rivals.js — rel). */
+  const c=chaseFor(p.id);
+  if(c){
+    S.chase=S.chase.filter(x=>x!==c);
+    const r=rivalById(c.ri);
+    if(r){r.rel=clamp((r.rel||0)-10,-100,100);r.lost=(r.lost||0)+1;}
+  }
   repEvent(0.4);
   pushNews('sign',{n:p.n,pid:p.id},'good');
   toast(t('pitchOk'));save();render();
@@ -5005,6 +6104,8 @@ function signClient(p){
 function releaseClient(pid){
   const p=byId(pid);
   p.agent=null;S.clients=S.clients.filter(c=>c!==pid);
+  /* Kendi bıraktığın oyuncu için rakip tehdidinin bir anlamı kalmadı */
+  if(S.poach&&S.poach.pid===pid)S.poach=null;
   repEvent(-0.8);
   save();render();
 }
@@ -5030,6 +6131,7 @@ function inboxAction(i,yes){
   m.action=null;m.read=true;save();render();
 }
 
+'use strict';
 /* js/ui.js — tüm görünümler, render, navigasyon, modallar */
 /* ================= NAVIGATION ================= */
 function cur(){return stack[stack.length-1];}
@@ -5051,6 +6153,9 @@ function toMenu(){
 function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
 function openSlot(n){
   if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
+  /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
+     yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
+  ensureRivals();
   stack=[{v:'dash'}];lastSig=null;
   render();
   /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
@@ -5161,6 +6266,9 @@ function playerRow(p,opts){
       ?` · <span style="color:var(--txt3)">${pitchCd(p)} ${t('wk')}</span>`
       :` · <span style="color:var(--acc)">%${Math.round(pitchChance(p)*100)}</span>`)
     :'';
+  /* Rakip aynı oyuncuyla görüşüyorsa listede görünsün: acele etmenin sebebi bu. */
+  const ch=p.agent===null?chaseFor(p.id):null;
+  const chTag=ch?` · <span style="color:var(--warn);font-weight:700">${t('chaseTag')} ${chaseLeft(ch)} ${t('wk')}</span>`:'';
   const potTag=(p.age<=23&&p.pot-p.r>=8)?` · <span style="color:var(--blue);font-weight:700">${t('pot')} ${p.pot}</span>`:'';
   const lgTag=opts.lg?`${isFree(p)?t('faShort'):LEAGUES[tm.lg].c} · `:'';
   const wonder=(p.age<=21&&p.pot-p.r>=14)?ICONS.gem.replace('<svg ','<svg class="gem" '):'';
@@ -5168,7 +6276,7 @@ function playerRow(p,opts){
     ${opts.noBadge?'':tmBadge(tm,34)}
     <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
       <span class="natc">${NATS[p.nat].c}</span></div>
-    <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}</div></div>
+    <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}${chTag}</div></div>
     <div class="mood"><i style="height:${Math.round(p.morale)}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
 }
@@ -5409,7 +6517,8 @@ dash(){
       <div class="agCell"><div class="v" style="color:var(--gold)">${Math.round(S.rep)}</div><div class="l">${t('rep')}</div>
         <div class="repbar"><div style="width:${Math.round(S.rep)}%"></div></div></div>
       <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
-      <div class="agCell"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
+      <div class="agCell tap" onclick="pushV('atlas')"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
+      <div class="agCell tap" onclick="pushV('rivals')"><div class="v">#${myRank()}<span class="faint">/${(S.rivals||[]).length+1}</span></div><div class="l">${t('rankLbl')}</div></div>
     </div>
     <div class="twline">
       <span class="twdot ${windowOpen()?'on':'off'}"></span>
@@ -5467,7 +6576,7 @@ market(){
     </select></label>`;
   return `<h2 class="sec">${t('freeAgents')}</h2>
    <div class="sub" style="margin-bottom:12px">${t('marketHint')}</div>
-   <button class="btn b" style="margin-bottom:12px" onclick="openScout()">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
+   <button class="btn b" style="margin-bottom:12px" onclick="pushV('atlas')">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
    <div class="fgrid">
      ${lgSel}
      ${sel('pos',[['all',t('all')],['KL',POSFULL[L].KL],['DF',POSFULL[L].DF],['OS',POSFULL[L].OS],['FV',POSFULL[L].FV]])}
@@ -5702,6 +6811,72 @@ skills(){
   </div>
   <div class="sub" style="margin:0 2px 8px">${t('skHint').replace('{n}',LV.bonus)}</div>`;
 },
+/* Keşif ağı ekranı. Çizimi js/atlas.js taşıyor — burada yalnız görünüm kaydı. */
+atlas(){return atlasView();},
+/* ===== rakip ajanslar =====
+   Sıralamada sen de varsın: rekabetin anlamı ancak kendini o listede görünce
+   ortaya çıkıyor. Portföy sayıları saklanmıyor, oyuncu listesinden türetiliyor
+   (bkz. rivalCounts) — hafta içinde bir kez sayılıp önbelleğe alınıyor. */
+rivals(){
+  ensureRivals();
+  const rows=rivalRank();
+  const me=myRank();
+  return `<h2 class="sec">${t('rivals')}</h2>
+   <div class="sub" style="margin-bottom:12px">${t('rivalsSub')}</div>
+   <div class="sect">${t('rivalRankT')}</div>
+   ${listWrap(rows.map((x,i)=>{
+     if(!x.r)return `<div class="pitem mine">
+       <div class="pinfo"><div class="pname"><span style="color:var(--acc)">${S.agent?esc(S.agent.agency):t('you')}</span><span class="star">★</span></div>
+       <div class="psub">${t('you')} · ${t('portfolio')} ${S.clients.length}/${maxClients()}</div></div>
+       <div class="rt g">${Math.round(x.rep)}</div></div>`;
+     const a=rivalArch(x.r);
+     const rel=x.r.rel<=-25?`<span style="color:var(--bad)"> · ${t('relHot')}</span>`
+              :x.r.rel<=-8?`<span style="color:var(--warn)"> · ${t('relTense')}</span>`:'';
+     return `<div class="pitem" onclick="pushV('rival',${x.r.id})">
+       <div class="pinfo"><div class="pname">${esc(rivalName(x.r))}</div>
+       <div class="psub">${a.n[L]} · ${archFocus(a)[L]} · ${t('portfolio')} ${rivalCount(x.r.id)}${rel}</div></div>
+       <div class="rt ${rtClass(Math.round(x.rep))}">${Math.round(x.rep)}</div></div>`;
+   }).join(''))}
+   <div class="sub" style="margin-top:10px">${t('rankLbl')}: <b>#${me}</b>/${rows.length}</div>`;
+},
+rival(id){
+  ensureRivals();
+  const r=rivalById(id);
+  if(!r)return `<div class="card">${emptyState('clients',t('rivals'),t('noNotable'))}</div>`;
+  const a=rivalArch(r);
+  /* Yalnızca keşif ağının ulaştığı liglerdeki müşteriler görünür: göremediğin bir
+     ligin oyuncusunu bu ekrandan öğrenmek keşif ağını anlamsızlaştırırdı. */
+  const seen=rivalClients(r.id).filter(p=>knownLg(teamOf(p).lg)).sort((x,y)=>y.r-x.r).slice(0,20);
+  const relTxt=r.rel<=-25?t('relHot'):r.rel<=-8?t('relTense'):t('relCalm');
+  const relCol=r.rel<=-25?'var(--bad)':r.rel<=-8?'var(--warn)':'var(--txt3)';
+  return `
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:0">
+        <div class="pname" style="font-size:17px">${esc(rivalName(r))}</div>
+        <div class="psub">${a.n[L]} · ${CTRYS[r.ctry][L]}</div>
+      </div>
+      <div class="rt ${rtClass(Math.round(r.rep))}">${Math.round(r.rep)}</div>
+    </div>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${a.dsc[L]}</span></div>
+    <div class="kv" style="margin-top:8px"><span class="k">${t('charLbl')}</span><span class="v">${archFocus(a)[L]}</span></div>
+    <div class="divider"></div>
+    <div class="grid3">
+      <div class="stat"><div class="v">${Math.round(r.rep)}</div><div class="l">${t('rep')}</div></div>
+      <div class="stat"><div class="v">${rivalCount(r.id)}</div><div class="l">${t('portfolio')}</div></div>
+      <div class="stat"><div class="v">%${Math.round(a.comm*100)}</div><div class="l">${t('commission')}</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sect">${t('relLbl')}</div>
+    <div class="kv"><span class="k">${t('relLbl')}</span><span class="v" style="color:${relCol}">${relTxt}</span></div>
+    <div class="kv"><span class="k">${t('wonFrom')}</span><span class="v">${r.won||0}</span></div>
+    <div class="kv"><span class="k">${t('lostTo')}</span><span class="v">${r.lost||0}</span></div>
+  </div>
+  <div class="sect">${t('notableCl')}</div>
+  ${seen.length?listWrap(seen.map(p=>playerRow(p,{lg:1})).join(''))
+   :`<div class="card"><div class="empty">${t('noNotable')}</div></div>`}`;
+},
 /* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
    ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
    iki yere kopyalanmasın diye ayrı bir "menü ayarları" görünümü yok. */
@@ -5835,7 +7010,12 @@ player(id){
     <div class="kv"><span class="k">${t('wage')}</span><span class="v">${fmtK(p.wage)}/${t('wk')}</span></div>
     <div class="kv"><span class="k">${t('contract')}</span><span class="v">${p.yrs} ${t('yrs')}</span></div>
     <div class="kv"><span class="k">${t('agent')}</span>
-      <span class="v">${mine?'<span style="color:var(--acc)">'+t('you')+'</span>':p.agent==='rival'?t('rival'):'—'}</span></div>
+      <span class="v">${mine?'<span style="color:var(--acc)">'+t('you')+'</span>'
+        :p.agent==='rival'?(()=>{const rv=rivalOf(p);
+          /* Adlı bir ajansa bağlıysa adı tıklanabilir; eski kayıtlarda p.ra yok,
+             o zaman eski isimsiz metin doğru cevaptır. */
+          return rv?lkR(rv.id,esc(rivalName(rv))):t('rival');})()
+        :'—'}</span></div>
   </div>
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
@@ -5856,7 +7036,13 @@ player(id){
        :`<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`}
     </div>
     <button class="btn d" style="margin-top:10px" onclick="releaseClient(${p.id})">${t('release')}</button>`
-  :p.agent===null?(!knownLg(tm.lg)?`
+  :p.agent===null?((()=>{
+    /* Yarış varsa düğmenin üstünde yazsın: yüzdedeki düşüşün sebebi görünür olmalı,
+       yoksa oyuncu şansının neden azaldığını anlamaz. */
+    const c=chaseFor(p.id),rv=c?rivalById(c.ri):null;
+    return rv?`<div class="dctx" style="margin-bottom:10px">${ICONS.alert}<span>${
+      t('chaseWith').replace('{a}',esc(rivalName(rv)))} · ${chaseLeft(c)} ${t('wk')}</span></div>`:'';
+  })())+(!knownLg(tm.lg)?`
     <button class="btn s" disabled>${t('scoutLock')}</button>`
    :profileOf(p)>repCap()?`
     <button class="btn s" disabled>${t('repLock')} · ${t('rep')} ${repNeedFor(profileOf(p))}+</button>`
@@ -6083,6 +7269,8 @@ function render(){
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
   else if(c.v==='skills')t1=t('skills');
+  else if(c.v==='atlas')t1=t('scoutNet');
+  else if(c.v==='rival')t1=rivalName(rivalById(c.id))||t('rivals');
   else if(c.v!=='dash')t1=t(c.v);
   document.getElementById('hT1').textContent=t1;
   document.getElementById('hT2').textContent=t2;
@@ -6109,7 +7297,12 @@ function render(){
   /* Yalnızca gerçekten başka bir ekrana geçildiğinde başa dön. Aksi halde piyasada
      filtre değiştirmek ya da bir tema seçmek listeyi en üste fırlatıyor. */
   const sig=c.v+':'+(c.id===undefined?'':c.id);
-  if(sig!==lastSig){lastSig=sig;if(window.scrollTo)window.scrollTo(0,0);}
+  const fresh=sig!==lastSig;
+  if(fresh){lastSig=sig;if(window.scrollTo)window.scrollTo(0,0);}
+  /* Harita her çizimden sonra dinleyicilerini yeniden bağlıyor — innerHTML
+     eskilerini siliyor. Ekrana ilk girişte oyuncunun kendi bölgesine
+     çerçeveleniyor; sonraki çizimlerde kamera olduğu yerde kalıyor. */
+  if(c.v==='atlas'){mapMount();if(fresh)mapHome();}
 }
 /* ===== olaylar ===== */
 function showEvent(ref){
@@ -6150,6 +7343,64 @@ function evChoose(i){
   openModal(`<h2>${ev.ttl(c)[L]}</h2>
     <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>
     ${chips?`<div style="margin-top:14px">${chips}</div>`:''}
+    <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
+  save();render();
+}
+/* ===== ayartma masası =====
+   Rakip ajans müşterinin kapısını çaldı. Olaylarla aynı kurallar: modal kilitli
+   açılır (dışarı tıklayarak kaçılamaz) ve sonuç applyEff'ten geçer.
+
+   Hedef bu arada geçersizleştiyse — transfer oldu, kendisi seni kovdu, futbolu
+   bıraktı — sessizce dönmek yetmez: kuyruk yalnızca closeModal ile ilerlediği için
+   sessiz bir return arkadaki bütün modalları kilitlerdi (bkz. showLevelUp). */
+function showPoach(){
+  const pc=S.poach;
+  const p=pc?byId(pc.pid):null;
+  const r=pc?rivalById(pc.ri):null;
+  if(!pc||!p||!r||p.agent!=='you'){S.poach=null;runNextModal();return;}
+  const risk=Math.round(poachChance(p,r)*100);
+  const col=risk>60?'var(--bad)':risk>35?'var(--warn)':'var(--acc)';
+  openModal(`
+   <div class="row">${tmBadge(teamOf(p),42)}
+     <div style="flex:1;min-width:0"><h2>${t('poachT')}</h2>
+     <div class="sub">${p.n} · ${esc(rivalName(r))}</div></div>
+     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${rivalArch(r).dsc[L]}</span></div>
+   <div class="negbox" style="margin-top:10px">
+     <div class="row" style="justify-content:space-between;font-size:11px">
+       <span class="sub" style="font-weight:800;text-transform:uppercase;letter-spacing:.06em">${t('poachT')}</span>
+       <b class="num" style="color:${col};font-size:15px">%${risk}</b></div>
+     <div class="moodbar"><div style="width:${risk}%;background:${col}"></div></div>
+     <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px">
+       <span class="sub">${t('trustL')}</span><b class="num">${Math.round(trustOf(p))}</b></div>
+     <div style="display:flex;justify-content:space-between;font-size:12px">
+       <span class="sub">${t('morale')}</span><b class="num">${Math.round(p.morale)}</b></div>
+   </div>
+   <div class="sect" style="margin-top:14px">${t('evPick')}</div>
+   ${POACH_OPT.map((o,i)=>`<button class="dchoice" onclick="poachChoose(${i})">${o.t[L]}</button>`).join('')}`,true);
+}
+function poachChoose(i){
+  const pc=S.poach;
+  if(!pc)return;
+  const p=byId(pc.pid),r=rivalById(pc.ri),opt=POACH_OPT[i];
+  if(!p||!r||!opt)return;
+  const out=opt.run({p,r})||{};
+  /* Nakit/güven/moral etkileri olaylarla aynı uygulayıcıdan geçiyor: mutasyon
+     kanalları tek yerde kalsın. */
+  applyEff(out.eff||{},{p});
+  const risk=clamp(poachChance(p,r)+(out.d||0),0.02,0.95);
+  const lost=RF()<risk;
+  S.poach=null;
+  if(lost)losePlayerTo(p,r);
+  else{
+    r.lost=(r.lost||0)+1;
+    trustEvent(p,4);
+    pushNews('poachHeld',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'good');
+  }
+  openModal(`<h2>${t('poachT')}</h2>
+    <div class="dquote ${lost?'bad':'good'}" style="margin-top:12px">${out.msg?out.msg[L]:''}</div>
+    <div class="dquote ${lost?'bad':'good'}" style="margin-top:8px">${
+      lost?(NEWS[L].poached({n:p.n,a:esc(rivalName(r))})):(NEWS[L].poachHeld({n:p.n,a:esc(rivalName(r))}))}</div>
     <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
   save();render();
 }

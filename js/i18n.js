@@ -45,6 +45,9 @@ setupTitle:'Kariyerine Başla',fname:'Ad',lname:'Soyad',contL:'Kıta',natL:'Uyru
 startBtn:'Kariyere Başla',
 setupHint:'Memleketinin futbolunu tanıyorsun — ağın orada kurulu. Diğer ligleri tanımak için ilerleyen dönemde para harcayıp keşif ağları kuracaksın.',
 scoutNet:'Keşif Ağı',scoutBuild:'Ağ Kur',scoutPendingT:'kuruluyor',scoutLock:'Bu ligde keşif ağın yok',
+mapFull:'Ağın var',mapPartial:'Genişletilebilir',mapOpen:'Keşfedilmemiş',mapFog:'Ligi yok',mapRecentre:'Haritayı ortala',
+mapHint:'Koyu bölgelerde ağın kurulu. Soluk olanların ligleri henüz keşfedilmedi — paran yettiği sürece dünyanın herhangi bir yerinde ağ kurabilirsin.',
+mapListTmp:'liste',
 scoutLockShort:'ağ yok',knownLbl:'tanıdığın lig',fillName:'Ad ve soyad gerekli.',
 meeting:'Temsilcilik Görüşmesi',meetPick:'Ne söyleyeceksin?',finalBtn:'Teklifini Sun',
 mcUnhappy:'Kulübünde mutsuz — hızlı bir çıkış yolu arıyor.',
@@ -113,6 +116,13 @@ slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynana
 toMenu:'Ana Menüye Dön',toMenuQ:'Ana menüye dönülsün mü? İlerlemen kaydedildi.',
 appSet:'Uygulama',careerSet:'Kariyer',menuSub:'Bir yuva seç ve devam et.',
 newCareerT:'Yeni Kariyer',deleteCareer:'Kariyeri Sil',
+rivals:'Rakip Ajanslar',
+rivalsSub:'Dünyada tek menajer sen değilsin. Kimin kime çalıştığını, kimin senden hesabı olduğunu buradan görürsün.',
+rivalRankT:'İtibar Sıralaması',rankLbl:'Sıralaman',charLbl:'Karakter',portfolio:'Portföy',
+notableCl:'Dikkat Çeken Müşteriler',noNotable:'Bildiğin liglerde dikkat çeken müşterisi yok.',
+relLbl:'Aranız',relHot:'Husumetli',relTense:'Gergin',relCalm:'Nötr',
+wonFrom:'Senden aldığı',lostTo:'Sana kaptırdığı',
+chaseTag:'yarışta',chaseWith:'{a} da görüşüyor',poachT:'Müşterine göz koydular',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -157,6 +167,9 @@ setupTitle:'Start Your Career',fname:'First Name',lname:'Last Name',contL:'Conti
 startBtn:'Start Career',
 setupHint:'You know your homeland\'s football — your network starts there. To learn other leagues, you\'ll invest in scouting networks as you earn.',
 scoutNet:'Scouting Network',scoutBuild:'Build Network',scoutPendingT:'building',scoutLock:'No scouting network in this league',
+mapFull:'Network active',mapPartial:'Expandable',mapOpen:'Uncharted',mapFog:'No leagues',mapRecentre:'Recentre the map',
+mapHint:'Solid regions are yours. Faint ones are still unscouted — you can build a network anywhere in the world you can afford.',
+mapListTmp:'list',
 scoutLockShort:'no network',knownLbl:'league(s) known',fillName:'First and last name required.',
 meeting:'Representation Meeting',meetPick:'What do you say?',finalBtn:'Make Your Offer',
 mcUnhappy:'Unhappy at his club — looking for a quick way out.',
@@ -225,6 +238,13 @@ slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last 
 toMenu:'Back to Main Menu',toMenuQ:'Return to the main menu? Your progress has been saved.',
 appSet:'App',careerSet:'Career',menuSub:'Pick a slot to continue.',
 newCareerT:'New Career',deleteCareer:'Delete Career',
+rivals:'Rival Agencies',
+rivalsSub:'You are not the only agent in the world. Who works for whom, and who has a score to settle with you.',
+rivalRankT:'Reputation Ranking',rankLbl:'Your rank',charLbl:'Character',portfolio:'Roster',
+notableCl:'Notable Clients',noNotable:'No notable clients in the leagues you know.',
+relLbl:'Standing',relHot:'Hostile',relTense:'Tense',relCalm:'Neutral',
+wonFrom:'Taken from you',lostTo:'Lost to you',
+chaseTag:'contested',chaseWith:'{a} is talking to him too',poachT:'They are after your client',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 let L='tr';
@@ -236,11 +256,19 @@ const lkP=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('player',${id
 const lkT=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('team',${id})">${n}</span>`:n;
 const lkL=(i,n)=>i!==undefined?`<span class="lnk" onclick="goLg(${i})">${n}</span>`:n;
 const lkC=(ci,n)=>ci!==undefined?`<span class="lnk" onclick="goCup(${ci})">${n}</span>`:n;
+/* Rakip ajans adı → ajans sayfası. Çok eski kayıtlarda ajans olmayabilir; o zaman
+   haber yine okunabilir olsun diye düz metne düşüyor. */
+const lkR=(ri,n)=>ri!==undefined&&n?`<span class="lnk" onclick="pushV('rival',${ri})">${n}</span>`:(n||'');
 const NEWS={
 tr:{goal:p=>`${lkP(p.pid,p.n)} bu hafta ${p.g} gol attı. Formu yükseliyor.`,
 sign:p=>`${lkP(p.pid,p.n)} artık senin müşterin.`,
 transfer:p=>`${lkP(p.pid,p.n)}, ${lkT(p.aid,p.a)} → ${lkT(p.bid,p.b)} (${p.f}). Komisyonun: ${p.k}`,
-firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} güç) menajerini kovdu ve seninle çalışmak istiyor.`,
+firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} güç) ${p.a?lkR(p.ri,p.a)+' ile yollarını ayırdı':'menajerini kovdu'} ve seninle çalışmak istiyor.`,
+chaseOn:p=>`${lkR(p.ri,p.a)}, ${lkP(p.pid,p.n)} ile görüşmeye başladı. Onu istiyorsan beklemenin âlemi yok.`,
+chaseLost:p=>`${lkP(p.pid,p.n)} ${lkR(p.ri,p.a)} ile anlaştı. Geç kaldın.`,
+poachWarn:p=>`${lkR(p.ri,p.a)} müşterin ${lkP(p.pid,p.n)} ile temasa geçmiş. Önümüzdeki haftalarda masaya oturacaklar.`,
+poached:p=>`${lkP(p.pid,p.n)} seninle yollarını ayırdı — artık ${lkR(p.ri,p.a)} ile çalışıyor.`,
+poachHeld:p=>`${lkP(p.pid,p.n)} kalmaya karar verdi. ${lkR(p.ri,p.a)} eli boş döndü.`,
 unhappyMsg:p=>`${lkP(p.pid,p.n)} mevcut maaşından memnun değil. Yeni sözleşme görüşmesi bekliyor.`,
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} kulübünde mutsuz, transfer istiyor.`,
 expire:p=>`${lkP(p.pid,p.n)} sözleşmesinin bitmesine ${p.y} sezon kaldı. Harekete geç.`,
@@ -273,7 +301,12 @@ inDebt:p=>`Kasan eksiye düştü. Haftalık giderin ${p.c}; ya müşteri kazan y
 en:{goal:p=>`${lkP(p.pid,p.n)} scored ${p.g} this week. Form is rising.`,
 sign:p=>`${lkP(p.pid,p.n)} is now your client.`,
 transfer:p=>`${lkP(p.pid,p.n)}: ${lkT(p.aid,p.a)} → ${lkT(p.bid,p.b)} (${p.f}). Your cut: ${p.k}`,
-firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} rated) fired his agent and wants to work with you.`,
+firedRival:p=>`${lkP(p.pid,p.n)} (${p.r} rated) ${p.a?'has parted ways with '+lkR(p.ri,p.a):'fired his agent'} and wants to work with you.`,
+chaseOn:p=>`${lkR(p.ri,p.a)} has started talking to ${lkP(p.pid,p.n)}. If you want him, waiting won't help.`,
+chaseLost:p=>`${lkP(p.pid,p.n)} has signed with ${lkR(p.ri,p.a)}. You were too slow.`,
+poachWarn:p=>`${lkR(p.ri,p.a)} has made contact with your client ${lkP(p.pid,p.n)}. They'll be at the table within weeks.`,
+poached:p=>`${lkP(p.pid,p.n)} has left you — he's with ${lkR(p.ri,p.a)} now.`,
+poachHeld:p=>`${lkP(p.pid,p.n)} decided to stay. ${lkR(p.ri,p.a)} went home empty-handed.`,
 unhappyMsg:p=>`${lkP(p.pid,p.n)} is unhappy with his wage. He expects new contract talks.`,
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} is unhappy at his club and wants a transfer.`,
 expire:p=>`${lkP(p.pid,p.n)}'s contract expires in ${p.y} season(s). Act now.`,

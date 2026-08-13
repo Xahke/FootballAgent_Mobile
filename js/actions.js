@@ -390,13 +390,26 @@ function leaveMeeting(){
   closeModal();save();render();
 }
 function pitchCost(p){return 10+Math.round(Math.max(0,p.r-65)*2);}
-function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch'),0.08,0.95);}
+/* chasePenalty() — imza yarışının tek okuma yeri. Rakip aynı oyuncuyla görüşüyorsa
+   şans burada düşer; ekrandaki yüzde de aynı fonksiyondan geldiği için çubuk yine
+   gerçeği söyler. */
+function pitchChance(p){return clamp(0.55+S.rep/100-(profileOf(p)-62)*0.022+skillBonus('pitch')-chasePenalty(p),0.08,0.95);}
 function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
-  p.agent='you';p.ignored=0;
+  p.agent='you';p.ignored=0;delete p.ra;
+  /* Yeni ilişkinin ilk haftalarında rakipler yaklaşmaz (bkz. RIV.poachGrace) */
+  p.sa=(S.tw||0);
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
   if(!S.clients.includes(p.id))S.clients.push(p.id);
+  /* Yarıştığın bir ajans varsa oyuncuyu onun elinden aldın: yarış kapanır, husumet
+     birikir. Rakipler bunu unutmuyor (bkz. rivals.js — rel). */
+  const c=chaseFor(p.id);
+  if(c){
+    S.chase=S.chase.filter(x=>x!==c);
+    const r=rivalById(c.ri);
+    if(r){r.rel=clamp((r.rel||0)-10,-100,100);r.lost=(r.lost||0)+1;}
+  }
   repEvent(0.4);
   pushNews('sign',{n:p.n,pid:p.id},'good');
   toast(t('pitchOk'));save();render();
@@ -404,6 +417,8 @@ function signClient(p){
 function releaseClient(pid){
   const p=byId(pid);
   p.agent=null;S.clients=S.clients.filter(c=>c!==pid);
+  /* Kendi bıraktığın oyuncu için rakip tehdidinin bir anlamı kalmadı */
+  if(S.poach&&S.poach.pid===pid)S.poach=null;
   repEvent(-0.8);
   save();render();
 }

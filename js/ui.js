@@ -20,6 +20,9 @@ function toMenu(){
 function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
 function openSlot(n){
   if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
+  /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
+     yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
+  ensureRivals();
   stack=[{v:'dash'}];lastSig=null;
   render();
   /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
@@ -130,6 +133,9 @@ function playerRow(p,opts){
       ?` · <span style="color:var(--txt3)">${pitchCd(p)} ${t('wk')}</span>`
       :` · <span style="color:var(--acc)">%${Math.round(pitchChance(p)*100)}</span>`)
     :'';
+  /* Rakip aynı oyuncuyla görüşüyorsa listede görünsün: acele etmenin sebebi bu. */
+  const ch=p.agent===null?chaseFor(p.id):null;
+  const chTag=ch?` · <span style="color:var(--warn);font-weight:700">${t('chaseTag')} ${chaseLeft(ch)} ${t('wk')}</span>`:'';
   const potTag=(p.age<=23&&p.pot-p.r>=8)?` · <span style="color:var(--blue);font-weight:700">${t('pot')} ${p.pot}</span>`:'';
   const lgTag=opts.lg?`${isFree(p)?t('faShort'):LEAGUES[tm.lg].c} · `:'';
   const wonder=(p.age<=21&&p.pot-p.r>=14)?ICONS.gem.replace('<svg ','<svg class="gem" '):'';
@@ -137,7 +143,7 @@ function playerRow(p,opts){
     ${opts.noBadge?'':tmBadge(tm,34)}
     <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
       <span class="natc">${NATS[p.nat].c}</span></div>
-    <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}</div></div>
+    <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}${chTag}</div></div>
     <div class="mood"><i style="height:${Math.round(p.morale)}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
 }
@@ -378,7 +384,8 @@ dash(){
       <div class="agCell"><div class="v" style="color:var(--gold)">${Math.round(S.rep)}</div><div class="l">${t('rep')}</div>
         <div class="repbar"><div style="width:${Math.round(S.rep)}%"></div></div></div>
       <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
-      <div class="agCell"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
+      <div class="agCell tap" onclick="pushV('atlas')"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
+      <div class="agCell tap" onclick="pushV('rivals')"><div class="v">#${myRank()}<span class="faint">/${(S.rivals||[]).length+1}</span></div><div class="l">${t('rankLbl')}</div></div>
     </div>
     <div class="twline">
       <span class="twdot ${windowOpen()?'on':'off'}"></span>
@@ -436,7 +443,7 @@ market(){
     </select></label>`;
   return `<h2 class="sec">${t('freeAgents')}</h2>
    <div class="sub" style="margin-bottom:12px">${t('marketHint')}</div>
-   <button class="btn b" style="margin-bottom:12px" onclick="openScout()">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
+   <button class="btn b" style="margin-bottom:12px" onclick="pushV('atlas')">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
    <div class="fgrid">
      ${lgSel}
      ${sel('pos',[['all',t('all')],['KL',POSFULL[L].KL],['DF',POSFULL[L].DF],['OS',POSFULL[L].OS],['FV',POSFULL[L].FV]])}
@@ -671,6 +678,72 @@ skills(){
   </div>
   <div class="sub" style="margin:0 2px 8px">${t('skHint').replace('{n}',LV.bonus)}</div>`;
 },
+/* Keşif ağı ekranı. Çizimi js/atlas.js taşıyor — burada yalnız görünüm kaydı. */
+atlas(){return atlasView();},
+/* ===== rakip ajanslar =====
+   Sıralamada sen de varsın: rekabetin anlamı ancak kendini o listede görünce
+   ortaya çıkıyor. Portföy sayıları saklanmıyor, oyuncu listesinden türetiliyor
+   (bkz. rivalCounts) — hafta içinde bir kez sayılıp önbelleğe alınıyor. */
+rivals(){
+  ensureRivals();
+  const rows=rivalRank();
+  const me=myRank();
+  return `<h2 class="sec">${t('rivals')}</h2>
+   <div class="sub" style="margin-bottom:12px">${t('rivalsSub')}</div>
+   <div class="sect">${t('rivalRankT')}</div>
+   ${listWrap(rows.map((x,i)=>{
+     if(!x.r)return `<div class="pitem mine">
+       <div class="pinfo"><div class="pname"><span style="color:var(--acc)">${S.agent?esc(S.agent.agency):t('you')}</span><span class="star">★</span></div>
+       <div class="psub">${t('you')} · ${t('portfolio')} ${S.clients.length}/${maxClients()}</div></div>
+       <div class="rt g">${Math.round(x.rep)}</div></div>`;
+     const a=rivalArch(x.r);
+     const rel=x.r.rel<=-25?`<span style="color:var(--bad)"> · ${t('relHot')}</span>`
+              :x.r.rel<=-8?`<span style="color:var(--warn)"> · ${t('relTense')}</span>`:'';
+     return `<div class="pitem" onclick="pushV('rival',${x.r.id})">
+       <div class="pinfo"><div class="pname">${esc(rivalName(x.r))}</div>
+       <div class="psub">${a.n[L]} · ${archFocus(a)[L]} · ${t('portfolio')} ${rivalCount(x.r.id)}${rel}</div></div>
+       <div class="rt ${rtClass(Math.round(x.rep))}">${Math.round(x.rep)}</div></div>`;
+   }).join(''))}
+   <div class="sub" style="margin-top:10px">${t('rankLbl')}: <b>#${me}</b>/${rows.length}</div>`;
+},
+rival(id){
+  ensureRivals();
+  const r=rivalById(id);
+  if(!r)return `<div class="card">${emptyState('clients',t('rivals'),t('noNotable'))}</div>`;
+  const a=rivalArch(r);
+  /* Yalnızca keşif ağının ulaştığı liglerdeki müşteriler görünür: göremediğin bir
+     ligin oyuncusunu bu ekrandan öğrenmek keşif ağını anlamsızlaştırırdı. */
+  const seen=rivalClients(r.id).filter(p=>knownLg(teamOf(p).lg)).sort((x,y)=>y.r-x.r).slice(0,20);
+  const relTxt=r.rel<=-25?t('relHot'):r.rel<=-8?t('relTense'):t('relCalm');
+  const relCol=r.rel<=-25?'var(--bad)':r.rel<=-8?'var(--warn)':'var(--txt3)';
+  return `
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:0">
+        <div class="pname" style="font-size:17px">${esc(rivalName(r))}</div>
+        <div class="psub">${a.n[L]} · ${CTRYS[r.ctry][L]}</div>
+      </div>
+      <div class="rt ${rtClass(Math.round(r.rep))}">${Math.round(r.rep)}</div>
+    </div>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${a.dsc[L]}</span></div>
+    <div class="kv" style="margin-top:8px"><span class="k">${t('charLbl')}</span><span class="v">${archFocus(a)[L]}</span></div>
+    <div class="divider"></div>
+    <div class="grid3">
+      <div class="stat"><div class="v">${Math.round(r.rep)}</div><div class="l">${t('rep')}</div></div>
+      <div class="stat"><div class="v">${rivalCount(r.id)}</div><div class="l">${t('portfolio')}</div></div>
+      <div class="stat"><div class="v">%${Math.round(a.comm*100)}</div><div class="l">${t('commission')}</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sect">${t('relLbl')}</div>
+    <div class="kv"><span class="k">${t('relLbl')}</span><span class="v" style="color:${relCol}">${relTxt}</span></div>
+    <div class="kv"><span class="k">${t('wonFrom')}</span><span class="v">${r.won||0}</span></div>
+    <div class="kv"><span class="k">${t('lostTo')}</span><span class="v">${r.lost||0}</span></div>
+  </div>
+  <div class="sect">${t('notableCl')}</div>
+  ${seen.length?listWrap(seen.map(p=>playerRow(p,{lg:1})).join(''))
+   :`<div class="card"><div class="empty">${t('noNotable')}</div></div>`}`;
+},
 /* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
    ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi
    iki yere kopyalanmasın diye ayrı bir "menü ayarları" görünümü yok. */
@@ -804,7 +877,12 @@ player(id){
     <div class="kv"><span class="k">${t('wage')}</span><span class="v">${fmtK(p.wage)}/${t('wk')}</span></div>
     <div class="kv"><span class="k">${t('contract')}</span><span class="v">${p.yrs} ${t('yrs')}</span></div>
     <div class="kv"><span class="k">${t('agent')}</span>
-      <span class="v">${mine?'<span style="color:var(--acc)">'+t('you')+'</span>':p.agent==='rival'?t('rival'):'—'}</span></div>
+      <span class="v">${mine?'<span style="color:var(--acc)">'+t('you')+'</span>'
+        :p.agent==='rival'?(()=>{const rv=rivalOf(p);
+          /* Adlı bir ajansa bağlıysa adı tıklanabilir; eski kayıtlarda p.ra yok,
+             o zaman eski isimsiz metin doğru cevaptır. */
+          return rv?lkR(rv.id,esc(rivalName(rv))):t('rival');})()
+        :'—'}</span></div>
   </div>
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
@@ -825,7 +903,13 @@ player(id){
        :`<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`}
     </div>
     <button class="btn d" style="margin-top:10px" onclick="releaseClient(${p.id})">${t('release')}</button>`
-  :p.agent===null?(!knownLg(tm.lg)?`
+  :p.agent===null?((()=>{
+    /* Yarış varsa düğmenin üstünde yazsın: yüzdedeki düşüşün sebebi görünür olmalı,
+       yoksa oyuncu şansının neden azaldığını anlamaz. */
+    const c=chaseFor(p.id),rv=c?rivalById(c.ri):null;
+    return rv?`<div class="dctx" style="margin-bottom:10px">${ICONS.alert}<span>${
+      t('chaseWith').replace('{a}',esc(rivalName(rv)))} · ${chaseLeft(c)} ${t('wk')}</span></div>`:'';
+  })())+(!knownLg(tm.lg)?`
     <button class="btn s" disabled>${t('scoutLock')}</button>`
    :profileOf(p)>repCap()?`
     <button class="btn s" disabled>${t('repLock')} · ${t('rep')} ${repNeedFor(profileOf(p))}+</button>`
@@ -1052,6 +1136,8 @@ function render(){
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
   else if(c.v==='skills')t1=t('skills');
+  else if(c.v==='atlas')t1=t('scoutNet');
+  else if(c.v==='rival')t1=rivalName(rivalById(c.id))||t('rivals');
   else if(c.v!=='dash')t1=t(c.v);
   document.getElementById('hT1').textContent=t1;
   document.getElementById('hT2').textContent=t2;
@@ -1078,7 +1164,12 @@ function render(){
   /* Yalnızca gerçekten başka bir ekrana geçildiğinde başa dön. Aksi halde piyasada
      filtre değiştirmek ya da bir tema seçmek listeyi en üste fırlatıyor. */
   const sig=c.v+':'+(c.id===undefined?'':c.id);
-  if(sig!==lastSig){lastSig=sig;if(window.scrollTo)window.scrollTo(0,0);}
+  const fresh=sig!==lastSig;
+  if(fresh){lastSig=sig;if(window.scrollTo)window.scrollTo(0,0);}
+  /* Harita her çizimden sonra dinleyicilerini yeniden bağlıyor — innerHTML
+     eskilerini siliyor. Ekrana ilk girişte oyuncunun kendi bölgesine
+     çerçeveleniyor; sonraki çizimlerde kamera olduğu yerde kalıyor. */
+  if(c.v==='atlas'){mapMount();if(fresh)mapHome();}
 }
 /* ===== olaylar ===== */
 function showEvent(ref){
@@ -1119,6 +1210,64 @@ function evChoose(i){
   openModal(`<h2>${ev.ttl(c)[L]}</h2>
     <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>
     ${chips?`<div style="margin-top:14px">${chips}</div>`:''}
+    <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
+  save();render();
+}
+/* ===== ayartma masası =====
+   Rakip ajans müşterinin kapısını çaldı. Olaylarla aynı kurallar: modal kilitli
+   açılır (dışarı tıklayarak kaçılamaz) ve sonuç applyEff'ten geçer.
+
+   Hedef bu arada geçersizleştiyse — transfer oldu, kendisi seni kovdu, futbolu
+   bıraktı — sessizce dönmek yetmez: kuyruk yalnızca closeModal ile ilerlediği için
+   sessiz bir return arkadaki bütün modalları kilitlerdi (bkz. showLevelUp). */
+function showPoach(){
+  const pc=S.poach;
+  const p=pc?byId(pc.pid):null;
+  const r=pc?rivalById(pc.ri):null;
+  if(!pc||!p||!r||p.agent!=='you'){S.poach=null;runNextModal();return;}
+  const risk=Math.round(poachChance(p,r)*100);
+  const col=risk>60?'var(--bad)':risk>35?'var(--warn)':'var(--acc)';
+  openModal(`
+   <div class="row">${tmBadge(teamOf(p),42)}
+     <div style="flex:1;min-width:0"><h2>${t('poachT')}</h2>
+     <div class="sub">${p.n} · ${esc(rivalName(r))}</div></div>
+     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${rivalArch(r).dsc[L]}</span></div>
+   <div class="negbox" style="margin-top:10px">
+     <div class="row" style="justify-content:space-between;font-size:11px">
+       <span class="sub" style="font-weight:800;text-transform:uppercase;letter-spacing:.06em">${t('poachT')}</span>
+       <b class="num" style="color:${col};font-size:15px">%${risk}</b></div>
+     <div class="moodbar"><div style="width:${risk}%;background:${col}"></div></div>
+     <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px">
+       <span class="sub">${t('trustL')}</span><b class="num">${Math.round(trustOf(p))}</b></div>
+     <div style="display:flex;justify-content:space-between;font-size:12px">
+       <span class="sub">${t('morale')}</span><b class="num">${Math.round(p.morale)}</b></div>
+   </div>
+   <div class="sect" style="margin-top:14px">${t('evPick')}</div>
+   ${POACH_OPT.map((o,i)=>`<button class="dchoice" onclick="poachChoose(${i})">${o.t[L]}</button>`).join('')}`,true);
+}
+function poachChoose(i){
+  const pc=S.poach;
+  if(!pc)return;
+  const p=byId(pc.pid),r=rivalById(pc.ri),opt=POACH_OPT[i];
+  if(!p||!r||!opt)return;
+  const out=opt.run({p,r})||{};
+  /* Nakit/güven/moral etkileri olaylarla aynı uygulayıcıdan geçiyor: mutasyon
+     kanalları tek yerde kalsın. */
+  applyEff(out.eff||{},{p});
+  const risk=clamp(poachChance(p,r)+(out.d||0),0.02,0.95);
+  const lost=RF()<risk;
+  S.poach=null;
+  if(lost)losePlayerTo(p,r);
+  else{
+    r.lost=(r.lost||0)+1;
+    trustEvent(p,4);
+    pushNews('poachHeld',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'good');
+  }
+  openModal(`<h2>${t('poachT')}</h2>
+    <div class="dquote ${lost?'bad':'good'}" style="margin-top:12px">${out.msg?out.msg[L]:''}</div>
+    <div class="dquote ${lost?'bad':'good'}" style="margin-top:8px">${
+      lost?(NEWS[L].poached({n:p.n,a:esc(rivalName(r))})):(NEWS[L].poachHeld({n:p.n,a:esc(rivalName(r))}))}</div>
     <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
   save();render();
 }

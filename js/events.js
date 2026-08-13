@@ -22,12 +22,26 @@ function evCtx(pid){
   const p=pid!==undefined&&pid!==null?byId(pid):null;
   return {p,tm:p?teamOf(p):null,pid};
 }
+/* Olay metinlerinde geçen rakip ajans adı. Rakipler kurulmamışsa (çok eski kayıt)
+   eski isimsiz metne düşer — olay yine de anlamlıdır. */
+function evRivalName(c){
+  const rs=(S&&S.rivals)||[];
+  if(!rs.length)return L==='tr'?'başka bir menajer':'another agent';
+  /* Aynı olayın metni ve seçenekleri aynı ajansı görsün: oyuncunun id'sinden
+     türetilen sabit bir seçim, hafta içinde değişmez. */
+  const r=rs[((c&&c.p?c.p.id:0)+(S.tw||0))%rs.length];
+  return rivalName(r);
+}
 const EVENTS=[
 /* ================= MÜŞTERİYLE İLGİLİ ================= */
-{id:'rivalAgent',w:10,need:'client',
+/* Ayartma artık rakip ajanslar üzerinden kendi kanalında da işliyor (bkz. rivals.js).
+   Bu olay o kanalın hafif hali: kaybetme riski yok, yalnızca ilişkiyi yokluyor.
+   İkisi aynı anda taşmasın diye ağırlığı düşük tutuluyor. */
+{id:'rivalAgent',w:6,need:'client',
  ttl:()=>({tr:'Rakip menajer devrede',en:'A rival agent is circling'}),
- txt:c=>({tr:`Kulislerde bir isim dolaşıyor: ${c.p.n} ile başka bir menajer görüşmüş. Oyuncu sana bir şey söylemedi ama haber kulağına geldi.`,
-          en:`Word is going around that another agent has been meeting ${c.p.n}. He hasn't mentioned it to you, but you've heard.`}),
+ txt:c=>{const a=evRivalName(c);
+   return {tr:`Kulislerde bir isim dolaşıyor: ${c.p.n} ile ${a} görüşmüş. Oyuncu sana bir şey söylemedi ama haber kulağına geldi.`,
+           en:`Word is going around that ${a} has been meeting ${c.p.n}. He hasn't mentioned it to you, but you've heard.`};},
  opts:[
   {t:{tr:'Doğrudan sor, açık konuş',en:'Ask him straight out'},
    eff:c=>RF()<0.55+trustOf(c.p)/300

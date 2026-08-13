@@ -135,6 +135,7 @@ function releaseToFree(p){
 function regenPlayer(p){
   Object.assign(p,genPlayer(teamOf(p),p.pos,intakeAge()),{id:p.id});
   delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
+  delete p.ra;                         // artık başka bir insan; eski ajansıyla işi yok
 }
 function newGame(){
   PID=1;
@@ -148,6 +149,9 @@ function newGame(){
   });
   buildAllFixtures();
   seedCups();
+  /* Dünya kurulduktan sonra: rakip ajanslar ve dikkat çekici oyuncuların paylaşımı.
+     Oyuncular üretilmeden çağrılamaz, sahiplenecek kimse olmazdı. */
+  ensureRivals();
   pushNews('tut',{},'info');
 }
 const SEASONW=38;   // sezon uzunluğu hedefi (en kalabalık ligin çift devresi)
@@ -394,6 +398,7 @@ function startCareer(){
 function buyScout(i){
   const cost=scoutCost(i);
   if(knownLg(i)||scoutPending(i))return;
+  /* Coğrafi bir koşul yok: parası yeten her keşfedilmemiş lig alınabilir. */
   if(S.cash<cost){toast(t('noCash'));return;}
   S.cash-=cost;
   S.scout=S.scout||[];
