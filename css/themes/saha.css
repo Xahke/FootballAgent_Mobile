@@ -31,7 +31,7 @@
 
   /* keşif haritası: derin lacivert deniz, yükseltilmiş kara */
   /* main yatay dolgusu; ana ekranın tam genişlik kanaması bunu kullanıyor */
-  --gutter:14px;
+  --gutter:14px; --gutter-neg:-14px;
   --map-sea:#070c17; --map-land:#131d33; --map-fog:#0e1526; --map-coast:#23314e;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -552,7 +552,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 @media (max-width:374px){
   /* Ana ekranın tam genişlik kanaması --gutter'ı okuyor; dolgu daralınca o da
      daralmalı, yoksa 360px'te belge 4px yatay taşıyordu. */
-  :root{--gutter:10px}
+  :root{--gutter:10px; --gutter-neg:-10px}
   main{padding:12px 10px 18px}
   .agCash{font-size:23px}
   .statusRow{gap:6px}
@@ -788,7 +788,7 @@ body[data-view="dash"] header .hrow{min-height:38px}
    bildirim düğmesinin (üst sağ, ~46px) altında kalıyor. */
 .hmTop{position:relative;z-index:0;padding:14px 0 16px;margin-bottom:2px}
 .hmTop::before{content:'';position:absolute;z-index:-1;top:-14px;bottom:-30px;
-  left:calc(-1 * var(--gutter));right:calc(-1 * var(--gutter));
+  left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.9) 26%,rgba(11,17,30,.5) 54%,rgba(11,17,30,.2) 100%),
     linear-gradient(180deg,rgba(11,17,30,.42) 0%,rgba(11,17,30,.05) 30%,rgba(11,17,30,.72) 78%,var(--bg) 100%),
@@ -1009,69 +1009,75 @@ body[data-view="dash"] main{padding-top:10px;padding-bottom:0}
 .hmRiseIc.badge{width:48px;height:48px}
 
 /* ===================== ANA EKRAN · YÜKSEKLİĞE DUYARLI BÜYÜME =====================
-   360x800 düzeni taban; --grow orada 0 olduğu için o ekran hiç değişmiyor.
+   360x800 düzeni taban; büyüme orada 0 olduğu için o ekran hiç değişmiyor.
    Daha uzun telefonlarda fazla dikey alan tek bir boşluğa bırakılmıyor,
    bileşenlere dağıtılıyor.
 
-   --grow: 800px üstündeki yükseklik. 1.04 katsayısı fazlanın tamamını
-   tüketip üstüne biraz daha kapatıyor, böylece alt boşluk uzun ekranda
-   büyümüyor (39px -> ~37 -> ~33). 160px'te duruyor: daha uzun ekranlarda
-   kartlar orantısız şişmesin.
+   Büyüme = 800px üstündeki yükseklik x 1.04, 160px'te doyuyor. 1.04 fazlanın
+   tamamını tüketip üstüne biraz daha kapatıyor, böylece alt boşluk uzun
+   ekranda büyümüyor (38px -> 35 -> 31).
 
-   Dağıtım (toplam ~1.00, brief'teki öncelik sırasıyla):
-     kariyer kartı 0.14 + haftayı ilerlet 0.13   -> %27
-     gündem satırları 2x0.075                    -> %15
-     hızlı erişim 2 satır x 0.125                -> %25
-     haftanın yükseleni 0.20                     -> %20
-     üst kimlik 0.05 + bölüm aralıkları 0.09     -> %13
-   dvh önce vh ile yazılıyor: desteklenmeyen tarayıcıda ikinci satır düşer. */
-html[data-theme="saha"]{
-  --grow:clamp(0px, calc((100vh - 800px) * 1.04), 160px);
-  --grow:clamp(0px, calc((100dvh - 800px) * 1.04), 160px);
-}
+   calc() içinde çarpma/bölme YOK — bazı eski WebView sürümleri length ile
+   sayı çarpımını çözemiyor ve kuralı tamamen düşürüyordu. Aynı doğrusal
+   sonuç yalnız toplama/çıkarma ve katsayılı vh/dvh birimiyle yazıldı:
+
+     f x clamp(0px, calc(104u - 832px), 160px)
+       = clamp(0px, calc((104f)u - (832f)px), (160f)px)
+
+   Her özellik iki kez yazılıyor: önce vh, sonra dvh. dvh'yi bilmeyen tarayıcı
+   ikinciyi düşürüp vh sürümünde kalıyor; ikisini de bilmeyen ise yukarıdaki
+   sabit 360x800 tabanına düşüyor. Üç durumda da ekran çalışır kalıyor.
+
+   Dağıtım (toplam ~1.00):
+     kariyer kartı .14 + haftayı ilerlet .13   -> %27
+     gündem satırları 2x.075                   -> %15
+     hızlı erişim 2 satır x .125               -> %25
+     haftanın yükseleni .20                    -> %20
+     üst kimlik .05 + bölüm aralıkları .09     -> %13 */
 
 /* --- üst kimlik: tünele biraz daha nefes --- */
-body[data-view="dash"] .hmTop{padding-bottom:calc(6px + var(--grow) * .05)}
-.hmWord{font-size:calc(25px + var(--grow) * .017)}
+body[data-view="dash"] .hmTop{padding-bottom:calc(6px + clamp(0px, calc(5.2vh - 41.6px), 8px));padding-bottom:calc(6px + clamp(0px, calc(5.2dvh - 41.6px), 8px))}
+.hmWord{font-size:calc(25px + clamp(0px, calc(1.768vh - 14.144px), 2.72px));font-size:calc(25px + clamp(0px, calc(1.768dvh - 14.144px), 2.72px))}
 
 /* --- kariyer kartı: daha rahat iç boşluk, içerik dikeyde ortalı --- */
 body[data-view="dash"] .hmCard{
-  min-height:calc(95px + var(--grow) * .14);
-  margin-bottom:calc(8px + var(--grow) * .02)}
-.hmAv{width:calc(56px + var(--grow) * .05);height:calc(56px + var(--grow) * .05)}
-.hmLv b{font-size:calc(18px + var(--grow) * .012)}
-.hmBalV{font-size:calc(19px + var(--grow) * .012)}
+  min-height:calc(95px + clamp(0px, calc(14.56vh - 116.48px), 22.4px));min-height:calc(95px + clamp(0px, calc(14.56dvh - 116.48px), 22.4px));
+  margin-bottom:calc(8px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(8px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+.hmAv{width:calc(56px + clamp(0px, calc(5.2vh - 41.6px), 8px));width:calc(56px + clamp(0px, calc(5.2dvh - 41.6px), 8px));height:calc(56px + clamp(0px, calc(5.2vh - 41.6px), 8px));height:calc(56px + clamp(0px, calc(5.2dvh - 41.6px), 8px))}
+.hmLv b{font-size:calc(18px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(18px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+.hmBalV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 
 /* --- ana aksiyon: uzun ekranda daha güçlü yükseklik --- */
 body[data-view="dash"] .hmAdv{
-  min-height:calc(74px + var(--grow) * .13);
-  margin-bottom:calc(10px + var(--grow) * .02)}
-.hmAdvTitle{font-size:calc(23px + var(--grow) * .017)}
+  min-height:calc(74px + clamp(0px, calc(13.52vh - 108.16px), 20.8px));min-height:calc(74px + clamp(0px, calc(13.52dvh - 108.16px), 20.8px));
+  margin-bottom:calc(10px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(10px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+.hmAdvTitle{font-size:calc(23px + clamp(0px, calc(1.768vh - 14.144px), 2.72px));font-size:calc(23px + clamp(0px, calc(1.768dvh - 14.144px), 2.72px))}
 
 /* --- gündem: daha rahat dikey hizalama (metin boyutu sabit) --- */
 body[data-view="dash"] .hmAg{
   /* taban 800px'de ölçülen doğal yükseklik: altında kalsaydı büyümenin bir
      kısmı içerik tarafından yutulurdu ve uzun ekranda boşluk kapanmazdı */
-  min-height:calc(56px + var(--grow) * .075);
-  margin-bottom:calc(7px + var(--grow) * .01)}
+  min-height:calc(56px + clamp(0px, calc(7.8vh - 62.4px), 12px));min-height:calc(56px + clamp(0px, calc(7.8dvh - 62.4px), 12px));
+  margin-bottom:calc(7px + clamp(0px, calc(1.04vh - 8.32px), 1.6px));margin-bottom:calc(7px + clamp(0px, calc(1.04dvh - 8.32px), 1.6px))}
 
 /* --- hızlı erişim: iki satır, en büyük paylardan biri --- */
 body[data-view="dash"] .hmQuick{
-  margin:calc(10px + var(--grow) * .015) 0 calc(9px + var(--grow) * .015)}
-body[data-view="dash"] .hmQ{min-height:calc(62px + var(--grow) * .125)}
-.hmQv{font-size:calc(20px + var(--grow) * .012)}
+  margin:calc(10px + clamp(0px, calc(1.56vh - 12.48px), 2.4px)) 0 calc(9px + clamp(0px, calc(1.56vh - 12.48px), 2.4px));
+  margin:calc(10px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px)) 0 calc(9px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px))}
+body[data-view="dash"] .hmQ{min-height:calc(62px + clamp(0px, calc(13vh - 104px), 20px));min-height:calc(62px + clamp(0px, calc(13dvh - 104px), 20px))}
+.hmQv{font-size:calc(20px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(20px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 
 /* --- haftanın yükseleni: fotoğrafa daha güçlü alan --- */
-body[data-view="dash"] .hmRise{min-height:calc(68px + var(--grow) * .20)}
-.hmRiseV{font-size:calc(19px + var(--grow) * .012)}
+body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 166.4px), 32px));min-height:calc(68px + clamp(0px, calc(20.8dvh - 166.4px), 32px))}
+.hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 
 /* --- rozetler: oranı koruyan küçük optik büyüme ---
    Görünür çap = kutu x 1.22 x 0.76. Katsayılar tavanları aşmayacak şekilde
    seçildi: gündem/hızlı erişim <=48, takvim <=58, yükselen <=52. */
-.hmAdvIc.badge{width:calc(58px + var(--grow) * .038);height:calc(58px + var(--grow) * .038)}
-.hmAgIc.badge {width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
-.hmQi.badge   {width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
-.hmRiseIc.badge{width:calc(48px + var(--grow) * .06);height:calc(48px + var(--grow) * .06)}
+.hmAdvIc.badge{width:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));width:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px))}
+.hmAgIc.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+.hmQi.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+.hmRiseIc.badge{width:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
 
 /* Dar ekrandaki eski rozet küçültmesi kaldırıldı: Barlow Condensed etiketleri
    zaten daralttığı için 360'ta 46px kutuyla da kırpma olmuyor (ölçüldü) ve

@@ -44,7 +44,7 @@ html[data-theme="saha"]{
 
    
    
-  --gutter:14px;
+  --gutter:14px; --gutter-neg:-14px;
   --map-sea:#070c17; --map-land:#131d33; --map-fog:#0e1526; --map-coast:#23314e;
 }
 html[data-theme="saha"] *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -484,7 +484,7 @@ html[data-theme="saha"] .mapkey.scouting i{background:var(--warn);opacity:.6}
 html[data-theme="saha"] .mapkey.open i{background:var(--acc);opacity:.18}
 html[data-theme="saha"] .agCell.tap{cursor:pointer}
 html[data-theme="saha"] .mapterr.full{filter:drop-shadow(0 0 5px var(--acc))}
-@media (max-width:374px){html[data-theme="saha"]{--gutter:10px}
+@media (max-width:374px){html[data-theme="saha"]{--gutter:10px; --gutter-neg:-10px}
 html[data-theme="saha"] main{padding:12px 10px 18px}
 html[data-theme="saha"] .agCash{font-size:23px}
 html[data-theme="saha"] .statusRow{gap:6px}
@@ -658,7 +658,7 @@ html[data-theme="saha"] body[data-view="dash"] header{padding-top:calc(3px + env
 html[data-theme="saha"] body[data-view="dash"] header .hrow{min-height:38px}
 html[data-theme="saha"] .hmTop{position:relative;z-index:0;padding:14px 0 16px;margin-bottom:2px}
 html[data-theme="saha"] .hmTop::before{content:'';position:absolute;z-index:-1;top:-14px;bottom:-30px;
-  left:calc(-1 * var(--gutter));right:calc(-1 * var(--gutter));
+  left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.9) 26%,rgba(11,17,30,.5) 54%,rgba(11,17,30,.2) 100%),
     linear-gradient(180deg,rgba(11,17,30,.42) 0%,rgba(11,17,30,.05) 30%,rgba(11,17,30,.72) 78%,var(--bg) 100%),
@@ -794,36 +794,33 @@ html[data-theme="saha"] .hmAdvIc.badge{width:58px;height:58px}
 html[data-theme="saha"] .hmAgIc.badge{width:46px;height:46px}
 html[data-theme="saha"] .hmQi.badge{width:46px;height:46px}
 html[data-theme="saha"] .hmRiseIc.badge{width:48px;height:48px}
-html[data-theme="saha"][data-theme="saha"]{
-  --grow:clamp(0px, calc((100vh - 800px) * 1.04), 160px);
-  --grow:clamp(0px, calc((100dvh - 800px) * 1.04), 160px);
-}
-html[data-theme="saha"] body[data-view="dash"] .hmTop{padding-bottom:calc(6px + var(--grow) * .05)}
-html[data-theme="saha"] .hmWord{font-size:calc(25px + var(--grow) * .017)}
+html[data-theme="saha"] body[data-view="dash"] .hmTop{padding-bottom:calc(6px + clamp(0px, calc(5.2vh - 41.6px), 8px));padding-bottom:calc(6px + clamp(0px, calc(5.2dvh - 41.6px), 8px))}
+html[data-theme="saha"] .hmWord{font-size:calc(25px + clamp(0px, calc(1.768vh - 14.144px), 2.72px));font-size:calc(25px + clamp(0px, calc(1.768dvh - 14.144px), 2.72px))}
 html[data-theme="saha"] body[data-view="dash"] .hmCard{
-  min-height:calc(95px + var(--grow) * .14);
-  margin-bottom:calc(8px + var(--grow) * .02)}
-html[data-theme="saha"] .hmAv{width:calc(56px + var(--grow) * .05);height:calc(56px + var(--grow) * .05)}
-html[data-theme="saha"] .hmLv b{font-size:calc(18px + var(--grow) * .012)}
-html[data-theme="saha"] .hmBalV{font-size:calc(19px + var(--grow) * .012)}
+  min-height:calc(95px + clamp(0px, calc(14.56vh - 116.48px), 22.4px));min-height:calc(95px + clamp(0px, calc(14.56dvh - 116.48px), 22.4px));
+  margin-bottom:calc(8px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(8px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+html[data-theme="saha"] .hmAv{width:calc(56px + clamp(0px, calc(5.2vh - 41.6px), 8px));width:calc(56px + clamp(0px, calc(5.2dvh - 41.6px), 8px));height:calc(56px + clamp(0px, calc(5.2vh - 41.6px), 8px));height:calc(56px + clamp(0px, calc(5.2dvh - 41.6px), 8px))}
+html[data-theme="saha"] .hmLv b{font-size:calc(18px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(18px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+html[data-theme="saha"] .hmBalV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 html[data-theme="saha"] body[data-view="dash"] .hmAdv{
-  min-height:calc(74px + var(--grow) * .13);
-  margin-bottom:calc(10px + var(--grow) * .02)}
-html[data-theme="saha"] .hmAdvTitle{font-size:calc(23px + var(--grow) * .017)}
+  min-height:calc(74px + clamp(0px, calc(13.52vh - 108.16px), 20.8px));min-height:calc(74px + clamp(0px, calc(13.52dvh - 108.16px), 20.8px));
+  margin-bottom:calc(10px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(10px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+html[data-theme="saha"] .hmAdvTitle{font-size:calc(23px + clamp(0px, calc(1.768vh - 14.144px), 2.72px));font-size:calc(23px + clamp(0px, calc(1.768dvh - 14.144px), 2.72px))}
 html[data-theme="saha"] body[data-view="dash"] .hmAg{
    
-  min-height:calc(56px + var(--grow) * .075);
-  margin-bottom:calc(7px + var(--grow) * .01)}
+  min-height:calc(56px + clamp(0px, calc(7.8vh - 62.4px), 12px));min-height:calc(56px + clamp(0px, calc(7.8dvh - 62.4px), 12px));
+  margin-bottom:calc(7px + clamp(0px, calc(1.04vh - 8.32px), 1.6px));margin-bottom:calc(7px + clamp(0px, calc(1.04dvh - 8.32px), 1.6px))}
 html[data-theme="saha"] body[data-view="dash"] .hmQuick{
-  margin:calc(10px + var(--grow) * .015) 0 calc(9px + var(--grow) * .015)}
-html[data-theme="saha"] body[data-view="dash"] .hmQ{min-height:calc(62px + var(--grow) * .125)}
-html[data-theme="saha"] .hmQv{font-size:calc(20px + var(--grow) * .012)}
-html[data-theme="saha"] body[data-view="dash"] .hmRise{min-height:calc(68px + var(--grow) * .20)}
-html[data-theme="saha"] .hmRiseV{font-size:calc(19px + var(--grow) * .012)}
-html[data-theme="saha"] .hmAdvIc.badge{width:calc(58px + var(--grow) * .038);height:calc(58px + var(--grow) * .038)}
-html[data-theme="saha"] .hmAgIc.badge{width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
-html[data-theme="saha"] .hmQi.badge{width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
-html[data-theme="saha"] .hmRiseIc.badge{width:calc(48px + var(--grow) * .06);height:calc(48px + var(--grow) * .06)}
+  margin:calc(10px + clamp(0px, calc(1.56vh - 12.48px), 2.4px)) 0 calc(9px + clamp(0px, calc(1.56vh - 12.48px), 2.4px));
+  margin:calc(10px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px)) 0 calc(9px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px))}
+html[data-theme="saha"] body[data-view="dash"] .hmQ{min-height:calc(62px + clamp(0px, calc(13vh - 104px), 20px));min-height:calc(62px + clamp(0px, calc(13dvh - 104px), 20px))}
+html[data-theme="saha"] .hmQv{font-size:calc(20px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(20px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+html[data-theme="saha"] body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 166.4px), 32px));min-height:calc(68px + clamp(0px, calc(20.8dvh - 166.4px), 32px))}
+html[data-theme="saha"] .hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+html[data-theme="saha"] .hmAdvIc.badge{width:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));width:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px))}
+html[data-theme="saha"] .hmAgIc.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+html[data-theme="saha"] .hmQi.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+html[data-theme="saha"] .hmRiseIc.badge{width:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
