@@ -535,182 +535,234 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 }
 
 /* ===================== ANA EKRAN (dashboard) =====================
-   Mobil oyun ana ekranı: tek bakışta durum, tek büyük aksiyon, en fazla iki
-   gündem satırı, dört hızlı erişim. Sıra önem sırasıdır.
+   Yapı dört temada da aynı: tek bakışta durum, tek büyük aksiyon, en fazla iki
+   gündem satırı, dört hızlı erişim, haftanın yükseleni. Sıra önem sırasıdır.
 
-   Bu blok dört temada da aynı; renkler tema değişkenlerinden geldiği için her
-   tema kendi diliyle çiziyor. Yalnız "saha" ayrıca atmosfer katmanı ekliyor. */
-.hmTop{display:flex;align-items:flex-start;gap:12px;margin:2px 0 14px}
+   Bu temanın dili: beyaz belge yüzeyi, soğuk gri ince sınır, çok hafif gölge,
+   düzenli ve sakin yoğunluk. Renk yalnız veri anlamı taşır — tek vurgu koyu
+   çam yeşili, o da aksiyonda ve olumlu sayılarda.
+
+   360x800'e sığma stratejisi dosyanın sonundaki iki blokta: önce tekrar eden
+   üst çubuk boşaltılıyor, sonra boşluklar ve kart yükseklikleri ölçülü biçimde
+   iniyor. transform:scale, zoom ve içerik kırpan overflow yok. */
+.hmTop{display:flex;align-items:flex-start;gap:12px;margin:0 0 12px}
 .hmId{flex:1;min-width:0}
-.hmWord{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1.04;
-  text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hmChip{display:inline-flex;align-items:center;gap:9px;margin-top:9px;padding:6px 12px;
-  border-radius:10px;background:var(--sur3);box-shadow:inset 0 0 0 1px var(--line);
-  font-size:11.5px;font-weight:700;color:var(--txt2);font-variant-numeric:tabular-nums}
-.hmChip i{width:1px;height:11px;background:var(--line2);display:block;flex-shrink:0}
-.hmChip .on{color:var(--acc)}
-.hmBell{position:relative;width:46px;height:46px;flex-shrink:0;border:none;border-radius:14px;
-  background:var(--sur2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;
-  justify-content:center;box-shadow:inset 0 0 0 1px var(--line);font-family:inherit}
-.hmBell svg{width:21px;height:21px}
+/* line-height 1.2: Türkçe büyük İ'nin noktası 1.04'te satır kutusunu taşırıyor
+   ve overflow:hidden onu kırpıyordu (ölçüldü). */
+.hmWord{font-size:23.5px;font-weight:600;letter-spacing:-.02em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+.hmChip{display:inline-flex;align-items:center;gap:9px;margin-top:7px;padding:4px 10px;
+  border-radius:var(--r-s);background:var(--n2);
+  font-size:12px;font-weight:500;color:var(--txt2);font-variant-numeric:tabular-nums}
+.hmChip i{width:1px;height:11px;background:var(--n4);display:block;flex-shrink:0}
+.hmChip .on{color:var(--txt);font-weight:600}
+.hmBell{position:relative;width:44px;height:44px;flex-shrink:0;border:1px solid var(--line);
+  border-radius:var(--r-s);background:var(--sur);color:var(--txt2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit}
+.hmBell svg{width:20px;height:20px}
 .hmBell.has{color:var(--txt)}
-.hmBell:active{transform:scale(.94)}
-.hmDot{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;
-  background:var(--acc);box-shadow:0 0 0 2px var(--sur2)}
+.hmBell:active{background:var(--n2)}
+.hmDot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 0 2px var(--sur)}
 
 /* --- kariyer özeti --- */
-.hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;
-  background:var(--sur2);border-radius:18px;padding:17px 15px;margin-bottom:15px;
-  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000}
-/* Portre <img> olarak geliyor; yüklenemezse onerror onu kaldırıyor ve altta
-   duran baş harfler ortaya çıkıyor. Görsel yalnız saha temasında gösteriliyor. */
-.hmAv{position:relative;overflow:hidden;width:68px;height:68px;border-radius:16px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;
-  letter-spacing:-.02em;background:var(--sur4);color:var(--txt2);
-  box-shadow:inset 0 0 0 1px var(--line2)}
-.hmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  object-position:50% 42%}
+.hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;
+  background:var(--sur);border:1px solid var(--line);border-radius:var(--r-s);
+  padding:11px 12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(22,25,29,.05)}
+.hmAv{position:relative;overflow:hidden;width:54px;height:54px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;
+  letter-spacing:-.01em;background:var(--n2);color:var(--txt2)}
+/* portre görseli yalnız saha temasında; burada baş harfler kalıyor */
+.hmAvImg{display:none}
 .hmCi{min-width:0}
-.hmLv{font-size:14.5px;font-weight:600;color:var(--txt2);white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-.hmLv b{font-size:19px;font-weight:900;color:var(--acc);margin-left:4px}
-.hmRep{display:flex;align-items:center;gap:9px;margin-top:9px}
-.hmShield{flex-shrink:0;color:var(--gold);display:flex}
-.hmShield svg{width:22px;height:22px}
+.hmLv{font-size:13.5px;font-weight:400;color:var(--txt2);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.hmLv b{font-size:18px;font-weight:600;color:var(--txt);margin-left:5px}
+.hmRep{display:flex;align-items:center;gap:8px;margin-top:5px}
+.hmShield{flex-shrink:0;color:var(--txt3);display:flex}
+.hmShield svg{width:18px;height:18px}
 .hmRepBody{flex:1;min-width:0}
-.hmRepL{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
-.hmBar{height:7px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:5px}
-.hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
-.hmRepN{font-size:11.5px;font-weight:700;color:var(--txt3);margin-top:4px;font-variant-numeric:tabular-nums}
-.hmRepN b{color:var(--gold);font-weight:800}
-.hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
+/* küçük etiketler versal + geniş aralık değil: bu tema sakin okunur */
+.hmRepL{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--txt3);line-height:1.2}
+.hmBar{height:6px;border-radius:3px;background:var(--n3);overflow:hidden;margin-top:4px}
+.hmBar div{height:100%;border-radius:3px;background:var(--n7);transition:width .3s ease}
+.hmRepN{font-size:11px;font-weight:400;color:var(--txt3);margin-top:3px;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.hmRepN b{color:var(--txt);font-weight:600}
+.hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:0;flex-shrink:0;
   padding-left:12px;border-left:1px solid var(--line)}
-.hmCoin{color:var(--gold);display:flex;margin-bottom:2px}
-.hmCoin svg{width:23px;height:23px}
-.hmBalV{font-size:19.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
-  white-space:nowrap}
+.hmCoin{display:none}   /* bakiye sayısı zaten para birimi taşıyor */
+.hmBalV{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  white-space:nowrap;color:var(--txt);line-height:1.2}
 .hmBalV.neg{color:var(--bad)}
-.hmBalL{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2)}
+.hmBalL{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--txt3);line-height:1.2}
 
-/* --- ana aksiyon: ekrandaki en güçlü öğe --- */
-.hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:15px;
-  min-height:98px;padding:18px 17px;margin-bottom:22px;border:none;border-radius:20px;cursor:pointer;
-  text-align:left;font-family:inherit;background:var(--acc);color:var(--accT)}
-.hmAdv:active{transform:scale(.985)}
-.hmAdvIc{position:relative;z-index:1;width:56px;height:56px;flex-shrink:0;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.16)}
-.hmAdvIc svg{width:29px;height:29px}
-.hmAdvT{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.hmAdvTitle{font-size:20.5px;font-weight:900;letter-spacing:-.025em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
-.hmAdvSub{font-size:13.5px;font-weight:700;opacity:.85;font-variant-numeric:tabular-nums}
-.hmAdvGo{position:relative;z-index:1;width:46px;height:46px;flex-shrink:0;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
-  background:rgba(0,0,0,.16)}
+/* --- ana aksiyon: ekrandaki tek dolu yüzey --- */
+.hmAdv{position:relative;width:100%;display:flex;align-items:center;gap:13px;
+  min-height:78px;padding:12px 14px;margin-bottom:12px;border:none;border-radius:12px;
+  cursor:pointer;text-align:left;font-family:inherit;background:var(--acc);color:var(--accT)}
+.hmAdv:active{background:var(--accD)}
+.hmAdvIc{width:44px;height:44px;flex-shrink:0;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14)}
+.hmAdvIc svg{width:23px;height:23px}
+.hmAdvT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hmAdvTitle{font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.2;white-space:nowrap}
+.hmAdvSub{font-size:12.5px;font-weight:400;opacity:.82;font-variant-numeric:tabular-nums;line-height:1.2}
+.hmAdvGo{width:44px;height:44px;flex-shrink:0;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:400;
+  background:rgba(255,255,255,.14)}
 
 /* --- bölüm başlığı --- */
-.hmSect{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--txt2);margin:0 2px 11px}
+.hmSect{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--txt3);margin:0 1px 8px;line-height:1.2}
 
 /* --- gündem: sol ray aciliyeti kodluyor --- */
-.hmAg{width:100%;display:flex;align-items:center;gap:13px;min-height:68px;padding:13px 14px;
-  margin-bottom:10px;border:none;border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;
-  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;
-  border-left:3px solid var(--txt3)}
-.hmAg:active{transform:scale(.99)}
+.hmAg{width:100%;display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 12px;
+  margin-bottom:8px;border:1px solid var(--line);border-radius:var(--r-s);cursor:pointer;
+  text-align:left;font-family:inherit;background:var(--sur);color:var(--txt);
+  box-shadow:0 1px 2px rgba(22,25,29,.05);border-left:3px solid var(--n4)}
+.hmAg:active{background:var(--n1)}
 .hmAg.red{border-left-color:var(--bad)}
-.hmAg.gold{border-left-color:var(--gold)}
-/* Mutsuz müşteri karar bekleyen olaydan daha az acil: kırmızı değil turuncu. */
+.hmAg.gold{border-left-color:var(--warn)}
+/* Mutsuz müşteri karar bekleyen olaydan daha az acil: kırmızı değil kehribar. */
 .hmAg.warn{border-left-color:var(--warn)}
-.hmAg.warn .hmAgIc{color:var(--warn)}
 .hmAg.teal{border-left-color:var(--acc)}
-.hmAg.blue{border-left-color:var(--blue)}
-.hmAgIc{width:50px;height:50px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--txt2);
-  box-shadow:inset 0 0 0 1px var(--line2)}
-.hmAg.red .hmAgIc{color:var(--bad)} .hmAg.gold .hmAgIc{color:var(--gold)}
-.hmAg.teal .hmAgIc{color:var(--acc)} .hmAg.blue .hmAgIc{color:var(--blue)}
-.hmAgIc svg{width:28px;height:28px}
-.hmAgT{flex:1;min-width:0;font-size:14.5px;font-weight:600;line-height:1.32}
-.hmAgC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1}
-.hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
-  box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
+.hmAg.blue{border-left-color:var(--n6)}
+.hmAgIc{width:40px;height:40px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;background:var(--n2);color:var(--txt2)}
+.hmAg.red .hmAgIc{color:var(--bad)}
+.hmAg.warn .hmAgIc{color:var(--warn)} .hmAg.gold .hmAgIc{color:var(--warn)}
+.hmAg.teal .hmAgIc{color:var(--acc)} .hmAg.blue .hmAgIc{color:var(--txt2)}
+.hmAgIc svg{width:21px;height:21px}
+.hmAgT{flex:1;min-width:0;font-size:13.5px;font-weight:400;line-height:1.3}
+.hmAgC{flex-shrink:0;color:var(--n4);font-size:18px;line-height:1}
+.hmEmpty{background:var(--sur);border:1px solid var(--line);border-radius:var(--r-s);
+  padding:14px 12px;margin-bottom:8px;color:var(--txt3);font-size:13px;text-align:center}
 
-/* --- hızlı erişim: 2x2, iri dokunma alanı --- */
-.hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0 14px}
-/* min-width:0 — grid öğesi varsayılan olarak içeriğinin min-content
-   genişliğinin altına inemiyor; bölünemeyen uzun etiketler (Transferler)
-   kartı 1fr izinin dışına taşırıyordu. */
-.hmQ{position:relative;min-width:0;min-height:98px;padding:13px;border:none;border-radius:18px;
-  cursor:pointer;text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
-  box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;display:flex;align-items:center;gap:12px}
-.hmQ:active{transform:scale(.97)}
-.hmQi{flex-shrink:0;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);box-shadow:inset 0 0 0 1px var(--line2)}
-.hmQi svg{width:30px;height:30px}
-.hmQb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-/* Kelime ortasından bölünmesin: 'OYUNCULARIM' tek kelime, sığar; çok
-   kelimeli 'SCOUTING NETWORK' boşluktan iki satıra iner. */
-.hmQt{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--txt2);
+/* --- hızlı erişim: 2x2 --- */
+.hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 10px}
+/* min-width:0 — grid öğesi varsayılan olarak içeriğinin min-content genişliğinin
+   altına inemiyor; bölünemeyen uzun etiketler kartı 1fr izinin dışına taşırıyordu. */
+.hmQ{position:relative;min-width:0;min-height:66px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:var(--r-s);cursor:pointer;text-align:left;font-family:inherit;
+  background:var(--sur);color:var(--txt);box-shadow:0 1px 2px rgba(22,25,29,.05);
+  display:flex;align-items:center;gap:10px}
+.hmQ:active{background:var(--n1)}
+.hmQi{flex-shrink:0;width:40px;height:40px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;background:var(--n2);color:var(--txt2)}
+.hmQi svg{width:21px;height:21px}
+.hmQb{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+/* Kelime ortasından bölünmesin: tek kelimeli etiketler sığar, çok kelimeli
+   'Scouting network' boşluktan iki satıra iner. */
+.hmQt{font-size:11.5px;font-weight:400;letter-spacing:0;color:var(--txt2);
   line-height:1.2;white-space:normal;overflow-wrap:normal;word-break:keep-all;
   max-height:2.4em;overflow:hidden}
-.hmQv{font-size:23px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
-.hmQv small{font-size:12px;font-weight:700;color:var(--txt3)}
+.hmQv{font-size:20px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  line-height:1.15;color:var(--txt)}
+.hmQv small{font-size:12px;font-weight:400;color:var(--txt3)}
 /* ok köşede: satır içinde yer kaplasaydı 360px'te etiket kırpılıyordu */
-.hmQc{position:absolute;top:9px;right:11px;color:var(--txt3);font-size:17px;line-height:1}
+.hmQc{position:absolute;top:7px;right:9px;color:var(--n4);font-size:16px;line-height:1}
 .hmQ.green .hmQi{color:var(--acc)} .hmQ.green .hmQv{color:var(--acc)}
-.hmQ.blue .hmQi{color:var(--blue)} .hmQ.blue .hmQv{color:var(--blue)}
-.hmQ.viol .hmQi{color:var(--viol)} .hmQ.viol .hmQv{color:var(--viol)}
+.hmQ.blue .hmQi{color:var(--txt2)}
+.hmQ.viol .hmQi{color:var(--txt2)}
 
 /* --- haftanın yükseleni --- */
-.hmRise{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;
-  min-height:88px;padding:14px 15px;margin-bottom:18px;border:none;border-radius:18px;cursor:pointer;
-  text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
-  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000;border-left:3px solid var(--gold)}
-.hmRise:active{transform:scale(.99)}
-.hmRiseIc{width:52px;height:52px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--gold);box-shadow:inset 0 0 0 1px var(--line2)}
-.hmRiseIc svg{width:29px;height:29px}
-.hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.hmRiseL{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
-.hmRiseV{font-size:22.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.12}
-.hmRiseV i{font-style:normal;color:var(--acc);font-size:14px}
-.hmRiseN{font-size:12.5px;font-weight:600;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap}
+.hmRise{position:relative;width:100%;display:flex;align-items:center;gap:12px;
+  min-height:77px;padding:10px 12px;margin-bottom:0;border:1px solid var(--line);
+  border-radius:var(--r-s);cursor:pointer;text-align:left;font-family:inherit;
+  background:var(--sur);color:var(--txt);box-shadow:0 1px 2px rgba(22,25,29,.05);
+  border-left:3px solid var(--acc)}
+.hmRise:active{background:var(--n1)}
+.hmRiseIc{width:40px;height:40px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;background:var(--n2);color:var(--acc)}
+.hmRiseIc svg{width:21px;height:21px}
+.hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+.hmRiseL{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+.hmRiseV{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  line-height:1.25;color:var(--txt)}
+.hmRiseV i{font-style:normal;color:var(--acc);font-size:13px}
+.hmRiseN{font-size:12px;font-weight:400;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;line-height:1.25}
+/* yükselen yoksa aynı yükseklikte dürüst boş durum */
+.hmRise.empty{cursor:default;border-left-color:var(--n4)}
+.hmRise.empty .hmRiseIc{color:var(--txt3)}
+.hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
 
-/* Dar telefonlarda önemli bilgi ilk ekranda kalsın diye ölçüler biraz iner. */
+/* Dar telefonlarda etiketlere yer açmak için birkaç ölçü iner. */
 @media (max-width:365px){
-  .hmWord{font-size:23px}
-  .hmCard{gap:11px;padding:14px 12px}
-  .hmAv{width:60px;height:60px;border-radius:14px;font-size:20px}
+  .hmWord{font-size:22px}
+  .hmCard{gap:10px;padding:10px}
+  .hmAv{width:50px;height:50px}
   .hmBal{padding-left:10px}
-  .hmBalV{font-size:17px}
-  .hmAdv{min-height:92px;padding:16px 14px}
-  .hmAdvTitle{font-size:19.5px}
-  .hmAdvIc{width:54px;height:54px}
-  .hmAdvIc svg{width:28px;height:28px}
-  .hmQ{min-height:92px;padding:12px 11px}
-  .hmQi{width:48px;height:48px}
-  .hmQi svg{width:27px;height:27px}
-  .hmQv{font-size:21px}
-  .hmAgIc{width:46px;height:46px}
-  .hmAgIc svg{width:26px;height:26px}
+  .hmBalV{font-size:17.5px}
+  .hmAdv{padding:12px}
+  .hmAdvTitle{font-size:18px}
+  .hmQ{gap:9px;padding:9px}
+  .hmQt{font-size:11px}
+  .hmQv{font-size:19px}
 }
 
-/* Ana ekran ölçek turunda etiketler bu temada sığmıyordu: "Oyuncularım" ve
-   "Transferler" kırpılıyor, aksiyon başlığı kutusunu taşıyordu. Ölçüler
-   saha'daki düzeltmeyle aynı; tasarım değişmiyor, yalnız metin sığıyor. */
-.hmQ{gap:10px;padding:12px}
-.hmQt{font-size:10px;letter-spacing:.01em}
-.hmAdvTitle{font-size:19px;line-height:1.16}
-.hmWord{line-height:1.14}
+/* ===================== ANA EKRAN · ÜST ÇUBUK (yalnız bu ekran) =====================
+   Ana ekranda üst çubuk ile ana ekranın kendi kimlik alanı aynı beş şeyi iki kez
+   gösteriyordu: uygulama adı + sezon/hafta, kasa, itibar, hafta ilerletme. Bu
+   tekrar 360x800'de ~110px yiyor ve alt gezinmenin içeriğin üstüne binmesinin
+   asıl sebebiydi.
 
-/* Bu blok dosyanın sonunda: yukarıdaki düzeltmeler kaynak sırasında dar ekran
-   media query'sinden sonra geldiği için onu eziyordu (eşit specificity, son
-   yazan kazanır). Dar ekran değerleri bu yüzden burada yeniden veriliyor. */
-@media (max-width:365px){
-  .hmAdvTitle{font-size:17px}
-  .hmQ{gap:9px;padding:11px}
-  .hmQi{width:44px;height:44px}
-  .hmQi svg{width:25px;height:25px}
-  .hmQt{font-size:9.5px}
-}
+   Ana ekranda üst çubuk yalnız ayarlara geçişi taşıyor. Safe-area üst boşluğu
+   korunduğu için çubuk gizlenmiyor, boşaltılıyor. Diğer 13 görünümün başlığı
+   hiç değişmiyor — kuralların hepsi body[data-view="dash"] kapsamında. */
+body[data-view="dash"] header .hstat{display:none}
+body[data-view="dash"] header #btnNext{display:none}
+/* visibility: yer korunuyor ki ayarlar düğmesi sağ kenarda kalsın */
+body[data-view="dash"] header .htitle{visibility:hidden}
+body[data-view="dash"] header{padding-top:calc(4px + env(safe-area-inset-top));padding-bottom:4px}
+/* satır yüksekliği ayarlar düğmesinin dokunma hedefiyle aynı: 44px */
+body[data-view="dash"] header .hrow{min-height:44px}
+
+/* ===================== ANA EKRAN · 360x800 DİKEY BÜTÇESİ =====================
+   Şart: ana ekran 360x800'de kaydırmadan sığacak ve son kartın altında sabit
+   gezinmeye en az 12px boşluk kalacak.
+
+   Gövde alt dolgusu gezinme yüksekliği (58px) + boşluk; main'in kendi alt
+   dolgusu sıfırlanıyor, yoksa iki kez sayılıyordu. */
+body[data-view="dash"]{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+body[data-view="dash"] main{padding-top:8px;padding-bottom:0}
+
+/* ===================== ANA EKRAN · YÜKSEKLİĞE DUYARLI BÜYÜME =====================
+   360x800 düzeni taban; büyüme orada 0 olduğu için o ekran hiç değişmiyor.
+   Daha uzun telefonlarda fazla dikey alan tek bir boşluğa bırakılmıyor,
+   bileşenlere dağıtılıyor.
+
+   calc() içinde çarpma/bölme YOK — bazı eski WebView sürümleri length ile sayı
+   çarpımını çözemiyor ve kuralı tamamen düşürüyor. Aynı doğrusal sonuç yalnız
+   toplama/çıkarma ve katsayılı vh/dvh birimiyle yazıldı:
+
+     f x clamp(0px, calc(104u - 832px), 160px)
+       = clamp(0px, calc((104f)u - (832f)px), (160f)px)
+
+   Her özellik iki kez yazılıyor: önce vh, sonra dvh. dvh'yi bilmeyen tarayıcı
+   ikinciyi düşürüp vh sürümünde kalıyor; ikisini de bilmeyen sabit tabana düşer.
+
+   Dağıtım (toplam ~1.00): kimlik .05 + kariyer .14 + aksiyon .13 + gündem
+   2x.075 + hızlı erişim 2x.125 + yükselen .24 + bölüm aralıkları .08 */
+body[data-view="dash"] .hmTop{margin-bottom:calc(12px + clamp(0px, calc(5.2vh - 41.6px), 8px));margin-bottom:calc(12px + clamp(0px, calc(5.2dvh - 41.6px), 8px))}
+body[data-view="dash"] .hmCard{
+  min-height:calc(76px + clamp(0px, calc(14.56vh - 116.48px), 22.4px));min-height:calc(76px + clamp(0px, calc(14.56dvh - 116.48px), 22.4px));
+  margin-bottom:calc(10px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(10px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+body[data-view="dash"] .hmAdv{
+  min-height:calc(78px + clamp(0px, calc(13.52vh - 108.16px), 20.8px));min-height:calc(78px + clamp(0px, calc(13.52dvh - 108.16px), 20.8px));
+  margin-bottom:calc(12px + clamp(0px, calc(2.08vh - 16.64px), 3.2px));margin-bottom:calc(12px + clamp(0px, calc(2.08dvh - 16.64px), 3.2px))}
+body[data-view="dash"] .hmAg{
+  min-height:calc(58px + clamp(0px, calc(7.8vh - 62.4px), 12px));min-height:calc(58px + clamp(0px, calc(7.8dvh - 62.4px), 12px));
+  margin-bottom:calc(8px + clamp(0px, calc(1.04vh - 8.32px), 1.6px));margin-bottom:calc(8px + clamp(0px, calc(1.04dvh - 8.32px), 1.6px))}
+body[data-view="dash"] .hmQuick{
+  margin:calc(12px + clamp(0px, calc(1.56vh - 12.48px), 2.4px)) 0 calc(10px + clamp(0px, calc(1.56vh - 12.48px), 2.4px));
+  margin:calc(12px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px)) 0 calc(10px + clamp(0px, calc(1.56dvh - 12.48px), 2.4px))}
+body[data-view="dash"] .hmQ{min-height:calc(66px + clamp(0px, calc(13vh - 104px), 20px));min-height:calc(66px + clamp(0px, calc(13dvh - 104px), 20px))}
+body[data-view="dash"] .hmRise{min-height:calc(77px + clamp(0px, calc(24.96vh - 199.68px), 38.4px));min-height:calc(77px + clamp(0px, calc(24.96dvh - 199.68px), 38.4px))}
+/* tipografi de bir tık büyüsün ki uzun ekranda kartlar boş görünmesin */
+.hmWord{font-size:calc(23.5px + clamp(0px, calc(1.768vh - 14.144px), 2.72px));font-size:calc(23.5px + clamp(0px, calc(1.768dvh - 14.144px), 2.72px))}
+.hmAdvTitle{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+.hmQv{font-size:calc(20px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(20px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+.hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
