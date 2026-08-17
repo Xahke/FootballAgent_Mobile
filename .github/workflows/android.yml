@@ -57,24 +57,38 @@ jobs:
       - name: APK derle
         run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon --warning-mode all
 
-      # Asıl kanıt gradle değişkeni değil, paketin kendisi. aapt2 ile APK'nın
-      # manifestinden okuyoruz ve 36 değilse iş başarısız oluyor.
-      - name: APK gerçekten API 36 hedefliyor mu
-        run: |
-          AAPT2=$(find "$ANDROID_HOME/build-tools" -name aapt2 -type f | sort -V | tail -1)
-          echo "aapt2: $AAPT2"
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          "$AAPT2" dump badging "$APK" | tee /tmp/badging.txt | grep -E 'package:|SdkVersion'
-          grep -q "targetSdkVersion:'36'" /tmp/badging.txt || { echo "::error::APK targetSdkVersion 36 degil"; exit 1; }
-          grep -q "sdkVersion:'24'" /tmp/badging.txt || { echo "::error::APK minSdkVersion 24 degil"; exit 1; }
-          ls -lh "$APK"
-
+      # Derleme başarılıysa APK'yı her hâlükârda sakla — doğrulama adımı
+      # düşse bile paket elde kalsın, tanı için gerekiyor.
       - name: APK'yı yükle
         uses: actions/upload-artifact@v4
         with:
           name: menajer-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # Asıl kanıt gradle değişkeni değil, paketin kendisi. APK'nın kendi
+      # manifestinden okuyoruz ve 36 değilse iş başarısız oluyor.
+      # Araç arayışı ayrı tutuluyor: hangi adımda düştüğü logdan görünsün,
+      # boş bir değişkenin "command not found" ile ölmesi tanıyı gizliyordu.
+      - name: APK gerçekten API 36 hedefliyor mu
+        run: |
+          set -x
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          ls -l "$APK"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<bos>} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<bos>}"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          ls -1 "$SDK/build-tools" || true
+          AAPT2=$(find "$SDK" -name aapt2 -type f 2>/dev/null | sort -V | tail -1)
+          echo "aapt2 = '${AAPT2}'"
+          if [ -z "$AAPT2" ]; then echo "::error::aapt2 bulunamadi ($SDK altinda)"; exit 1; fi
+          "$AAPT2" dump badging "$APK" > /tmp/badging.txt
+          echo "----- badging (ilk 15 satir) -----"
+          head -15 /tmp/badging.txt
+          echo "----- sdk satirlari -----"
+          grep -E "SdkVersion|sdkVersion" /tmp/badging.txt || true
+          grep -q "targetSdkVersion:'36'" /tmp/badging.txt || { echo "::error::APK targetSdkVersion 36 degil"; exit 1; }
+          grep -q "sdkVersion:'24'" /tmp/badging.txt || { echo "::error::APK minSdkVersion 24 degil"; exit 1; }
+          echo "dogrulandi: minSdk 24 / targetSdk 36"
 
   # Kayıt katmanının testleri native derlemeden bağımsız; ayrı iş olarak
   # koşuyor ki APK derlemesi düşse bile sonucu görünür kalsın.
