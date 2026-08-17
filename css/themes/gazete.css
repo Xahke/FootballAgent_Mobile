@@ -663,7 +663,7 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmQc{position:absolute;top:9px;right:11px;color:var(--txt3);font-size:17px;line-height:1}
 .hmQ.green .hmQi{color:var(--acc)} .hmQ.green .hmQv{color:var(--acc)}
 .hmQ.blue .hmQi{color:var(--blue)} .hmQ.blue .hmQv{color:var(--blue)}
-.hmQ.viol .hmQi{color:var(--viol)} .hmQ.viol .hmQv{color:var(--viol)}
+.hmQ.scout .hmQi{color:var(--viol)} .hmQ.scout .hmQv{color:var(--viol)}
 
 /* --- haftanın yükseleni --- */
 .hmRise{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;

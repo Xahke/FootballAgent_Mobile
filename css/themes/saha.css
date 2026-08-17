@@ -564,178 +564,233 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 
-/* ===================== ANA EKRAN (dashboard) =====================
-   Mobil oyun ana ekranı: tek bakışta durum, tek büyük aksiyon, en fazla iki
-   gündem satırı, dört hızlı erişim. Sıra önem sırasıdır.
+/* ===================== ANA EKRAN · RENK SÖZLÜĞÜ =====================
+   Ana ekranın kendi semantik tokenları. Genel tema değişkenleri (--acc, --sur2
+   …) bütün ekranlarda kullanılıyor; onları buradaki daha nötr, daha koyu zemin
+   için değiştirmek diğer 13 görünümü de değiştirirdi. Bu yüzden ayrı sözlük ve
+   .hm* bileşenleri yalnız bunu okuyor — hiçbir yere sabit renk yazılmıyor.
 
-   Bu blok dört temada da aynı; renkler tema değişkenlerinden geldiği için her
-   tema kendi diliyle çiziyor. Yalnız "saha" ayrıca atmosfer katmanı ekliyor. */
+   Renk anlam taşır, dekorasyon değil:
+     yeşil  → ana aksiyon ve olumlu durum   (ekranda TEK güçlü yeşil yüzey var)
+     altın  → para, sözleşme, değer artışı
+     mavi   → gelen kutusu
+     teal   → keşif   (eski mor kaldırıldı: cyberpunk'a kayıyordu)
+     kırmızı→ kritik
+     turuncu→ dikkat, ama kritik değil
+   Her kanalın -t (çok hafif iç ton, %5-6) ve -l (ince sınır, %20-22) eşi var;
+   rozet zemini bu ikisinden kuruluyor, gradient ve glow'dan değil. */
+:root{
+  --d-bg:#0A0F17;                    /* ana ekran zemini */
+  --d-card:#121A25;                  /* düz kart */
+  --d-card2:#172131;                 /* yükseltilmiş kart (kariyer) */
+  --d-sunk:#0E1721;                  /* rozet/oyuk yüzey */
+  --d-line:rgba(170,190,215,.14);    /* ince sınır */
+  --d-line2:rgba(170,190,215,.08);   /* daha da ince ayraç */
+  --d-txt:#E8EDF5; --d-txt2:#9FADC2; --d-txt3:#6B7A91;
+  --d-green:#2FCB73;  --d-green-t:rgba(47,203,115,.06);  --d-green-l:rgba(47,203,115,.22);
+  /* ana aksiyonun yüzeyi: tek geçişin iki ucu ve üstündeki metin rengi */
+  --d-green-hi:#239B5E; --d-green-lo:#136A43; --d-on-green:#EAF7EF;
+  --d-gold:#D9AE55;   --d-gold-t:rgba(217,174,85,.06);   --d-gold-l:rgba(217,174,85,.22);
+  --d-blue:#4B91C7;   --d-blue-t:rgba(75,145,199,.06);   --d-blue-l:rgba(75,145,199,.22);
+  --d-teal:#36AAA1;   --d-teal-t:rgba(54,170,161,.06);   --d-teal-l:rgba(54,170,161,.22);
+  --d-red:#E25B68;    --d-red-t:rgba(226,91,104,.07);    --d-red-l:rgba(226,91,104,.24);
+  --d-orange:#D79545; --d-orange-t:rgba(215,149,69,.06); --d-orange-l:rgba(215,149,69,.22);
+  /* Yarıçap sistemi iki basamak: ana aksiyon biraz daha yumuşak, gerisi eşit. */
+  --d-r:11px; --d-r-lg:14px;
+}
+
+/* ===================== ANA EKRAN (dashboard) =====================
+   Mobil ana ekran: tek bakışta durum, tek büyük aksiyon, en fazla iki gündem
+   satırı, dört hızlı erişim. Sıra önem sırasıdır.
+
+   Hiyerarşi parlaklıkla değil yüzey farkıyla kuruluyor: yükseltilmiş kart bir
+   ton açık, düz kart bir ton koyu, aralarını ince sınırlar ayırıyor. Kart başına
+   en fazla bir gradient, kart arkasında glow yok. */
 .hmTop{display:flex;align-items:flex-start;gap:12px;margin:2px 0 14px}
 .hmId{flex:1;min-width:0}
-.hmWord{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1.04;
+/* Condensed 800'de negatif tracking harfleri birbirine yapıştırıyordu; sıfır
+   tracking daha sakin ve Türkçe İ/Ğ'ye de nefes bırakıyor. */
+.hmWord{font-size:25px;font-weight:800;letter-spacing:0;line-height:1.04;color:var(--d-txt);
   text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hmChip{display:inline-flex;align-items:center;gap:9px;margin-top:9px;padding:6px 12px;
-  border-radius:10px;background:var(--sur3);box-shadow:inset 0 0 0 1px var(--line);
-  font-size:11.5px;font-weight:700;color:var(--txt2);font-variant-numeric:tabular-nums}
-.hmChip i{width:1px;height:11px;background:var(--line2);display:block;flex-shrink:0}
-.hmChip .on{color:var(--acc)}
-.hmBell{position:relative;width:46px;height:46px;flex-shrink:0;border:none;border-radius:14px;
-  background:var(--sur2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;
-  justify-content:center;box-shadow:inset 0 0 0 1px var(--line);font-family:inherit}
-.hmBell svg{width:21px;height:21px}
-.hmBell.has{color:var(--txt)}
+.hmChip{display:inline-flex;align-items:center;gap:9px;margin-top:9px;padding:5px 11px;
+  border-radius:8px;background:rgba(10,15,23,.7);box-shadow:inset 0 0 0 1px var(--d-line);
+  font-size:11.5px;font-weight:600;color:var(--d-txt2);font-variant-numeric:tabular-nums}
+.hmChip i{width:1px;height:11px;background:var(--d-line);display:block;flex-shrink:0}
+/* Bulunulan hafta yeşil değil: yeşil bu ekranda yalnız aksiyonun rengi. */
+.hmChip .on{color:var(--d-txt)}
+.hmBell{position:relative;width:44px;height:44px;flex-shrink:0;border:none;border-radius:12px;
+  background:var(--d-card);color:var(--d-txt2);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;box-shadow:inset 0 0 0 1px var(--d-line);font-family:inherit}
+.hmBell svg{width:20px;height:20px}
+.hmBell.has{color:var(--d-txt)}
 .hmBell:active{transform:scale(.94)}
-.hmDot{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;
-  background:var(--acc);box-shadow:0 0 0 2px var(--sur2)}
+.hmDot{position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;
+  background:var(--d-blue);box-shadow:0 0 0 2px var(--d-card)}
 
-/* --- kariyer özeti --- */
+/* --- kariyer özeti: sakin, yükseltilmiş, nötr --- */
 .hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;
-  background:var(--sur2);border-radius:18px;padding:17px 15px;margin-bottom:15px;
-  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000}
+  background:var(--d-card2);border-radius:var(--d-r);padding:17px 15px;margin-bottom:15px;
+  box-shadow:inset 0 0 0 1px var(--d-line)}
 /* Portre <img> olarak geliyor; yüklenemezse onerror onu kaldırıyor ve altta
    duran baş harfler ortaya çıkıyor. Görsel yalnız saha temasında gösteriliyor. */
-.hmAv{position:relative;overflow:hidden;width:68px;height:68px;border-radius:16px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;
-  letter-spacing:-.02em;background:var(--sur4);color:var(--txt2);
-  box-shadow:inset 0 0 0 1px var(--line2)}
+.hmAv{position:relative;overflow:hidden;width:68px;height:68px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:800;
+  letter-spacing:-.01em;background:var(--d-sunk);color:var(--d-txt2);
+  box-shadow:inset 0 0 0 1px var(--d-line)}
 .hmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   object-position:50% 42%}
 .hmCi{min-width:0}
-.hmLv{font-size:14.5px;font-weight:600;color:var(--txt2);white-space:nowrap;
+.hmLv{font-size:14.5px;font-weight:500;color:var(--d-txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.hmLv b{font-size:19px;font-weight:900;color:var(--acc);margin-left:4px}
+.hmLv b{font-size:19px;font-weight:800;color:var(--d-txt);margin-left:5px}
 .hmRep{display:flex;align-items:center;gap:9px;margin-top:9px}
-.hmShield{flex-shrink:0;color:var(--gold);display:flex}
-.hmShield svg{width:22px;height:22px}
+.hmShield{flex-shrink:0;color:var(--d-gold);display:flex}
+.hmShield svg{width:21px;height:21px}
 .hmRepBody{flex:1;min-width:0}
-.hmRepL{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
-.hmBar{height:7px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:5px}
-.hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
-.hmRepN{font-size:11.5px;font-weight:700;color:var(--txt3);margin-top:4px;font-variant-numeric:tabular-nums}
-.hmRepN b{color:var(--gold);font-weight:800}
+/* Küçük etiketler artık versal ve geniş aralıklı değil: ekranda yedi ayrı
+   yerde bağırmak yerine normal okunuyorlar. */
+.hmRepL{font-size:10.5px;font-weight:600;letter-spacing:.01em;color:var(--d-txt3)}
+.hmBar{height:6px;border-radius:3px;background:var(--d-sunk);overflow:hidden;margin-top:5px;
+  box-shadow:inset 0 0 0 1px var(--d-line2)}
+.hmBar div{height:100%;border-radius:3px;background:var(--d-gold);transition:width .3s ease}
+.hmRepN{font-size:11.5px;font-weight:600;color:var(--d-txt3);margin-top:4px;font-variant-numeric:tabular-nums}
+.hmRepN b{color:var(--d-gold);font-weight:700}
 .hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
-  padding-left:12px;border-left:1px solid var(--line)}
-.hmCoin{color:var(--gold);display:flex;margin-bottom:2px}
-.hmCoin svg{width:23px;height:23px}
-.hmBalV{font-size:19.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
-  white-space:nowrap}
-.hmBalV.neg{color:var(--bad)}
-.hmBalL{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2)}
+  padding-left:12px;border-left:1px solid var(--d-line)}
+.hmCoin{color:var(--d-gold);display:flex;margin-bottom:2px}
+.hmCoin svg{width:22px;height:22px}
+.hmBalV{font-size:19.5px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+  white-space:nowrap;color:var(--d-txt)}
+.hmBalV.neg{color:var(--d-red)}
+.hmBalL{font-size:10.5px;font-weight:600;letter-spacing:.01em;color:var(--d-txt3)}
 
-/* --- ana aksiyon: ekrandaki en güçlü öğe --- */
+/* --- ana aksiyon: ekrandaki tek güçlü yüzey --- */
 .hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:15px;
-  min-height:98px;padding:18px 17px;margin-bottom:22px;border:none;border-radius:20px;cursor:pointer;
-  text-align:left;font-family:inherit;background:var(--acc);color:var(--accT)}
+  min-height:98px;padding:18px 17px;margin-bottom:22px;border:none;border-radius:var(--d-r-lg);
+  cursor:pointer;text-align:left;font-family:inherit;background:var(--d-green);color:var(--d-on-green)}
 .hmAdv:active{transform:scale(.985)}
 .hmAdvIc{position:relative;z-index:1;width:56px;height:56px;flex-shrink:0;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.16)}
-.hmAdvIc svg{width:29px;height:29px}
+  display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)}
+.hmAdvIc svg{width:26px;height:26px}
 .hmAdvT{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.hmAdvTitle{font-size:20.5px;font-weight:900;letter-spacing:-.025em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
-.hmAdvSub{font-size:13.5px;font-weight:700;opacity:.85;font-variant-numeric:tabular-nums}
-.hmAdvGo{position:relative;z-index:1;width:46px;height:46px;flex-shrink:0;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
-  background:rgba(0,0,0,.16)}
+.hmAdvTitle{font-size:20.5px;font-weight:800;letter-spacing:.005em;text-transform:uppercase;
+  line-height:1.05;white-space:nowrap}
+.hmAdvSub{font-size:13.5px;font-weight:600;opacity:.8;font-variant-numeric:tabular-nums}
+.hmAdvGo{position:relative;z-index:1;width:44px;height:44px;flex-shrink:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;
+  background:rgba(0,0,0,.18)}
 
-/* --- bölüm başlığı --- */
-.hmSect{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--txt2);margin:0 2px 11px}
+/* --- bölüm başlığı: etiketten sonra ince bir çizgi bölümün nerede başladığını
+       söylüyor. Tek yapısal süs, yüksekliğe hiç mal olmuyor. --- */
+.hmSect{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--d-txt3);margin:0 2px 11px}
+.hmSect::after{content:'';flex:1;height:1px;background:var(--d-line)}
 
 /* --- gündem: sol ray aciliyeti kodluyor --- */
 .hmAg{width:100%;display:flex;align-items:center;gap:13px;min-height:68px;padding:13px 14px;
-  margin-bottom:10px;border:none;border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;
-  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;
-  border-left:3px solid var(--txt3)}
+  margin-bottom:10px;border:none;border-radius:var(--d-r);cursor:pointer;text-align:left;
+  font-family:inherit;background:var(--d-card);color:var(--d-txt);
+  box-shadow:inset 0 0 0 1px var(--d-line);border-left:3px solid var(--d-txt3)}
 .hmAg:active{transform:scale(.99)}
-.hmAg.red{border-left-color:var(--bad)}
-.hmAg.gold{border-left-color:var(--gold)}
+/* Kritik satır ekrandaki ikinci ve son glow hakkını kullanıyor — çok kısık,
+   yalnız "burası acil" demeye yetecek kadar. */
+.hmAg.red{border-left-color:var(--d-red);
+  box-shadow:inset 0 0 0 1px var(--d-red-l),0 6px 18px -15px rgba(226,91,104,.75)}
+.hmAg.gold{border-left-color:var(--d-gold)}
 /* Mutsuz müşteri karar bekleyen olaydan daha az acil: kırmızı değil turuncu. */
-.hmAg.warn{border-left-color:var(--warn)}
-.hmAg.warn .hmAgIc{color:var(--warn)}
-.hmAg.teal{border-left-color:var(--acc)}
-.hmAg.blue{border-left-color:var(--blue)}
-.hmAgIc{width:50px;height:50px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--txt2);
-  box-shadow:inset 0 0 0 1px var(--line2)}
-.hmAg.red .hmAgIc{color:var(--bad)} .hmAg.gold .hmAgIc{color:var(--gold)}
-.hmAg.teal .hmAgIc{color:var(--acc)} .hmAg.blue .hmAgIc{color:var(--blue)}
-.hmAgIc svg{width:28px;height:28px}
-.hmAgT{flex:1;min-width:0;font-size:14.5px;font-weight:600;line-height:1.32}
-.hmAgC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1}
-.hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
-  box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
+.hmAg.warn{border-left-color:var(--d-orange)}
+.hmAg.teal{border-left-color:var(--d-teal)}
+.hmAg.blue{border-left-color:var(--d-blue)}
+.hmAgIc{width:44px;height:44px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--d-sunk);color:var(--d-txt2);
+  box-shadow:inset 0 0 0 1px var(--d-line)}
+.hmAgIc svg{width:22px;height:22px}
+.hmAgT{flex:1;min-width:0;font-size:14.5px;font-weight:500;line-height:1.32}
+.hmAgC{flex-shrink:0;color:var(--d-txt3);font-size:19px;line-height:1}
+.hmEmpty{background:var(--d-card);border-radius:var(--d-r);padding:19px 15px;margin-bottom:10px;
+  box-shadow:inset 0 0 0 1px var(--d-line);color:var(--d-txt2);font-size:13.5px;text-align:center}
 
-/* --- hızlı erişim: 2x2, iri dokunma alanı --- */
+/* --- hızlı erişim: 2x2, düz nötr kartlar, gradient yok --- */
 .hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0 14px}
 /* min-width:0 — grid öğesi varsayılan olarak içeriğinin min-content
    genişliğinin altına inemiyor; bölünemeyen uzun etiketler (Transferler)
    kartı 1fr izinin dışına taşırıyordu. */
-.hmQ{position:relative;min-width:0;min-height:98px;padding:13px;border:none;border-radius:18px;
-  cursor:pointer;text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
-  box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;display:flex;align-items:center;gap:12px}
+.hmQ{position:relative;min-width:0;min-height:98px;padding:13px;border:none;border-radius:var(--d-r);
+  cursor:pointer;text-align:left;font-family:inherit;background:var(--d-card);color:var(--d-txt);
+  box-shadow:inset 0 0 0 1px var(--d-line);display:flex;align-items:center;gap:12px}
 .hmQ:active{transform:scale(.97)}
-.hmQi{flex-shrink:0;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);box-shadow:inset 0 0 0 1px var(--line2)}
-.hmQi svg{width:30px;height:30px}
+.hmQi{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--d-sunk);color:var(--d-txt2);
+  box-shadow:inset 0 0 0 1px var(--d-line)}
+.hmQi svg{width:22px;height:22px}
 .hmQb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-/* Kelime ortasından bölünmesin: 'OYUNCULARIM' tek kelime, sığar; çok
-   kelimeli 'SCOUTING NETWORK' boşluktan iki satıra iner. */
-.hmQt{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--txt2);
+/* Kelime ortasından bölünmesin: 'Oyuncularım' tek kelime, sığar; çok kelimeli
+   'Scouting network' boşluktan iki satıra iner. */
+.hmQt{font-size:11.5px;font-weight:500;letter-spacing:0;color:var(--d-txt2);
   line-height:1.2;white-space:normal;overflow-wrap:normal;word-break:keep-all;
   max-height:2.4em;overflow:hidden}
-.hmQv{font-size:23px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
-.hmQv small{font-size:12px;font-weight:700;color:var(--txt3)}
+/* Sayı beyaz: kanalın rengini zaten ikon taşıyor, ikinci kez söylemek dört
+   kartı da renkli bir vitrine çeviriyordu. */
+.hmQv{font-size:23px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+  line-height:1.1;color:var(--d-txt)}
+.hmQv small{font-size:12px;font-weight:600;color:var(--d-txt3)}
 /* ok köşede: satır içinde yer kaplasaydı 360px'te etiket kırpılıyordu */
-.hmQc{position:absolute;top:9px;right:11px;color:var(--txt3);font-size:17px;line-height:1}
-.hmQ.green .hmQi{color:var(--acc)} .hmQ.green .hmQv{color:var(--acc)}
-.hmQ.blue .hmQi{color:var(--blue)} .hmQ.blue .hmQv{color:var(--blue)}
-.hmQ.viol .hmQi{color:var(--viol)} .hmQ.viol .hmQv{color:var(--viol)}
+.hmQc{position:absolute;top:9px;right:11px;color:var(--d-txt3);font-size:17px;line-height:1}
 
 /* --- haftanın yükseleni --- */
 .hmRise{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;
-  min-height:88px;padding:14px 15px;margin-bottom:18px;border:none;border-radius:18px;cursor:pointer;
-  text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
-  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000;border-left:3px solid var(--gold)}
+  min-height:88px;padding:14px 15px;margin-bottom:18px;border:none;border-radius:var(--d-r);
+  cursor:pointer;text-align:left;font-family:inherit;background:var(--d-card);color:var(--d-txt);
+  box-shadow:inset 0 0 0 1px var(--d-line);border-left:3px solid var(--d-gold)}
 .hmRise:active{transform:scale(.99)}
-.hmRiseIc{width:52px;height:52px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--gold);box-shadow:inset 0 0 0 1px var(--line2)}
-.hmRiseIc svg{width:29px;height:29px}
+.hmRiseIc{width:44px;height:44px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--d-gold-t);color:var(--d-gold);
+  box-shadow:inset 0 0 0 1px var(--d-gold-l)}
+.hmRiseIc svg{width:22px;height:22px}
 .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.hmRiseL{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
-.hmRiseV{font-size:22.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.12}
-.hmRiseV i{font-style:normal;color:var(--acc);font-size:14px}
-.hmRiseN{font-size:12.5px;font-weight:600;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;
+.hmRiseL{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--d-gold)}
+.hmRiseV{font-size:22.5px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+  line-height:1.12;color:var(--d-txt)}
+.hmRiseV i{font-style:normal;color:var(--d-green);font-size:14px}
+.hmRiseN{font-size:12.5px;font-weight:500;color:var(--d-txt2);overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 
 /* Dar telefonlarda önemli bilgi ilk ekranda kalsın diye ölçüler biraz iner. */
 @media (max-width:365px){
   .hmWord{font-size:23px}
   .hmCard{gap:11px;padding:14px 12px}
-  .hmAv{width:60px;height:60px;border-radius:14px;font-size:20px}
+  .hmAv{width:60px;height:60px;border-radius:11px;font-size:20px}
   .hmBal{padding-left:10px}
   .hmBalV{font-size:17px}
   .hmAdv{min-height:92px;padding:16px 14px}
   .hmAdvTitle{font-size:19.5px}
   .hmAdvIc{width:54px;height:54px}
-  .hmAdvIc svg{width:28px;height:28px}
   .hmQ{min-height:92px;padding:12px 11px}
-  .hmQi{width:48px;height:48px}
-  .hmQi svg{width:27px;height:27px}
   .hmQv{font-size:21px}
-  .hmAgIc{width:46px;height:46px}
-  .hmAgIc svg{width:26px;height:26px}
 }
 
 /* ===================== ANA EKRAN · SAHA ATMOSFERİ =====================
-   Referans ekranın stadyum hissi, görsel dosya kullanmadan CSS ile. Tek
-   cömert yer burası; gerisi sakin kalıyor.
+   Ekrandaki tek güçlü yüzey Haftayı İlerlet. Zemin ve gezinme de ana ekranın
+   kendi nötr lacivertine geçiyor; gövdenin genel yeşil/mavi radyal ışıması
+   burada kapalı — dört kartın arkasında ayrıca parlayan bir zemin, "her şey
+   aynı derecede parlak" hissinin yarısıydı.
 
-   Aksiyon kartının içindeki çizgiler bir ceza sahası ve orta yuvarlak —
-   oyunun konusunu taşıyan tek dekoratif öğe, ve yalnızca ekrandaki en önemli
-   düğmenin üstünde duruyor. Düşük opaklık: okunurluğu bozmuyor. */
-.hmAdv{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
-  color:#eafff5;box-shadow:0 10px 26px -12px rgba(30,201,126,.55),inset 0 0 0 1px rgba(126,255,196,.28)}
-.hmAdv::before{content:'';position:absolute;inset:0;opacity:.15;pointer-events:none;
+   Aksiyon kartının içindeki çizgiler bir ceza sahası ve yayı — oyunun konusunu
+   taşıyan tek dekoratif öğe, ve yalnız ekrandaki en önemli düğmenin üstünde.
+   Opaklık .15 → .09: dokusu var, deseni yok. Hareketli ışık/sweep yok. */
+body[data-view="dash"]{background-image:none;background-color:var(--d-bg)}
+body[data-view="dash"] header{background:rgba(10,15,23,.86);border-bottom-color:var(--d-line2)}
+body[data-view="dash"] nav .navin{background:rgba(18,26,37,.97);border-color:var(--d-line)}
+body[data-view="dash"] nav button.on{color:var(--d-green)}
+body[data-view="dash"] nav button.on .icw{background:var(--d-green-t)}
+body[data-view="dash"] nav .nbadge{background:var(--d-red);box-shadow:none;border-color:var(--d-card)}
+
+/* Tek gradient, tek kısık glow — ikisinin de hakkı bu kartta.
+   Yeşil tam doygunlukta bir levha olarak değil, birincil yeşilden koyuya inen
+   tek bir geçişle duruyor: hâlâ ekrandaki en güçlü yüzey ama neon değil. */
+.hmAdv{background:linear-gradient(152deg,var(--d-green-hi) 0%,var(--d-green-lo) 100%);
+  color:var(--d-on-green);box-shadow:inset 0 0 0 1px rgba(120,220,170,.22),0 10px 26px -17px rgba(47,203,115,.5)}
+.hmAdv::before{content:'';position:absolute;inset:0;opacity:.09;pointer-events:none;
   background:
     /* ceza sahası yayı */
     radial-gradient(circle at 100% 50%,transparent 0 74px,rgba(255,255,255,.85) 74px 75.2px,transparent 75.2px),
@@ -743,26 +798,8 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
     linear-gradient(to right,transparent 0 76%,rgba(255,255,255,.75) 76% 76.6%,transparent 76.6%),
     linear-gradient(to bottom,transparent 0 14%,rgba(255,255,255,.75) 14% 14.8%,transparent 14.8%),
     linear-gradient(to bottom,transparent 0 85%,rgba(255,255,255,.75) 85% 85.8%,transparent 85.8%)}
-.hmAdvIc{background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
-.hmAdvGo{background:rgba(255,255,255,.15);box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)}
-
-/* kariyer kartı: hafif derinlik, altın itibar */
-.hmCard{background:linear-gradient(152deg,#16223d 0%,#111a2e 62%,#0e1626 100%);
-  box-shadow:inset 0 0 0 1px var(--line2),0 8px 22px -16px #000}
-.hmAv{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
-  box-shadow:inset 0 0 0 1px rgba(240,199,110,.32)}
-.hmBar div{background:linear-gradient(90deg,var(--gold),#f6dfa6)}
-.hmShield{filter:drop-shadow(0 0 5px rgba(240,199,110,.35))}
-
-/* hızlı erişim halkaları kendi kanallarında parlıyor */
-.hmQ.green .hmQi{background:rgba(30,201,126,.13);box-shadow:inset 0 0 0 1px rgba(30,201,126,.34)}
-.hmQ.blue  .hmQi{background:rgba(77,159,255,.13);box-shadow:inset 0 0 0 1px rgba(77,159,255,.34)}
-.hmQ.viol  .hmQi{background:rgba(162,116,245,.13);box-shadow:inset 0 0 0 1px rgba(162,116,245,.34)}
-.hmRiseIc{background:rgba(240,199,110,.12);box-shadow:inset 0 0 0 1px rgba(240,199,110,.32)}
-.hmAg.red .hmAgIc{background:rgba(240,85,93,.12)}
-.hmAg.gold .hmAgIc{background:rgba(240,199,110,.12)}
-.hmAg.teal .hmAgIc{background:rgba(30,201,126,.12)}
-.hmAg.blue .hmAgIc{background:rgba(77,159,255,.12)}
+.hmAdvIc{background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.hmAdvGo{background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 
 /* Ana ekranda kasa/itibar üst çubukta ikinci kez görünmesin — kariyer kartı
    zaten ikisini de taşıyor. Yalnız bu temada ve yalnız bu ekranda. */
@@ -776,125 +813,72 @@ body[data-view="dash"] header #btnNext{display:none}
 body[data-view="dash"] header{padding-top:calc(3px + env(safe-area-inset-top));padding-bottom:3px}
 body[data-view="dash"] header .hrow{min-height:38px}
 
+/* ===================== ANA EKRAN · ROZET KANALLARI =====================
+   Rozet artık görselin içinde değil, tamamen CSS: tek ince sınır, düz koyu
+   zemin, kendi renginden çok hafif bir iç ton. Çift halka yok, neon aura yok,
+   iç gradient yok, ikonun altında drop-shadow yok. İkon ve sınır her zaman
+   aynı hue ailesinde — kanalın rengini rozet söylüyor, kartın yüzeyi değil.
+   Renksiz kalan tek yer aksiyon kartı: orada zaten yeşilin üstündeyiz. */
+.hmQ.green .hmQi{color:var(--d-green);background:var(--d-green-t);box-shadow:inset 0 0 0 1px var(--d-green-l)}
+.hmQ.blue  .hmQi{color:var(--d-blue); background:var(--d-blue-t); box-shadow:inset 0 0 0 1px var(--d-blue-l)}
+/* Sınıf adı kanalı söylüyor, rengi değil: saha burada teal, diğer üç tema
+   kendi morunu kullanmaya devam ediyor (eski .viol adı rengi vaat ediyordu). */
+.hmQ.scout .hmQi{color:var(--d-teal); background:var(--d-teal-t); box-shadow:inset 0 0 0 1px var(--d-teal-l)}
+.hmAg.red  .hmAgIc{color:var(--d-red);   background:var(--d-red-t);   box-shadow:inset 0 0 0 1px var(--d-red-l)}
+.hmAg.warn .hmAgIc{color:var(--d-orange);background:var(--d-orange-t);box-shadow:inset 0 0 0 1px var(--d-orange-l)}
+.hmAg.gold .hmAgIc{color:var(--d-gold);  background:var(--d-gold-t);  box-shadow:inset 0 0 0 1px var(--d-gold-l)}
+.hmAg.teal .hmAgIc{color:var(--d-teal);  background:var(--d-teal-t);  box-shadow:inset 0 0 0 1px var(--d-teal-l)}
+.hmAg.blue .hmAgIc{color:var(--d-blue);  background:var(--d-blue-t);  box-shadow:inset 0 0 0 1px var(--d-blue-l)}
+
 /* ===================== ANA EKRAN · GÖRSEL VARLIKLAR (yalnız saha) =====================
    Üç optimize WebP yalnız bu temada kullanılıyor. Diğer üç tema renk yerine
-   veri anlamı taşıyor; oraya fotoğraf koymak o temaların dilini bozardı. */
+   veri anlamı taşıyor; oraya fotoğraf koymak o temaların dilini bozardı.
 
-/* --- stadyum tüneli: ajans adı ve sezon/hafta bloğunun atmosferi ---
-   Tüm sayfaya yayılmıyor; yalnız üst 176px. Sol tarafta yazıların arkasına
-   güçlü koyu lacivert gradient var, sağdaki kapı görünür kalıyor.
-   background-position yatayda %64: kapı kaynakta ~%70'te ve cover kırpması
-   360-520px arasında değiştiği için sabit yüzde kapıyı sağ üçte birde tutuyor,
-   bildirim düğmesinin (üst sağ, ~46px) altında kalıyor. */
+   İkisi artık içerik değil zemin. Bulanıklaştırma yok — kalite gizlenmiyor,
+   fotoğraf doygunluğunu ve parlaklığını bırakıp duotone bir dokuya çekiliyor.
+   Fotoğraf ve karartma ayrı katmanlarda (::before / ::after): tek katmanda
+   olsaydı filter gradientleri de soldurur, karartma da fotoğrafla birlikte
+   kaybolurdu. */
+
+/* --- stadyum tüneli: ajans adının atmosferi, fotoğrafı değil ---
+   Tüm sayfaya yayılmıyor; yalnız üst 176px. background-position yatayda %64:
+   kapı kaynakta ~%70'te ve cover kırpması 360-520px arasında değiştiği için
+   sabit yüzde kapıyı sağ üçte birde tutuyor.
+   %26 görünürlük + doygunluk .5 + parlaklık .72 ile kapı belli belirsiz
+   seçiliyor; ajans adıyla yarışmıyor ve üstünde yapay parlama yok. */
 .hmTop{position:relative;z-index:0;padding:14px 0 16px;margin-bottom:2px}
-.hmTop::before{content:'';position:absolute;z-index:-1;top:-14px;bottom:-30px;
-  left:var(--gutter-neg);right:var(--gutter-neg);
-  background:
-    linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.9) 26%,rgba(11,17,30,.5) 54%,rgba(11,17,30,.2) 100%),
-    linear-gradient(180deg,rgba(11,17,30,.42) 0%,rgba(11,17,30,.05) 30%,rgba(11,17,30,.72) 78%,var(--bg) 100%),
-    url(../assets/ui/home-stadium-tunnel.webp) 64% 50%/cover no-repeat;
-  background-color:var(--bg)}
+.hmTop::before,.hmTop::after{content:'';position:absolute;z-index:-1;top:-14px;bottom:-30px;
+  left:var(--gutter-neg);right:var(--gutter-neg);pointer-events:none}
+.hmTop::before{background:url(../assets/ui/home-stadium-tunnel.webp) 64% 50%/cover no-repeat;
+  filter:grayscale(.5) saturate(.55) contrast(.9) brightness(.8);opacity:.3}
+/* lacivert duotone: solda tam kapalı, sağa doğru açılıyor */
+.hmTop::after{background:
+  linear-gradient(90deg,var(--d-bg) 0%,rgba(10,15,23,.94) 30%,rgba(12,21,34,.62) 62%,rgba(14,25,42,.34) 100%),
+  linear-gradient(180deg,rgba(10,15,23,.5) 0%,rgba(10,15,23,.1) 26%,rgba(10,15,23,.72) 76%,var(--d-bg) 100%)}
 /* Kariyer kartı tünelin üstünde kalmalı: .hmTop konumlandırılmış olduğu için
-   aksi halde ::before kartın tepesini örtüyordu. */
+   aksi halde katmanlar kartın tepesini örtüyordu. */
 .hmCard{position:relative;z-index:1}
-.hmWord{text-shadow:0 2px 14px rgba(0,0,0,.75)}
-.hmChip{background:rgba(19,27,46,.82);box-shadow:inset 0 0 0 1px var(--line2)}
-/* zil, kapının parlaklığıyla yarışmasın diye kendi koyu zeminini taşıyor */
-.hmBell{background:rgba(19,27,46,.9);box-shadow:inset 0 0 0 1px var(--line2),0 4px 14px -8px #000}
+.hmWord{text-shadow:0 2px 12px rgba(0,0,0,.6)}
 
-/* --- menajer portresi --- */
-.hmAvImg{display:block;filter:brightness(1.08) saturate(1.04)}
-.hmAv{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
-  box-shadow:inset 0 0 0 1px rgba(233,188,90,.42),0 5px 16px -8px #000}
+/* --- menajer portresi: sakin avatar. Altın halka ve parlatma kalktı;
+       tek doğrudan içerik görseli olduğu için duruyor ama öne çıkmıyor. --- */
+.hmAvImg{display:block;filter:saturate(.6) brightness(.94) contrast(1.02)}
+.hmAv{background:var(--d-sunk);color:var(--d-gold);box-shadow:inset 0 0 0 1px var(--d-line)}
 
-/* --- haftanın yükseleni: oyuncu solda, metin sağda --- */
-.hmRise{
-  background:
-    linear-gradient(90deg,rgba(19,27,46,.12) 0%,rgba(19,27,46,.42) 26%,rgba(19,27,46,.9) 52%,var(--sur2) 74%),
-    url(../assets/ui/weekly-riser.webp) 24% 34%/cover no-repeat;
-  background-color:var(--sur2);
-  padding-left:46%}
-/* fotoğraf ikonun işini yapıyor; altın halka burada fazlalık olurdu */
-.hmRise .hmRiseIc{display:none}
-.hmRiseV{text-shadow:0 2px 10px rgba(0,0,0,.6)}
-
-/* --- ikon halkaları: renk kanalı + ince kenar + hafif iç gradient --- */
-.hmQ.green .hmQi{background:linear-gradient(158deg,rgba(30,201,126,.22),rgba(30,201,126,.07));
-  box-shadow:inset 0 0 0 1px rgba(30,201,126,.4)}
-.hmQ.green .hmQi svg{filter:drop-shadow(0 1px 5px rgba(30,201,126,.45))}
-.hmQ.blue .hmQi{background:linear-gradient(158deg,rgba(77,159,255,.22),rgba(77,159,255,.07));
-  box-shadow:inset 0 0 0 1px rgba(77,159,255,.4)}
-.hmQ.blue .hmQi svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}
-.hmQ.viol .hmQi{background:linear-gradient(158deg,rgba(162,116,245,.22),rgba(162,116,245,.07));
-  box-shadow:inset 0 0 0 1px rgba(162,116,245,.4)}
-.hmQ.viol .hmQi svg{filter:drop-shadow(0 1px 5px rgba(162,116,245,.45))}
-
-.hmAg.red .hmAgIc{background:linear-gradient(158deg,rgba(240,85,93,.2),rgba(240,85,93,.06));
-  box-shadow:inset 0 0 0 1px rgba(240,85,93,.38)}
-.hmAg.red .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(240,85,93,.45))}
-.hmAg.warn .hmAgIc{background:linear-gradient(158deg,rgba(230,162,60,.2),rgba(230,162,60,.06));
-  box-shadow:inset 0 0 0 1px rgba(230,162,60,.38)}
-.hmAg.warn .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(230,162,60,.45))}
-.hmAg.gold .hmAgIc{background:linear-gradient(158deg,rgba(233,188,90,.2),rgba(233,188,90,.06));
-  box-shadow:inset 0 0 0 1px rgba(233,188,90,.38)}
-.hmAg.gold .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(233,188,90,.45))}
-.hmAg.teal .hmAgIc{background:linear-gradient(158deg,rgba(30,201,126,.2),rgba(30,201,126,.06));
-  box-shadow:inset 0 0 0 1px rgba(30,201,126,.38)}
-.hmAg.teal .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(30,201,126,.45))}
-.hmAg.blue .hmAgIc{background:linear-gradient(158deg,rgba(77,159,255,.2),rgba(77,159,255,.06));
-  box-shadow:inset 0 0 0 1px rgba(77,159,255,.38)}
-.hmAg.blue .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}
-
-/* ===================== ANA EKRAN · ROZET İKONLARI (yalnız saha) =====================
-   Görseller kendi dairesini, çemberini ve glow'unu taşıyor. Bu yüzden .badge
-   taşıyan kaplarda CSS halkası, iç gradienti ve kenarı tamamen kapatılıyor —
-   yoksa görselin çemberiyle üst üste binip çift çember oluşuyordu.
-
-   Rozeti olmayan kaplar (örneğin imza yarışı satırındaki gem ikonu) eski
-   halkasını koruyor, böylece satırlar arasında boşluk tutarlılığı bozulmuyor. */
-.hmBadge{display:block;width:100%;height:100%;object-fit:contain}
-.hmQi.badge,.hmAgIc.badge,.hmAdvIc.badge,.hmRiseIc.badge{
-  background:none!important;box-shadow:none!important;border:none;padding:0;overflow:visible}
-/* rozet varken alttaki SVG çizilmiyor; yedeğe düşüldüğünde .badge kalkıyor
-   ve aşağıdaki kural devre dışı kalarak SVG geri geliyor */
-.hmQi.badge>svg,.hmAgIc.badge>svg,.hmAdvIc.badge>svg,.hmRiseIc.badge>svg{display:none}
-/* kanal rengine göre eklenen glow ve iç gradient artık görselin içinde */
-.hmQ.green .hmQi.badge svg,.hmQ.blue .hmQi.badge svg,.hmQ.viol .hmQi.badge svg,
-.hmAg .hmAgIc.badge svg{filter:none}
-
-/* Yükselen kartı: fotoğraf solda kalıyor ama rozet geri geldi. Metin alanı
-   biraz sola çekildi ki rozet + değer + ad sığsın. */
-.hmRise{padding-left:40%}
-.hmRise .hmRiseIc{display:flex;width:48px;height:48px}
-
-/* Aksiyon kartındaki takvim rozeti koyu zeminini kendi taşıyor; yeşil kartın
-   üstünde kendi dairesiyle duruyor. */
-.hmAdvIc.badge{width:56px;height:56px}
-
-/* Dar telefon: rozet görselinin görünür dairesi kutusunun ~%76'sı (glow payı
-   var). Kutuyu küçültmek ikonu küçük göstermiyor ama etikete yer açıyor —
-   360px'te "Oyuncularım" kırpılıyordu. */
-@media (max-width:365px){
-  .hmQ{gap:10px}
-}
-
-/* Rozetler SVG halkalarından daha geniş bir kutu kaplıyor (glow payı). Hızlı
-   erişim kartında etiket için yeri geri kazanıyoruz: daha dar boşluk, daha
-   dar dolgu, bir tık küçük etiket. "Oyuncularım" tek kelime, sarılamıyor. */
-.hmQ{gap:10px;padding:12px}
-.hmQt{font-size:10px;letter-spacing:.01em}
-
-/* Yükselen kartı: solda fotoğraf, sağda rozet + değer + ad. Metin sütunu
-   40%'ta sıkışıyordu; fotoğrafın okunur kısmı zaten ilk üçte bir. */
-.hmRise{padding-left:33%}
-.hmRise .hmRiseIc{width:42px;height:42px}
-.hmRiseV{font-size:20px}
-.hmRiseN{font-size:12px}
-
-/* Türkçe büyük harf İ'nin noktası ve olası alt uzantılar için satır kutusuna
-   pay: line-height 1.04'te scrollHeight taşıyordu. */
-.hmWord{line-height:1.14}
-.hmAdvTitle{line-height:1.16}
+/* --- haftanın yükseleni: futbolcu altın/lacivert duotone silüet ---
+   Metin alanının altı tam opak: değerin arkasında fotoğraf detayı kalmıyor,
+   bu yüzden metne text-shadow da gerekmiyor. */
+.hmRise::before,.hmRise::after{content:'';position:absolute;inset:0;pointer-events:none}
+.hmRise::before{background:url(../assets/ui/weekly-riser.webp) 24% 34%/cover no-repeat;
+  filter:grayscale(1) sepia(.7) saturate(1.4) hue-rotate(-8deg) brightness(.88) contrast(1.06)}
+/* Karartma rozetin başladığı yerde (kart genişliğinin ~%34'ü) tamamlanıyor:
+   altın halka yarı saydam bir alanın üstünde asılı kalmasın. */
+.hmRise::after{background:linear-gradient(90deg,rgba(18,26,37,.16) 0%,rgba(18,26,37,.55) 16%,
+  rgba(18,26,37,.95) 33%,var(--d-card) 44%)}
+/* içerik katmanların üstünde */
+.hmRise>*{position:relative;z-index:1}
+/* yükselen yoksa fotoğraf da yok: boş durum dürüst kalsın */
+.hmRise.empty::before,.hmRise.empty::after{display:none}
 
 /* ===================== BARLOW CONDENSED (yalnız saha başlıkları) =====================
    Kaynak: github.com/jpt/barlow — Jeremy Tribby, SIL OFL 1.1 (assets/fonts/OFL.txt).
@@ -926,17 +910,21 @@ body[data-view="dash"] header .hrow{min-height:38px}
   src:url(../assets/fonts/barlow-condensed-800-latin.woff2) format('woff2');
   unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
-/* Condensed yalnız kısa, güçlü olması gereken yerlerde. Gündem cümleleri ve
-   uzun açıklamalar sistem fontunda kalıyor: orada okunurluk önce geliyor. */
+/* Condensed yalnız kısa ve güçlü olması gereken beş yerde: ajans adı, ana
+   aksiyon, bölüm başlıkları, büyük sayısal değerler, yükselen başlığı/değeri.
+
+   Geri kalan her şey — gündem cümleleri, kart açıklamaları, sezon/hafta
+   yardımcı metni, küçük etiketler, alt gezinme — sistem fontunda. Condensed
+   bir metin yüzü değil; her etiketi ona yıkmak ekranı tek tonlu bir spor
+   grafiğine çeviriyordu. */
 :root{--cond:'Barlow Condensed',-apple-system,'Segoe UI',Roboto,Helvetica,sans-serif}
 .hmWord{font-family:var(--cond);font-weight:800}
-.hmChip{font-family:var(--cond);font-weight:600;font-size:12.5px}
 .hmAdvTitle{font-family:var(--cond);font-weight:800}
 .hmSect{font-family:var(--cond);font-weight:700}
-.hmQt,.hmQv{font-family:var(--cond);font-weight:700}
+.hmQv{font-family:var(--cond);font-weight:700}
 .hmRiseL{font-family:var(--cond);font-weight:700}
 .hmRiseV{font-family:var(--cond);font-weight:800}
-.hmLv,.hmBalV,.hmBalL,.hmRepL{font-family:var(--cond);font-weight:700}
+.hmLv b,.hmBalV{font-family:var(--cond);font-weight:800}
 
 /* ===================== ANA EKRAN · 360x800 DİKEY BÜTÇESİ =====================
    Şart: ana ekran 360x800'de kaydırmadan sığacak ve Haftanın Yükseleni kartının
@@ -952,61 +940,49 @@ body[data-view="dash"] main{padding-top:10px;padding-bottom:0}
 .hmTop{padding:8px 0 6px;margin-bottom:8px}
 .hmWord{font-size:25px;line-height:1.14}
 .hmChip{margin-top:6px;padding:4px 10px}
-.hmBell{width:44px;height:44px;border-radius:13px}
+.hmBell{width:44px;height:44px;border-radius:12px}
 .hmBell svg{width:20px;height:20px}
 
-.hmCard{padding:10px 12px;margin-bottom:8px;gap:12px;border-radius:16px}
-.hmAv{width:56px;height:56px;border-radius:14px;font-size:20px}
+.hmCard{padding:10px 12px;margin-bottom:8px;gap:12px;border-radius:var(--d-r)}
+.hmAv{width:56px;height:56px;border-radius:11px;font-size:20px}
 .hmLv{font-size:14px} .hmLv b{font-size:18px}
 .hmRep{margin-top:6px;gap:8px}
 .hmShield svg{width:19px;height:19px}
-.hmRepL{font-size:9.5px}
+.hmRepL{font-size:10px}
 .hmBar{height:6px;margin-top:4px}
 .hmRepN{font-size:11px;margin-top:3px}
 .hmBalV{font-size:19px}
-.hmBalL{font-size:9.5px}
+.hmBalL{font-size:10px}
 .hmCoin svg{width:20px;height:20px}
 .hmBal{padding-left:11px}
 
-.hmAdv{min-height:74px;padding:8px 14px;margin-bottom:10px;gap:12px;border-radius:18px}
+.hmAdv{min-height:74px;padding:8px 14px;margin-bottom:10px;gap:12px;border-radius:var(--d-r-lg)}
 .hmAdvTitle{font-size:23px;line-height:1.1}
 .hmAdvSub{font-size:12.5px}
 .hmAdvGo{width:44px;height:44px;font-size:21px}
 
 .hmSect{font-size:12px;margin:0 2px 7px;letter-spacing:.09em}
 
-.hmAg{min-height:50px;padding:5px 12px;margin-bottom:7px;gap:11px;border-radius:14px}
+.hmAg{min-height:50px;padding:5px 12px;margin-bottom:7px;gap:11px;border-radius:var(--d-r)}
 .hmAgT{font-size:13.5px;line-height:1.25}
 .hmAgC{font-size:17px}
 
 .hmQuick{gap:9px;margin:10px 0 9px}
-.hmQ{min-height:60px;padding:8px 10px;gap:10px;border-radius:15px}
-.hmQt{font-size:10px;line-height:1.15}
+.hmQ{min-height:60px;padding:8px 10px;gap:10px;border-radius:var(--d-r)}
+/* Sistem fontu condensed'dan geniş; 10px yerine 11px okunur kalıyor ve
+   "Oyuncularım" hâlâ tek satıra sığıyor (ölçüldü). */
+.hmQt{font-size:11px;line-height:1.18}
 .hmQv{font-size:20px;line-height:1.05}
 .hmQc{top:7px;right:9px;font-size:16px}
 
-.hmRise{min-height:62px;padding:8px 12px;margin-bottom:0;gap:11px;border-radius:15px;padding-left:31%}
+.hmRise{min-height:62px;padding:8px 12px;margin-bottom:0;gap:11px;border-radius:var(--d-r);padding-left:31%}
 .hmRiseL{font-size:11px}
 .hmRiseV{font-size:19px;line-height:1.1}
 .hmRiseN{font-size:11.5px}
 /* yükselen yoksa aynı yükseklikte dürüst boş durum */
-.hmRise.empty{cursor:default;background:var(--sur2);border-left-color:var(--line2)}
+.hmRise.empty{cursor:default;background:var(--d-card);border-left-color:var(--d-line)}
 .hmRise.empty .hmRiseIc{opacity:.55}
-.hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
-
-/* ===================== ROZET OPTİK ÖLÇEĞİ =====================
-   Görsellerin şeffaf glow payı var: görünür daire, kutunun ~%76'sı. Kutuyu
-   büyütmek kart yüksekliğini büyütürdü, bunun yerine görsel kutusu içinde
-   ölçekleniyor. Kap overflow:visible olduğu için kesilme yok, çift çember de
-   yok çünkü CSS halkası .badge kaplarında zaten kapalı. */
-.hmQi.badge .hmBadge,.hmAgIc.badge .hmBadge,
-.hmAdvIc.badge .hmBadge,.hmRiseIc.badge .hmBadge{
-  transform:scale(1.22);
-  filter:brightness(1.12) saturate(1.14)}
-.hmAdvIc.badge{width:58px;height:58px}
-.hmAgIc.badge{width:46px;height:46px}
-.hmQi.badge{width:46px;height:46px}
-.hmRiseIc.badge{width:48px;height:48px}
+.hmRiseNone{font-size:12.5px;color:var(--d-txt3);line-height:1.25}
 
 /* ===================== ANA EKRAN · YÜKSEKLİĞE DUYARLI BÜYÜME =====================
    360x800 düzeni taban; büyüme orada 0 olduğu için o ekran hiç değişmiyor.
@@ -1072,13 +1048,19 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
 .hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 
 /* --- rozetler: oranı koruyan küçük optik büyüme ---
-   Görünür çap = kutu x 1.22 x 0.76. Katsayılar tavanları aşmayacak şekilde
-   seçildi: gündem/hızlı erişim <=48, takvim <=58, yükselen <=52. */
-.hmAdvIc.badge{width:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));width:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));height:calc(58px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px))}
-.hmAgIc.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
-.hmQi.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
-.hmRiseIc.badge{width:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
+   Rozet artık CSS dairesi, görünür çap = kutunun kendisi. Tabanlar 44/44/44/56
+   ve büyüme kart yüksekliklerinin altında kalıyor, yani hiçbir kartın gerçek
+   yüksekliğini itmiyor (en dar durum: gündem 44+10 dolgu = 54 < 56 min-height).
+   İkon da halkayla birlikte büyüyor, yoksa uzun ekranda halkanın içinde
+   kayboluyordu. */
+.hmAdvIc{width:calc(56px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));width:calc(56px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px));height:calc(56px + clamp(0px, calc(3.952vh - 31.616px), 6.08px));height:calc(56px + clamp(0px, calc(3.952dvh - 31.616px), 6.08px))}
+.hmAgIc{width:calc(44px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(44px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(44px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(44px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+.hmQi{width:calc(44px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(44px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(44px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(44px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
+.hmRiseIc{width:calc(44px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(44px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(44px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(44px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
+.hmAdvIc svg{width:calc(26px + clamp(0px, calc(1.95vh - 15.6px), 3px));width:calc(26px + clamp(0px, calc(1.95dvh - 15.6px), 3px));height:calc(26px + clamp(0px, calc(1.95vh - 15.6px), 3px));height:calc(26px + clamp(0px, calc(1.95dvh - 15.6px), 3px))}
+.hmAgIc svg,.hmQi svg,.hmRiseIc svg{width:calc(22px + clamp(0px, calc(2.6vh - 20.8px), 4px));width:calc(22px + clamp(0px, calc(2.6dvh - 20.8px), 4px));height:calc(22px + clamp(0px, calc(2.6vh - 20.8px), 4px));height:calc(22px + clamp(0px, calc(2.6dvh - 20.8px), 4px))}
 
-/* Dar ekrandaki eski rozet küçültmesi kaldırıldı: Barlow Condensed etiketleri
-   zaten daralttığı için 360'ta 46px kutuyla da kırpma olmuyor (ölçüldü) ve
-   rozetler doğrulanmış 43px görünür çapını koruyor. */
+/* Dokunma hedefi: ana ekranda üst çubuk yalnız ayarları taşıyor ve paylaşılan
+   .hback 36px. Diğer 13 görünümün başlığını değiştirmemek için düzeltme yalnız
+   bu ekrana kapsamlandı. */
+body[data-view="dash"] header .hback{width:44px;height:44px;border-radius:12px}

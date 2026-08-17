@@ -97,47 +97,44 @@ function setTheme(id){
    oyuncunun istemediği bir şey. nextWeek()'in içine dokunmuyoruz — sıra aynen
    kalsın diye koruma yalnız bu çağrı yerinde. Header'daki "Devam" düğmesi
    küçük ve alışılmış davranışını koruyor. */
-/* ================= ANA EKRAN ROZET İKONLARI =================
-   Sekiz hazır rozet görseli yalnız saha temasında kullanılıyor: kendi dairesi,
-   çemberi ve glow'unu taşıdıkları için oradaki CSS halkası ayrıca çizilmiyor,
-   yoksa çift çember olurdu. Diğer temalar mevcut SVG setini kullanmaya devam
-   ediyor — onların dili renk değil veri anlamı üzerine kurulu.
+/* ================= ANA EKRAN SEMBOLLERİ =================
+   Ana ekranın on sembolü tek bir çizim dilinde: viewBox 0 0 24 24, stroke 2,
+   yuvarlak uç ve köşe, tek renk, dolgu yok. Hepsi aynı optik ölçekte —
+   24-28px iç ölçüde okunması gereken tek yer burası.
 
-   Görseller yalnız saha'da markup'a giriyor. display:none ile gizlemek de
-   olurdu ama tarayıcı onları yine indirirdi; sekiz dosya ~160KB, mobil bir
-   oyunda diğer üç temaya bunu ödetmenin anlamı yok. render() tema
-   değişiminde zaten yeniden çalışıyor. */
-/* Yollar tam ve düz literal: build.js tek dosya sürümünde bunları data URI ile
-   değiştiriyor ve bunu metinden yapıyor. Parça birleştirerek kurulan bir yol
-   (…'home-icon-'+ad+'.webp') derleme sırasında görünmez, dist'te 404 olurdu. */
-const HM_BADGE={
-  calendar:'assets/ui/home-icon-calendar.webp',
-  clients :'assets/ui/home-icon-players.webp',
-  transfer:'assets/ui/home-icon-transfers.webp',
-  inbox   :'assets/ui/home-icon-inbox.webp',
-  scout   :'assets/ui/home-icon-scout.webp',
-  contract:'assets/ui/home-icon-contract.webp',
-  alert   :'assets/ui/home-icon-warning.webp',
-  /* aynı geometri, turuncu ton: mutsuzluk kritik olayla aynı görünmesin */
-  alertWarn:'assets/ui/home-icon-warning-orange.webp',
-  trend   :'assets/ui/home-icon-trend.webp'
+   Neden ayrı bir set: ICONS alt gezinme, boş ekranlar ve liste satırlarında da
+   kullanılıyor; oradaki anlamları değiştirmeden (örneğin gezinmedeki
+   "Müşteriler" iki kişi olarak kalmalı) ana ekranın kendi sözlüğü olsun diye.
+   Bulunmayan bir anahtar ICONS'a düşüyor, böylece set eksiksiz olmak zorunda
+   değil.
+
+   Rozet dairesi burada değil, CSS'te: ince tek sınır, düz koyu zemin. Görselin
+   içine gömülü çember/glow yok, bu yüzden çift halka da yok. */
+const HM_ICONS={
+  /* takvim: tek işaretli hücre "bu hafta"yı söylüyor, nokta ızgarası değil */
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10.2h18"/><path d="M8 3v4M16 3v4"/><rect x="6.9" y="13.4" width="4.4" height="3.6" rx="1" fill="currentColor" stroke="none"/></svg>',
+  /* forma: müşteri = sahadaki oyuncu */
+  clients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.4 4.8 5.5c-.5.2-.8.7-.8 1.2v2.8c0 .5.4.9.9.9H7v9.2c0 .6.4 1 1 1h8c.6 0 1-.4 1-1v-9.2h2.1c.5 0 .9-.4.9-.9V6.7c0-.5-.3-1-.8-1.2L15 3.4"/><path d="M9 3.4a3 3 0 0 0 6 0"/></svg>',
+  /* transfer: iki temiz yatay karşı yönlü ok */
+  transfer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9h14"/><path d="m14 5.5 3.5 3.5L14 12.5"/><path d="M20.5 15h-14"/><path d="M10 11.5 6.5 15 10 18.5"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m3.8 7.4 7.1 4.9a2 2 0 0 0 2.2 0l7.1-4.9"/></svg>',
+  /* dürbün: iki mercek, iki gövde, köprü — keşif */
+  scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.6" cy="15.6" r="4.4"/><circle cx="17.4" cy="15.6" r="4.4"/><path d="M11 15.6h2"/><path d="M3.6 12.6 5.4 4.9A1.2 1.2 0 0 1 6.6 4h2.1a1.2 1.2 0 0 1 1.2 1.2v7.4"/><path d="m20.4 12.6-1.8-7.7A1.2 1.2 0 0 0 17.4 4h-2.1a1.2 1.2 0 0 0-1.2 1.2v7.4"/></svg>',
+  /* sözleşme: sayfa + kalem. İmza karalaması yok, 24px'te lekeye dönüşüyor */
+  contract:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 12.4V5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M8 8h5"/><path d="M8 11.6h3"/><path d="m14.6 20-3.1.8.8-3.1 5-5a1.55 1.55 0 0 1 2.2 2.2z"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2a1.6 1.6 0 0 0-1.4.8L3.4 17.5a1.6 1.6 0 0 0 1.4 2.4h14.4a1.6 1.6 0 0 0 1.4-2.4L13.4 5a1.6 1.6 0 0 0-1.4-.8z"/><path d="M12 9.8v4.1"/><path d="M12 17.2h.01"/></svg>',
+  trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.6 9.2 10.9l3.5 3.5 7.8-7.8"/><path d="M14.8 6.6h5.7v5.7"/></svg>',
+  /* imza yarışı: dolu elmas yerine aynı çizgi dilinde kesme taş */
+  gem:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8.4 3.6-3.9 5.6L12 20.4l7.5-11.2-3.9-5.6z"/><path d="M4.5 9.2h15"/></svg>'
 };
-/* Rozeti olan ama kendi SVG'si olmayan anahtarlar için yedek eşlemesi. */
+/* Kendi sembolü olmayan anahtarlar için eşleme: mutsuzluk da uyarı üçgeni,
+   kritik olaydan ayrımı geometride değil renkte (kırmızı vs turuncu). */
 const HM_SVG={alertWarn:'alert'};
-function hmHasBadge(name){return !!HM_BADGE[name]&&themeOf()==='saha';}
-/* Rozet + altında SVG yedeği. Görsel yüklenemezse hmBadgeFail() rozeti
-   kaldırıp kabın 'badge' sınıfını düşürüyor; CSS o anda halkayı ve SVG'yi
-   geri getiriyor. Erişilebilir adı metin etiketi taşıyor, görsel dekoratif. */
-function hmIcon(name,px){
-  const svg=ICONS[HM_SVG[name]||name]||'';
-  if(!hmHasBadge(name))return svg;
-  return `<img class="hmBadge" src="${HM_BADGE[name]}" alt="" aria-hidden="true"`+
-         ` width="${px}" height="${px}" onerror="hmBadgeFail(this)">${svg}`;
-}
-function hmBadgeFail(img){
-  const p=img.parentNode;
-  if(p&&p.classList)p.classList.remove('badge');
-  img.remove();
+/* Set yalnız saha'da devrede: diğer üç tema ana ekranda da kendi ICONS dilini
+   kullanmaya devam ediyor, sanat yönleri değişmesin. */
+function hmIcon(name){
+  const key=HM_SVG[name]||name;
+  return (themeOf()==='saha'&&HM_ICONS[key])||ICONS[key]||'';
 }
 let hmLastAdv=0;
 function hmAdvance(){
@@ -463,7 +460,7 @@ dash(){
   /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
      dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
   const qCard=(cls,icon,label,value,go)=>`<button class="hmQ ${cls}" onclick="${go}">
-    <span class="hmQi${hmHasBadge(icon)?' badge':''}">${hmIcon(icon,52)}</span>
+    <span class="hmQi">${hmIcon(icon)}</span>
     <span class="hmQb"><span class="hmQt">${label}</span><span class="hmQv">${value}</span></span>
     <span class="hmQc">›</span></button>`;
 
@@ -474,7 +471,7 @@ dash(){
       <div class="hmChip"><span>${t('season')} ${S.season}</span><i></i><span class="on">${wkNow}. ${t('week')}</span></div>
     </div>
     <button class="hmBell${unread?' has':''}" onclick="navTo('inbox')" aria-label="${t('notifs')}">
-      ${ICONS.inbox}${unread?`<i class="hmDot"></i>`:''}
+      ${hmIcon('inbox')}${unread?`<i class="hmDot"></i>`:''}
     </button>
   </div>
 
@@ -499,7 +496,7 @@ dash(){
   </div>
 
   <button class="hmAdv" onclick="hmAdvance()">
-    <span class="hmAdvIc${hmHasBadge('calendar')?' badge':''}">${hmIcon('calendar',56)}</span>
+    <span class="hmAdvIc">${hmIcon('calendar')}</span>
     <span class="hmAdvT">
       <span class="hmAdvTitle">${t('hmAdvance')}</span>
       <span class="hmAdvSub">${wkNow}. ${t('week')} · ${t('season')} ${S.season}</span>
@@ -509,7 +506,7 @@ dash(){
 
   <div class="hmSect">${t('hmToday')}</div>
   ${agTop.length?agTop.map(x=>`<button class="hmAg ${x.rail}" onclick="${x.go}">
-      <span class="hmAgIc${hmHasBadge(x.ic)?' badge':''}">${hmIcon(x.ic,50)}</span>
+      <span class="hmAgIc">${hmIcon(x.ic)}</span>
       <span class="hmAgT">${esc(x.txt)}</span>
       <span class="hmAgC">›</span></button>`).join('')
    :`<div class="hmEmpty">${S.clients.length?t('hmNoAgenda'):t('noClientsSub')}</div>`}
@@ -518,11 +515,11 @@ dash(){
     ${qCard('green','clients',t('hmMyPlayers'),`${S.clients.length}<small>/${maxClients()}</small>`,"navTo('clients')")}
     ${qCard('green','transfer',t('hmTransfers'),deals,"navTo('market')")}
     ${qCard('blue','inbox',t('inbox'),unread,"navTo('inbox')")}
-    ${qCard('viol','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
+    ${qCard('scout','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
   </div>
 
   ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
-    <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
+    <span class="hmRiseIc">${hmIcon('trend')}</span>
     <span class="hmRiseT">
       <span class="hmRiseL">${t('hmRiser')}</span>
       <span class="hmRiseV">+${riser.gain>=1?fmtK(riser.gain):(+riser.gain.toFixed(1))+'K €'} <i>▲</i></span>
@@ -532,7 +529,7 @@ dash(){
   /* Yükselen yoksa kart kaldırılmıyor, aynı yükseklikte dürüst bir boş durum
      kalıyor: ana ekranın toplam yüksekliği haftadan haftaya oynamasın. */
   :`<div class="hmRise empty">
-    <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
+    <span class="hmRiseIc">${hmIcon('trend')}</span>
     <span class="hmRiseT"><span class="hmRiseL">${t('hmRiser')}</span>
     <span class="hmRiseNone">${t('hmNoRiser')}</span></span></div>`}
 
