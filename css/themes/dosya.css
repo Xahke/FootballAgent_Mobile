@@ -365,6 +365,17 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   pointer-events:none;max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* Kayıt yazılamıyor uyarısı. Başlığın üstünü kapatıyor ve sorun sürdükçe orada
+   kalıyor — toast olsaydı kaybolurdu, oysa anlatmak istediği şey tam olarak
+   "bu hâlâ böyle". Modalın (100) altında, başlık ve gezinmenin (60) üstünde. */
+.savewarn{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  z-index:90;display:none;gap:8px;align-items:baseline;justify-content:center;flex-wrap:wrap;
+  background:var(--bad);color:#fff;padding:9px 14px;padding-top:calc(9px + env(safe-area-inset-top));
+  font-size:13px;line-height:1.35;text-align:center;cursor:pointer}
+.savewarn.show{display:flex}
+.savewarn .swt{font-weight:600}
+.savewarn .swd{opacity:.82;font-size:12px}
+
 /* ===================== YARDIMCILAR ===================== */
 .zone1{color:var(--txt)} .zone2{color:var(--txt2)} .zoneR{color:var(--bad)}
 

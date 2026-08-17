@@ -4,12 +4,30 @@
    çağırdığı save() ve açılış var. */
 /* ================= SAVE ================= */
 /* Açık kariyer yoksa (ana menü) yazacak bir şey yok — çağrı sessizce düşer,
-   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz. */
+   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz.
+   Hâlâ senkron: 25 çağrı yerinin hiçbiri beklemek istemiyor. Gerçek yazma
+   arkadan oluyor (js/store.js), başarısızlığı da ekranda görünüyor. */
 function save(){if(curSlot&&S)saveToSlot(curSlot);}
-/* ================= AÇILIŞ ================= */
-migrateLegacy();          // tek kayıtlı sürümden gelen ilerleme 1. yuvaya
+/* ================= AÇILIŞ =================
+   Menü hemen çiziliyor, kayıtlar arkadan geliyor. Sıra bu: storeInit()'i
+   beklemek açılışta boş bir kare bırakırdı, beklemeden boş yuva çizmek ise
+   kayıt silinmiş gibi görünürdü — bu yüzden storeReady false iken menü
+   "yükleniyor" satırı gösteriyor ve göç bitince yeniden çiziliyor. */
 stack=[{v:'menu'}];
-render();                 // S null: render kabuk dalına girer, ana menü açılır
+render();
+storeInit().then(()=>{render();},()=>{render();});
+
+/* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta
+   tamamlanma sözü vermiyor, ama yazmayı başlatmak hiç başlatmamaktan iyi. */
+function flushOnHide(){if(curSlot&&S)saveToSlot(curSlot);}
+if(typeof document!=='undefined'&&document.addEventListener){
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')flushOnHide();
+  });
+}
+if(typeof window!=='undefined'&&window.addEventListener)
+  window.addEventListener('pagehide',flushOnHide);
+
 /* Çevrimdışı çalışma. file:// ile açıldığında service worker kaydı yapılamaz —
    tek dosya sürümü (dist/menajer.html) zaten kendi kendine yeterli olduğu için sorun değil.
    Capacitor içinde de kaydetmiyoruz: varlıklar zaten uygulamaya gömülü, service worker

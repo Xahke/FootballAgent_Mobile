@@ -18,15 +18,29 @@ function toMenu(){
   render();
 }
 function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
+/* Kayıt okuması asenkron (IndexedDB). Tıklama işleyicisi sözü beklemiyor;
+   okuma bitene kadar menü olduğu gibi duruyor — tam kayıt telefonda birkaç yüz
+   milisaniye sürebiliyor, o sırada ikinci kez tıklanırsa iki kez açılmasın. */
+let slotOpening=0;
 function openSlot(n){
-  if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
-  /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
-     yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
-  ensureRivals();
-  stack=[{v:'dash'}];lastSig=null;
-  render();
-  /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
-  if(S.evCur&&S.agent)showEvent(S.evCur);
+  if(slotOpening)return;
+  slotOpening=n;
+  loadSlot(n).then(r=>{
+    slotOpening=0;
+    if(!r.ok){
+      /* 'future': daha yeni bir sürümün yazdığı kayıt. Bozuk değil, bu yüzden
+         silinmiyor — kullanıcıya neden açılmadığı ayrı söyleniyor. */
+      toast(t(r.reason==='future'?'slotNewer':'slotBroken'));
+      render();return;
+    }
+    /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
+       yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
+    ensureRivals();
+    stack=[{v:'dash'}];lastSig=null;
+    render();
+    /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
+    if(S.evCur&&S.agent)showEvent(S.evCur);
+  },()=>{slotOpening=0;toast(t('slotBroken'));render();});
 }
 function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
 function askDeleteSlot(n){
@@ -82,6 +96,35 @@ function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2200);
+}
+/* ================= KAYIT UYARISI =================
+   Yazma başarısızlığı eskiden hiçbir yere gitmiyordu: lsSet() false dönüyor,
+   save() onu atıyordu. Oyuncu ilerlemesinin yazılmadığını ancak uygulamayı
+   kapatıp açınca anlıyordu — mağazada en ağır bedeli ödeten hata türü.
+
+   Toast yetmez, kaybolur. Bu yüzden kalıcı bir şerit: sorun sürdüğü sürece
+   ekranda kalıyor, dokununca ne olduğunu ve ne yapılabileceğini anlatıyor.
+   store.js sağlık değişince fireSaveHealth() ile burayı çağırıyor. */
+function onSaveHealth(){
+  updateSaveBanner();
+  if(saveHealthy()&&SAVEH.everFailed)toast(t('saveOkAgain'));
+}
+function updateSaveBanner(){
+  const el=document.getElementById('saveWarn');
+  if(!el)return;
+  const bad=!saveHealthy();
+  if(bad)el.innerHTML=`<span class="swt">${t('saveFailTtl')}</span> <span class="swd">${t('saveFailTap')}</span>`;
+  if(el.classList)el.classList.toggle('show',bad);
+}
+function showSaveHelp(){
+  if(saveHealthy())return;
+  openModal(`<h2>${t('saveFailTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('saveFailWhat')}</span></div>
+    <div class="kv" style="margin-top:12px"><span class="k">${t('saveFailWhere')}</span>
+      <span class="v">${saveBackend()==='idb'?'IndexedDB':'localStorage'}</span></div>
+    <div class="kv"><span class="k">${t('saveFailCode')}</span><span class="v">${esc(SAVEH.lastErr)}</span></div>
+    <div class="sub" style="margin-top:12px">${t('saveFailFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
 }
 /* lock=true iken arka plana dokunmak kapatmaz — karar verilmesi gereken ekranlar
    (olaylar) böyle açılır, yoksa seçim yapmadan atlanabiliyor. */
@@ -268,6 +311,21 @@ const VIEWS={
    Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
 menu(){
   const m=allMeta(),rows=[];
+  /* Kayıtlar henüz okunmadı (ya da eski sürümden göç ediyor). Boş yuva çizmek
+     ilerlemenin silindiğini düşündürürdü — bekleyen bir satır dürüst olan. */
+  if(!storeReady){
+    for(let n=1;n<=SLOTS;n++)rows.push(`<div class="pitem">
+      <div class="pinfo"><div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
+      <div class="psub">${t('slotLoading')}</div></div></div>`);
+    return `
+    <div class="hero" style="margin-top:10px">
+      <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
+      <div class="hname">Menajer</div>
+      <div class="hsub">${t('menuSub')}</div>
+    </div>
+    <div class="sect">${t('slotsLbl')}</div>
+    ${listWrap(rows.join(''))}`;
+  }
   for(let n=1;n<=SLOTS;n++){
     const s=m['s'+n];
     if(s){
@@ -1109,6 +1167,9 @@ function showChrome(on){
 function render(){
   applyTheme();
   document.documentElement.lang=L;   // ekran okuyucu ve tarayıcı doğru dili görsün
+  /* Şerit #view'ın dışında, innerHTML onu silmiyor — ama dil değişmiş olabilir,
+     bu yüzden metni her çizimde tazeleniyor. */
+  updateSaveBanner();
   const c=cur();
   /* Açık kariyer yoksa kabuktayız: ana menü, yeni kariyer ya da menüden açılan
      ayarlar. Ayrı bir ekran durumu tutmuyoruz — S'nin kendisi bu ayrımı taşıyor. */

@@ -353,6 +353,13 @@ html[data-theme="saha"] .toast{position:fixed;top:64px;left:50%;background:linea
   opacity:0;transform:translate(-50%,-8px);transition:opacity .2s ease,transform .2s ease;pointer-events:none;
   max-width:90%;text-align:center;box-shadow:var(--sh-el),inset 0 0 0 1px var(--line2)}
 html[data-theme="saha"] .toast.show{opacity:1;transform:translate(-50%,0)}
+html[data-theme="saha"] .savewarn{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  z-index:90;display:none;gap:8px;align-items:baseline;justify-content:center;flex-wrap:wrap;
+  background:var(--bad);color:#180a0d;padding:9px 14px;padding-top:calc(9px + env(safe-area-inset-top));
+  font-size:12.5px;line-height:1.35;text-align:center;cursor:pointer;font-weight:700}
+html[data-theme="saha"] .savewarn.show{display:flex}
+html[data-theme="saha"] .savewarn .swt{font-weight:800}
+html[data-theme="saha"] .savewarn .swd{opacity:.72;font-size:11.5px;font-weight:600}
 html[data-theme="saha"] .zone1{color:var(--gold)}
 html[data-theme="saha"] .zone2{color:var(--blue)}
 html[data-theme="saha"] .zoneR{color:var(--bad)}
@@ -802,6 +809,13 @@ html[data-theme="gazete"] .toast{position:fixed;top:auto;bottom:calc(76px + env(
   z-index:200;border:none;opacity:0;transform:translate(-50%,6px);
   transition:opacity .18s ease,transform .18s ease;pointer-events:none;max-width:88%;text-align:center}
 html[data-theme="gazete"] .toast.show{opacity:1;transform:translate(-50%,0)}
+html[data-theme="gazete"] .savewarn{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  z-index:90;display:none;gap:8px;align-items:baseline;justify-content:center;flex-wrap:wrap;
+  background:var(--bad);color:#fdf9f3;padding:9px 14px;padding-top:calc(9px + env(safe-area-inset-top));
+  font-size:12.5px;line-height:1.35;text-align:center;cursor:pointer}
+html[data-theme="gazete"] .savewarn.show{display:flex}
+html[data-theme="gazete"] .savewarn .swt{font-weight:700;letter-spacing:.01em}
+html[data-theme="gazete"] .savewarn .swd{opacity:.8;font-size:11.5px}
 html[data-theme="gazete"] .zone1{color:var(--txt)}
 html[data-theme="gazete"] .zone2{color:var(--txt2)}
 html[data-theme="gazete"] .zoneR{color:var(--bad)}
@@ -1253,6 +1267,13 @@ html[data-theme="terminal"] .toast{position:fixed;top:auto;bottom:calc(72px + en
   border:1px solid var(--n4);opacity:0;transform:translate(-50%,6px);
   transition:opacity .18s ease,transform .18s ease;pointer-events:none;max-width:88%;text-align:center}
 html[data-theme="terminal"] .toast.show{opacity:1;transform:translate(-50%,0)}
+html[data-theme="terminal"] .savewarn{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  z-index:90;display:none;gap:8px;align-items:baseline;justify-content:center;flex-wrap:wrap;
+  background:var(--bad);color:#0d0e10;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));
+  font-size:12.5px;line-height:1.35;text-align:center;cursor:pointer}
+html[data-theme="terminal"] .savewarn.show{display:flex}
+html[data-theme="terminal"] .savewarn .swt{font-weight:700}
+html[data-theme="terminal"] .savewarn .swd{opacity:.75;font-size:11.5px}
 html[data-theme="terminal"] .zone1{color:var(--txt)}
 html[data-theme="terminal"] .zone2{color:var(--txt2)}
 html[data-theme="terminal"] .zoneR{color:var(--bad)}
@@ -1697,6 +1718,13 @@ html[data-theme="dosya"] .toast{position:fixed;top:auto;bottom:calc(84px + env(s
   border:none;opacity:0;transform:translate(-50%,8px);transition:opacity .2s ease,transform .2s ease;
   pointer-events:none;max-width:88%;text-align:center}
 html[data-theme="dosya"] .toast.show{opacity:1;transform:translate(-50%,0)}
+html[data-theme="dosya"] .savewarn{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  z-index:90;display:none;gap:8px;align-items:baseline;justify-content:center;flex-wrap:wrap;
+  background:var(--bad);color:#fff;padding:9px 14px;padding-top:calc(9px + env(safe-area-inset-top));
+  font-size:13px;line-height:1.35;text-align:center;cursor:pointer}
+html[data-theme="dosya"] .savewarn.show{display:flex}
+html[data-theme="dosya"] .savewarn .swt{font-weight:600}
+html[data-theme="dosya"] .savewarn .swd{opacity:.82;font-size:12px}
 html[data-theme="dosya"] .zone1{color:var(--txt)}
 html[data-theme="dosya"] .zone2{color:var(--txt2)}
 html[data-theme="dosya"] .zoneR{color:var(--bad)}
@@ -1835,6 +1863,7 @@ html[data-theme="dosya"] .hstat .l{display:none}}
 <nav id="nav"></nav>
 <div class="modal" id="modal" onclick="if(event.target===this)dismissModal()"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
+<div class="savewarn" id="saveWarn" onclick="showSaveHelp()"></div>
 <script>
 'use strict';
 'use strict';
@@ -1952,6 +1981,12 @@ mainMenu:'Ana Menü',slotsLbl:'Kayıt Yuvaları',slotN:'Yuva {n}',slotEmpty:'Bo�
 slotEmptyHint:'Yeni kariyer başlat',slotNew:'Yeni Kariyer',slotContinue:'Devam Et',
 slotDelete:'Sil',slotDeleteQ:'{n} yuvasındaki kariyer silinecek. Bu geri alınamaz. Emin misin?',
 slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynanan',
+slotLoading:'Yükleniyor…',slotNewer:'Bu kayıt oyunun daha yeni bir sürümüyle yazılmış.',
+saveFailTtl:'Kayıt edilemiyor',saveFailTap:'Ayrıntı için dokun',
+saveFailWhat:'İlerlemen şu anda cihaza yazılamıyor. Oynamaya devam edebilirsin, ama uygulamayı kapatırsan son kaydedilen noktadan sonrası kaybolur.',
+saveFailWhere:'Depolama',saveFailCode:'Hata',
+saveFailFix:'Genellikle cihazda yer kalmadığında olur. Biraz yer açıp oyuna geri dönmen yeterli; kayıt kendi kendine düzelir. Tarayıcıda oynuyorsan gizli sekme ya da kapatılmış site verisi de bu hataya yol açar.',
+saveOkAgain:'Kayıt yeniden çalışıyor.',
 toMenu:'Ana Menüye Dön',toMenuQ:'Ana menüye dönülsün mü? İlerlemen kaydedildi.',
 appSet:'Uygulama',careerSet:'Kariyer',menuSub:'Bir yuva seç ve devam et.',
 newCareerT:'Yeni Kariyer',deleteCareer:'Kariyeri Sil',
@@ -2074,6 +2109,12 @@ mainMenu:'Main Menu',slotsLbl:'Save Slots',slotN:'Slot {n}',slotEmpty:'Empty slo
 slotEmptyHint:'Start a new career',slotNew:'New Career',slotContinue:'Continue',
 slotDelete:'Delete',slotDeleteQ:'The career in slot {n} will be deleted. This cannot be undone. Are you sure?',
 slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last played',
+slotLoading:'Loading…',slotNewer:'This save was written by a newer version of the game.',
+saveFailTtl:'Can\'t save',saveFailTap:'Tap for details',
+saveFailWhat:'Your progress can\'t be written to this device right now. You can keep playing, but if you close the app anything after the last successful save is lost.',
+saveFailWhere:'Storage',saveFailCode:'Error',
+saveFailFix:'This usually means the device is out of space. Free some up and come back — saving recovers on its own. In a browser, a private tab or blocked site data causes the same error.',
+saveOkAgain:'Saving works again.',
 toMenu:'Back to Main Menu',toMenuQ:'Return to the main menu? Your progress has been saved.',
 appSet:'App',careerSet:'Career',menuSub:'Pick a slot to continue.',
 newCareerT:'New Career',deleteCareer:'Delete Career',
@@ -2177,6 +2218,266 @@ released:p=>`${lkT(p.tid,p.c)} released ${lkP(p.pid,p.n)}. Your client is now wi
 inDebt:p=>`Your balance has gone negative. Weekly costs are ${p.c} — win clients or scale back your scouting network.`}
 };
 
+/* js/store.js — kalıcı depolama katmanı (IndexedDB, localStorage'a düşüşle).
+
+   Neden localStorage bırakıldı:
+
+   Bir kariyerin kaydı ilk haftada ~2 milyon karakter, sekizinci sezonda ~7,5
+   milyonda oturuyor (sızıntı değil — l5, seasons, inbox, arch hepsi sınırlı;
+   7000 oyuncunun taşıdığı veri bu kadar). localStorage origin başına 5 MiB ile
+   sınırlı ve karakterleri UTF-16, yani 2 bayt sayıyor. Sonuç: ilk kaydın kendisi
+   kotanın %80'ini yiyor, üçüncü hafta civarında yazma başarısız oluyordu ve
+   üç yuvanın ikisi hiçbir zaman kullanılamıyordu.
+
+   Daha kötüsü sessizdi. lsSet() false dönüyordu ama save() dönüş değerini
+   atıyordu; oyuncu ilerlemesinin yazılmadığını ancak uygulamayı kapatıp
+   açtığında anlıyordu. Bu dosyanın ikinci işi o sessizliği bitirmek.
+
+   IndexedDB'nin kotası diskin bir yüzdesi; aynı kayıt orada rahat sığıyor.
+   Bedeli asenkron olması, ve oyunun her yerinden çağrılan save() senkron kalmak
+   zorunda — 25 çağrı yeri var, hiçbiri beklemek istemiyor. Bu yüzden burada bir
+   arkadan yazma kuyruğu var: save() kaydı kuyruğa bırakıp döner, yazma arka
+   planda olur. Anahtar başına aynı anda tek yazma uçar; o sürerken gelen
+   istekler tek bir bekleyende birleşir (son yazan kazanır), böylece bir hafta
+   içinde üç kez save() çağrılması üç kez 7 MB kopyalamaz.
+
+   Okuma asenkron kaldı ama yalnızca üç yerde okunuyor: açılış, yuva açma, göç.
+   Menünün okuduğu özet bellekte tutulduğu için (js/saves.js, META) render()
+   senkron kalabiliyor — orası her hafta çağrılıyor, oraya söz veremezdik.
+
+   IndexedDB kullanılamıyorsa (bazı gizli sekme kipleri, kapatılmış depolama)
+   katman sessizce localStorage'a düşer: oyun çalışmaya devam eder, yalnız eski
+   kota sınırı geri gelir — ama bu kez kullanıcı bunu görür. */
+
+/* ================= DÜŞÜK SEVİYE: localStorage =================
+   Depolama kapatılmış ya da kota dolmuş olabilir; hiçbiri oyunu çökertmemeli.
+   Bu üçü hâlâ gerekiyor çünkü cihaz tercihleri (PREFS) burada kalıyor: küçükler
+   ve daha ilk çizimden önce, senkron okunmaları gerekiyor. */
+function jparse(s){try{return JSON.parse(s);}catch(e){return null;}}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+/* ================= KAYIT ŞEMASI SÜRÜMÜ =================
+   Kayıtlar artık sürüm taşıyor: {v, S, PID}. localStorage döneminde yazılmış
+   kayıtlarda v yok; onlar 9 sayılıyor (anahtar adı menajerSaveV9 idi).
+
+   Kural: her adım bir öncekinin çıktısını alır ve bir sonrakine çevirir, sırayla
+   uygulanır. Bir alan eklemek şema sürümü gerektirmez — CLAUDE.md'nin dediği gibi
+   her yeni alan yokken de çalışmak zorunda. Sürüm ancak var olan bir alanın
+   anlamı değişirse artar; o zaman burada bir adım yazılır ve eski kayıtlar
+   yüklenirken çevrilir. Kayıt anahtarını bir daha asla bump etmeyeceğiz. */
+const SAVE_SCHEMA=10;
+const SCHEMA_STEPS={
+  /* 9 → 10: localStorage'dan IndexedDB'ye taşındı. Alanların hiçbiri değişmedi,
+     bu yüzden adım kimlik. Yine de burada duruyor: zinciri kurmadan ilk gerçek
+     göç geldiğinde eski kayıtları çevirecek yer olmaz. */
+  9:function(rec){return rec;}
+};
+/* Sürümü olmayan kayıt localStorage dönemindendir. */
+function schemaOf(rec){return (rec&&typeof rec.v==='number')?rec.v:9;}
+/* Dönüş: çevrilmiş kayıt, ya da neden çevrilemediğini söyleyen null.
+   İleri sürümlü kayıt (kullanıcı eski bir sürüme döndü) bozuk sayılmaz —
+   yüklenmez ama silinmez de; yeni sürüm geri geldiğinde yerinde durur. */
+function migrateSave(rec){
+  if(!rec)return null;
+  let v=schemaOf(rec);
+  if(v>SAVE_SCHEMA)return null;                 // gelecekten gelen kayıt
+  while(v<SAVE_SCHEMA){
+    const step=SCHEMA_STEPS[v];
+    if(!step)return null;                       // zincirde boşluk: çeviremeyiz
+    rec=step(rec);
+    if(!rec)return null;
+    v++;
+  }
+  rec.v=SAVE_SCHEMA;
+  return rec;
+}
+
+/* ================= KAYIT SAĞLIĞI =================
+   Yazma başarısızlığı artık bir yere gidiyor. ui.js bunu okuyup kalıcı bir
+   uyarı şeridi çiziyor; sessizce yutulan tek yol kalmadı.
+
+   Sağlık anahtar başına izleniyor, tek bir bayrakla değil. Sebep ölçülerek
+   bulundu: kayıt 5 MiB'i aştığında yuvanın yazması patlıyor ama hemen ardından
+   giden küçük özet yazması başarılı oluyordu — tek bayraklı sürümde bu, uyarıyı
+   açıldığı anda kapatıyordu. Özetin yazılabilmesi kariyerin yazılabildiğini
+   söylemez. Bir anahtar ancak kendisi yeniden yazılabildiğinde temizleniyor. */
+const SAVEH={ok:true,fails:0,lastErr:'',lastOkAt:0,everFailed:false,backend:'ls'};
+const _bad={};
+function saveHealthy(){return SAVEH.ok;}
+function saveBackend(){return SAVEH.backend;}
+function saveBadKeys(){return Object.keys(_bad);}
+/* ui.js yüklendikten sonra bu kancayı tanımlıyor; store.js ondan önce yüklendiği
+   için varlığı kontrol ediliyor (açılışın ilk anlarında henüz yok). */
+function fireSaveHealth(){if(typeof onSaveHealth==='function'){try{onSaveHealth();}catch(e){}}}
+function syncSaveHealth(){
+  const ok=Object.keys(_bad).length===0;
+  if(ok===SAVEH.ok)return;
+  SAVEH.ok=ok;
+  fireSaveHealth();
+}
+function noteSaveOk(key){
+  delete _bad[key||'?'];
+  SAVEH.lastOkAt=Date.now();
+  syncSaveHealth();
+}
+function noteSaveFail(key,e){
+  _bad[key||'?']=true;
+  SAVEH.fails++;SAVEH.everFailed=true;
+  SAVEH.lastErr=(e&&(e.name||e.message))||'?';
+  syncSaveHealth();
+}
+
+/* ================= INDEXEDDB =================
+   Tek veritabanı, iki depo: kayıtlar ve menü özeti. Anahtarlar dışarıdan
+   veriliyor ('s1'..'s3', 'meta') — bu dosya yuva kavramını bilmiyor. */
+const DB_NAME='menajer';
+const DB_VER=1;
+const ST_SAVE='saves';
+const ST_META='meta';
+const DB_TIMEOUT=5000;   // açılış takılırsa localStorage'a düş, sonsuza kadar bekleme
+
+let _dbP=null;
+function idbFactory(){
+  try{return (typeof indexedDB!=='undefined'&&indexedDB)?indexedDB:null;}
+  catch(e){return null;}   // bazı gizli sekme kiplerinde erişim bile atar
+}
+/* Dönüş: IDBDatabase ya da null. null "IndexedDB yok" demek, hata değil —
+   çağıran taraf localStorage'a düşer. */
+function dbOpen(){
+  if(_dbP)return _dbP;
+  _dbP=new Promise(res=>{
+    const f=idbFactory();
+    if(!f){res(null);return;}
+    let req,done=false;
+    const fin=v=>{if(!done){done=true;res(v);}};
+    /* Açılış onblocked'da askıda kalabilir (başka sekme eski sürümü tutuyor).
+       Oyun bir yükleme ekranında sonsuza kadar bekleyemez. */
+    setTimeout(()=>fin(null),DB_TIMEOUT);
+    try{req=f.open(DB_NAME,DB_VER);}catch(e){fin(null);return;}
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(ST_SAVE))db.createObjectStore(ST_SAVE);
+      if(!db.objectStoreNames.contains(ST_META))db.createObjectStore(ST_META);
+    };
+    req.onsuccess=e=>fin(e.target.result);
+    req.onerror=()=>fin(null);
+    req.onblocked=()=>fin(null);
+  });
+  return _dbP;
+}
+/* Tek işlemlik sarmalayıcı. İşlem tamamlanmadan çözmüyor: put'ta oncomplete
+   beklenmezse kota hatası sessizce kaçar — bu dosyanın var oluş sebebi o. */
+function dbTx(store,mode,fn){
+  return dbOpen().then(db=>{
+    if(!db)return Promise.reject(new Error('NoIndexedDB'));
+    return new Promise((res,rej)=>{
+      let tx;
+      try{tx=db.transaction(store,mode);}catch(e){rej(e);return;}
+      let req;
+      try{req=fn(tx.objectStore(store));}catch(e){rej(e);return;}
+      tx.oncomplete=()=>res(req?req.result:undefined);
+      tx.onerror=()=>rej(tx.error||(req&&req.error)||new Error('TxError'));
+      tx.onabort=()=>rej(tx.error||(req&&req.error)||new Error('TxAbort'));
+    });
+  });
+}
+
+/* ================= KAYIT ERİŞİMİ (arka uçtan bağımsız) =================
+   Anahtar: 's1'..'s3' kayıtlar, 'meta' menü özeti. Değer her zaman düz bir
+   nesne; IndexedDB onu yapısal kopyayla saklıyor (JSON.stringify yok — 7 MB'lık
+   bir dizeyi kurmak "Devam"a basmanın maliyetinin %42'siydi), localStorage'a
+   düşüldüğünde ise JSON'a çevriliyor. */
+const LSKEY={meta:'menajerMetaV1',s1:'menajerSaveV9s1',s2:'menajerSaveV9s2',s3:'menajerSaveV9s3'};
+function storeName(key){return key==='meta'?ST_META:ST_SAVE;}
+
+function recGet(key){
+  if(SAVEH.backend==='ls')return Promise.resolve(jparse(lsGet(LSKEY[key])));
+  return dbTx(storeName(key),'readonly',st=>st.get(key));
+}
+function recPut(key,val){
+  if(SAVEH.backend==='ls'){
+    let s;
+    try{s=JSON.stringify(val);}catch(e){return Promise.reject(e);}
+    return lsSet(LSKEY[key],s)?Promise.resolve(true)
+      :Promise.reject(new Error('QuotaExceededError'));
+  }
+  return dbTx(storeName(key),'readwrite',st=>st.put(val,key)).then(()=>true);
+}
+function recDel(key){
+  if(SAVEH.backend==='ls'){lsDel(LSKEY[key]);return Promise.resolve(true);}
+  return dbTx(storeName(key),'readwrite',st=>st.delete(key)).then(()=>true);
+}
+/* Hangi yuvalarda kayıt var — yalnız anahtarlar. Açılışta özet ile gerçeğin
+   tutup tutmadığı buradan bakılıyor; üç kaydı okumak 20 MB ayrıştırmak olurdu. */
+function recSlotKeys(){
+  if(SAVEH.backend==='ls')
+    return Promise.resolve(['s1','s2','s3'].filter(k=>lsGet(LSKEY[k])!==null));
+  return dbTx(ST_SAVE,'readonly',st=>st.getAllKeys()).then(ks=>Array.prototype.slice.call(ks||[]));
+}
+
+/* Hangi arka ucun kullanılacağını açılışta bir kez belirler. */
+function storeBackendInit(){
+  return dbOpen().then(db=>{
+    SAVEH.backend=db?'idb':'ls';
+    return SAVEH.backend;
+  });
+}
+
+/* ================= ARKADAN YAZMA KUYRUĞU =================
+   save() senkron kalabilsin diye. Anahtar başına en fazla bir yazma uçuyor;
+   uçarken gelenler tek bir bekleyende birleşiyor ve son yazan kazanıyor.
+   Değer çağrı anında değil, yazma anında kuruluyor (build fonksiyonu) —
+   böylece birleşen istekler en güncel durumu yazar, eskimiş bir kopyayı değil. */
+const _pend={};
+const _busy={};
+let _inflight=0;
+/* Silme de aynı kuyruktan geçiyor: uçmakta olan bir yazmanın arkasına dizilsin,
+   yoksa silinen yuva geri yazılabilirdi. */
+const REC_DEL={del:true};
+
+function queueRec(key,build){
+  _pend[key]=build;
+  if(_busy[key])return;
+  flushRec(key);
+}
+/* Bekleyen yazma varsa iptal ediliyor — birazdan silinecek şeyi yazmanın anlamı yok. */
+function queueDel(key){queueRec(key,()=>REC_DEL);}
+function flushRec(key){
+  const build=_pend[key];
+  if(!build){_busy[key]=false;return;}
+  delete _pend[key];
+  _busy[key]=true;_inflight++;
+  let val;
+  try{val=build();}
+  catch(e){
+    /* Değeri kuramadık. Kuyruğu yine de ilerlet: arkada bekleyen bir istek
+       varsa (örneğin silme) onun askıda kalmaması gerekiyor. */
+    _busy[key]=false;_inflight--;noteSaveFail(key,e);
+    if(_pend[key])flushRec(key);
+    return;
+  }
+  const op=(val===REC_DEL)?recDel(key):recPut(key,val);
+  op.then(()=>noteSaveOk(key),e=>noteSaveFail(key,e)).then(()=>{
+    _inflight--;
+    _busy[key]=false;
+    if(_pend[key])flushRec(key);
+  });
+}
+/* Bekleyen yazma var mı — testler ve kapanış için. */
+function savePending(){return _inflight>0||Object.keys(_pend).length>0;}
+/* Tüm kuyruk boşalana kadar bekler. Kapanışta beklemek için değil (tarayıcı
+   söz vermez), testlerin belirlenimci olması için. */
+function saveDrain(){
+  return new Promise(res=>{
+    (function tick(){
+      if(!savePending()){res();return;}
+      setTimeout(tick,0);
+    })();
+  });
+}
+
 /* js/saves.js — kayıt yuvaları ve cihaz tercihleri.
 
    Neden ayrı bir katman:
@@ -2190,35 +2491,52 @@ inDebt:p=>`Your balance has gone negative. Weekly costs are ${p.c} — win clien
       S null — ama Ayarlar oradan da açılabilmeli. Cihaza ait olan bu üç tercih
       PREFS'e taşındı. Kariyere ait olanlar (hafta raporu, olaylar) S'de kaldı.
 
-   Eski tek kayıtlı sürümden gelenler 1. yuvaya devredilir; kimsenin ilerlemesi
-   silinmez. */
+   Kayıtların kendisi artık IndexedDB'de (js/store.js — nedeni orada yazıyor).
+   Bu dosya yuva kavramını ve göçü tutuyor, depolamanın nasıl çalıştığını değil.
+
+   İki şey senkron kalmak zorundaydı ve kaldı:
+
+   - PREFS. Daha ilk çizimden önce, bu dosya yüklenirken okunuyor (dil menüden
+     önce doğru olmalı). Küçük olduğu için localStorage'da kaldı; kotayı zorlayan
+     kayıtlar oradan çıkınca yazması da güvene girdi.
+   - Menü özeti. allMeta() bellekteki META'yı döndürüyor; render() her hafta
+     çağrılıyor ve söz bekleyemez. META açılışta bir kez okunuyor, sonra her
+     yazışta senkron güncelleniyor ve diske arkadan yazılıyor.
+
+   Eski tek kayıtlı sürümden ve localStorage döneminden gelenler kayıpsız
+   devralınıyor: göç önce yazar, yazdığını geri okuyup doğrular, ancak ondan
+   sonra eskisini siler. Yarıda kesilirse hiçbir şey kaybolmaz, bir sonraki
+   açılışta kaldığı yerden devam eder. */
+
 const SLOTS=3;
 const LEGACYKEY='menajerSaveV9';        // tek kayıtlı sürümün anahtarı
-const SLOTKEY=n=>'menajerSaveV9s'+n;
-const METAKEY='menajerMetaV1';
+const SLOTKEY=n=>'menajerSaveV9s'+n;    // localStorage dönemi — yalnız göç okur
 const PREFKEY='menajerPrefsV1';
 /* 0 = açık kariyer yok (ana menüdeyiz). save() nereye yazacağını buradan bilir. */
 let curSlot=0;
-/* Kullanıcı depolamayı kapatmış ya da kota dolmuş olabilir — hiçbiri oyunu
-   çökertmemeli, kayıt sessizce başarısız olur. */
-function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
-function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
-function jparse(s){try{return JSON.parse(s);}catch(e){return null;}}
+/* Açılış tamamlanana kadar menü "yükleniyor" gösteriyor; boş yuva göstermek
+   kaydı silinmiş gibi görünürdü. */
+let storeReady=false;
+
 /* ================= CİHAZ TERCİHLERİ ================= */
 let PREFS=jparse(lsGet(PREFKEY))||{};
-function savePrefs(){lsSet(PREFKEY,JSON.stringify(PREFS));}
+function savePrefs(){
+  if(lsSet(PREFKEY,JSON.stringify(PREFS)))noteSaveOk('prefs');
+  else noteSaveFail('prefs',new Error('PrefsQuota'));
+}
 function pref(k,d){return PREFS[k]===undefined?d:PREFS[k];}
 function setPref(k,v){PREFS[k]=v;savePrefs();}
 /* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı */
 if(PREFS.lang)L=PREFS.lang;
-/* ================= YUVA ÖZETLERİ ================= */
-function readMeta(){return jparse(lsGet(METAKEY))||{};}
-function writeMeta(m){lsSet(METAKEY,JSON.stringify(m));}
-function allMeta(){return readMeta();}                 // menü tek okumayla dönsün
-function slotMeta(n){return readMeta()['s'+n]||null;}
+
+/* ================= YUVA ÖZETLERİ =================
+   Bellekte tutuluyor; diske arkadan yazılıyor. Okuyanların hepsi senkron kalır. */
+let META={};
+function allMeta(){return META;}
+function slotMeta(n){return META['s'+n]||null;}
 function slotUsed(n){return !!slotMeta(n);}
-function anySlot(){const m=readMeta();for(let n=1;n<=SLOTS;n++)if(m['s'+n])return true;return false;}
+function anySlot(){for(let n=1;n<=SLOTS;n++)if(META['s'+n])return true;return false;}
+function metaDirty(){queueRec('meta',()=>META);}
 /* Özet menüde gösterilen her şeyi taşır; tam kaydı açmaya gerek kalmaz.
    totalWeeks() global S'yi okuduğu için burada fikstürden yeniden hesaplanıyor —
    bu fonksiyon her zaman kendisine verilen duruma bakmalı. */
@@ -2231,54 +2549,161 @@ function metaOf(st){
           clients:(st.clients||[]).length,
           ts:Date.now()};
 }
+
 /* ================= YUVA İŞLEMLERİ ================= */
-/* Kayıt biçimi eski sürümle aynı: {S,PID}. Yalnızca anahtar yuvaya göre değişiyor. */
 function validSave(d){return !!(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEAGUES.length);}
+
+/* Senkron döner: "kuyruğa alındı" demek, "diske yazıldı" demek değil. Gerçek
+   sonuç SAVEH üzerinden görünür oluyor (ui.js kalıcı bir şerit çiziyor) —
+   eskiden burada dönen false hiçbir yere gitmiyordu, asıl hata oydu. */
 function saveToSlot(n){
   if(!n||typeof S==='undefined'||!S)return false;
-  if(!lsSet(SLOTKEY(n),JSON.stringify({S,PID})))return false;
-  const m=readMeta();m['s'+n]=metaOf(S);writeMeta(m);
-  return true;
-}
-function loadSlot(n){
-  const d=jparse(lsGet(SLOTKEY(n)));
-  if(!validSave(d)){
-    /* özet var ama kayıt bozuk/eksik: yuvayı boş göster, menü yalan söylemesin */
-    const m=readMeta();if(m['s'+n]){delete m['s'+n];writeMeta(m);}
-    return false;
-  }
-  S=d.S;PID=d.PID;curSlot=n;
-  /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
-  L=PREFS.lang||S.lang||'tr';
-  return true;
-}
-function deleteSlot(n){
-  lsDel(SLOTKEY(n));
-  const m=readMeta();delete m['s'+n];writeMeta(m);
-  if(curSlot===n){curSlot=0;S=null;}
-}
-/* ================= ESKİ KAYDIN DEVRİ =================
-   Tek kayıtlı sürümden güncelleyen oyuncu ana menüde kariyerini 1. yuvada bulur.
-   Yazma başarısız olursa eski anahtar silinmez — ilerleme kaybolmaktansa iki kez
-   denenmesi yeğdir. */
-function migrateLegacy(){
-  const raw=lsGet(LEGACYKEY);
-  if(!raw)return false;
-  if(lsGet(SLOTKEY(1))){lsDel(LEGACYKEY);return false;}   // yuva zaten dolu
-  const d=jparse(raw);
-  if(!validSave(d)){lsDel(LEGACYKEY);return false;}
-  if(!lsSet(SLOTKEY(1),raw))return false;
-  const m=readMeta();m.s1=metaOf(d.S);writeMeta(m);
-  /* Cihaz tercihleri o güne dek kaydın içindeydi; ilk kez dışarı taşınıyor. */
-  if(PREFS.theme===undefined&&d.S.theme)PREFS.theme=d.S.theme;
-  if(PREFS.lang===undefined&&d.S.lang)PREFS.lang=d.S.lang;
-  if(PREFS.sfxOn===undefined&&d.S.sfxOn!==undefined)PREFS.sfxOn=d.S.sfxOn;
-  savePrefs();
-  if(PREFS.lang)L=PREFS.lang;
-  lsDel(LEGACYKEY);
+  META['s'+n]=metaOf(S);
+  /* Kayıt nesnesi yazma anında kuruluyor ki birleşen istekler en güncel durumu
+     yazsın. snap ile hangi kariyeri yazdığımızı sabitliyoruz: bu arada yuva
+     değiştirilmişse S başka bir kariyeri gösteriyor olabilir. PID ise sayaç —
+     eskimişini yazmak yeniden yüklemede id çakışması demek olurdu, bu yüzden
+     hâlâ aynı kariyerdeysek güncel değeri alınıyor. */
+  const snap=S,pidAtQueue=PID;
+  queueRec('s'+n,()=>({v:SAVE_SCHEMA,S:snap,PID:(S===snap?PID:pidAtQueue)}));
+  metaDirty();
   return true;
 }
 
+/* Asenkron: yalnız üç yerden çağrılıyor (yuva açma, göç doğrulaması, testler).
+   Dönüş {ok:true} ya da {ok:false,reason}. reason ayrımı önemli — 'future'
+   bozuk kayıt değil, yeni bir sürümün yazdığı kayıt; onu silmek veri kaybı olur. */
+function loadSlot(n){
+  return recGet('s'+n).then(rec=>{
+    if(!rec)return dropSlotMeta(n,'missing');
+    if(schemaOf(rec)>SAVE_SCHEMA)return {ok:false,reason:'future'};
+    const d=migrateSave(rec);
+    if(!validSave(d))return dropSlotMeta(n,'broken');
+    S=d.S;PID=d.PID;curSlot=n;
+    /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
+    L=PREFS.lang||S.lang||'tr';
+    return {ok:true};
+  },()=>({ok:false,reason:'error'}));
+}
+/* özet var ama kayıt yok/bozuk: yuvayı boş göster, menü yalan söylemesin */
+function dropSlotMeta(n,reason){
+  if(META['s'+n]){delete META['s'+n];metaDirty();}
+  return {ok:false,reason:reason};
+}
+function deleteSlot(n){
+  delete META['s'+n];
+  queueDel('s'+n);
+  metaDirty();
+  if(curSlot===n){curSlot=0;S=null;}
+}
+
+/* ================= AÇILIŞ VE GÖÇ =================
+   Sıra önemli:
+   1) arka uç seçilir (IndexedDB var mı),
+   2) özet okunur — hangi yuvaların dolu sayıldığını bilmeden göç yapılamaz,
+   3) localStorage yuvaları taşınır,
+   4) tek kayıtlı sürümün anahtarı taşınır,
+   5) özet gerçekle karşılaştırılır.
+   Her adım kendi başına yeniden çalıştırılabilir; yarıda kesilen göç bir sonraki
+   açılışta kaldığı yerden devam eder. */
+function storeInit(){
+  return storeBackendInit()
+    .then(()=>recGet('meta'))
+    .then(m=>{META=m||{};},()=>{META={};})
+    .then(migrateLsSlots)
+    .then(migrateLegacy)
+    .then(reconcileMeta)
+    .then(()=>{storeReady=true;},e=>{storeReady=true;noteSaveFail('init',e);});
+}
+
+/* localStorage'daki bir kaydı arka uca taşır. Kayıpsız olmasının tek yolu
+   sırayı bozmamak: yaz → geri oku → aynı mı diye bak → ancak o zaman sil.
+   Karşılaştırma tam serileştirme üzerinden; pahalı ama kayıt başına ömürde bir
+   kez çalışıyor ve "taşıdım sandım" ihtimalini bırakmıyor. */
+function moveOneSlot(n){
+  const raw=lsGet(SLOTKEY(n));
+  if(raw===null)return Promise.resolve('none');
+  const d=jparse(raw);
+  /* Hiç ayrıştırılamıyorsa taşınacak anlamlı bir şey yok. Silmiyoruz da —
+     elde tutulan bozuk bayt, silinmiş bayttan iyidir. */
+  if(!d||typeof d!=='object')return Promise.resolve('unparsable');
+  const rec={v:SAVE_SCHEMA,S:d.S,PID:d.PID};
+  const want=JSON.stringify(rec);
+  return recPut('s'+n,rec)
+    .then(()=>recGet('s'+n))
+    .then(back=>{
+      if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+      lsDel(SLOTKEY(n));
+      if(!META['s'+n]&&validSave(rec)){META['s'+n]=metaOf(rec.S);metaDirty();}
+      return 'moved';
+    })
+    .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+}
+function migrateLsSlots(){
+  let p=Promise.resolve();
+  for(let n=1;n<=SLOTS;n++)p=p.then(((k)=>()=>moveOneSlot(k))(n));
+  return p;
+}
+
+/* ================= ESKİ KAYDIN DEVRİ =================
+   Tek kayıtlı sürümden güncelleyen oyuncu ana menüde kariyerini 1. yuvada bulur.
+   Yazma başarısız olursa eski anahtar silinmez — ilerleme kaybolmaktansa iki kez
+   denenmesi yeğdir.
+
+   1. yuvanın dolu olup olmadığına artık META'dan bakılıyor, localStorage'dan
+   değil: kayıtlar oradan çıktığı için eski kontrol her açılışta "yuva boş" der
+   ve gerçek kaydın üstüne yazardı. */
+function migrateLegacy(){
+  const raw=lsGet(LEGACYKEY);
+  if(!raw)return Promise.resolve(false);
+  if(META.s1){lsDel(LEGACYKEY);return Promise.resolve(false);}   // yuva zaten dolu
+  const d=jparse(raw);
+  if(!validSave(d)){lsDel(LEGACYKEY);return Promise.resolve(false);}
+  const rec={v:SAVE_SCHEMA,S:d.S,PID:d.PID};
+  const want=JSON.stringify(rec);
+  return recPut('s1',rec)
+    .then(()=>recGet('s1'))
+    .then(back=>{
+      if(!back||JSON.stringify(back)!==want)return false;
+      META.s1=metaOf(d.S);metaDirty();
+      /* Cihaz tercihleri o güne dek kaydın içindeydi; ilk kez dışarı taşınıyor. */
+      if(PREFS.theme===undefined&&d.S.theme)PREFS.theme=d.S.theme;
+      if(PREFS.lang===undefined&&d.S.lang)PREFS.lang=d.S.lang;
+      if(PREFS.sfxOn===undefined&&d.S.sfxOn!==undefined)PREFS.sfxOn=d.S.sfxOn;
+      savePrefs();
+      if(PREFS.lang)L=PREFS.lang;
+      lsDel(LEGACYKEY);
+      return true;
+    })
+    .catch(e=>{noteSaveFail('s1',e);return false;});
+}
+
+/* Özet ile gerçeğin tuttuğundan emin ol. İki yön de mümkün: özet yazılmadan
+   uygulama kapanmışsa kayıt var ama özet yok; kayıt silinememişse tersi.
+   Yalnız anahtarlara bakılıyor — üç kaydı okumak 20 MB ayrıştırmak olurdu. */
+function reconcileMeta(){
+  return recSlotKeys().then(keys=>{
+    const has={};keys.forEach(k=>{has[k]=true;});
+    let changed=false,rebuild=[];
+    for(let n=1;n<=SLOTS;n++){
+      const k='s'+n;
+      if(META[k]&&!has[k]){delete META[k];changed=true;}
+      else if(!META[k]&&has[k])rebuild.push(n);
+    }
+    if(changed)metaDirty();
+    /* Özeti olmayan kaydın özeti yeniden kuruluyor — nadir yol, tam okuma gerekir. */
+    let p=Promise.resolve();
+    rebuild.forEach(n=>{
+      p=p.then(()=>recGet('s'+n)).then(rec=>{
+        const d=migrateSave(rec);
+        if(validSave(d)){META['s'+n]=metaOf(d.S);metaDirty();}
+      },()=>{});
+    });
+    return p;
+  },()=>{});
+}
+
+'use strict';
 /* js/data.js — statik veri: isim havuzları, kıtalar, ülkeler, ligler, takımlar, kupalar */
 /* ================= NAME POOLS ================= */
 const NATS={
@@ -2741,6 +3166,7 @@ const POS=['KL','DF','OS','FV'];
 const POSL={tr:{KL:'KL',DF:'DF',OS:'OS',FV:'FV'},en:{KL:'GK',DF:'DF',OS:'MF',FV:'FW'}};
 const POSFULL={tr:{KL:'Kaleci',DF:'Defans',OS:'Orta Saha',FV:'Forvet'},en:{KL:'Goalkeeper',DF:'Defender',OS:'Midfielder',FV:'Forward'}};
 
+'use strict';
 /* js/worldgeo.js — ÜRETİLMİŞ DOSYA, elle düzenleme.
    Kaynak: Natural Earth 1:110m map units (kamu malı).
    Üretmek için: node tools/build-geo.js
@@ -2772,6 +3198,7 @@ t:{
 ctx:"M1976 202l-1 6-16 6 0-5 17-7zM1951 220l4-2 2 4-3 6-13 0 0-5 10-3zM377 12l41 27 1 7 16 13-5 15 0 7 7 5-3 21 12 23-9 7-34 10-21-2-9-27-33-13-5-16-7-7-2-25 15-15-3-12 4-9-4-7 39-2zM-93-348l-1 23-35-1 0 32-11 1-1 25-42 0-3 4 1-5 24-1 10-28 16-14 12-26 28-3 2-7zM-1192-614l-15-17-14-5 3-11 7-7-8-6 6-9-5-9 22-19-9-8 5-21-4-17-28 11-2-13-13-4 118-103 26 8 53-11 16-2 1 4 16-7 4 1 3 9 19-7-8 8 18-5 49 10 6 6-17 5 13 2 32-3 3 7 14-6-4-4 8-4 18-2 7 9 10-1 10 5 26-2 5-6 9-2 9 4-8 10 31-19-9-11 11-12 16-7 13 6 0 12-11 5 13 2-9 11 18-8 4 6-8 8 2 8 27-17 9-12 22 2 7 6-13 11-3 11-34 9-7-3-27 19-15 8-12 0-16 13-11 1-36 22-19 22 12 2-5 20 15-2 39 23 25 2-10 22 0 14 9 11 20-16 4-19-3-7 17-5 24-16 4-8-1-10-6-9 17-12 10-28 7-3 22 4 8-3 14 11 0 4 15 1-10 24 8 2 3 7 16-7 23-18 11 39-7 8 15 13 19 7 0 10 9 6-4 14-50 23-61 0-11 9-15 5-35 28 9-2 22-17 24-10 15-1 6 6-12 8-1 23 11 6 17-2 14-14-2 9 5 5-15 8-24 7-25 14-7-1 2-10 21-11-28 2-4-7 6-16-3-4-8 2-2-3-22 24-11 6-33 0-26 17-19 0-5 2 0 8-41 14-6-3 18-20 4-22-8-6-2-9-5 1 0-5-27-18-10 4-22-2-23-6-1-9-5 5-269 0zM-727-773l9-5 12 0-15 9-6-4zM-614-884l-4-5 7-5 17 1 8 6-1 3-27 0zM-698-769l5-3 5 3-11 5 1-5zM-700-906l-8 4-17-4 23-6 2 6zM-675-930l-16 0 1-3 18 2-3 1zM-682-941l5 3-22 3 5-7 12 1zM-665-900l-28-5 8-10-3-4-19-4 22-3 19 3 3 3-6 4 8 4 50-2 15 5-21 8-48 1zM-792-936l8 2-23 5-6-3 21-4zM-781-942l6 2-22 2 16-4zM-531-642l-17 18 7-4 6 2-5 5 22 4-6 9 8-2 0 14-7 11-10-2 5-10-3-2-14 11-6-1 9-5-9-3-29 0-1-4 8-4-4-3 27-27 8-7 14-3-3 3zM-707-803l14 8-2 5 6-1 4 4-10 3-11-2-2-5-28 11 1-6-12 1 11-6 17-19 5 1-1 5 5-2 3 3zM-610-879l10-4 21 10-3 4 17-2 3 6 17 4 5 14-17 5 26 10 7 10 12 0-6 8-21 12-16-15-11 2-5 6 16 14 0 12-7 8-26-12 13 16-1 4-36-11-8-5 5-4-19-11-1 3-26 2-5-4 11-8 34-1-1-4 24-16 0-9-23-9 7-2-5-7-10-4-22 4-27-2-30-8 13-5-12 0 7-10 26-13 22-3-11 6 0 7 14-8 23-5 5 11-7 7 18-3zM-715-898l28 3-46 19-9 0 9-14 18-8zM-903-917l47-13 22-1-21 10-27 5-21-1zM-1240-675l9-1-13 14 0 9-4 0-2-14 6-10 4 2zM-737-946l27 4 0 5-2 4-34-5 11-2-6-3 4-3zM-1202-608l-6 2-13-6-5-12-9-2 2-7 3-3 20 6 8 22zM-916-901l27 3 7 7-89 26 1-4-12-5 39-19 0-6 27-2zM-796-914l16-1-15 9-51 6-12 0 24-8-43 0 34-12 16 3 5 6 12 0 2-9 17-2-5 8zM-817-887l4 4-11 17 18 10-5 5-14 1 2 4-6 4-25-5-66 7 1-5-17-2-1-8 44-4-42-2 0-4 23-4-22-2 25-12 28-6 6 2-10 5 21-4 5 6 14-6 4 4-5 10 9-4 5-11 15 0zM-774-883l-2-7 14-5 7 3 15-2-13 8 7 4-10 10-23 3-13-12 3-3 15 1zM-812-892l14 2-14 6-4-7 4-1zM-717-922l-5 9-12 7-13 1-7-2 7-5-13 0 9-7 34-3zM-656-957l31-5 3 4 19 3-1 5 5 3-33 10-27 0-3-4 12-6-12 0-4-7 10-3zM-613-967l48-6 12 3 33-6 111 4-39 6-8 2 15 0-52 13-44 5 9 1-7 1 2 5-44 14 12 0-2 2-25 6-62-3 20-7 3-6 20 3-3-6-10-2 25-5 5-4-6-3 2-5 37-1-39-1-15-7 2-3zM-618-828l-17 4 9-12 13 2-5 6zM-773-850l2 4-8 4-16-2-7-5 19-8 10 7zM-623-625l16 2 8 8-17-4-7-6zM-629-590l1 6 16 1-10 6-11-5-1-4 5-4zM847-617l-4 8-8 2 5 12-3 5-21-4 2 22-21 8 16 22-5 3 3 7-13-6-36-1-16-5-5 3 1 7-24-2-1 5-15 11-2 9-8-6-13 0-5-11-5 0-3-12-15-9-28 3-13-12-30-14-23 7 12 46-22-13-15 7-3-13-12-4-15-18 10 1-2-9 17 0-5-20-19-2-18 8-6-2-9-15-7 1-10-9 4-25 12 7-2-9 16-13 15 0 37 13 8-5 15 0 15 6 1-4 14 1 0-6-18-8 7-6-3-3 7-3-9-8 2-5 34-4 31-12 17 2 9 13 8-3 14 4 2 7 9-1 18-11-2 3 53 40 2-6 16 7 12-3 29 16 12-1 9 7zM569-519l-12-46 23-7 30 14 13 12 28-3 15 9 3 12 5 0 5 11 13 0 8 6 2-9 15-11 4 1-6 8 29 8-10 9-12-1-2-9-13 3-4 15-9-1-1 6 9 3 4 9-2 13-15-3-1-7-28-12-22-15-12-15-11 1-8-12-16-7-14 11 3 7-11 0zM1565 33l40 16 13 12 1 8 18 8 2 6-10 2 1 8 10 8 6 14 6-1-1 6 9 2-4 2 11 5-2 4-30-6-18-26-14-5-17 8 1 9-9 4-18-2 5-82zM1694 46l4 4-2 10-5-12-19-14 4-3 18 15zM1678 73l-19 6-14-7 1-4 16 1 2-6 2 7 7-1 9-9 0-8 6 0 2 9-4 8-8 4zM1565 33l-5 82-9-11-11-2-17 4 13-14-6-24-47-23-7 7-3-10-8-7 20-4-1-3-16 0-4-8-10-2-4-6 21-7 17 5 4 25 11 7 10-13 13-8 10 0 29 12zM1383 112l1 6-8 10-10 2 6-13 11-5zM1487 87l5-19 1 10-6 9zM1308-52l-6 11 9 12-2 6 13 12-13 1-4 20-11 9-5 31-2-4-12 6-5-8-13-5-13 5-4-6-16-1-2-17-5-3-7-22 1-12 7-8 9 15 15-1 11-8 11 4 9-3 13-36 22 2zM1436 35l12 4 4 10-9-6-23 0 2-7 14-1zM1408 48l-8-3-2-5 12-1 2 5-4 4zM1420-27l1 7 7 1 1 5 0 11-6-1 3 14-3 1-8-24 5-14zM1365-11l13-1 11-9 2 3-9 13-47 2-2 10 10 11 6-6 21-4-1 6-5-2-15 12 18 35-1 8-6 4-4-5 6-10-11 5-3-3 2-5-8-8 1-12-8 4 1 33-8 1-4-3 4-12-2-12-4 0-4-9 15-42 9-9 23 5zM1330 129l-14-9 10-2 10 7-1 4-5 0zM1343 107l18-5-2 7-32 2 0-5 16 1zM1309 105l7-1 2 5-26 5 4-8 9-4 4 3zM1202 81l2 4 21 1 3-5 20 6 3 9 17 2 13 7-13 5-56-13-13 1-20-6-1-5-10-1 8-12 26 7zM1159 14l5 15 9 2 5 8-5 35-12 0-23-21-35-55-8-21-37-40-1-6 24 3 36 40 12 0 9 8 16 17-5 10 10 5zM-649 658l12 27 15 0-1 5-6 4-29-7-46-26 40 14 2-13 6-5 7 1zM-762 221l14 23-2 12 14 32 8-2 1 3-2 13-11 6 2 25 4 5-12 20 1 24-4 12 16 36-4 12 3 11-5 8 9 24-5 4 2 24 7 15-4 3 14 19-2 5 8 7-4 3 9 40-6 13 6 13 11 4 11 16 33 3-8 0-10 7 3 11-4 1-41-19-7-8 0-7-9-8-9-21-1-12 7-9-16-4 5-11-4-20 13 4-4-26-8-3 2 16-7-2-7-41 3-8-11-27 4 0 4-59-7-19-3-26 4-15-2-79-7-38 8-10zM462 21l-7-10 0-46 12-18 8 0 9-9 15-1 38-48 4-8-1-25 24-7-5 35-20 49-22 31-38 32-17 25zM435 59l-16-13-1-7-41-27 0-13 12-23-12-29 14-16 6 2 4 11 8 0 14 11 16 2 13-11 5 5 7 0-9 14 0 46 7 10-15 11-12 27zM272-103l-12-10 0-14-12-20-2-12-4 1 6-30 5-9 9 1-2-56 13 0-1-25 129 0 9 43 10 8-16 13-4 42-16 34-5 3-3 25-3-21-6-5-1-18-5-1 0 3-7 0 4 12-11 16-6 1-9-7-12 11-24-1-11-12-8 2-5 17-8 4 8 5zM260-246l2 50-9-1-5 9-6 30 4-1 7 19-13 7-8 14-10 6-14 0 1 4-10 10-14 5-5-4-2 4-9 1 2-4-5-14-12-9 3-6 14 0-6-11-4-31-7 0 0-8-5-5 5-16 13-12 6-47-9-12-3-20 11-6 88 48zM-783-248l-4 14 2 7-24 0-6-4 2-4 18 3 4-3-4-10-7-2 3-3 16 2zM-785-227l-2-7 6-16 17 3 17 13-5 5-5-3-15 3-1-3-9 11-3-6zM1407-867l2-4 13 7-15-3zM485-582l-3 7-9 2-7 13 26 35-6 8-27-17-58-12-36-22 6-2 7-10-7-5 14-5-1-3-8 2-1-5 13-5-1-20-20-4-8-6-20-2-4-8-8 0 0-7-7-6-18 2-7-11 12-4-21-17-1-9-14-1-12-6-6-13-5-2 3-4-5-11 3-9 9-6-10-6 24-26-15-8 2-8-10-8 4-9-13-13 6-8-15-7 0-7 26-9 38 9 42 17 3 7-20 9-39-9-6 2 16 8 6 16 19 6 0-5-7-5 4-4 23 7 6-3-8-8 16-10 17 4 2-7-10-7 2-6-8-7 24 3 7 6-10 2 2 6 8 3 12-2-1-7 39-14 7 0-5 7 10 1 29-8 13 6 6-7-12-6 2-4 26 3 49 16 2-6-13-8-10-1-12-16 8-9-1-9 4-2 22 2 6 6-2 8 8 3 15 22 13 7 1 7-7 15 10 2 9-7 3-10-9-6-1-8-9 0-6-6-1-11-16-8 9-7-7-7 12 5 4 10 10 2-9-8 25-4 19 6-23-20 46-3-11-5 3-6 36-6-1-3 27 1 10-5 14 0-1-8 12-3 36 11 25-2 23 4 15 9-20 11 30 2 11 7 11-5 26 2 8 5 34 1-9-7 30 1 70 29-7-11 19 4 46-1-19-9 4-4 79 6 48 14 47 0 38 15 8-3 45 1 28 10 5-4-20-11 77 7 18 5 66 43-5 5-12-1 42 18 9 8-19-3-19 10-7 15 4 5-23-8-12 9-9-4-3 5-13-2 7 20 19 7 18 17-8 0 7 10 10 5-11 6 10 14-11 3 9 12-3 11-63-52-13-16-5-13 11-2 1-27 5-9-13-16-9 1 6 9-7 13-24-14-18 4 0 19 15 7-29 4-8-8-16-2-5 6-55 1-17 51 16 1 11 8 11 2 1-6 11 1 25 13 33 57-2 17 3 9-10 36-9 7-16-6-8 9 1 5-7-9 5 0-7-15-9-11 5-4 14 2-9-41-19 9-15 0-12-12-17-9-19-3-44-37-29-8-22 3-3 5 12 10-2 17 4 5-9 8-39-9-9 8-19 5-22-2-23-12-29 3-17-6-7-9-37-9-2 12 8 8-5 8-55-13-25 16-12 3-9-7-12 1-29-16-12 3-16-7-2 6-53-40 2-3-18 11-9 1-2-7-14-4-8 3-9-13-17-2-31 12-34 4-2 5 9 8-7 3 3 3-7 6 18 8 0 6-14-1-1 4-15-6-15 0-8 5-37-13-15 0-16 13 2 9-12-7-4 25 10 9 7-1 9 15 6 2zM637-960l12-2 45 11 9 9-37-2-40-11 11-5zM718-946l25 5 3 4-36 4-2-13 10 0zM1020-917l56 5 6 8-37 2-25-7-7-6 7-2zM1103-910l23 3-3 4-13-1-24-7 17 1zM1069-890l2-4 8-1 21 7-31-2zM307-957l45-1-24 5-8-2 2-2-15 0zM212-678l-29-2 2-5 12-4 14 4 1 7zM407-894l13-9-4-4 33-11 45-6 9 3-44 12-18 10-12 19 6 9 20 8-31 0-4-5-16-2-4-6 7-2-3-6 11-8-8-2zM1339-671l65 57-17-4 7 18 25 21-13-7 0 9-45-61-29-28 4-6-9-5 3-2 9 8zM-1441-825l-11 6 2 3 10-8 20 2 1 10-30 6-22 13-7 0-8-8 5-4-18-1 9-8-14 3-15 10 65-43 13 19zM-1410-865l-12 1 13-7 14 3-15 3zM331-577l2-3 20 10 10-1-1 5-23 9-6-3 1-5-12-4 11-6-2-2zM-850-337l13-1-1 4-12 2 0-5zM-836-340l7 6-3 9-4-15zM-845-317l3 0 3 11-4 8-5-11 3-8zM-582 649l9-8 9 3 4-4 10 5-13 8-6-4-6 5-7-5zM105-950l12-3 34 10-17 4-10 16-8 0-17-5 6-4-26-10-6-8 18-3 14 3zM189-953l-9 5-19 1-42-8 38-3 32 5zM177-933l-15 4-13-2 4-3-5-3 14-1 15 5zM-309-972l57-7 75 0 39 6-75 4 65 3-9 5 51-6 20 1 3 4-55 8 16 0-17 13-2 10 7 6-24 4 12 4 0 8-8 1 8 9-17 1 8 4-3 3-22 2 8 7-1 4-14-4-5 3 19 9 1 8-15 2-13-10 1 7-11 5 32 1-47 18-34 4-24 15-51 14-10 6-9 16-17 9 1 8-15 21-13 1-10-10-18 0-17-31 2-17-8-10 7-8-4-4 14-13 14-4 11-13-24 7-8-3 3-7 6-6 22 3-16-10-13-1 13-10-7-21-8-4 3-4-15-6-54 1-13-9 36-3-41-7 64-12 5-4-16-3 48-9 1-3 65-1 21-4 35 6-13-4 3-3zM671 610l13 7-5 6-15 1 7-14zM1383 112l11-6 16 0-26 12-1-6zM175 359l5-6 6 9 11 3 16-7 2-47 9 14 1 12 7-1 20-18 9 5 16-2 17-25 26-18 19 2 7 26-3 19-8-1-5 12 6 7 6-1 3-6 8 0-5 20-29 36-29 26-17 5-2 4-34-1-31 12-13-9-4-19 4-2 0-10-18-39zM310 364l-4-4-6 3-12 13 7 9 13-7 5-10-3-4zM310 364l3 4-5 10-13 7-7-9 12-13 6-3 4 4zM-614 380l7-1 38 24 7 9-4 6 4 7-3 8-10 7-32-7-7-7 0-46zM-768 138l14 1 17-14 14-2 1 22 13 12 43 16 3 11 0 6-3 0 6 14 21 1 0 12 7 4 3 8-4 15 2 7-3 3-12-11-29 4-6 33-15-3-3 10-7-9-15-3-7 11-8 2-14-32 2-12-14-23 5-13-6-20 4-6 2-24-11-20zM-776 54l-10-1-23 13-1 17-7 4-2 8 11 19-2 5 22 8 8-8 1 19 11 0 11 20-2 24-4 6 6 20-8 20-5 3-12-7-1-6-53-34-6-10 2-4-44-80-17-13 4-5-6-12 3-9 9-8-2 13 10 0 4 6 6-5 9-19 13-5 12-13 2-18 3-1 16 15 7 13 25-1 8 6-7 13 9 7zM-743-16l-2 2-5-12-4 5-21-1 0 8 6 2 0 4-9 1 0 9 7 12-5 40-9-7 7-13-8-6-25 1-7-13-16-15-13-6-13 0-16-12 5-16 6-1 9-14-4-3 3-23-6-17 8-9-3-7 21-12 3-15 15-8 8 1 23-15 1 8-8 2-11 15-5 16 6 1 2 18 6 8 20 0 8 11 22 0-6 20 6 15-6 7 7 7 3 12zM-856-109l1 9-8 9-5-10 3-4-11-8-14 9 4 9-5 4-5 0-2-7-5 1-2-5-14-1 4-9-2-7 4-1 3 7 6-1 3 4 21-11 12 3 12 9zM-913-120l-4 1 2 7-4 9-18-22-3-2-1 7-8-7 3-8-3-2 4-4 18 6 3-3 11 18zM-924-138l-3 3-20-4-19-23 7-2 4-9 7-4 3 3 11-12 5 2 15-5-12 46 2 5zM-914-189l-15 5-5-2-11 12-3-3-7 4-1 6-6 4-5-5 0-7-8 1-8-7 3-8 15-11 32-1 19 12zM-983-181l8 7 8-1-2 10-23-8 9-8zM-1015-183l8-19 14 0 1-4-10-11 5 0 1-7 20 0-4 24 11 2-11 9-3 8-9 8-13-2-10-8zM-976-224l8-8 4 1-5 23-11 8 4-24zM-674-65l2 3-4 5-24 10-19-4 5 3 0 17 10 3-24 18-9 1-16-26 6-7-6-15 6-20-22 0-8-11-20 0-6-8-2-18-6-1 5-16 11-15 8-2-7 4 2 13-5 7 4 10 4-1 3-9-3-14 14-5-1-6 4-4 4 9 7 0 7 11 22-1 6 6 8 1 7-7 27-1-9 4 3 6 9 1 8 6 1 10 10 3-9 7 3 9-10 5-3 9 7 10zM-628-24l-9-1-13 9-12-6-4-13 5-15-6-8 2-5-9-2-7-10 3-9 10-5-3-9 9-7 8 4 6 15 14 11-2 11-7 3-1 10 16 27zM-605-29l-16-3-1 9-6-1-16-27 1-10 7-3 2-11 24-1 12 4-6 10 0 9 5 7-6 17zM-573-52l-15 25-17-2 6-17-5-7 0-9 6-10 11 4 14 16zM-837 2l-2 18-12 13-13 5-9 19-6 5-4-6-10 0 7-23-2-5-4 6-7-6 0-15 4-2 5-21 14-7 16 12 13 0 10 7zM-725-233l7 4-17 3 1-7 9 0zM-848-233l14 8-12 2-11-6 9-4zM-892-292l17 1 14 9 10-1 18 16 10 3-2 3 16 6-16 5-24 0 9-7-15-7-1-8-33-7-4-3 5-3-11 0-15 9-10 1 9-9 23-8zM339 280l-19-2-15-8-3-12-16-15-9-20 19 3 16-19 12-10 9-2 0 5 9-1 18 11-4 45-17 25zM320 278l-26 18-17 25-16 2-9-5-20 18-7 1-1-12-9-14 1-36 11-1 2-44 25-5 4 5 19-7 9 20 16 15 3 12 15 8zM215 311l-2 47-16 7-11-3-6-9-5 6-12-18-8-63-26-51 0-9 19-5 6 6 46-1 8 6 26 2 29-8 12 3-17 9-4-5-25 5-2 44-11 1-1 36zM-186-264l3-4 42 0 1-25 11-1 0-32 35 1 1-20 40 31-17 0 12 110-3 9-44 0-12 5-11-4-6 10-14-18-12-7-17 2-4 4 3-50-8-11zM30-79l-9 2-3-38-9-17 1-6 17-16 13 7 2 12-12 28 0 28zM161-288l3 20 9 12-6 47-13 12-5 16 5 5 0 8 7 0-5 11-12-14-8 7-15-4-22 7-13-7-11 3-15-9-12 1-8 26-9-7-7 4 0-9-13-3-7-26 36-8 7-16 0-29 15-6 68-48 17 5 7 7 7-5zM10-138l-1 6 9 17 3 38-9 2-7-18 3-12-4-23-5-7 1-4 10 1zM-151-158l24 2 1 4 4-2 10 5 9-6 5 3 6 9-3 7 6 8-3 5 5 15-5 3 0 8-10 5-6-15-8 2-7-21-14 2-10 12-20-27 5-6 9-2 2-11zM-184-156l33-2-2 11-9 2-5 6-11-6-6-11zM-93-97l-2 16 11 9-2 17-14-6-27-24 14-21 5-1 6 15 9-5zM-147-112l10-12 14-2 7 21 3-1-14 21-11-6-9-21zM-60-130l2-17 11-19 13-4 22-18 16 0 7 26 13 3 0 9-14 12-42 0 1 17-8-4-9 4-12-9zM304-66l-33 2-18 5-4 8-17-3-16-9-10 10-1 9-15-3-12 18-17-31-1-9 9-24 9-1 2-4 5 4 14-5 10-10-1-4 14 0 10-6 8-14 13-7 7 13 0 14 18 15 15 23 11 9zM205-44l-10 53-13 13-5 12 1 10-16 19-5-6-10 4-7-5-8 7-9-13 9-7-5-8 12-5 1-5 6 6 9 0 4-6 0-18-5-7 5-15-11-2-3-12 32 7 13-25 15 3zM125-28l20-1 3 12 11 2-5 15 6 17-5 14-9 0-6-6-1 5-12 5 5 8-9 7-19-23-6-17 7-23 20 0 0-15zM107-29l18 1 0 15-20 0 2-16zM340 105l28 17-1 34-7 16 6 4-34 10 1 9-9 2-12 10-16 19-19-3-7-5-16 2-14-18 2-40 23 0-1-25 5 5 12 1 3 5 9 2 7-4 2 7 9 1 8 13 8 0 0-14-3 2-11-7 2-33 3-8 22-2zM362 116l11 2 6 10 2 43 4 0 8 13 0 16-9 11-7-7 2-20-19-12 7-16 3-24-2-10-6-6zM382 145l32 0 32-15 3 55-16 25-23 11-30 28-2 9 9 20-3 25-33 21 4 6-2 6-8 0 1-30-7-26 17-25 4-45-18-11-9 1-1-14 34-10 13 8-2 20 7 7 9-11 0-16-8-13-4 0-3-17 4-9zM345 336l-3 6-6 1-6-7 5-12 8 1 2 11zM144 60l-9 13-3-10 8-7 4 4zM137 77l44-3 12 27 18-1 4-10 8-3 5 0-1 5 14 0 4 47 19-2 1 4 0 21-23 0-2 40 14 18-20 6-26-2-8-6-46 1-6-6-19 5 0-19 5-17 18-40-10-27 5-7-10-31zM338 30l3 12-15 15-4-21 7 1 3-7 6 0zM377-411l-1 4-4-2-2 8 3 2-2 5 4-2 1 5-3 20-9-22 6-23 8-3-1 8zM378-419l-8 3 7-20 8 6-7 11zM546 157l9 34-2 7-2 3-3-7-2 4 0 14-37 102-19 8-14-8-6-37 16-33-4-25 6-15 21-6 16-14 4-7-2-5 5 1 11-22 3 6zM375-396l-4 2 1-15 4 2-1 11zM-184-171l12 0 6-4 13 5-33 5 2-6zM376-407l1-4 13 5 19-14 6 16-23 8 13 12-5 7-8 1-6 9-13-2 3-38zM558-305l3 3 24-1 19-25 6 15-6 0 2 10-5 2-4 18-33-6-6-16zM549-311l-1-9 5-8 5 11-2 7-7-1zM512-377l6 18-20-7 6-12 8 1zM415-404l-6-16 21-13 0-24 13-13 21 3 10 15 7 3 2 8-6 14 9 12 14 7 7 9 0 9 11 14-14-2-6 12-20-1-33-25-30-12zM599-286l2-15 5-2-2-10 6 0 12 13 15 4 13 15-12 24-7 2 0 17-12 4 0 7-14 5 1 5-5 4-18 4-15-30 32-13 5-25-6-9zM607-323l-3-5 3-4 0 9zM1837 200l5 7-4 2-1-9zM1833 197l0-13 5 4 0 10-5-1zM1132-153l-4-15 6-11 24-1 10 5 4-8 10 4 4 24-18 10 6 7-21 6-9-2-12-19zM1158-180l-24 1-6 11 4 15-20-6 1-10-10 0-5 53 7 0 8 23 19 15-3 5-7 1-2-6-9-6-2 3-19-24-1 7-2-7 12-45-8-24-11-16 6-13-21-29 4-2 4-14 7 0 12-9 5 4 2 8 7 0 1 25 11-8 20-1 22 33-2 16zM1182-179l-10-4-4 8-10-5 2-16-22-33-20 1-11 8-1-25-7 0-7-12 9-13 7 4-4-15 6-2 15 22 13 0 6 11-9 8 14 7 30 35 4 9-1 12zM1092-257l-12 9-7 0-4 14-4 2 21 29-6 13 11 16 8 24-9 25-4-40-14-37-7-11-17 15-14-4 2-15-4-12-10-19-15-12-3-10 4 2-1-9 5-3-1-23 8 3 4-10 1-24 12-9 8 2-1-14 6-1 11 10 4 20-8 11 1 14 11-2 5 12 7 2-1 11 8 5 6 2 7-4 1 5-9 13zM1153-132l21-6-6-7 18-10-1-15-6-30-30-35-14-7 9-8-6-11-13 0-15-22 24-4 8-7 16 7 0 8 6 5 12 3-13 11-8 20 42 48 8 23 0 22-41 39-5-8 3-9-9-7zM1320-533l3 3-5-1-2 8 6 9-15 14 2 7 13 11-11 1-1 6-11-2-3 3-8-5 2-7-4-11-13-5 13-23 16 4-5-7 12-5 0-7 11 7zM1305-475l17-10 23 22 7 15-1 7-23 8-17-29 6-2-12-11zM850-618l34-18 55 13 5-8-8-8 2-12 37 9 7 9 17 6 29-3 23 12 22 2 19-5 9-8 14 5 11-1 1 21 6 6 15 0 5-5 26 17-22 0-8 12-18 11-18-3-1 8 9 9-8 10-10 5-15 0-23 11-48-13-45-1-19-19-22-9-27-4-6-5-3-14-11-10-28-11-6-9zM1043-355l1 14-8-2-12 9-1 24-4 10-8-3 1 23-5 3-8-20-3 0-1 8-7-7 11-18-28-4-2-9-15-6-2 9 9 7-8 9 7 3-1 8 6 9 2 15-21 3 2 9-4 8-15 8-28 31 1 6-20 8 1 70-6 0-4 10 3 4-10 4-7 12-11-12-23-48-6-24-12-17-16-68-15 8-8-2-16-15 4-4-3-5-14-11 6-8 24 0-14-27-7-6 9-13 13 1 21-39-2-9 7-7-10-6-12-20 4-5 28 1 7-10 15 14 2 11 6 6 1 6-8-1 6 14 29 16-7 18 38 18 15 1 7 7 31 4-3-19 6-2 4 12 11 5 24-2-6-11 8-2 19-17 9 3 7-5 6 7-2 6 12 2zM1007-277l1 9-4-2 3 10-15-26-10-1 0 12-14-2-9-20 1-8-7-3 8-9-9-7 2-9 15 6 2 9 28 4-11 18 7 7 1-8 3 0 8 20zM984-349l6 11-24 2-12-7 10-13 20 7zM945-351l3 19-31-4-7-7-15-1-38-18 2-12 9-9 52 28 25 4zM813-446l-7 10-28-1-4 5 12 20 10 6-7 7 2 9-21 39-13-1-9 13 7 6 14 27-24 0-6 8-9-3-13-19-52 5 2-15 14-7-7-7-2-11-11-6-11-14 18 6 17 0 23-7-2-11 5-7 23-7-2-8 9-11-6-8 10 1 2-5 2-10-6-12 4-5 33-8 15 16 18 5zM689-470l29 3 2-6 7-1 3-10 10 7 1 11 6 4 12-9 18 0 3 4-33 8-4 5 6 12-4 15-10-1 6 8-9 11 2 8-23 7-5 7 2 11-23 7-17 0-18-6 7-12-2-8-9-2-7-18 3-7-5-2 2-24 19 3 1-6 13-6 0-10 8-2 0-5 9 4zM704-467l2-13-4-9-9-3 1-6 9 1 4-15 13-3-1 6 7 3-2 4-12-2 1 7 43 1 6 12 10 1 5 12-18 0-12 9-6-4-1-11-10-7-3 10-7 1-2 6-4-3-10 3zM717-531l1-5 6-2 18 4-1-7 5-3 16 5 36 1 13 9-14 6-2 5-12 2-1 8-12-2-14 8 0 6-19 2-24-3-1-7 22-1 10-9-29-8 6-8-4-1zM532-525l15-7 17 13 16 0-3-7 14-11 16 7 8 12 11-1 12 15 22 15 28 12 1 7-9-4 0 5-8 2 0 10-13 6-1 6-7 1-12-4-3-11-8 0-14-11-22-8-18 1-6 7-9 2-5-22-9-4 1-9-7 0 0-11 11 3 7-4-13-14-8 3 1 9-5-8zM518-376l-11-14 0-9-7-9-14-7-9-12 6-14-2-8-7-3-17-25-4-19 6-3 9 10 11 2 14-11 4 4-3 6 10 6 5 9 19 9 15 3 16-4 15-12 11-2 29 9 14 11 8 0 3 11-2 24 5 2-3 7 7 18 9 2 2 8-7 12 11 14 11 6 2 11 7 7-14 7-2 15-46-9-6-15-6-2-18 8-14-4-22-13-19-29-5 2-8-4-3 5zM377-411l2-14 6-5-8-6-2-9 7-18 29 1 28-6-9 11 0 24-40 27-13-5zM479-487l-4 0-6-9-23-10-2-10 13-2 7 5 5 7-2 4 10 6 2 9zM250-851l-19 6 1-8-11-4-12 3-8 13-20-2-10-6-9 4 0 7-16-2-1 6-8 0-22 35 1 8-9 0-4 11 2 15 6 5-2 14-10 14-7-7-16 14-12 2-13-6-8-38 46-29 32-36 32-22 30-4 10-8 28-2 27 8-9 3 11 6zM99-732l10-14 2-14-6-5-2-15 4-11 9 0-1-8 22-35 8 0 1-6 16 2 0-7 5-1 25 13 8 21-14 3-7 7 2 7-27 19-4 16 17 14-7 13-9 3-5 31-11-2-5 10-10 0-21-41zM259-700l12 6 14 1 1 9 21 17-12 4 7 11-8 1-2 9-51-7-17 4-5-11 6-3-5-14 18-5 1-7 7-3-2-6 15-6zM302-652l18-2 7 6 0 7 8 0 4 8 20 2 8 6 20 4 1 20-9 1-3 9-31 10 2 7-14-6-2 3-18-4-1-5-9 2-9 15-9 0-5-2 5-12 11 1-16-21-12-5-25 9-17-4-4 3-7-7 6-7-3-6 7-10 5-1-6-14 17-4 51 7-1-6 11-4zM220-673l5 14-6 3 11 21-12 15 3 6-12-6-26 1-14-12-14 0 1-4-8-1-9-11-7-25 32-13 10 5 43 3 3 4zM166-603l-1 5-5 0-2 12-14 3-22-4-3-4-10 4-16-4 4-6 5 4 1-4 21-1 3 3-1-10 6-8 8 4 8-6 17 6 1 6zM215-607l7 7-6 2-8 17-25 7-24-14 1-10 5 0 1-5 9 4 24-10 16 2zM260-605l8-3 17 8 11 18-11-1-5 12-3-16-17-18zM280-571l14 2 1 4-8 1-1 15-13-6-17 6-26-1-3-10-12-2-15-17 8-2 8-17 10-5 17 4 17-6 17 18 3 16zM244-694l2 6-7 3-1 7-18 5-8-5-1-7-14-4-3-10 34-4 16 9zM248-715l5 2 6 13-15 6-16-9-34 4 2-16 8-4 9 9 7 0 0-9 7-2 21 6zM249-739l-3 9 5 11-3 4-21-6-7 2 0-7-10-3-1-7 10-3 30 0zM227-556l3 6 26 1 17-6 13 6-7 14 4 7-18 2 0 7-9 1-7-5-16 4-1-9-6-4 5-11-7-10 3-3zM275-444l-1 4-15 1-13-5 1-5 7 4 15 0 0 3 6-2zM233-519l16-4 7 5 9-1 0-7 5 4-4 9-12-2-12 4 8 7-11 2-6-7-2 3 9 13-4 3 12 9 1 8-10-4 4 7-7 1 5 11-16-5-18-35 7-15 19-6zM214-513l-7 15-9-8-3-24 4-6 9 6 2 14 4 3zM163-583l20 9 3-2 7 8-4 5-30-5-2 5 29 29-25-12-13-20-6-2-3 5-3-4 0-4 16 0 4-9 7-3zM94-596l-1 5 10 3-5 7-7-2-2 5-7-1-5 4-9-2-4-6-5 2 7-15 17-4 11 4zM58-628l2 8-5-1 3-7zM59-636l-4 15-14-4-17-15 23-4 12 8zM-58-673l1 9-7 10-18 8-13-2 9-13-5-12 21-15-1 13 13 2zM1805 265l11 14-5 3-11-9-11-20 5 0 11 12zM1792 132l2 4-7 0-3-8 8 4zM1788 121l-2 2-7-11-1-7 10 16zM1779 124l-11-1-1-7 12 8zM1768 101l2 6-18-14 16 8zM1741 88l4 4-7-2-3-7 6 5zM1717 67l12 15-2 4-7-4-4-19 1 4zM1810 504l-33 20-1-5 14-10 1-7-7-5 3-5 10-4 13-18 3-11-2-25 5-1 8 11-6 24 6-9-2 13 5 4 20-2-18 18-8 0-11 12zM1703 547l61-38-3 10 11-5-5 11-32 20-1 6-20 5-25 20-21 9-21-5 15-14 41-19zM1505 513l6 1-23 29-2-4-12 9-8-1 10-35 13 5 16-4zM1335 405l-24 10-11 11-40 1-24 14-15-1-13-10 3-7 9-5 7-20 2-27-8-43 4 6-1-12 7 9-4-24 14-33 0 9 6-8 25-15 8 1 18-9 21-4 19-19 2-12 10-11 3 11 5-2-3-6 4-6 5 2 3-9 16-17 16-5 13 13 14 1-2-7 16-23 8-5 15-1 0-6-7-4 6-2 31 14 13-5 5 6-13 13 1 5-9 16 46 34 8-5 14-29 5-33 12-22 9 49 7-5 8 10 1 50 23 18 3 25 5-3 3 6 3-2-1 13 15 23-9 47-21 33-21 18-46 55-20 4-29 16-11-8 5-7-21 12-25-10-3-8 4-16-2-5-9-1 6-6 2-10-9 9-11 2 20-20 3-9-29 25-6-5 3-7-7-14 4-3-26-14-58 9zM906-95l-1 13-14 7-6-10-3-18 4-21 8 7 12 22zM1198-229l-10-4-2-11 5-5 18-4 3 5-5 13-9 6zM811-532l-3-7 5-3-16-22 21-8-2-22 21 4 3-5-5-12 8-2 7-9 6 9 28 11 11 10 3 14 6 5 27 4 22 9 19 19 45 1 48 13 23-11 15 0 18-15-9-9 1-8 18 3 18-11 8-12 22 0-26-17-5 5-15 0-6-6-1-21 14 5 9-8-4-5 2-17-12-10 3-5 22-3 29 8 44 37 19 3 17 9 12 12 15 0 19-9 9 41-14-2-5 4 9 11 7 15-5 0 4 6-11-7 0 7-12 5 5 7-16-4-13 23-27 13 2-6-4-5 4-8-9-7-14 13-2 9-10 0-3 6 32 20 7-9 18 5 5 7-13 3-11 22 14 7 30 33 4 10-6 3 13 11 1 20-6 1-14 45-26 22-12 2-6 6-4-5-5 7-25 8-2 13-6 1-4-9 2-5-32-5-6-5 0-8-16-7-8 7-19 1-11 5 4 15-5-1-3-8-7 4-14-7 1-11-7-2-5-12-11 2-1-14 8-11-4-20-11-10-18-1 2-6-6-7-7 5-9-3-19 17-8 2-20-7-10 13-3-10-31-2-42-24-10-4-4 3-29-16-6-14 8 1-1-6-6-6-2-11-15-14-18-5-18-20-5-12-10-1-6-12 0-6 14-8 12 2 1-8 12-2 16-14zM1318-307l-5 31-11-20 10-22 6 4 0 7zM92-686l-13 0-5-19 4-6 18-7-1 13 5 1-11 12 3 6zM114-700l3 6-5 10-12-12 14-4zM-58-673l-13-2 1-13 8-1 9 8-5 8zM-121-817l-2 7 8 7-12 9-33 9-34-5 9-5-17-5 15-2 0-4-17-2 7-7 13-2 12 8 13-6 10 3 15-6 13 1zM470-526l16 9 6-8 14 15 9 4-8 1-3 23-10-6 3-6-4-4-14 11-2-9-10-6 2-4-12-12 16 2-3-10zM475-487l-16-12 10 3 6 9zM401-546l58 12 15 16-15-2-15 4-11-7-11 1-4-14-17-10zM1332-160l-6-9 9 0 4 5-1 10-6-6zM1356-126l2-11 6-1 0 9 6-12 1 12-10 16-7-9 2-4zM1399-106l3 16-3 11-5-13-5 7 4 9-2 6-14-7-4-10 3-6-7-6-3 6-6-1-7 7-2-3 3-11 13-8 4 5 8-3 2-6 7 0-1-10 9 6 3 11zM1311-117l-14 12 23-38 3 10-12 16zM1339-229l4 14-1 10-6 5 0 10 4 10 10 0 15 7 3 15-14-12-2 4-8-7-16-1 3-9-3-3-1 5-9-13-2-12 5 4-1-31 19 4zM1347-144l-2-6 14 4 1 6-11 9-2-13zM1385-153l4 14-9-3 5 12-5 3-8-18 7 1-1-4-8-10 11 0 4 5zM1109-81l2-3 9 6 2 6 13-5 7 8 5 8 2 26 9 19-8 1-24-20-9-15-8-31zM1308-52l-22-2-13 36-9 3-11-4-11 8-15 1-7-7-2-8 8 4 8-2 2-11 18-5 13-18 5 7 3-5 5 1 0-15 13-18 5 0 7 12 17 7-1 5-7 1 2 6-8 4zM1280-69l0 15-5-1-3 5-5-7 13-12zM136-584l25-4 2 5-7 3-4 9-16 0 0-13zM231-845l0 7 15 7-6 8 13 13-4 9 10 8-2 8 15 8-24 26-45 8-15-10 0-11-6-11 10-13 22-15-18-14-4-16-25-13 4-3 10 6 20 2 8-13 12-3 11 4-1 8zM219-615l-6 9-14-3-16 6 0 3-12 0-7-8 15-12 8-1 5 4 17-3 10 5zM144-640l12 5-1 4 14 0 13 11-17 11-17-6-8 6-19-12-3-9 26-10zM401-181l3-32 16-13 11 26 44 40-8 2-17-20-10-5-10-2-6 3-7-6-3 9-13-2zM-634 254l4 24 24 3 6 20 12 1-2 33-8 9-21 1-11-4 8-19-2-6-35-16-22-20 6-33 29-4 12 11zM568-239l15 30-8 3-2 10-28 11-9 9-31 8-9 8-17 1-11-32 3-1-1-14 5-15 37 4 3 4 22-21 31-5zM343-442l18-7-5 8-13-1zM343-442l13 2-10 5-8-6 5-1zM272-277l1 25-13 0 0 6-88-48-18 11-7-7-17-5-13-14-5 2-12-21 5-5 0-37-4-11 5-3 0-11 15-12 0-10 40 11 6 11 36 14 10-9-3-9 10-12 22 1 4 5 18 4 3 4-4 6 3 5-3 8 4 10 5 91zM529-101l-30 38-15 1-9 9-8 0-3 4-7 0-5-5-13 11-16-2-14-11-8 0-16-27-13-14-7-1 11-11 3-25 16-24 6-23 13 2 3-9 7 6 6-3 20 7 17 20-7 12 1 7 12 2-3 4 13 18 37 14 9 0zM467-158l8-2 3 4 0 5-7 3 5 4-3 7-12-2-1-7 7-12zM540-144l1 25-12 18-9 0-37-14-13-18 6-11 12 13 52-13zM377 12l-49 5 4-25 14-20-4-1 0-15 5-4 7 3 17-3 6-5 6 8 6 21-12 23 0 13zM338 14l3 15-9 1-3 7-7-1 3-16 13-6zM187-536l-22-17-8-10 2-5 34 5-2 5 5 5-1 6-7 4-1 7zM226-532l6 4 1 9-19 6-4-3 0-12 16-4zM186-576l14-3 15 17 12 2-3 7 7 10-3 10-10 2 2-5-11-8-5 6-11-9 3-6-5-5 2-5-4 0 4-5-7-8zM203-535l-4-1-3 10-10-8 7-13 12 8-2 4zM209-526l-6-9 6-9 11 8-11 10zM-682-135l9-2-1 10-11 0 3-8zM-29-667l3 5-3 11 4 5-22 0-3-4 10-4-5-7 2-7 14 1zM-18-696l-16 14-11-2-2-12-5 6-4-17 11-22 18 0-10 13 19-2-2 10-9 10 11 2zM342-44l-12-14-20 3-32-43-14-10 8-4 5-17 8-2 11 12 24 1 12-11 9 7 6-1 11-16-4-12 7 0 0-3 5 1 1 18 6 5 3 11-2 14-5 0-4 7 7 1 13 14 6 14-20 21-17 3-7-3-5 4z"
 };
 
+'use strict';
 /* js/atlas.js — keşif ağı haritası.
 
    Oyunun keşif birimi lig; harita ise BÖLGE gösteriyor. 22 lig 16 bölgeye
@@ -3041,6 +3468,7 @@ function mapMount(){
   },{passive:false});
 }
 
+'use strict';
 /* js/rivals.js — rakip menajer ajansları.
 
    Oyunun geri kalanında "rakip menajer" yalnızca bir bayraktı: p.agent==='rival'
@@ -3994,6 +4422,7 @@ function teamPos(tid){
   return tbl.findIndex(x=>x.id===tid)+1;
 }
 
+'use strict';
 /* js/sim.js — haftalık maç simülasyonu, sezon sonu, gelişim, küme düşme/yükselme, milli turnuva */
 /* ================= SIM ================= */
 function teamStr(tid){
@@ -4488,6 +4917,7 @@ function endSeason(){
   S.season++;S.week=1;
 }
 
+'use strict';
 /* js/market.js — yapay zekâ transfer piyasası: kulüpler arası alım-satım, kulüp bütçeleri, sezon sonu kadro dengesi */
 /* ================= KADRO SINIRLARI =================
    playMatchSide en az 1 kaleci + 10 oyuncu bulabilmeli; bu yüzden mevki tabanları sert kuraldır. */
@@ -4718,6 +5148,7 @@ function rebalanceSquads(){
   });
 }
 
+'use strict';
 /* js/events.js — olaylar: menajerliğin sahada olmayan tarafı.
    Yeni olay eklemek için EVENTS dizisine bir kayıt yazmak yeterli:
      id   : benzersiz kısa ad
@@ -5317,6 +5748,7 @@ function applyEff(r,c){
   return out;
 }
 
+'use strict';
 /* js/skills.js — yetenek ağacı (merkezden dört yöne açılan düğüm ağı).
 
    Ağaç bir ızgara üzerinde duruyor: merkezde ajansın kendisi (hub), ondan dört
@@ -5618,6 +6050,7 @@ function skillBonus(key){
 function branchTaken(br){return SKILLS.filter(sk=>sk.br===br&&hasSkill(sk.id)).length;}
 function branchTotal(br){return SKILLS.filter(sk=>sk.br===br).length;}
 
+'use strict';
 /* js/sfx.js — arayüz sesi.
    Ses dosyası yok: Web Audio ile anlık sentezleniyor, böylece tek dosya çıktısı ve
    çevrimdışı çalışma bozulmuyor.
@@ -5686,6 +6119,7 @@ if(typeof document!=='undefined'&&document.addEventListener){
   },true);
 }
 
+'use strict';
 /* js/actions.js — oyuncu aksiyonları: sözleşme pazarlığı, transfer teklifleri, temsilcilik görüşmesi, keşif satın alma */
 /* ================= NEGOTIATION ================= */
 /* Son 5 maçın ortalama reytingi kulübün cömertliğini doğrudan belirler:
@@ -6151,15 +6585,29 @@ function toMenu(){
   render();
 }
 function askToMenu(){if(confirm(t('toMenuQ')))toMenu();}
+/* Kayıt okuması asenkron (IndexedDB). Tıklama işleyicisi sözü beklemiyor;
+   okuma bitene kadar menü olduğu gibi duruyor — tam kayıt telefonda birkaç yüz
+   milisaniye sürebiliyor, o sırada ikinci kez tıklanırsa iki kez açılmasın. */
+let slotOpening=0;
 function openSlot(n){
-  if(!loadSlot(n)){toast(t('slotBroken'));render();return;}
-  /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
-     yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
-  ensureRivals();
-  stack=[{v:'dash'}];lastSig=null;
-  render();
-  /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
-  if(S.evCur&&S.agent)showEvent(S.evCur);
+  if(slotOpening)return;
+  slotOpening=n;
+  loadSlot(n).then(r=>{
+    slotOpening=0;
+    if(!r.ok){
+      /* 'future': daha yeni bir sürümün yazdığı kayıt. Bozuk değil, bu yüzden
+         silinmiyor — kullanıcıya neden açılmadığı ayrı söyleniyor. */
+      toast(t(r.reason==='future'?'slotNewer':'slotBroken'));
+      render();return;
+    }
+    /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
+       yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
+    ensureRivals();
+    stack=[{v:'dash'}];lastSig=null;
+    render();
+    /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */
+    if(S.evCur&&S.agent)showEvent(S.evCur);
+  },()=>{slotOpening=0;toast(t('slotBroken'));render();});
 }
 function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
 function askDeleteSlot(n){
@@ -6215,6 +6663,35 @@ function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2200);
+}
+/* ================= KAYIT UYARISI =================
+   Yazma başarısızlığı eskiden hiçbir yere gitmiyordu: lsSet() false dönüyor,
+   save() onu atıyordu. Oyuncu ilerlemesinin yazılmadığını ancak uygulamayı
+   kapatıp açınca anlıyordu — mağazada en ağır bedeli ödeten hata türü.
+
+   Toast yetmez, kaybolur. Bu yüzden kalıcı bir şerit: sorun sürdüğü sürece
+   ekranda kalıyor, dokununca ne olduğunu ve ne yapılabileceğini anlatıyor.
+   store.js sağlık değişince fireSaveHealth() ile burayı çağırıyor. */
+function onSaveHealth(){
+  updateSaveBanner();
+  if(saveHealthy()&&SAVEH.everFailed)toast(t('saveOkAgain'));
+}
+function updateSaveBanner(){
+  const el=document.getElementById('saveWarn');
+  if(!el)return;
+  const bad=!saveHealthy();
+  if(bad)el.innerHTML=`<span class="swt">${t('saveFailTtl')}</span> <span class="swd">${t('saveFailTap')}</span>`;
+  if(el.classList)el.classList.toggle('show',bad);
+}
+function showSaveHelp(){
+  if(saveHealthy())return;
+  openModal(`<h2>${t('saveFailTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('saveFailWhat')}</span></div>
+    <div class="kv" style="margin-top:12px"><span class="k">${t('saveFailWhere')}</span>
+      <span class="v">${saveBackend()==='idb'?'IndexedDB':'localStorage'}</span></div>
+    <div class="kv"><span class="k">${t('saveFailCode')}</span><span class="v">${esc(SAVEH.lastErr)}</span></div>
+    <div class="sub" style="margin-top:12px">${t('saveFailFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
 }
 /* lock=true iken arka plana dokunmak kapatmaz — karar verilmesi gereken ekranlar
    (olaylar) böyle açılır, yoksa seçim yapmadan atlanabiliyor. */
@@ -6401,6 +6878,21 @@ const VIEWS={
    Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
 menu(){
   const m=allMeta(),rows=[];
+  /* Kayıtlar henüz okunmadı (ya da eski sürümden göç ediyor). Boş yuva çizmek
+     ilerlemenin silindiğini düşündürürdü — bekleyen bir satır dürüst olan. */
+  if(!storeReady){
+    for(let n=1;n<=SLOTS;n++)rows.push(`<div class="pitem">
+      <div class="pinfo"><div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
+      <div class="psub">${t('slotLoading')}</div></div></div>`);
+    return `
+    <div class="hero" style="margin-top:10px">
+      <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
+      <div class="hname">Menajer</div>
+      <div class="hsub">${t('menuSub')}</div>
+    </div>
+    <div class="sect">${t('slotsLbl')}</div>
+    ${listWrap(rows.join(''))}`;
+  }
   for(let n=1;n<=SLOTS;n++){
     const s=m['s'+n];
     if(s){
@@ -7242,6 +7734,9 @@ function showChrome(on){
 function render(){
   applyTheme();
   document.documentElement.lang=L;   // ekran okuyucu ve tarayıcı doğru dili görsün
+  /* Şerit #view'ın dışında, innerHTML onu silmiyor — ama dil değişmiş olabilir,
+     bu yüzden metni her çizimde tazeleniyor. */
+  updateSaveBanner();
   const c=cur();
   /* Açık kariyer yoksa kabuktayız: ana menü, yeni kariyer ya da menüden açılan
      ayarlar. Ayrı bir ekran durumu tutmuyoruz — S'nin kendisi bu ayrımı taşıyor. */
@@ -7477,12 +7972,30 @@ function setLangTo(lc){
    çağırdığı save() ve açılış var. */
 /* ================= SAVE ================= */
 /* Açık kariyer yoksa (ana menü) yazacak bir şey yok — çağrı sessizce düşer,
-   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz. */
+   böylece çağıran taraflar curSlot'u kontrol etmek zorunda kalmaz.
+   Hâlâ senkron: 25 çağrı yerinin hiçbiri beklemek istemiyor. Gerçek yazma
+   arkadan oluyor (js/store.js), başarısızlığı da ekranda görünüyor. */
 function save(){if(curSlot&&S)saveToSlot(curSlot);}
-/* ================= AÇILIŞ ================= */
-migrateLegacy();          // tek kayıtlı sürümden gelen ilerleme 1. yuvaya
+/* ================= AÇILIŞ =================
+   Menü hemen çiziliyor, kayıtlar arkadan geliyor. Sıra bu: storeInit()'i
+   beklemek açılışta boş bir kare bırakırdı, beklemeden boş yuva çizmek ise
+   kayıt silinmiş gibi görünürdü — bu yüzden storeReady false iken menü
+   "yükleniyor" satırı gösteriyor ve göç bitince yeniden çiziliyor. */
 stack=[{v:'menu'}];
-render();                 // S null: render kabuk dalına girer, ana menü açılır
+render();
+storeInit().then(()=>{render();},()=>{render();});
+
+/* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta
+   tamamlanma sözü vermiyor, ama yazmayı başlatmak hiç başlatmamaktan iyi. */
+function flushOnHide(){if(curSlot&&S)saveToSlot(curSlot);}
+if(typeof document!=='undefined'&&document.addEventListener){
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')flushOnHide();
+  });
+}
+if(typeof window!=='undefined'&&window.addEventListener)
+  window.addEventListener('pagehide',flushOnHide);
+
 /* Çevrimdışı çalışma. file:// ile açıldığında service worker kaydı yapılamaz —
    tek dosya sürümü (dist/menajer.html) zaten kendi kendine yeterli olduğu için sorun değil.
    Capacitor içinde de kaydetmiyoruz: varlıklar zaten uygulamaya gömülü, service worker
