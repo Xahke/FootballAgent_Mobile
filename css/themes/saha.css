@@ -30,6 +30,8 @@
   --sk-hub:var(--txt2); --sk-tb:#4d9fff; --sk-fd:#1ec97e; --sk-ag:#e9bc5a; --sk-nw:#b07cf0;
 
   /* keşif haritası: derin lacivert deniz, yükseltilmiş kara */
+  /* main yatay dolgusu; ana ekranın tam genişlik kanaması bunu kullanıyor */
+  --gutter:14px;
   --map-sea:#070c17; --map-land:#131d33; --map-fog:#0e1526; --map-coast:#23314e;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -548,6 +550,9 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .mapterr.full{filter:drop-shadow(0 0 5px var(--acc))}
 
 @media (max-width:374px){
+  /* Ana ekranın tam genişlik kanaması --gutter'ı okuyor; dolgu daralınca o da
+     daralmalı, yoksa 360px'te belge 4px yatay taşıyordu. */
+  :root{--gutter:10px}
   main{padding:12px 10px 18px}
   .agCash{font-size:23px}
   .statusRow{gap:6px}
@@ -584,89 +589,101 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
   background:var(--acc);box-shadow:0 0 0 2px var(--sur2)}
 
 /* --- kariyer özeti --- */
-.hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;
-  background:var(--sur2);border-radius:16px;padding:15px 14px;margin-bottom:13px;
-  box-shadow:inset 0 0 0 1px var(--line)}
-.hmAv{width:54px;height:54px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;
-  justify-content:center;font-size:19px;font-weight:900;letter-spacing:-.02em;
-  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+.hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;
+  background:var(--sur2);border-radius:18px;padding:17px 15px;margin-bottom:15px;
+  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000}
+/* Portre <img> olarak geliyor; yüklenemezse onerror onu kaldırıyor ve altta
+   duran baş harfler ortaya çıkıyor. Görsel yalnız saha temasında gösteriliyor. */
+.hmAv{position:relative;overflow:hidden;width:68px;height:68px;border-radius:16px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;
+  letter-spacing:-.02em;background:var(--sur4);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.hmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
 .hmCi{min-width:0}
-.hmLv{font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;
+.hmLv{font-size:14.5px;font-weight:600;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.hmLv b{font-size:16px;font-weight:900;color:var(--acc);margin-left:3px}
-.hmRep{display:flex;align-items:center;gap:8px;margin-top:7px}
+.hmLv b{font-size:19px;font-weight:900;color:var(--acc);margin-left:4px}
+.hmRep{display:flex;align-items:center;gap:9px;margin-top:9px}
 .hmShield{flex-shrink:0;color:var(--gold);display:flex}
-.hmShield svg{width:19px;height:19px}
+.hmShield svg{width:22px;height:22px}
 .hmRepBody{flex:1;min-width:0}
-.hmRepL{font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt3)}
-.hmBar{height:6px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:4px}
+.hmRepL{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
+.hmBar{height:7px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:5px}
 .hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
-.hmRepN{font-size:10.5px;font-weight:700;color:var(--txt3);margin-top:3px;font-variant-numeric:tabular-nums}
+.hmRepN{font-size:11.5px;font-weight:700;color:var(--txt3);margin-top:4px;font-variant-numeric:tabular-nums}
 .hmRepN b{color:var(--gold);font-weight:800}
 .hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
   padding-left:12px;border-left:1px solid var(--line)}
 .hmCoin{color:var(--gold);display:flex;margin-bottom:2px}
-.hmCoin svg{width:20px;height:20px}
-.hmBalV{font-size:17px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+.hmCoin svg{width:23px;height:23px}
+.hmBalV{font-size:19.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   white-space:nowrap}
 .hmBalV.neg{color:var(--bad)}
-.hmBalL{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+.hmBalL{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2)}
 
 /* --- ana aksiyon: ekrandaki en güçlü öğe --- */
-.hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;
-  min-height:84px;padding:15px 16px;margin-bottom:20px;border:none;border-radius:18px;cursor:pointer;
+.hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:15px;
+  min-height:98px;padding:18px 17px;margin-bottom:22px;border:none;border-radius:20px;cursor:pointer;
   text-align:left;font-family:inherit;background:var(--acc);color:var(--accT)}
 .hmAdv:active{transform:scale(.985)}
-.hmAdvIc{position:relative;z-index:1;width:52px;height:52px;flex-shrink:0;border-radius:50%;
+.hmAdvIc{position:relative;z-index:1;width:56px;height:56px;flex-shrink:0;border-radius:50%;
   display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.16)}
-.hmAdvIc svg{width:26px;height:26px}
+.hmAdvIc svg{width:29px;height:29px}
 .hmAdvT{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.hmAdvTitle{font-size:20px;font-weight:900;letter-spacing:-.02em;text-transform:uppercase;line-height:1.05}
-.hmAdvSub{font-size:12.5px;font-weight:700;opacity:.82;font-variant-numeric:tabular-nums}
-.hmAdvGo{position:relative;z-index:1;width:44px;height:44px;flex-shrink:0;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;
+.hmAdvTitle{font-size:20.5px;font-weight:900;letter-spacing:-.025em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
+.hmAdvSub{font-size:13.5px;font-weight:700;opacity:.85;font-variant-numeric:tabular-nums}
+.hmAdvGo{position:relative;z-index:1;width:46px;height:46px;flex-shrink:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;
   background:rgba(0,0,0,.16)}
 
 /* --- bölüm başlığı --- */
-.hmSect{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--txt3);margin:0 2px 10px}
+.hmSect{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt2);margin:0 2px 11px}
 
 /* --- gündem: sol ray aciliyeti kodluyor --- */
-.hmAg{width:100%;display:flex;align-items:center;gap:12px;min-height:58px;padding:11px 13px;
-  margin-bottom:9px;border:none;border-radius:14px;cursor:pointer;text-align:left;font-family:inherit;
-  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line);
+.hmAg{width:100%;display:flex;align-items:center;gap:13px;min-height:68px;padding:13px 14px;
+  margin-bottom:10px;border:none;border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;
+  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;
   border-left:3px solid var(--txt3)}
 .hmAg:active{transform:scale(.99)}
 .hmAg.red{border-left-color:var(--bad)}
 .hmAg.gold{border-left-color:var(--gold)}
+/* Mutsuz müşteri karar bekleyen olaydan daha az acil: kırmızı değil turuncu. */
+.hmAg.warn{border-left-color:var(--warn)}
+.hmAg.warn .hmAgIc{color:var(--warn)}
 .hmAg.teal{border-left-color:var(--acc)}
 .hmAg.blue{border-left-color:var(--blue)}
-.hmAgIc{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--txt2)}
+.hmAgIc{width:50px;height:50px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
 .hmAg.red .hmAgIc{color:var(--bad)} .hmAg.gold .hmAgIc{color:var(--gold)}
 .hmAg.teal .hmAgIc{color:var(--acc)} .hmAg.blue .hmAgIc{color:var(--blue)}
-.hmAgIc svg{width:19px;height:19px}
-.hmAgT{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.3}
+.hmAgIc svg{width:28px;height:28px}
+.hmAgT{flex:1;min-width:0;font-size:14.5px;font-weight:600;line-height:1.32}
 .hmAgC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1}
-.hmEmpty{background:var(--sur2);border-radius:14px;padding:16px 14px;margin-bottom:9px;
-  box-shadow:inset 0 0 0 1px var(--line);color:var(--txt3);font-size:13px;text-align:center}
+.hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
+  box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
 
 /* --- hızlı erişim: 2x2, iri dokunma alanı --- */
-.hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 12px}
-.hmQ{position:relative;min-height:84px;padding:12px 12px 12px 12px;border:none;border-radius:16px;
+.hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0 14px}
+/* min-width:0 — grid öğesi varsayılan olarak içeriğinin min-content
+   genişliğinin altına inemiyor; bölünemeyen uzun etiketler (Transferler)
+   kartı 1fr izinin dışına taşırıyordu. */
+.hmQ{position:relative;min-width:0;min-height:98px;padding:13px;border:none;border-radius:18px;
   cursor:pointer;text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
-  box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:11px}
+  box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000;display:flex;align-items:center;gap:12px}
 .hmQ:active{transform:scale(.97)}
-.hmQi{flex-shrink:0;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4)}
-.hmQi svg{width:20px;height:20px}
+.hmQi{flex-shrink:0;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4);box-shadow:inset 0 0 0 1px var(--line2)}
+.hmQi svg{width:30px;height:30px}
 .hmQb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 /* Kelime ortasından bölünmesin: 'OYUNCULARIM' tek kelime, sığar; çok
    kelimeli 'SCOUTING NETWORK' boşluktan iki satıra iner. */
-.hmQt{font-size:9.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--txt3);
-  line-height:1.22;white-space:normal;overflow-wrap:normal;word-break:keep-all;
-  max-height:2.44em;overflow:hidden}
-.hmQv{font-size:20px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.hmQt{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--txt2);
+  line-height:1.2;white-space:normal;overflow-wrap:normal;word-break:keep-all;
+  max-height:2.4em;overflow:hidden}
+.hmQv{font-size:23px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .hmQv small{font-size:12px;font-weight:700;color:var(--txt3)}
 /* ok köşede: satır içinde yer kaplasaydı 360px'te etiket kırpılıyordu */
 .hmQc{position:absolute;top:9px;right:11px;color:var(--txt3);font-size:17px;line-height:1}
@@ -675,32 +692,38 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .hmQ.viol .hmQi{color:var(--viol)} .hmQ.viol .hmQv{color:var(--viol)}
 
 /* --- haftanın yükseleni --- */
-.hmRise{width:100%;display:flex;align-items:center;gap:13px;min-height:74px;padding:12px 14px;
-  margin-bottom:16px;border:none;border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;
-  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line);
-  border-left:3px solid var(--gold)}
+.hmRise{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;
+  min-height:88px;padding:14px 15px;margin-bottom:18px;border:none;border-radius:18px;cursor:pointer;
+  text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
+  box-shadow:inset 0 0 0 1px var(--line),0 6px 18px -14px #000;border-left:3px solid var(--gold)}
 .hmRise:active{transform:scale(.99)}
-.hmRiseIc{width:46px;height:46px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:var(--sur4);color:var(--gold)}
-.hmRiseIc svg{width:23px;height:23px}
+.hmRiseIc{width:52px;height:52px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4);color:var(--gold);box-shadow:inset 0 0 0 1px var(--line2)}
+.hmRiseIc svg{width:29px;height:29px}
 .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.hmRiseL{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
-.hmRiseV{font-size:20px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.hmRiseL{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
+.hmRiseV{font-size:22.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.12}
 .hmRiseV i{font-style:normal;color:var(--acc);font-size:14px}
-.hmRiseN{font-size:11.5px;font-weight:600;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;
+.hmRiseN{font-size:12.5px;font-weight:600;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 
 /* Dar telefonlarda önemli bilgi ilk ekranda kalsın diye ölçüler biraz iner. */
 @media (max-width:365px){
-  .hmWord{font-size:22px}
-  .hmCard{gap:9px;padding:11px}
-  .hmAv{width:46px;height:46px;border-radius:11px;font-size:16px}
-  .hmBal{padding-left:9px}
-  .hmBalV{font-size:15px}
-  .hmAdvTitle{font-size:17.5px}
-  .hmAdvIc{width:46px;height:46px}
-  .hmQ{min-height:78px;padding:11px 10px}
-  .hmQv{font-size:18px}
+  .hmWord{font-size:23px}
+  .hmCard{gap:11px;padding:14px 12px}
+  .hmAv{width:60px;height:60px;border-radius:14px;font-size:20px}
+  .hmBal{padding-left:10px}
+  .hmBalV{font-size:17px}
+  .hmAdv{min-height:92px;padding:16px 14px}
+  .hmAdvTitle{font-size:19.5px}
+  .hmAdvIc{width:54px;height:54px}
+  .hmAdvIc svg{width:28px;height:28px}
+  .hmQ{min-height:92px;padding:12px 11px}
+  .hmQi{width:48px;height:48px}
+  .hmQi svg{width:27px;height:27px}
+  .hmQv{font-size:21px}
+  .hmAgIc{width:46px;height:46px}
+  .hmAgIc svg{width:26px;height:26px}
 }
 
 /* ===================== ANA EKRAN · SAHA ATMOSFERİ =====================
@@ -720,10 +743,6 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
     linear-gradient(to right,transparent 0 76%,rgba(255,255,255,.75) 76% 76.6%,transparent 76.6%),
     linear-gradient(to bottom,transparent 0 14%,rgba(255,255,255,.75) 14% 14.8%,transparent 14.8%),
     linear-gradient(to bottom,transparent 0 85%,rgba(255,255,255,.75) 85% 85.8%,transparent 85.8%)}
-/* üstten gelen ışık — sahanın açıldığı koridor hissi */
-.hmAdv::after{content:'';position:absolute;left:-30%;top:-160%;width:60%;height:320%;
-  transform:rotate(18deg);pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent)}
 .hmAdvIc{background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
 .hmAdvGo{background:rgba(255,255,255,.15);box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)}
 
@@ -756,3 +775,72 @@ body[data-view="dash"] header #btnNext{display:none}
 /* Boşalan çubuk ince kalsın; safe-area üst boşluğu yine korunuyor. */
 body[data-view="dash"] header{padding-top:calc(3px + env(safe-area-inset-top));padding-bottom:3px}
 body[data-view="dash"] header .hrow{min-height:38px}
+
+/* ===================== ANA EKRAN · GÖRSEL VARLIKLAR (yalnız saha) =====================
+   Üç optimize WebP yalnız bu temada kullanılıyor. Diğer üç tema renk yerine
+   veri anlamı taşıyor; oraya fotoğraf koymak o temaların dilini bozardı. */
+
+/* --- stadyum tüneli: ajans adı ve sezon/hafta bloğunun atmosferi ---
+   Tüm sayfaya yayılmıyor; yalnız üst 176px. Sol tarafta yazıların arkasına
+   güçlü koyu lacivert gradient var, sağdaki kapı görünür kalıyor.
+   background-position yatayda %64: kapı kaynakta ~%70'te ve cover kırpması
+   360-520px arasında değiştiği için sabit yüzde kapıyı sağ üçte birde tutuyor,
+   bildirim düğmesinin (üst sağ, ~46px) altında kalıyor. */
+.hmTop{position:relative;z-index:0;padding:14px 0 16px;margin-bottom:2px}
+.hmTop::before{content:'';position:absolute;z-index:-1;top:-14px;bottom:-30px;
+  left:calc(-1 * var(--gutter));right:calc(-1 * var(--gutter));
+  background:
+    linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.9) 26%,rgba(11,17,30,.5) 54%,rgba(11,17,30,.2) 100%),
+    linear-gradient(180deg,rgba(11,17,30,.42) 0%,rgba(11,17,30,.05) 30%,rgba(11,17,30,.72) 78%,var(--bg) 100%),
+    url(../assets/ui/home-stadium-tunnel.webp) 64% 50%/cover no-repeat;
+  background-color:var(--bg)}
+/* Kariyer kartı tünelin üstünde kalmalı: .hmTop konumlandırılmış olduğu için
+   aksi halde ::before kartın tepesini örtüyordu. */
+.hmCard{position:relative;z-index:1}
+.hmWord{text-shadow:0 2px 14px rgba(0,0,0,.75)}
+.hmChip{background:rgba(19,27,46,.82);box-shadow:inset 0 0 0 1px var(--line2)}
+/* zil, kapının parlaklığıyla yarışmasın diye kendi koyu zeminini taşıyor */
+.hmBell{background:rgba(19,27,46,.9);box-shadow:inset 0 0 0 1px var(--line2),0 4px 14px -8px #000}
+
+/* --- menajer portresi --- */
+.hmAvImg{display:block;filter:brightness(1.08) saturate(1.04)}
+.hmAv{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.42),0 5px 16px -8px #000}
+
+/* --- haftanın yükseleni: oyuncu solda, metin sağda --- */
+.hmRise{
+  background:
+    linear-gradient(90deg,rgba(19,27,46,.12) 0%,rgba(19,27,46,.42) 26%,rgba(19,27,46,.9) 52%,var(--sur2) 74%),
+    url(../assets/ui/weekly-riser.webp) 24% 34%/cover no-repeat;
+  background-color:var(--sur2);
+  padding-left:46%}
+/* fotoğraf ikonun işini yapıyor; altın halka burada fazlalık olurdu */
+.hmRise .hmRiseIc{display:none}
+.hmRiseV{text-shadow:0 2px 10px rgba(0,0,0,.6)}
+
+/* --- ikon halkaları: renk kanalı + ince kenar + hafif iç gradient --- */
+.hmQ.green .hmQi{background:linear-gradient(158deg,rgba(30,201,126,.22),rgba(30,201,126,.07));
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.4)}
+.hmQ.green .hmQi svg{filter:drop-shadow(0 1px 5px rgba(30,201,126,.45))}
+.hmQ.blue .hmQi{background:linear-gradient(158deg,rgba(77,159,255,.22),rgba(77,159,255,.07));
+  box-shadow:inset 0 0 0 1px rgba(77,159,255,.4)}
+.hmQ.blue .hmQi svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}
+.hmQ.viol .hmQi{background:linear-gradient(158deg,rgba(162,116,245,.22),rgba(162,116,245,.07));
+  box-shadow:inset 0 0 0 1px rgba(162,116,245,.4)}
+.hmQ.viol .hmQi svg{filter:drop-shadow(0 1px 5px rgba(162,116,245,.45))}
+
+.hmAg.red .hmAgIc{background:linear-gradient(158deg,rgba(240,85,93,.2),rgba(240,85,93,.06));
+  box-shadow:inset 0 0 0 1px rgba(240,85,93,.38)}
+.hmAg.red .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(240,85,93,.45))}
+.hmAg.warn .hmAgIc{background:linear-gradient(158deg,rgba(230,162,60,.2),rgba(230,162,60,.06));
+  box-shadow:inset 0 0 0 1px rgba(230,162,60,.38)}
+.hmAg.warn .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(230,162,60,.45))}
+.hmAg.gold .hmAgIc{background:linear-gradient(158deg,rgba(233,188,90,.2),rgba(233,188,90,.06));
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.38)}
+.hmAg.gold .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(233,188,90,.45))}
+.hmAg.teal .hmAgIc{background:linear-gradient(158deg,rgba(30,201,126,.2),rgba(30,201,126,.06));
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.38)}
+.hmAg.teal .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(30,201,126,.45))}
+.hmAg.blue .hmAgIc{background:linear-gradient(158deg,rgba(77,159,255,.2),rgba(77,159,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(77,159,255,.38)}
+.hmAg.blue .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}

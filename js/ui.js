@@ -414,7 +414,8 @@ dash(){
   if(S.poach){const p=byId(S.poach.pid);if(p)ag.push({rail:'red',ic:'alert',txt:t('hmPoach').replace('{n}',p.n),go:`pushV('player',${p.id})`});}
   S.clients.map(byId).forEach(p=>{
     if(isFree(p))ag.push({rail:'red',ic:'alert',txt:t('needsClub')+' · '+p.n,go:`pushV('player',${p.id})`});
-    else if(p.morale<40)ag.push({rail:'red',ic:'alert',txt:t('unhappy')+' · '+p.n,go:`pushV('player',${p.id})`});
+    /* Mutsuzluk karar bekleyen bir olaydan daha az acil — ray turuncu. */
+    else if(p.morale<40)ag.push({rail:'warn',ic:'alert',txt:t('unhappy')+' · '+p.n,go:`pushV('player',${p.id})`});
   });
   (S.pendC||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'contract',txt:t('signPending')+' · '+p.n,go:`pushV('player',${p.id})`});});
   (S.offers||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'transfer',txt:t('considering')+' · '+p.n,go:`pushV('player',${p.id})`});});
@@ -429,7 +430,7 @@ dash(){
      Hiçbir müşteride hareket yoksa kart hiç çizilmiyor. */
   const risers=S.clients.map(byId).filter(p=>p&&valueMult(p)>1.02)
     .map(p=>({p,gain:valueOf(p)-valueOf({r:p.r,agent:p.agent})}))
-    .filter(x=>x.gain>0).sort((a,b)=>b.gain-a.gain);
+    .filter(x=>x.gain>=0.1).sort((a,b)=>b.gain-a.gain);
   const riser=risers[0]||null;
 
   const lp=levelProgress();
@@ -460,7 +461,7 @@ dash(){
   </div>
 
   <div class="hmCard">
-    <div class="hmAv" aria-hidden="true">${esc(ini)}</div>
+    <div class="hmAv" aria-hidden="true">${esc(ini)}<img class="hmAvImg" src="assets/ui/agent-silhouette.webp" alt="" onerror="this.remove()"></div>
     <div class="hmCi">
       <div class="hmLv">${t('hmLevel')} <b>${lp.lv}</b></div>
       <div class="hmRep">
@@ -506,7 +507,7 @@ dash(){
     <span class="hmRiseIc">${ICONS.trend}</span>
     <span class="hmRiseT">
       <span class="hmRiseL">${t('hmRiser')}</span>
-      <span class="hmRiseV">+${fmtK(riser.gain)} <i>▲</i></span>
+      <span class="hmRiseV">+${riser.gain>=1?fmtK(riser.gain):(+riser.gain.toFixed(1))+'K €'} <i>▲</i></span>
       <span class="hmRiseN">${esc(riser.p.n)}</span>
     </span>
     <span class="hmAgC">›</span></button>`:''}

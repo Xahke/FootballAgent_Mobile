@@ -7,7 +7,9 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'www');
-const ITEMS = ['index.html', 'manifest.json', 'sw.js', 'css', 'js', 'icons'];
+/* assets/ = arayüz görselleri (ana ekranın stadyum/portre/yükselen görselleri).
+   icons/ uygulama ikonlarına ait; karıştırmamak için ayrı kök. */
+const ITEMS = ['index.html', 'manifest.json', 'sw.js', 'css', 'js', 'icons', 'assets'];
 
 function copy(src, dst) {
   const st = fs.statSync(src);
