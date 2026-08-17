@@ -775,6 +775,12 @@ body[data-view="dash"] header #btnNext{display:none}
 /* Boşalan çubuk ince kalsın; safe-area üst boşluğu yine korunuyor. */
 body[data-view="dash"] header{padding-top:calc(3px + env(safe-area-inset-top));padding-bottom:3px}
 body[data-view="dash"] header .hrow{min-height:38px}
+/* Dokunma hedefi: paylaşılan .hback bu temada 36px ve ana ekranda üst çubuğun
+   taşıdığı tek düğme o (ayarlar) — yani 36px'lik hedef tam da burada, en çok
+   dokunulan ekranda kalıyordu. Diğer üç tema zaten 44px; düzeltme yalnız bu
+   görünüme kapsamlandı ki saha'nın diğer 13 ekranındaki geri düğmesi aynen
+   kalsın. Satır 38 -> 44px'e çıkıyor, alt gezinme boşluğu 38 -> 32px. */
+body[data-view="dash"] header .hback{width:44px;height:44px}
 
 /* ===================== ANA EKRAN · GÖRSEL VARLIKLAR (yalnız saha) =====================
    Üç optimize WebP yalnız bu temada kullanılıyor. Diğer üç tema renk yerine
