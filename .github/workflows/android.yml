@@ -90,8 +90,11 @@ jobs:
       - name: dogrula-3-targetSdk-36
         run: grep -q "targetSdkVersion:'36'" badging.txt
 
+      # Yeni build-tools'un aapt2'si minSdk'yi "minSdkVersion:'24'" diye
+      # yazıyor; eski biçim "sdkVersion:'24'" idi. Büyük/küçük harfe
+      # duyarsız arama iki biçimi de yakalıyor.
       - name: dogrula-4-minSdk-24
-        run: grep -q "sdkVersion:'24'" badging.txt
+        run: grep -qi "sdkVersion:'24'" badging.txt
 
       # Bağımsız ikinci kaynak: AGP'nin ürettiği birleştirilmiş manifest düz
       # XML. aapt2 tarafı ne olursa olsun bu her zaman çalışıyor ve sonucu
