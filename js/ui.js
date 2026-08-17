@@ -97,6 +97,44 @@ function setTheme(id){
    oyuncunun istemediği bir şey. nextWeek()'in içine dokunmuyoruz — sıra aynen
    kalsın diye koruma yalnız bu çağrı yerinde. Header'daki "Devam" düğmesi
    küçük ve alışılmış davranışını koruyor. */
+/* ================= ANA EKRAN ROZET İKONLARI =================
+   Sekiz hazır rozet görseli yalnız saha temasında kullanılıyor: kendi dairesi,
+   çemberi ve glow'unu taşıdıkları için oradaki CSS halkası ayrıca çizilmiyor,
+   yoksa çift çember olurdu. Diğer temalar mevcut SVG setini kullanmaya devam
+   ediyor — onların dili renk değil veri anlamı üzerine kurulu.
+
+   Görseller yalnız saha'da markup'a giriyor. display:none ile gizlemek de
+   olurdu ama tarayıcı onları yine indirirdi; sekiz dosya ~160KB, mobil bir
+   oyunda diğer üç temaya bunu ödetmenin anlamı yok. render() tema
+   değişiminde zaten yeniden çalışıyor. */
+/* Yollar tam ve düz literal: build.js tek dosya sürümünde bunları data URI ile
+   değiştiriyor ve bunu metinden yapıyor. Parça birleştirerek kurulan bir yol
+   (…'home-icon-'+ad+'.webp') derleme sırasında görünmez, dist'te 404 olurdu. */
+const HM_BADGE={
+  calendar:'assets/ui/home-icon-calendar.webp',
+  clients :'assets/ui/home-icon-players.webp',
+  transfer:'assets/ui/home-icon-transfers.webp',
+  inbox   :'assets/ui/home-icon-inbox.webp',
+  scout   :'assets/ui/home-icon-scout.webp',
+  contract:'assets/ui/home-icon-contract.webp',
+  alert   :'assets/ui/home-icon-warning.webp',
+  trend   :'assets/ui/home-icon-trend.webp'
+};
+function hmHasBadge(name){return !!HM_BADGE[name]&&themeOf()==='saha';}
+/* Rozet + altında SVG yedeği. Görsel yüklenemezse hmBadgeFail() rozeti
+   kaldırıp kabın 'badge' sınıfını düşürüyor; CSS o anda halkayı ve SVG'yi
+   geri getiriyor. Erişilebilir adı metin etiketi taşıyor, görsel dekoratif. */
+function hmIcon(name,px){
+  const svg=ICONS[name]||'';
+  if(!hmHasBadge(name))return svg;
+  return `<img class="hmBadge" src="${HM_BADGE[name]}" alt="" aria-hidden="true"`+
+         ` width="${px}" height="${px}" onerror="hmBadgeFail(this)">${svg}`;
+}
+function hmBadgeFail(img){
+  const p=img.parentNode;
+  if(p&&p.classList)p.classList.remove('badge');
+  img.remove();
+}
 let hmLastAdv=0;
 function hmAdvance(){
   const now=Date.now();
@@ -445,7 +483,7 @@ dash(){
   /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
      dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
   const qCard=(cls,icon,label,value,go)=>`<button class="hmQ ${cls}" onclick="${go}">
-    <span class="hmQi">${ICONS[icon]}</span>
+    <span class="hmQi${hmHasBadge(icon)?' badge':''}">${hmIcon(icon,52)}</span>
     <span class="hmQb"><span class="hmQt">${label}</span><span class="hmQv">${value}</span></span>
     <span class="hmQc">›</span></button>`;
 
@@ -481,7 +519,7 @@ dash(){
   </div>
 
   <button class="hmAdv" onclick="hmAdvance()">
-    <span class="hmAdvIc">${ICONS.calendar}</span>
+    <span class="hmAdvIc${hmHasBadge('calendar')?' badge':''}">${hmIcon('calendar',56)}</span>
     <span class="hmAdvT">
       <span class="hmAdvTitle">${t('hmAdvance')}</span>
       <span class="hmAdvSub">${wkNow}. ${t('week')} · ${t('season')} ${S.season}</span>
@@ -491,7 +529,7 @@ dash(){
 
   <div class="hmSect">${t('hmToday')}</div>
   ${agTop.length?agTop.map(x=>`<button class="hmAg ${x.rail}" onclick="${x.go}">
-      <span class="hmAgIc">${ICONS[x.ic]}</span>
+      <span class="hmAgIc${hmHasBadge(x.ic)?' badge':''}">${hmIcon(x.ic,50)}</span>
       <span class="hmAgT">${esc(x.txt)}</span>
       <span class="hmAgC">›</span></button>`).join('')
    :`<div class="hmEmpty">${S.clients.length?t('hmNoAgenda'):t('noClientsSub')}</div>`}
@@ -504,7 +542,7 @@ dash(){
   </div>
 
   ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
-    <span class="hmRiseIc">${ICONS.trend}</span>
+    <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
     <span class="hmRiseT">
       <span class="hmRiseL">${t('hmRiser')}</span>
       <span class="hmRiseV">+${riser.gain>=1?fmtK(riser.gain):(+riser.gain.toFixed(1))+'K €'} <i>▲</i></span>

@@ -844,3 +844,56 @@ body[data-view="dash"] header .hrow{min-height:38px}
 .hmAg.blue .hmAgIc{background:linear-gradient(158deg,rgba(77,159,255,.2),rgba(77,159,255,.06));
   box-shadow:inset 0 0 0 1px rgba(77,159,255,.38)}
 .hmAg.blue .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}
+
+/* ===================== ANA EKRAN · ROZET İKONLARI (yalnız saha) =====================
+   Görseller kendi dairesini, çemberini ve glow'unu taşıyor. Bu yüzden .badge
+   taşıyan kaplarda CSS halkası, iç gradienti ve kenarı tamamen kapatılıyor —
+   yoksa görselin çemberiyle üst üste binip çift çember oluşuyordu.
+
+   Rozeti olmayan kaplar (örneğin imza yarışı satırındaki gem ikonu) eski
+   halkasını koruyor, böylece satırlar arasında boşluk tutarlılığı bozulmuyor. */
+.hmBadge{display:block;width:100%;height:100%;object-fit:contain}
+.hmQi.badge,.hmAgIc.badge,.hmAdvIc.badge,.hmRiseIc.badge{
+  background:none!important;box-shadow:none!important;border:none;padding:0;overflow:visible}
+/* rozet varken alttaki SVG çizilmiyor; yedeğe düşüldüğünde .badge kalkıyor
+   ve aşağıdaki kural devre dışı kalarak SVG geri geliyor */
+.hmQi.badge>svg,.hmAgIc.badge>svg,.hmAdvIc.badge>svg,.hmRiseIc.badge>svg{display:none}
+/* kanal rengine göre eklenen glow ve iç gradient artık görselin içinde */
+.hmQ.green .hmQi.badge svg,.hmQ.blue .hmQi.badge svg,.hmQ.viol .hmQi.badge svg,
+.hmAg .hmAgIc.badge svg{filter:none}
+
+/* Yükselen kartı: fotoğraf solda kalıyor ama rozet geri geldi. Metin alanı
+   biraz sola çekildi ki rozet + değer + ad sığsın. */
+.hmRise{padding-left:40%}
+.hmRise .hmRiseIc{display:flex;width:48px;height:48px}
+
+/* Aksiyon kartındaki takvim rozeti koyu zeminini kendi taşıyor; yeşil kartın
+   üstünde kendi dairesiyle duruyor. */
+.hmAdvIc.badge{width:56px;height:56px}
+
+/* Dar telefon: rozet görselinin görünür dairesi kutusunun ~%76'sı (glow payı
+   var). Kutuyu küçültmek ikonu küçük göstermiyor ama etikete yer açıyor —
+   360px'te "Oyuncularım" kırpılıyordu. */
+@media (max-width:365px){
+  .hmQ{gap:10px}
+  .hmQi.badge{width:42px;height:42px}
+  .hmAgIc.badge{width:44px;height:44px}
+}
+
+/* Rozetler SVG halkalarından daha geniş bir kutu kaplıyor (glow payı). Hızlı
+   erişim kartında etiket için yeri geri kazanıyoruz: daha dar boşluk, daha
+   dar dolgu, bir tık küçük etiket. "Oyuncularım" tek kelime, sarılamıyor. */
+.hmQ{gap:10px;padding:12px}
+.hmQt{font-size:10px;letter-spacing:.01em}
+
+/* Yükselen kartı: solda fotoğraf, sağda rozet + değer + ad. Metin sütunu
+   40%'ta sıkışıyordu; fotoğrafın okunur kısmı zaten ilk üçte bir. */
+.hmRise{padding-left:33%}
+.hmRise .hmRiseIc{width:42px;height:42px}
+.hmRiseV{font-size:20px}
+.hmRiseN{font-size:12px}
+
+/* Türkçe büyük harf İ'nin noktası ve olası alt uzantılar için satır kutusuna
+   pay: line-height 1.04'te scrollHeight taşıyordu. */
+.hmWord{line-height:1.14}
+.hmAdvTitle{line-height:1.16}

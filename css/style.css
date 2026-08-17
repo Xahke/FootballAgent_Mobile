@@ -690,6 +690,25 @@ html[data-theme="saha"] .hmAg.teal .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba
 html[data-theme="saha"] .hmAg.blue .hmAgIc{background:linear-gradient(158deg,rgba(77,159,255,.2),rgba(77,159,255,.06));
   box-shadow:inset 0 0 0 1px rgba(77,159,255,.38)}
 html[data-theme="saha"] .hmAg.blue .hmAgIc svg{filter:drop-shadow(0 1px 5px rgba(77,159,255,.45))}
+html[data-theme="saha"] .hmBadge{display:block;width:100%;height:100%;object-fit:contain}
+html[data-theme="saha"] .hmQi.badge,html[data-theme="saha"] .hmAgIc.badge,html[data-theme="saha"] .hmAdvIc.badge,html[data-theme="saha"] .hmRiseIc.badge{
+  background:none!important;box-shadow:none!important;border:none;padding:0;overflow:visible}
+html[data-theme="saha"] .hmQi.badge>svg,html[data-theme="saha"] .hmAgIc.badge>svg,html[data-theme="saha"] .hmAdvIc.badge>svg,html[data-theme="saha"] .hmRiseIc.badge>svg{display:none}
+html[data-theme="saha"] .hmQ.green .hmQi.badge svg,html[data-theme="saha"] .hmQ.blue .hmQi.badge svg,html[data-theme="saha"] .hmQ.viol .hmQi.badge svg,html[data-theme="saha"] .hmAg .hmAgIc.badge svg{filter:none}
+html[data-theme="saha"] .hmRise{padding-left:40%}
+html[data-theme="saha"] .hmRise .hmRiseIc{display:flex;width:48px;height:48px}
+html[data-theme="saha"] .hmAdvIc.badge{width:56px;height:56px}
+@media (max-width:365px){html[data-theme="saha"] .hmQ{gap:10px}
+html[data-theme="saha"] .hmQi.badge{width:42px;height:42px}
+html[data-theme="saha"] .hmAgIc.badge{width:44px;height:44px}}
+html[data-theme="saha"] .hmQ{gap:10px;padding:12px}
+html[data-theme="saha"] .hmQt{font-size:10px;letter-spacing:.01em}
+html[data-theme="saha"] .hmRise{padding-left:33%}
+html[data-theme="saha"] .hmRise .hmRiseIc{width:42px;height:42px}
+html[data-theme="saha"] .hmRiseV{font-size:20px}
+html[data-theme="saha"] .hmRiseN{font-size:12px}
+html[data-theme="saha"] .hmWord{line-height:1.14}
+html[data-theme="saha"] .hmAdvTitle{line-height:1.16}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
@@ -1282,6 +1301,15 @@ html[data-theme="gazete"] .hmQi svg{width:27px;height:27px}
 html[data-theme="gazete"] .hmQv{font-size:21px}
 html[data-theme="gazete"] .hmAgIc{width:46px;height:46px}
 html[data-theme="gazete"] .hmAgIc svg{width:26px;height:26px}}
+html[data-theme="gazete"] .hmQ{gap:10px;padding:12px}
+html[data-theme="gazete"] .hmQt{font-size:10px;letter-spacing:.01em}
+html[data-theme="gazete"] .hmAdvTitle{font-size:19px;line-height:1.16}
+html[data-theme="gazete"] .hmWord{line-height:1.14}
+@media (max-width:365px){html[data-theme="gazete"] .hmAdvTitle{font-size:17px}
+html[data-theme="gazete"] .hmQ{gap:9px;padding:11px}
+html[data-theme="gazete"] .hmQi{width:44px;height:44px}
+html[data-theme="gazete"] .hmQi svg{width:25px;height:25px}
+html[data-theme="gazete"] .hmQt{font-size:9.5px}}
 
 /* ===== tema: terminal ===== */
 html[data-theme="terminal"]{
@@ -1875,6 +1903,15 @@ html[data-theme="terminal"] .hmQi svg{width:27px;height:27px}
 html[data-theme="terminal"] .hmQv{font-size:21px}
 html[data-theme="terminal"] .hmAgIc{width:46px;height:46px}
 html[data-theme="terminal"] .hmAgIc svg{width:26px;height:26px}}
+html[data-theme="terminal"] .hmQ{gap:10px;padding:12px}
+html[data-theme="terminal"] .hmQt{font-size:10px;letter-spacing:.01em}
+html[data-theme="terminal"] .hmAdvTitle{font-size:19px;line-height:1.16}
+html[data-theme="terminal"] .hmWord{line-height:1.14}
+@media (max-width:365px){html[data-theme="terminal"] .hmAdvTitle{font-size:17px}
+html[data-theme="terminal"] .hmQ{gap:9px;padding:11px}
+html[data-theme="terminal"] .hmQi{width:44px;height:44px}
+html[data-theme="terminal"] .hmQi svg{width:25px;height:25px}
+html[data-theme="terminal"] .hmQt{font-size:9.5px}}
 
 /* ===== tema: dosya ===== */
 html[data-theme="dosya"]{
@@ -2463,3 +2500,12 @@ html[data-theme="dosya"] .hmQi svg{width:27px;height:27px}
 html[data-theme="dosya"] .hmQv{font-size:21px}
 html[data-theme="dosya"] .hmAgIc{width:46px;height:46px}
 html[data-theme="dosya"] .hmAgIc svg{width:26px;height:26px}}
+html[data-theme="dosya"] .hmQ{gap:10px;padding:12px}
+html[data-theme="dosya"] .hmQt{font-size:10px;letter-spacing:.01em}
+html[data-theme="dosya"] .hmAdvTitle{font-size:19px;line-height:1.16}
+html[data-theme="dosya"] .hmWord{line-height:1.14}
+@media (max-width:365px){html[data-theme="dosya"] .hmAdvTitle{font-size:17px}
+html[data-theme="dosya"] .hmQ{gap:9px;padding:11px}
+html[data-theme="dosya"] .hmQi{width:44px;height:44px}
+html[data-theme="dosya"] .hmQi svg{width:25px;height:25px}
+html[data-theme="dosya"] .hmQt{font-size:9.5px}}

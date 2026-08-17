@@ -699,3 +699,22 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   .hmAgIc{width:46px;height:46px}
   .hmAgIc svg{width:26px;height:26px}
 }
+
+/* Ana ekran ölçek turunda etiketler bu temada sığmıyordu: "Oyuncularım" ve
+   "Transferler" kırpılıyor, aksiyon başlığı kutusunu taşıyordu. Ölçüler
+   saha'daki düzeltmeyle aynı; tasarım değişmiyor, yalnız metin sığıyor. */
+.hmQ{gap:10px;padding:12px}
+.hmQt{font-size:10px;letter-spacing:.01em}
+.hmAdvTitle{font-size:19px;line-height:1.16}
+.hmWord{line-height:1.14}
+
+/* Bu blok dosyanın sonunda: yukarıdaki düzeltmeler kaynak sırasında dar ekran
+   media query'sinden sonra geldiği için onu eziyordu (eşit specificity, son
+   yazan kazanır). Dar ekran değerleri bu yüzden burada yeniden veriliyor. */
+@media (max-width:365px){
+  .hmAdvTitle{font-size:17px}
+  .hmQ{gap:9px;padding:11px}
+  .hmQi{width:44px;height:44px}
+  .hmQi svg{width:25px;height:25px}
+  .hmQt{font-size:9.5px}
+}
