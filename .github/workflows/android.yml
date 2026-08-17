@@ -66,29 +66,56 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-      # Asıl kanıt gradle değişkeni değil, paketin kendisi. APK'nın kendi
-      # manifestinden okuyoruz ve 36 değilse iş başarısız oluyor.
-      # Araç arayışı ayrı tutuluyor: hangi adımda düştüğü logdan görünsün,
-      # boş bir değişkenin "command not found" ile ölmesi tanıyı gizliyordu.
-      - name: APK gerçekten API 36 hedefliyor mu
+      # Asıl kanıt gradle değişkeni değil, paketin kendisi.
+      #
+      # Doğrulama bilerek küçük adımlara bölündü ve adlar ne kontrol edildiğini
+      # söylüyor: iş logları özel, ama adım adları ve sonuçları herkese açık
+      # API'den okunabiliyor. Tek büyük adım düştüğünde hangi satırda kırıldığı
+      # görünmüyordu; böyle, sonuç listesi tanının kendisi oluyor.
+      - name: dogrula-1-aapt2-bulundu
         run: |
-          set -x
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          ls -l "$APK"
-          echo "ANDROID_HOME=${ANDROID_HOME:-<bos>} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<bos>}"
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
-          ls -1 "$SDK/build-tools" || true
+          echo "SDK=$SDK"; ls -1 "$SDK/build-tools" || true
           AAPT2=$(find "$SDK" -name aapt2 -type f 2>/dev/null | sort -V | tail -1)
-          echo "aapt2 = '${AAPT2}'"
-          if [ -z "$AAPT2" ]; then echo "::error::aapt2 bulunamadi ($SDK altinda)"; exit 1; fi
-          "$AAPT2" dump badging "$APK" > /tmp/badging.txt
-          echo "----- badging (ilk 15 satir) -----"
-          head -15 /tmp/badging.txt
-          echo "----- sdk satirlari -----"
-          grep -E "SdkVersion|sdkVersion" /tmp/badging.txt || true
-          grep -q "targetSdkVersion:'36'" /tmp/badging.txt || { echo "::error::APK targetSdkVersion 36 degil"; exit 1; }
-          grep -q "sdkVersion:'24'" /tmp/badging.txt || { echo "::error::APK minSdkVersion 24 degil"; exit 1; }
-          echo "dogrulandi: minSdk 24 / targetSdk 36"
+          echo "aapt2='$AAPT2'"
+          test -n "$AAPT2"
+          echo "AAPT2=$AAPT2" >> "$GITHUB_ENV"
+
+      - name: dogrula-2-badging-alindi
+        run: |
+          "$AAPT2" dump badging android/app/build/outputs/apk/debug/app-debug.apk > badging.txt
+          wc -l badging.txt
+          grep -E "SdkVersion|sdkVersion|^package:" badging.txt || true
+
+      - name: dogrula-3-targetSdk-36
+        run: grep -q "targetSdkVersion:'36'" badging.txt
+
+      - name: dogrula-4-minSdk-24
+        run: grep -q "sdkVersion:'24'" badging.txt
+
+      # Bağımsız ikinci kaynak: AGP'nin ürettiği birleştirilmiş manifest düz
+      # XML. aapt2 tarafı ne olursa olsun bu her zaman çalışıyor ve sonucu
+      # artifact olarak dışarı taşıyor.
+      - name: dogrula-5-merged-manifest
+        if: always()
+        run: |
+          M=$(find android/app/build/intermediates -name AndroidManifest.xml -path '*merged*' 2>/dev/null | head -1)
+          echo "manifest=$M"
+          test -n "$M"
+          grep -o 'android:[a-zA-Z]*SdkVersion="[0-9]*"' "$M" | tee sdk-versions.txt
+          grep -q 'android:targetSdkVersion="36"' "$M"
+          grep -q 'android:minSdkVersion="24"' "$M"
+
+      - name: dogrulama-ciktilarini-yukle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-dogrulama
+          path: |
+            badging.txt
+            sdk-versions.txt
+            android/variables.gradle
+          if-no-files-found: warn
 
   # Kayıt katmanının testleri native derlemeden bağımsız; ayrı iş olarak
   # koşuyor ki APK derlemesi düşse bile sonucu görünür kalsın.
