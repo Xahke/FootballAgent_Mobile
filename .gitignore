@@ -1,7 +1,11 @@
 node_modules/
 www/
 android/
-package-lock.json
+
+# package-lock.json artık depoda. CI "npm install" ile her koşuda farklı yama
+# sürümleri çekebiliyordu; mağazaya çıkan bir uygulamada derlemenin tekrar
+# üretilebilir olması gerekiyor. CI "npm ci" kullanıyor ve kilit dosyasını
+# kaynak kabul ediyor.
 
 # Natural Earth kaynağının yerel kopyası. Üretilen js/worldgeo.js depoda
 # durduğu için oyunun buna ihtiyacı yok; yalnız yeniden üretirken indirilir.

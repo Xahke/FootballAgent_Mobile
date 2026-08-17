@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Futbolcu menajerliği simülasyonu — mobil öncelikli, çevrimdışı, TR/EN",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "themes": "node tools/build-themes.js",
     "dist": "node tools/build-themes.js && node build.js",
@@ -15,8 +18,8 @@
     "android:aab": "npm run android:sync && node tools/android.js aab"
   },
   "devDependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/cli": "^6.2.0",
-    "@capacitor/core": "^6.2.0"
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
   }
 }

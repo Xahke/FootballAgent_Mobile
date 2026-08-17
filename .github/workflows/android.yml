@@ -5,7 +5,7 @@ name: Android build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'upgrade/**']
 
 jobs:
   apk:
@@ -13,31 +13,61 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Capacitor 8 → NodeJS 22 veya üstü
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: npm
 
-      # Capacitor 6 → Android Gradle Plugin 8 → JDK 17
+      # Capacitor 8 → Android Gradle Plugin 8.13 + Gradle 8.14 → JDK 21
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
+      # Kilit dosyası depoda: npm ci onu birebir kuruyor, böylece CI derlemesi
+      # tekrar üretilebilir oluyor. npm install olsaydı her koşu farklı yama
+      # sürümü çekebilirdi.
       - name: Bağımlılıklar
-        run: npm install
+        run: npm ci
 
       - name: Web varlıklarını hazırla
         run: npm run www
 
-      # android/ depoda tutulmuyor; her derlemede sıfırdan üretiliyor
+      # android/ depoda tutulmuyor; her derlemede Capacitor'ın güncel
+      # şablonundan sıfırdan üretiliyor. Yükseltmenin bütün native tarafı
+      # (AGP, Gradle wrapper, AndroidX, SDK sürümleri) buradan geliyor —
+      # elle yamanan bir native dosya yok.
       - name: Android projesini oluştur
         run: npx cap add android
 
       - name: Senkronize et
         run: npx cap sync android
 
+      # Şablonun gerçekten beklenen SDK sürümlerini getirdiğini derlemeden
+      # önce doğrula: sessizce API 34'e düşmüş bir şablonla derlemek,
+      # Play'in 31 Ağustos 2026 sonrası reddettiği paketi üretmek olurdu.
+      - name: SDK sürümlerini doğrula
+        run: |
+          cat android/variables.gradle
+          grep -q 'compileSdkVersion = 36' android/variables.gradle || { echo "::error::compileSdkVersion 36 degil"; exit 1; }
+          grep -q 'targetSdkVersion = 36'  android/variables.gradle || { echo "::error::targetSdkVersion 36 degil"; exit 1; }
+          grep -q 'minSdkVersion = 24'     android/variables.gradle || { echo "::error::minSdkVersion 24 degil"; exit 1; }
+
       - name: APK derle
-        run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
+        run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon --warning-mode all
+
+      # Asıl kanıt gradle değişkeni değil, paketin kendisi. aapt2 ile APK'nın
+      # manifestinden okuyoruz ve 36 değilse iş başarısız oluyor.
+      - name: APK gerçekten API 36 hedefliyor mu
+        run: |
+          AAPT2=$(find "$ANDROID_HOME/build-tools" -name aapt2 -type f | sort -V | tail -1)
+          echo "aapt2: $AAPT2"
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          "$AAPT2" dump badging "$APK" | tee /tmp/badging.txt | grep -E 'package:|SdkVersion'
+          grep -q "targetSdkVersion:'36'" /tmp/badging.txt || { echo "::error::APK targetSdkVersion 36 degil"; exit 1; }
+          grep -q "sdkVersion:'24'" /tmp/badging.txt || { echo "::error::APK minSdkVersion 24 degil"; exit 1; }
+          ls -lh "$APK"
 
       - name: APK'yı yükle
         uses: actions/upload-artifact@v4
@@ -45,3 +75,18 @@ jobs:
           name: menajer-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+  # Kayıt katmanının testleri native derlemeden bağımsız; ayrı iş olarak
+  # koşuyor ki APK derlemesi düşse bile sonucu görünür kalsın.
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Bağımlılıklar
+        run: npm ci
+      - name: Kayıt testleri
+        run: node tools/savetest.js
