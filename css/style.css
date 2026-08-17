@@ -698,9 +698,7 @@ html[data-theme="saha"] .hmQ.green .hmQi.badge svg,html[data-theme="saha"] .hmQ.
 html[data-theme="saha"] .hmRise{padding-left:40%}
 html[data-theme="saha"] .hmRise .hmRiseIc{display:flex;width:48px;height:48px}
 html[data-theme="saha"] .hmAdvIc.badge{width:56px;height:56px}
-@media (max-width:365px){html[data-theme="saha"] .hmQ{gap:10px}
-html[data-theme="saha"] .hmQi.badge{width:42px;height:42px}
-html[data-theme="saha"] .hmAgIc.badge{width:44px;height:44px}}
+@media (max-width:365px){html[data-theme="saha"] .hmQ{gap:10px}}
 html[data-theme="saha"] .hmQ{gap:10px;padding:12px}
 html[data-theme="saha"] .hmQt{font-size:10px;letter-spacing:.01em}
 html[data-theme="saha"] .hmRise{padding-left:33%}
@@ -783,6 +781,36 @@ html[data-theme="saha"] .hmAdvIc.badge{width:58px;height:58px}
 html[data-theme="saha"] .hmAgIc.badge{width:46px;height:46px}
 html[data-theme="saha"] .hmQi.badge{width:46px;height:46px}
 html[data-theme="saha"] .hmRiseIc.badge{width:48px;height:48px}
+html[data-theme="saha"][data-theme="saha"]{
+  --grow:clamp(0px, calc((100vh - 800px) * 1.04), 160px);
+  --grow:clamp(0px, calc((100dvh - 800px) * 1.04), 160px);
+}
+html[data-theme="saha"] body[data-view="dash"] .hmTop{padding-bottom:calc(6px + var(--grow) * .05)}
+html[data-theme="saha"] .hmWord{font-size:calc(25px + var(--grow) * .017)}
+html[data-theme="saha"] body[data-view="dash"] .hmCard{
+  min-height:calc(95px + var(--grow) * .14);
+  margin-bottom:calc(8px + var(--grow) * .02)}
+html[data-theme="saha"] .hmAv{width:calc(56px + var(--grow) * .05);height:calc(56px + var(--grow) * .05)}
+html[data-theme="saha"] .hmLv b{font-size:calc(18px + var(--grow) * .012)}
+html[data-theme="saha"] .hmBalV{font-size:calc(19px + var(--grow) * .012)}
+html[data-theme="saha"] body[data-view="dash"] .hmAdv{
+  min-height:calc(74px + var(--grow) * .13);
+  margin-bottom:calc(10px + var(--grow) * .02)}
+html[data-theme="saha"] .hmAdvTitle{font-size:calc(23px + var(--grow) * .017)}
+html[data-theme="saha"] body[data-view="dash"] .hmAg{
+   
+  min-height:calc(56px + var(--grow) * .075);
+  margin-bottom:calc(7px + var(--grow) * .01)}
+html[data-theme="saha"] body[data-view="dash"] .hmQuick{
+  margin:calc(10px + var(--grow) * .015) 0 calc(9px + var(--grow) * .015)}
+html[data-theme="saha"] body[data-view="dash"] .hmQ{min-height:calc(62px + var(--grow) * .125)}
+html[data-theme="saha"] .hmQv{font-size:calc(20px + var(--grow) * .012)}
+html[data-theme="saha"] body[data-view="dash"] .hmRise{min-height:calc(68px + var(--grow) * .20)}
+html[data-theme="saha"] .hmRiseV{font-size:calc(19px + var(--grow) * .012)}
+html[data-theme="saha"] .hmAdvIc.badge{width:calc(58px + var(--grow) * .038);height:calc(58px + var(--grow) * .038)}
+html[data-theme="saha"] .hmAgIc.badge{width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
+html[data-theme="saha"] .hmQi.badge{width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
+html[data-theme="saha"] .hmRiseIc.badge{width:calc(48px + var(--grow) * .06);height:calc(48px + var(--grow) * .06)}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{

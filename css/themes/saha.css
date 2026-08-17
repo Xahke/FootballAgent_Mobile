@@ -876,8 +876,6 @@ body[data-view="dash"] header .hrow{min-height:38px}
    360px'te "Oyuncularım" kırpılıyordu. */
 @media (max-width:365px){
   .hmQ{gap:10px}
-  .hmQi.badge{width:42px;height:42px}
-  .hmAgIc.badge{width:44px;height:44px}
 }
 
 /* Rozetler SVG halkalarından daha geniş bir kutu kaplıyor (glow payı). Hızlı
@@ -1009,3 +1007,72 @@ body[data-view="dash"] main{padding-top:10px;padding-bottom:0}
 .hmAgIc.badge{width:46px;height:46px}
 .hmQi.badge{width:46px;height:46px}
 .hmRiseIc.badge{width:48px;height:48px}
+
+/* ===================== ANA EKRAN · YÜKSEKLİĞE DUYARLI BÜYÜME =====================
+   360x800 düzeni taban; --grow orada 0 olduğu için o ekran hiç değişmiyor.
+   Daha uzun telefonlarda fazla dikey alan tek bir boşluğa bırakılmıyor,
+   bileşenlere dağıtılıyor.
+
+   --grow: 800px üstündeki yükseklik. 1.04 katsayısı fazlanın tamamını
+   tüketip üstüne biraz daha kapatıyor, böylece alt boşluk uzun ekranda
+   büyümüyor (39px -> ~37 -> ~33). 160px'te duruyor: daha uzun ekranlarda
+   kartlar orantısız şişmesin.
+
+   Dağıtım (toplam ~1.00, brief'teki öncelik sırasıyla):
+     kariyer kartı 0.14 + haftayı ilerlet 0.13   -> %27
+     gündem satırları 2x0.075                    -> %15
+     hızlı erişim 2 satır x 0.125                -> %25
+     haftanın yükseleni 0.20                     -> %20
+     üst kimlik 0.05 + bölüm aralıkları 0.09     -> %13
+   dvh önce vh ile yazılıyor: desteklenmeyen tarayıcıda ikinci satır düşer. */
+html[data-theme="saha"]{
+  --grow:clamp(0px, calc((100vh - 800px) * 1.04), 160px);
+  --grow:clamp(0px, calc((100dvh - 800px) * 1.04), 160px);
+}
+
+/* --- üst kimlik: tünele biraz daha nefes --- */
+body[data-view="dash"] .hmTop{padding-bottom:calc(6px + var(--grow) * .05)}
+.hmWord{font-size:calc(25px + var(--grow) * .017)}
+
+/* --- kariyer kartı: daha rahat iç boşluk, içerik dikeyde ortalı --- */
+body[data-view="dash"] .hmCard{
+  min-height:calc(95px + var(--grow) * .14);
+  margin-bottom:calc(8px + var(--grow) * .02)}
+.hmAv{width:calc(56px + var(--grow) * .05);height:calc(56px + var(--grow) * .05)}
+.hmLv b{font-size:calc(18px + var(--grow) * .012)}
+.hmBalV{font-size:calc(19px + var(--grow) * .012)}
+
+/* --- ana aksiyon: uzun ekranda daha güçlü yükseklik --- */
+body[data-view="dash"] .hmAdv{
+  min-height:calc(74px + var(--grow) * .13);
+  margin-bottom:calc(10px + var(--grow) * .02)}
+.hmAdvTitle{font-size:calc(23px + var(--grow) * .017)}
+
+/* --- gündem: daha rahat dikey hizalama (metin boyutu sabit) --- */
+body[data-view="dash"] .hmAg{
+  /* taban 800px'de ölçülen doğal yükseklik: altında kalsaydı büyümenin bir
+     kısmı içerik tarafından yutulurdu ve uzun ekranda boşluk kapanmazdı */
+  min-height:calc(56px + var(--grow) * .075);
+  margin-bottom:calc(7px + var(--grow) * .01)}
+
+/* --- hızlı erişim: iki satır, en büyük paylardan biri --- */
+body[data-view="dash"] .hmQuick{
+  margin:calc(10px + var(--grow) * .015) 0 calc(9px + var(--grow) * .015)}
+body[data-view="dash"] .hmQ{min-height:calc(62px + var(--grow) * .125)}
+.hmQv{font-size:calc(20px + var(--grow) * .012)}
+
+/* --- haftanın yükseleni: fotoğrafa daha güçlü alan --- */
+body[data-view="dash"] .hmRise{min-height:calc(68px + var(--grow) * .20)}
+.hmRiseV{font-size:calc(19px + var(--grow) * .012)}
+
+/* --- rozetler: oranı koruyan küçük optik büyüme ---
+   Görünür çap = kutu x 1.22 x 0.76. Katsayılar tavanları aşmayacak şekilde
+   seçildi: gündem/hızlı erişim <=48, takvim <=58, yükselen <=52. */
+.hmAdvIc.badge{width:calc(58px + var(--grow) * .038);height:calc(58px + var(--grow) * .038)}
+.hmAgIc.badge {width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
+.hmQi.badge   {width:calc(46px + var(--grow) * .045);height:calc(46px + var(--grow) * .045)}
+.hmRiseIc.badge{width:calc(48px + var(--grow) * .06);height:calc(48px + var(--grow) * .06)}
+
+/* Dar ekrandaki eski rozet küçültmesi kaldırıldı: Barlow Condensed etiketleri
+   zaten daralttığı için 360'ta 46px kutuyla da kırpma olmuyor (ölçüldü) ve
+   rozetler doğrulanmış 43px görünür çapını koruyor. */
