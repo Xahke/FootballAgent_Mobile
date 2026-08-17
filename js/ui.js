@@ -118,14 +118,18 @@ const HM_BADGE={
   scout   :'assets/ui/home-icon-scout.webp',
   contract:'assets/ui/home-icon-contract.webp',
   alert   :'assets/ui/home-icon-warning.webp',
+  /* aynı geometri, turuncu ton: mutsuzluk kritik olayla aynı görünmesin */
+  alertWarn:'assets/ui/home-icon-warning-orange.webp',
   trend   :'assets/ui/home-icon-trend.webp'
 };
+/* Rozeti olan ama kendi SVG'si olmayan anahtarlar için yedek eşlemesi. */
+const HM_SVG={alertWarn:'alert'};
 function hmHasBadge(name){return !!HM_BADGE[name]&&themeOf()==='saha';}
 /* Rozet + altında SVG yedeği. Görsel yüklenemezse hmBadgeFail() rozeti
    kaldırıp kabın 'badge' sınıfını düşürüyor; CSS o anda halkayı ve SVG'yi
    geri getiriyor. Erişilebilir adı metin etiketi taşıyor, görsel dekoratif. */
 function hmIcon(name,px){
-  const svg=ICONS[name]||'';
+  const svg=ICONS[HM_SVG[name]||name]||'';
   if(!hmHasBadge(name))return svg;
   return `<img class="hmBadge" src="${HM_BADGE[name]}" alt="" aria-hidden="true"`+
          ` width="${px}" height="${px}" onerror="hmBadgeFail(this)">${svg}`;
@@ -415,33 +419,9 @@ menu(){
 },
 setup(){return setupHtml();},
 dash(){
-  /* my clients' matches this week */
-  const cms=[];
-  S.clients.map(byId).forEach(p=>{
-    if(isFree(p))return;          // kulüpsüz oyuncunun maçı olmaz
-    const tm=teamOf(p);
-    const len=lgWeeks(tm.lg);
-    const wkL=Math.min(S.week-1,len-1);
-    const nx=S.week-1<len?(S.fx[tm.lg][wkL]||[]).find(x=>x.h===tm.id||x.a===tm.id):null;
-    let last=null;
-    const li=Math.min(S.week-1,len)-1;
-    if(li>=0)last=(S.fx[tm.lg][li]||[]).find(x=>(x.h===tm.id||x.a===tm.id)&&x.hg!==null);
-    cms.push({p,tm,nx,last});
-  });
-  const cmHtml=cms.length?listWrap(cms.map(x=>{
-    const lastStr=x.last?(()=>{
-      const mine=x.last.h===x.tm.id?x.last.hg:x.last.ag, opp=x.last.h===x.tm.id?x.last.ag:x.last.hg;
-      const oppTm=S.teams[x.last.h===x.tm.id?x.last.a:x.last.h];
-      const col=mine>opp?'var(--acc)':mine<opp?'var(--bad)':'var(--warn)';
-      return `${t('lastM')}: <b style="color:${col}">${mine}-${opp}</b> ${oppTm.n}`;
-    })():'';
-    const nextStr=x.nx?`${t('nextM')}: ${S.teams[x.nx.h===x.tm.id?x.nx.a:x.nx.h].n}`:'';
-    return `<div class="pitem" onclick="pushV('player',${x.p.id})">
-      ${tmBadge(x.tm,34)}
-      <div class="pinfo"><div class="pname">${x.p.n} <span class="faint" style="font-weight:400">· ${x.tm.n}</span></div>
-      <div class="psub">${[lastStr,nextStr].filter(Boolean).join(' · ')}</div></div>
-      <div class="rt ${rtClass(x.p.r)}">${x.p.r}</div></div>`;
-  }).join('')):'';
+  /* Ana ekran 360x800'e kaydırmadan sığmak zorunda, bu yüzden burada yalnız
+     "bu hafta ne yapmalıyım" var. Müşterilerin maç listesi Müşteriler ve
+     oyuncu ekranlarında duruyor — veri ve mekanik aynen yerinde. */
   /* ===== Bugünün gündemi =====
      Kaynaklar gerçek durumdan; sıra aciliyete göre ve yalnız ilk ikisi ekrana
      çıkıyor. Ana ekranın işi her şeyi listelemek değil, bu hafta gerçekten
@@ -453,7 +433,7 @@ dash(){
   S.clients.map(byId).forEach(p=>{
     if(isFree(p))ag.push({rail:'red',ic:'alert',txt:t('needsClub')+' · '+p.n,go:`pushV('player',${p.id})`});
     /* Mutsuzluk karar bekleyen bir olaydan daha az acil — ray turuncu. */
-    else if(p.morale<40)ag.push({rail:'warn',ic:'alert',txt:t('unhappy')+' · '+p.n,go:`pushV('player',${p.id})`});
+    else if(p.morale<40)ag.push({rail:'warn',ic:'alertWarn',txt:t('unhappy')+' · '+p.n,go:`pushV('player',${p.id})`});
   });
   (S.pendC||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'contract',txt:t('signPending')+' · '+p.n,go:`pushV('player',${p.id})`});});
   (S.offers||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'transfer',txt:t('considering')+' · '+p.n,go:`pushV('player',${p.id})`});});
@@ -548,11 +528,16 @@ dash(){
       <span class="hmRiseV">+${riser.gain>=1?fmtK(riser.gain):(+riser.gain.toFixed(1))+'K €'} <i>▲</i></span>
       <span class="hmRiseN">${esc(riser.p.n)}</span>
     </span>
-    <span class="hmAgC">›</span></button>`:''}
+    <span class="hmAgC">›</span></button>`
+  /* Yükselen yoksa kart kaldırılmıyor, aynı yükseklikte dürüst bir boş durum
+     kalıyor: ana ekranın toplam yüksekliği haftadan haftaya oynamasın. */
+  :`<div class="hmRise empty">
+    <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
+    <span class="hmRiseT"><span class="hmRiseL">${t('hmRiser')}</span>
+    <span class="hmRiseNone">${t('hmNoRiser')}</span></span></div>`}
 
   ${S.clients.length?'':`<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
-     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}
-  ${cms.length?`<div class="hmSect">${t('myMatches')}</div>${cmHtml}`:''}`;
+     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}`;
 },
 clients(){
   const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);

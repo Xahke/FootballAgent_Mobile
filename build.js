@@ -2,28 +2,30 @@
 const fs=require('fs');
 const path=require('path');
 
-/* Arayüz görselleri tek dosya sürümünde data URI olarak gömülüyor. Normal web
-   ve Capacitor çıktısı harici .webp dosyalarını kullanmaya devam ediyor —
-   orada dosyalar zaten yanında ve service worker onları önbelleğe alıyor.
-   Tek dosya sürümünün ise yanında hiçbir şey olmamalı; url(../assets/...)
-   dist/menajer.html'in yanından çözülemez ve 404 verirdi. */
+/* Arayüz görselleri ve yazı tipleri tek dosya sürümünde data URI olarak
+   gömülüyor. Normal web ve Capacitor çıktısı harici dosyaları kullanmaya devam
+   ediyor — orada dosyalar zaten yanında ve service worker onları önbelleğe
+   alıyor. Tek dosya sürümünün ise yanında hiçbir şey olmamalı;
+   url(../assets/...) dist/menajer.html'in yanından çözülemez ve 404 verirdi. */
 function dataUri(rel){
   const file=path.join(__dirname,rel);
   if(!fs.existsSync(file)){console.warn('varlık bulunamadı, gömülmedi:',rel);return null;}
   const ext=path.extname(file).slice(1).toLowerCase();
-  const mime=ext==='webp'?'image/webp':ext==='png'?'image/png':ext==='jpg'||ext==='jpeg'?'image/jpeg':'application/octet-stream';
+  const mime=ext==='webp'?'image/webp':ext==='png'?'image/png':ext==='jpg'||ext==='jpeg'?'image/jpeg':
+    ext==='woff2'?'font/woff2':'application/octet-stream';
   return 'data:'+mime+';base64,'+fs.readFileSync(file).toString('base64');
 }
-/* CSS'te url(../assets/ui/x) — stylesheet css/ içinden bir seviye yukarı bakar. */
+/* CSS'te url(../assets/…) — stylesheet css/ içinden bir seviye yukarı bakar.
+   @font-face src'leri de buradan geçiyor. */
 function inlineCssAssets(css){
-  return css.replace(/url\((['"]?)\.\.\/(assets\/ui\/[a-z0-9._-]+)\1\)/gi,(m,q,rel)=>{
+  return css.replace(/url\((['"]?)\.\.\/(assets\/(?:ui|fonts)\/[a-z0-9._-]+)\1\)/gi,(m,q,rel)=>{
     const d=dataUri(rel);return d?'url('+d+')':m;
   });
 }
-/* Markup'ta src="assets/ui/x" — kök göreli. Menajer portresi buradan geliyor;
-   gömülmezse tek dosya sürümünde 404 olur ve baş harf yedeğine düşerdi. */
+/* Markup'ta src="assets/…" — kök göreli. Menajer portresi ve rozetler buradan
+   geliyor; gömülmezse tek dosya sürümünde 404 olur ve yedeğe düşerdi. */
 function inlineJsAssets(js){
-  return js.replace(/(["'])(assets\/ui\/[a-z0-9._-]+)\1/gi,(m,q,rel)=>{
+  return js.replace(/(["'])(assets\/(?:ui|fonts)\/[a-z0-9._-]+)\1/gi,(m,q,rel)=>{
     const d=dataUri(rel);return d?q+d+q:m;
   });
 }

@@ -2,7 +2,7 @@
    Oyun tamamen istemci tarafında; ağ yalnızca dosyaları indirmek için gerekiyor.
    Bu yüzden uygulama kabuğu kuruluşta önbelleğe alınır ve sonrasında ağ hiç beklenmez.
    CACHE sürümünü, önbelleğe alınan dosyalardan biri her değiştiğinde artır. */
-const CACHE = 'menajer-v13';
+const CACHE = 'menajer-v14';
 const SHELL = [
   './',
   './index.html',
@@ -39,7 +39,14 @@ const SHELL = [
   './assets/ui/home-icon-scout.webp',
   './assets/ui/home-icon-contract.webp',
   './assets/ui/home-icon-warning.webp',
-  './assets/ui/home-icon-trend.webp'
+  './assets/ui/home-icon-trend.webp',
+  './assets/ui/home-icon-warning-orange.webp',
+  './assets/fonts/barlow-condensed-600-latin.woff2',
+  './assets/fonts/barlow-condensed-600-latinext.woff2',
+  './assets/fonts/barlow-condensed-700-latin.woff2',
+  './assets/fonts/barlow-condensed-700-latinext.woff2',
+  './assets/fonts/barlow-condensed-800-latin.woff2',
+  './assets/fonts/barlow-condensed-800-latinext.woff2'
 ];
 
 self.addEventListener('install', e => {
