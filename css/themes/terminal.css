@@ -18,6 +18,8 @@
   --bad:#c2564d;  --bad-soft:#221615;
   --warn:#a8863c; --warn-soft:#1f1b13;
   --blue:var(--n7); --blue-soft:var(--n2);
+  /* keşif ağı kartı; bu temada renk veri anlamı taşımadığı için nötr */
+  --viol:var(--n7);
   --gold:var(--n8); --gold-soft:var(--n2);
 
   --r:8px; --r-s:5px;
@@ -535,4 +537,148 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ===================== ANA EKRAN (dashboard) =====================
+   Mobil oyun ana ekranı: tek bakışta durum, tek büyük aksiyon, en fazla iki
+   gündem satırı, dört hızlı erişim. Sıra önem sırasıdır.
+
+   Bu blok dört temada da aynı; renkler tema değişkenlerinden geldiği için her
+   tema kendi diliyle çiziyor. Yalnız "saha" ayrıca atmosfer katmanı ekliyor. */
+.hmTop{display:flex;align-items:flex-start;gap:12px;margin:2px 0 14px}
+.hmId{flex:1;min-width:0}
+.hmWord{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1.04;
+  text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hmChip{display:inline-flex;align-items:center;gap:9px;margin-top:9px;padding:6px 12px;
+  border-radius:10px;background:var(--sur3);box-shadow:inset 0 0 0 1px var(--line);
+  font-size:11.5px;font-weight:700;color:var(--txt2);font-variant-numeric:tabular-nums}
+.hmChip i{width:1px;height:11px;background:var(--line2);display:block;flex-shrink:0}
+.hmChip .on{color:var(--acc)}
+.hmBell{position:relative;width:46px;height:46px;flex-shrink:0;border:none;border-radius:14px;
+  background:var(--sur2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;box-shadow:inset 0 0 0 1px var(--line);font-family:inherit}
+.hmBell svg{width:21px;height:21px}
+.hmBell.has{color:var(--txt)}
+.hmBell:active{transform:scale(.94)}
+.hmDot{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 0 2px var(--sur2)}
+
+/* --- kariyer özeti --- */
+.hmCard{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;
+  background:var(--sur2);border-radius:16px;padding:15px 14px;margin-bottom:13px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+.hmAv{width:54px;height:54px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:19px;font-weight:900;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+.hmCi{min-width:0}
+.hmLv{font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.hmLv b{font-size:16px;font-weight:900;color:var(--acc);margin-left:3px}
+.hmRep{display:flex;align-items:center;gap:8px;margin-top:7px}
+.hmShield{flex-shrink:0;color:var(--gold);display:flex}
+.hmShield svg{width:19px;height:19px}
+.hmRepBody{flex:1;min-width:0}
+.hmRepL{font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt3)}
+.hmBar{height:6px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:4px}
+.hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
+.hmRepN{font-size:10.5px;font-weight:700;color:var(--txt3);margin-top:3px;font-variant-numeric:tabular-nums}
+.hmRepN b{color:var(--gold);font-weight:800}
+.hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
+  padding-left:12px;border-left:1px solid var(--line)}
+.hmCoin{color:var(--gold);display:flex;margin-bottom:2px}
+.hmCoin svg{width:20px;height:20px}
+.hmBalV{font-size:17px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.hmBalV.neg{color:var(--bad)}
+.hmBalL{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+
+/* --- ana aksiyon: ekrandaki en güçlü öğe --- */
+.hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:14px;
+  min-height:84px;padding:15px 16px;margin-bottom:20px;border:none;border-radius:18px;cursor:pointer;
+  text-align:left;font-family:inherit;background:var(--acc);color:var(--accT)}
+.hmAdv:active{transform:scale(.985)}
+.hmAdvIc{position:relative;z-index:1;width:52px;height:52px;flex-shrink:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.16)}
+.hmAdvIc svg{width:26px;height:26px}
+.hmAdvT{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.hmAdvTitle{font-size:20px;font-weight:900;letter-spacing:-.02em;text-transform:uppercase;line-height:1.05}
+.hmAdvSub{font-size:12.5px;font-weight:700;opacity:.82;font-variant-numeric:tabular-nums}
+.hmAdvGo{position:relative;z-index:1;width:44px;height:44px;flex-shrink:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;
+  background:rgba(0,0,0,.16)}
+
+/* --- bölüm başlığı --- */
+.hmSect{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt3);margin:0 2px 10px}
+
+/* --- gündem: sol ray aciliyeti kodluyor --- */
+.hmAg{width:100%;display:flex;align-items:center;gap:12px;min-height:58px;padding:11px 13px;
+  margin-bottom:9px;border:none;border-radius:14px;cursor:pointer;text-align:left;font-family:inherit;
+  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line);
+  border-left:3px solid var(--txt3)}
+.hmAg:active{transform:scale(.99)}
+.hmAg.red{border-left-color:var(--bad)}
+.hmAg.gold{border-left-color:var(--gold)}
+.hmAg.teal{border-left-color:var(--acc)}
+.hmAg.blue{border-left-color:var(--blue)}
+.hmAgIc{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4);color:var(--txt2)}
+.hmAg.red .hmAgIc{color:var(--bad)} .hmAg.gold .hmAgIc{color:var(--gold)}
+.hmAg.teal .hmAgIc{color:var(--acc)} .hmAg.blue .hmAgIc{color:var(--blue)}
+.hmAgIc svg{width:19px;height:19px}
+.hmAgT{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.3}
+.hmAgC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1}
+.hmEmpty{background:var(--sur2);border-radius:14px;padding:16px 14px;margin-bottom:9px;
+  box-shadow:inset 0 0 0 1px var(--line);color:var(--txt3);font-size:13px;text-align:center}
+
+/* --- hızlı erişim: 2x2, iri dokunma alanı --- */
+.hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 12px}
+.hmQ{position:relative;min-height:84px;padding:12px 12px 12px 12px;border:none;border-radius:16px;
+  cursor:pointer;text-align:left;font-family:inherit;background:var(--sur2);color:var(--txt);
+  box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:11px}
+.hmQ:active{transform:scale(.97)}
+.hmQi{flex-shrink:0;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4)}
+.hmQi svg{width:20px;height:20px}
+.hmQb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+/* Kelime ortasından bölünmesin: 'OYUNCULARIM' tek kelime, sığar; çok
+   kelimeli 'SCOUTING NETWORK' boşluktan iki satıra iner. */
+.hmQt{font-size:9.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--txt3);
+  line-height:1.22;white-space:normal;overflow-wrap:normal;word-break:keep-all;
+  max-height:2.44em;overflow:hidden}
+.hmQv{font-size:20px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.hmQv small{font-size:12px;font-weight:700;color:var(--txt3)}
+/* ok köşede: satır içinde yer kaplasaydı 360px'te etiket kırpılıyordu */
+.hmQc{position:absolute;top:9px;right:11px;color:var(--txt3);font-size:17px;line-height:1}
+.hmQ.green .hmQi{color:var(--acc)} .hmQ.green .hmQv{color:var(--acc)}
+.hmQ.blue .hmQi{color:var(--blue)} .hmQ.blue .hmQv{color:var(--blue)}
+.hmQ.viol .hmQi{color:var(--viol)} .hmQ.viol .hmQv{color:var(--viol)}
+
+/* --- haftanın yükseleni --- */
+.hmRise{width:100%;display:flex;align-items:center;gap:13px;min-height:74px;padding:12px 14px;
+  margin-bottom:16px;border:none;border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;
+  background:var(--sur2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line);
+  border-left:3px solid var(--gold)}
+.hmRise:active{transform:scale(.99)}
+.hmRiseIc{width:46px;height:46px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--sur4);color:var(--gold)}
+.hmRiseIc svg{width:23px;height:23px}
+.hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.hmRiseL{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
+.hmRiseV{font-size:20px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.hmRiseV i{font-style:normal;color:var(--acc);font-size:14px}
+.hmRiseN{font-size:11.5px;font-weight:600;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* Dar telefonlarda önemli bilgi ilk ekranda kalsın diye ölçüler biraz iner. */
+@media (max-width:365px){
+  .hmWord{font-size:22px}
+  .hmCard{gap:9px;padding:11px}
+  .hmAv{width:46px;height:46px;border-radius:11px;font-size:16px}
+  .hmBal{padding-left:9px}
+  .hmBalV{font-size:15px}
+  .hmAdvTitle{font-size:17.5px}
+  .hmAdvIc{width:46px;height:46px}
+  .hmQ{min-height:78px;padding:11px 10px}
+  .hmQv{font-size:18px}
 }

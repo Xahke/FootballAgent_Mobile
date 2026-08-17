@@ -92,6 +92,18 @@ function setTheme(id){
   setPref('theme',id);applyTheme();render();
 }
 /* ================= UI HELPERS ================= */
+/* Ana ekranın büyük "Haftayı ilerlet" kartı. Kart iri olduğu için çift dokunma
+   kolay; iki hafta birden ilerletmek de olay/kayıt sırasını bozmasa bile
+   oyuncunun istemediği bir şey. nextWeek()'in içine dokunmuyoruz — sıra aynen
+   kalsın diye koruma yalnız bu çağrı yerinde. Header'daki "Devam" düğmesi
+   küçük ve alışılmış davranışını koruyor. */
+let hmLastAdv=0;
+function hmAdvance(){
+  const now=Date.now();
+  if(now-hmLastAdv<450)return;
+  hmLastAdv=now;
+  nextWeek();
+}
 function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
@@ -365,20 +377,6 @@ menu(){
 },
 setup(){return setupHtml();},
 dash(){
-  const inc=weeklyIncome(),net=weeklyNet();
-  /* agenda: everything that needs my attention */
-  const items=[];
-  S.clients.map(byId).forEach(p=>{
-    const pen=pendingFor(p.id),offs=(S.offers||[]).filter(x=>x.pid===p.id);
-    let st=null,col='var(--warn)';
-    if(isFree(p)){st=t('needsClub');col='var(--bad)';}
-    else if(pen){st=t('pendingTag')+': '+S.teams[pen.tid].n+' · '+nextWindowLabel();col='var(--acc)';}
-    else if(offs.length){st=t('considering')+': '+offs.map(o=>S.teams[o.tid].n).join(', ');col='var(--blue)';}
-    else if(p.morale<40){st=p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut');col='var(--bad)';}
-    else if(p.yrs<=1)st=t('expiring');
-    else if(p.r>teamStr(p.team)+6)st=t('outgrown');
-    if(st)items.push({p,st,col});
-  });
   /* my clients' matches this week */
   const cms=[];
   S.clients.map(byId).forEach(p=>{
@@ -392,13 +390,6 @@ dash(){
     if(li>=0)last=(S.fx[tm.lg][li]||[]).find(x=>(x.h===tm.id||x.a===tm.id)&&x.hg!==null);
     cms.push({p,tm,nx,last});
   });
-  const agendaHtml=items.length
-    ?listWrap(items.map(x=>`<div class="pitem" onclick="pushV('player',${x.p.id})">
-       ${tmBadge(teamOf(x.p),34)}
-       <div class="pinfo"><div class="pname">${x.p.n}</div>
-       <div class="psub" style="color:${x.col};font-weight:600">${x.st}</div></div>
-       <span class="faint">›</span></div>`).join(''))
-    :(S.clients.length?`<div class="card"><div class="sub">${t('allGood')}</div></div>`:'');
   const cmHtml=cms.length?listWrap(cms.map(x=>{
     const lastStr=x.last?(()=>{
       const mine=x.last.h===x.tm.id?x.last.hg:x.last.ag, opp=x.last.h===x.tm.id?x.last.ag:x.last.hg;
@@ -413,56 +404,116 @@ dash(){
       <div class="psub">${[lastStr,nextStr].filter(Boolean).join(' · ')}</div></div>
       <div class="rt ${rtClass(x.p.r)}">${x.p.r}</div></div>`;
   }).join('')):'';
-  /* durum kartları: bu hafta neyle ilgilenmeliyim? */
-  const cUnhappy=S.clients.map(byId).filter(p=>p.morale<40).length;
-  const cSign=(S.pendC||[]).length;
-  const cDeals=(S.offers||[]).length+(S.pending||[]).length;
-  const cUnread=S.inbox.filter(m=>!m.read).length+S.inbox.filter(m=>m.action).length;
-  const stCards=[
-    cUnhappy?`<div class="stCard bad" onclick="navTo('clients')">${ICONS.alert}<div><div class="cnt">${cUnhappy}</div><div class="lbl">${t('unhappy')}</div></div></div>`:'',
-    cDeals?`<div class="stCard blue" onclick="navTo('clients')">${ICONS.transfer}<div><div class="cnt">${cDeals}</div><div class="lbl">${t('considering')}</div></div></div>`:'',
-    cSign?`<div class="stCard good" onclick="navTo('clients')">${ICONS.contract}<div><div class="cnt">${cSign}</div><div class="lbl">${t('signPending')}</div></div></div>`:'',
-    cUnread?`<div class="stCard warn" onclick="navTo('inbox')">${ICONS.inbox}<div><div class="cnt">${cUnread}</div><div class="lbl">${t('notifs')}</div></div></div>`:''
-  ].filter(Boolean).join('');
+  /* ===== Bugünün gündemi =====
+     Kaynaklar gerçek durumdan; sıra aciliyete göre ve yalnız ilk ikisi ekrana
+     çıkıyor. Ana ekranın işi her şeyi listelemek değil, bu hafta gerçekten
+     dokunulması gerekeni söylemek — gerisi hızlı erişim kartlarının arkasında.
+     rail: sol kenar rengi. Dekorasyon değil, aciliyeti kodluyor. */
+  const ag=[];
+  if(S.evCur)ag.push({rail:'red',ic:'alert',txt:t('hmEvPending'),go:`showEvent(${JSON.stringify(S.evCur).replace(/"/g,'&quot;')})`});
+  if(S.poach){const p=byId(S.poach.pid);if(p)ag.push({rail:'red',ic:'alert',txt:t('hmPoach').replace('{n}',p.n),go:`pushV('player',${p.id})`});}
+  S.clients.map(byId).forEach(p=>{
+    if(isFree(p))ag.push({rail:'red',ic:'alert',txt:t('needsClub')+' · '+p.n,go:`pushV('player',${p.id})`});
+    else if(p.morale<40)ag.push({rail:'red',ic:'alert',txt:t('unhappy')+' · '+p.n,go:`pushV('player',${p.id})`});
+  });
+  (S.pendC||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'contract',txt:t('signPending')+' · '+p.n,go:`pushV('player',${p.id})`});});
+  (S.offers||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'gold',ic:'transfer',txt:t('considering')+' · '+p.n,go:`pushV('player',${p.id})`});});
+  (S.chase||[]).forEach(x=>{const p=byId(x.pid);if(p)ag.push({rail:'teal',ic:'gem',txt:t('hmChase').replace('{n}',p.n),go:`pushV('player',${p.id})`});});
+  (S.scout||[]).forEach(x=>ag.push({rail:'teal',ic:'scout',txt:t('hmScoutSoon').replace('{n}',lgName(x.lg)),go:`pushV('atlas')`}));
+  S.inbox.filter(m=>m.action).slice(0,2).forEach(()=>ag.push({rail:'blue',ic:'inbox',txt:t('notifs'),go:`navTo('inbox')`}));
+  const agTop=ag.slice(0,2);
+
+  /* ===== Haftanın yükseleni =====
+     Uydurma veri yok: p.vm form kaynaklı değer çarpanı (core.js, VAL). 1'in
+     üstündeyse oyuncunun piyasa değeri temel değerinin üzerine çıkmış demektir.
+     Hiçbir müşteride hareket yoksa kart hiç çizilmiyor. */
+  const risers=S.clients.map(byId).filter(p=>p&&valueMult(p)>1.02)
+    .map(p=>({p,gain:valueOf(p)-valueOf({r:p.r,agent:p.agent})}))
+    .filter(x=>x.gain>0).sort((a,b)=>b.gain-a.gain);
+  const riser=risers[0]||null;
+
+  const lp=levelProgress();
+  const wkNow=Math.min(S.week,totalWeeks());
+  const unread=S.inbox.filter(m=>!m.read).length;
+  const deals=(S.offers||[]).length+(S.pending||[]).length;
+  /* Yüzde işareti Türkçede önde, İngilizcede arkada durur. */
+  const knownPct=Math.round((S.known||[]).length/LEAGUES.length*100);
+  const pctStr=L==='tr'?'%'+knownPct:knownPct+'%';
+  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toUpperCase():'—';
+
+  /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
+     dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
+  const qCard=(cls,icon,label,value,go)=>`<button class="hmQ ${cls}" onclick="${go}">
+    <span class="hmQi">${ICONS[icon]}</span>
+    <span class="hmQb"><span class="hmQt">${label}</span><span class="hmQv">${value}</span></span>
+    <span class="hmQc">›</span></button>`;
+
   return `
-  <div class="agHero">
-    <div class="row" style="position:relative;z-index:1">
-      <div style="flex:1;min-width:0">
-        <div class="agName">${S.agent?esc(S.agent.agency):t('agency')}</div>
-        <div class="agSub">${S.agent?esc(S.agent.fn+' '+S.agent.ln)+' · '+NATNAME[S.agent.nat][L]:''} · ${t('season')} ${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</div>
+  <div class="hmTop">
+    <div class="hmId">
+      <div class="hmWord">${S.agent?esc(S.agent.agency):t('agency')}</div>
+      <div class="hmChip"><span>${t('season')} ${S.season}</span><i></i><span class="on">${wkNow}. ${t('week')}</span></div>
+    </div>
+    <button class="hmBell${unread?' has':''}" onclick="navTo('inbox')" aria-label="${t('notifs')}">
+      ${ICONS.inbox}${unread?`<i class="hmDot"></i>`:''}
+    </button>
+  </div>
+
+  <div class="hmCard">
+    <div class="hmAv" aria-hidden="true">${esc(ini)}</div>
+    <div class="hmCi">
+      <div class="hmLv">${t('hmLevel')} <b>${lp.lv}</b></div>
+      <div class="hmRep">
+        <span class="hmShield">${ICONS.rep}</span>
+        <div class="hmRepBody">
+          <div class="hmRepL">${t('rep')}</div>
+          <div class="hmBar"><div style="width:${Math.round(lp.pct*100)}%"></div></div>
+          <div class="hmRepN"><b>${Math.round(repTotal())}</b> / ${lp.need?repForLevel(lp.lv+1):Math.round(repTotal())}</div>
+        </div>
       </div>
     </div>
-    <div class="agCash num" ${S.cash<0?'style="color:var(--bad)"':''}>${fmtK(S.cash)}<small>${net>=0?'+':'−'}${fmtK(Math.abs(net))}/${t('wk')}</small></div>
-    <div class="twline" style="margin-top:6px;font-weight:600">
-      <span class="faint">${t('weeklyIncome')} ${fmtK(inc)}</span>
-      <span class="faint">· ${t('costLbl')} ${fmtK(weeklyCost())}</span>
-      <span style="color:${net>=0?'var(--acc)':'var(--bad)'}">· ${t('netLbl')} ${net>=0?'+':'−'}${fmtK(Math.abs(net))}</span>
-    </div>
-    <div class="agGrid">
-      <div class="agCell"><div class="v" style="color:var(--gold)">${Math.round(S.rep)}</div><div class="l">${t('rep')}</div>
-        <div class="repbar"><div style="width:${Math.round(S.rep)}%"></div></div></div>
-      <div class="agCell"><div class="v">${S.clients.length}<span class="faint">/${maxClients()}</span></div><div class="l">${t('clientCount')}</div></div>
-      <div class="agCell tap" onclick="pushV('atlas')"><div class="v">${(S.known||[]).length}<span class="faint">/${LEAGUES.length}</span></div><div class="l">${t('scoutNet')}</div></div>
-      <div class="agCell tap" onclick="pushV('rivals')"><div class="v">#${myRank()}<span class="faint">/${(S.rivals||[]).length+1}</span></div><div class="l">${t('rankLbl')}</div></div>
-    </div>
-    <div class="twline">
-      <span class="twdot ${windowOpen()?'on':'off'}"></span>
-      ${windowOpen()?t('twOpen'):t('twClosed')}
-      ${windowOpen()?'':`<span class="faint">· ${t('twNext')}: ${nextWindowLabel()}</span>`}
+    <div class="hmBal">
+      <span class="hmCoin">${ICONS.cash}</span>
+      <span class="hmBalV${S.cash<0?' neg':''}">${fmtK(S.cash)}</span>
+      <span class="hmBalL">${t('hmBalance')}</span>
     </div>
   </div>
-  ${stCards?`<div class="statusRow">${stCards}</div>`:''}
-  ${(()=>{
-    const fresh=S.inbox.filter(m=>m.action||!m.read).slice(0,3);
-    if(!fresh.length)return '';
-    return `<div class="sect" style="margin:2px 2px 8px">${t('notifs')}</div>
-      ${fresh.map(m=>msgHtml(m)).join('')}
-      <button class="btn s" style="margin-bottom:12px" onclick="navTo('inbox')">${t('allNotifs')}</button>`;
-  })()}
-  ${S.clients.length?`<div class="sect" style="margin:2px 2px 8px">${t('agenda')}</div>${agendaHtml}`:
-    `<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
+
+  <button class="hmAdv" onclick="hmAdvance()">
+    <span class="hmAdvIc">${ICONS.calendar}</span>
+    <span class="hmAdvT">
+      <span class="hmAdvTitle">${t('hmAdvance')}</span>
+      <span class="hmAdvSub">${wkNow}. ${t('week')} · ${t('season')} ${S.season}</span>
+    </span>
+    <span class="hmAdvGo">→</span>
+  </button>
+
+  <div class="hmSect">${t('hmToday')}</div>
+  ${agTop.length?agTop.map(x=>`<button class="hmAg ${x.rail}" onclick="${x.go}">
+      <span class="hmAgIc">${ICONS[x.ic]}</span>
+      <span class="hmAgT">${esc(x.txt)}</span>
+      <span class="hmAgC">›</span></button>`).join('')
+   :`<div class="hmEmpty">${S.clients.length?t('hmNoAgenda'):t('noClientsSub')}</div>`}
+
+  <div class="hmQuick">
+    ${qCard('green','clients',t('hmMyPlayers'),`${S.clients.length}<small>/${maxClients()}</small>`,"navTo('clients')")}
+    ${qCard('green','transfer',t('hmTransfers'),deals,"navTo('market')")}
+    ${qCard('blue','inbox',t('inbox'),unread,"navTo('inbox')")}
+    ${qCard('viol','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
+  </div>
+
+  ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
+    <span class="hmRiseIc">${ICONS.trend}</span>
+    <span class="hmRiseT">
+      <span class="hmRiseL">${t('hmRiser')}</span>
+      <span class="hmRiseV">+${fmtK(riser.gain)} <i>▲</i></span>
+      <span class="hmRiseN">${esc(riser.p.n)}</span>
+    </span>
+    <span class="hmAgC">›</span></button>`:''}
+
+  ${S.clients.length?'':`<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
      <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}
-  ${cms.length?`<div class="sect" style="margin:2px 2px 8px">${t('myMatches')}</div>${cmHtml}`:''}`;
+  ${cms.length?`<div class="hmSect">${t('myMatches')}</div>${cmHtml}`:''}`;
 },
 clients(){
   const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);
@@ -1112,6 +1163,8 @@ scout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="
 alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></svg>',
 gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.5 7.5 7z" opacity=".9"/><path d="M7.5 7h9L12 2.5z" opacity=".55"/></svg>',
 skills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/></svg>',
+calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/><path d="M3.2 10h17.6M8 3v4M16 3v4"/><circle cx="8.4" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.4" cy="17.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor" stroke="none"/></svg>',
+trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg>',
 settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
@@ -1171,6 +1224,10 @@ function render(){
      bu yüzden metni her çizimde tazeleniyor. */
   updateSaveBanner();
   const c=cur();
+  /* Hangi ekrandayız — CSS'in bilmesi gereken tek durum. Tema dosyaları
+     ekrana özgü kural yazabilsin diye (ana ekranda üst çubuğun kasa/itibar
+     rozetlerini gizlemek gibi); gezinme mantığına dokunmuyor. */
+  if(document.body&&document.body.dataset)document.body.dataset.view=c.v;
   /* Açık kariyer yoksa kabuktayız: ana menü, yeni kariyer ya da menüden açılan
      ayarlar. Ayrı bir ekran durumu tutmuyoruz — S'nin kendisi bu ayrımı taşıyor. */
   if(!S||!S.agent){
