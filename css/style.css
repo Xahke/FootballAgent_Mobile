@@ -1389,7 +1389,7 @@ html[data-theme="gazete"] .hmRiseIc{width:40px;height:40px;flex-shrink:0;border-
 html[data-theme="gazete"] .hmRiseIc svg{width:21px;height:21px}
 html[data-theme="gazete"] .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
 html[data-theme="gazete"] .hmRiseL{font-family:var(--serif);font-size:11px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--txt3);line-height:1.2}
+  text-transform:uppercase;color:#716c60;line-height:1.2}
 html[data-theme="gazete"] .hmRiseV{font-size:19px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
   line-height:1.25;color:var(--txt)}
 html[data-theme="gazete"] .hmRiseV i{font-style:normal;color:var(--acc);font-size:13px}
@@ -1400,12 +1400,12 @@ html[data-theme="gazete"] .hmRise.empty .hmRiseIc{color:var(--txt3)}
 html[data-theme="gazete"] .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
 html[data-theme="gazete"] .hmRise{overflow:hidden}
 html[data-theme="gazete"] .hmRise>*{position:relative;z-index:1}
-@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="gazete"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
-    pointer-events:none;opacity:.7;
-    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
-    filter:invert(1) grayscale(1) sepia(.4) contrast(1.55) brightness(1.08);
-    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
-    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="gazete"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:62px;
+    pointer-events:none;opacity:.52;
+    background:url(../assets/ui/weekly-riser.webp) 30% 12%/auto 165% no-repeat;
+    filter:grayscale(1) sepia(.4) contrast(1.45) brightness(1.05);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%)}
 html[data-theme="gazete"] .hmRise.empty::before{display:none}}
 @media (max-width:365px){html[data-theme="gazete"] .hmWord{font-size:20px}
 html[data-theme="gazete"] .hmCard{gap:10px;padding:9px 10px}
@@ -2027,7 +2027,7 @@ html[data-theme="terminal"] .hmRiseIc{width:40px;height:40px;flex-shrink:0;borde
 html[data-theme="terminal"] .hmRiseIc svg{width:21px;height:21px}
 html[data-theme="terminal"] .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
 html[data-theme="terminal"] .hmRiseL{font-family:var(--mono);font-size:10.5px;font-weight:400;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--txt3);line-height:1.2}
+  text-transform:uppercase;color:#7d8492;line-height:1.2}
 html[data-theme="terminal"] .hmRiseV{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em;
   line-height:1.25;color:var(--txt)}
 html[data-theme="terminal"] .hmRiseV i{font-style:normal;color:var(--acc);font-size:12px}
@@ -2655,7 +2655,7 @@ html[data-theme="dosya"] .hmRiseIc{width:40px;height:40px;flex-shrink:0;border-r
 html[data-theme="dosya"] .hmRiseIc svg{width:21px;height:21px}
 html[data-theme="dosya"] .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
 html[data-theme="dosya"] .hmRiseL{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--txt3);line-height:1.2}
+  color:#6f757c;line-height:1.2}
 html[data-theme="dosya"] .hmRiseV{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   line-height:1.25;color:var(--txt)}
 html[data-theme="dosya"] .hmRiseV i{font-style:normal;color:var(--acc);font-size:13px}
@@ -2666,12 +2666,12 @@ html[data-theme="dosya"] .hmRise.empty .hmRiseIc{color:var(--txt3)}
 html[data-theme="dosya"] .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
 html[data-theme="dosya"] .hmRise{overflow:hidden}
 html[data-theme="dosya"] .hmRise>*{position:relative;z-index:1}
-@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="dosya"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
-    pointer-events:none;opacity:.55;
-    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
-    filter:invert(1) grayscale(1) contrast(1.35) brightness(1.08);
-    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
-    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="dosya"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:64px;
+    pointer-events:none;opacity:.42;
+    background:url(../assets/ui/weekly-riser.webp) 30% 12%/auto 165% no-repeat;
+    filter:grayscale(1) contrast(1.1);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%)}
 html[data-theme="dosya"] .hmRise.empty::before{display:none}}
 @media (max-width:365px){html[data-theme="dosya"] .hmWord{font-size:22px}
 html[data-theme="dosya"] .hmCard{gap:10px;padding:10px}

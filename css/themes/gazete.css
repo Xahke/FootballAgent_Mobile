@@ -698,8 +698,12 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   box-shadow:inset 0 0 0 1px var(--line2)}
 .hmRiseIc svg{width:21px;height:21px}
 .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+/* Etiket --txt3 ile kağıt zeminde 3.38:1 kalıyordu; 11px versal serif için bu
+   az. Kendi tonu var: --txt3 ile --txt2 arasında, 4.93:1 — eşiği geçiyor ama
+   altındaki oyuncu adından (6.58:1) hâlâ açık, yani sıralama bozulmuyor.
+   Global --txt3 tokenine dokunulmadı; başka hiçbir metin etkilenmiyor. */
 .hmRiseL{font-family:var(--serif);font-size:11px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--txt3);line-height:1.2}
+  text-transform:uppercase;color:#716c60;line-height:1.2}
 .hmRiseV{font-size:19px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
   line-height:1.25;color:var(--txt)}
 .hmRiseV i{font-style:normal;color:var(--acc);font-size:13px}
@@ -710,13 +714,17 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmRise.empty .hmRiseIc{color:var(--txt3)}
 .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
 
-/* Haftanın yükseleni: solda eski bir kupürden kesilmiş gibi duran futbolcu.
-   invert() zorunlu: kaynak fotoğraf koyu zeminde koyu figür, kağıdın üstünde
-   soluk hali lekeye dönüyordu. Negatifi alınınca kağıt kağıt kalıyor, yalnız
-   figürün konturu mürekkep bırakıyor. Kontrast 1'in üstünde — gazete baskısı
+/* Haftanın yükseleni: solda kupürden kesilmiş gibi duran küçük bir fotoğraf.
+   Fotoğraf pozitif duruyor. Negatifi denendi ve bırakıldı: kağıdın üstünde
+   kontur neredeyse görünmez kalıyordu. Kontrast 1'in üstünde — gazete baskısı
    ara tonları yutar — ve sepya mürekkebi kağıdın sıcaklığına oturtuyor.
-   Tram yok: kontur zaten ince, üstüne nokta koymak dokuyu değil gürültüyü
-   artırıyordu; baskı hissini künyedeki portre taşıyor.
+   Kadraj dar ve yakın; background-size yüksekliğin %165'i, oyuncunun başı ve
+   omzu banda sığıyor. Bant yüzde değil piksel: metin sütunu sabit (dolgu + ikon
+   + boşluk) ama kart genişliği ekranla büyüyor; yüzde kalsaydı geniş telefonda
+   bant yazının altına taşardı. Maske bandın sonunda tam saydama iniyor, metin
+   hemen ardından başlıyor: yazının altında mürekkep kalmıyor, sert kenar yok.
+   Tram yok: baskı hissini künyedeki portre taşıyor, burada nokta eklemek
+   dokuyu değil gürültüyü artırıyordu.
    Katman ::before olduğu için :active zemini değiştirdiğinde fotoğraf duruyor.
    Boş durumda hiç çizilmiyor — yükselen yokken fotoğraf uydurma veri olurdu. */
 .hmRise{overflow:hidden}
@@ -725,12 +733,12 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
    altında duran fotoğraf okunurluğu bozardı. Bu yüzden sanat yalnız maske
    destekleniyorsa çiziliyor; desteklenmiyorsa kart eski haline döner. */
 @supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
-  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
-    pointer-events:none;opacity:.7;
-    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
-    filter:invert(1) grayscale(1) sepia(.4) contrast(1.55) brightness(1.08);
-    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
-    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:62px;
+    pointer-events:none;opacity:.52;
+    background:url(../assets/ui/weekly-riser.webp) 30% 12%/auto 165% no-repeat;
+    filter:grayscale(1) sepia(.4) contrast(1.45) brightness(1.05);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%)}
   .hmRise.empty::before{display:none}
 }
 

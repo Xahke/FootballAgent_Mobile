@@ -688,8 +688,12 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   justify-content:center;background:var(--n2);color:var(--acc)}
 .hmRiseIc svg{width:21px;height:21px}
 .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+/* Etiket --txt3 ile beyaz kartta 3.18:1 kalıyordu; 11px versal metin için bu
+   az. Kendi tonu var: --txt3 ile --txt2 arasında, 4.65:1 — eşiği geçiyor ama
+   altındaki oyuncu adından (5.89:1) hâlâ açık, yani sıralama bozulmuyor.
+   Global --txt3 tokenine dokunulmadı; başka hiçbir metin etkilenmiyor. */
 .hmRiseL{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--txt3);line-height:1.2}
+  color:#6f757c;line-height:1.2}
 .hmRiseV{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   line-height:1.25;color:var(--txt)}
 .hmRiseV i{font-style:normal;color:var(--acc);font-size:13px}
@@ -700,12 +704,15 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmRise.empty .hmRiseIc{color:var(--txt3)}
 .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
 
-/* Haftanın yükseleni: kartın solunda futbolcunun soluk bir baskısı.
-   invert() burada süs değil, zorunluluk: kaynak fotoğraf koyu zeminde koyu
-   figür, beyaz kartın üstünde soluk hali gri bir leke olarak okunuyordu.
-   Negatifi alınınca kağıt beyaz kalıyor ve yalnız figürün konturu basılıyor —
-   bir belgeye açık tonda basılmış fotoğrafın okunuşu. Maske sağa doğru
-   tamamen siliyor, sağ yarı metin için temiz kalıyor.
+/* Haftanın yükseleni: kartın solunda küçük bir filigran.
+   Fotoğraf pozitif duruyor. Negatifi denendi ve bırakıldı: beyaz kartta
+   figürün konturu açık bir hayalet/omuz yayı olarak okunuyordu.
+   Kadraj bu yüzden dar ve yakın — background-size yüksekliğin %165'i, yani
+   oyuncunun başı ve omzu 64px'lik banda sığacak kadar büyük. Bant yüzde değil
+   piksel: metin sütunu sabit (dolgu + ikon + boşluk) ama kart genişliği ekranla
+   büyüyor; yüzde kalsaydı geniş telefonda bant yazının altına taşardı. Maske
+   bandın sonunda tam saydama iniyor, metin hemen ardından başlıyor: yazının
+   altında hiç mürekkep kalmıyor ve sert kenar da oluşmuyor.
    Katman ::before, kartın background sırtına binmiyor: :active zemini
    değiştirdiğinde fotoğraf kaybolmuyor.
    Boş durumda hiç çizilmiyor — yükselen yokken fotoğraf uydurma veri olurdu. */
@@ -715,12 +722,12 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
    altında duran fotoğraf okunurluğu bozardı. Bu yüzden sanat yalnız maske
    destekleniyorsa çiziliyor; desteklenmiyorsa kart eski haline döner. */
 @supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
-  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
-    pointer-events:none;opacity:.55;
-    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
-    filter:invert(1) grayscale(1) contrast(1.35) brightness(1.08);
-    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
-    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:64px;
+    pointer-events:none;opacity:.42;
+    background:url(../assets/ui/weekly-riser.webp) 30% 12%/auto 165% no-repeat;
+    filter:grayscale(1) contrast(1.1);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 40%,transparent 100%)}
   .hmRise.empty::before{display:none}
 }
 

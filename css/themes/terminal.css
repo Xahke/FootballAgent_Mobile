@@ -700,8 +700,12 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   box-shadow:inset 0 0 0 1px var(--line2)}
 .hmRiseIc svg{width:21px;height:21px}
 .hmRiseT{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+/* Etiket --txt3 ile koyu kartta 3.81:1 kalıyordu; 10.5px versal mono için bu
+   az. Kendi tonu var: --txt3 ile --txt2 arasında, 4.90:1 — eşiği geçiyor ama
+   altındaki oyuncu adından (6.17:1) hâlâ koyu, yani sıralama bozulmuyor.
+   Global --txt3 tokenine dokunulmadı; başka hiçbir metin etkilenmiyor. */
 .hmRiseL{font-family:var(--mono);font-size:10.5px;font-weight:400;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--txt3);line-height:1.2}
+  text-transform:uppercase;color:#7d8492;line-height:1.2}
 .hmRiseV{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em;
   line-height:1.25;color:var(--txt)}
 .hmRiseV i{font-style:normal;color:var(--acc);font-size:12px}
