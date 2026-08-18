@@ -571,9 +571,20 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   padding:11px 12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(22,25,29,.05)}
 .hmAv{position:relative;overflow:hidden;width:54px;height:54px;border-radius:9px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;
-  letter-spacing:-.01em;background:var(--n2);color:var(--txt2)}
-/* portre görseli yalnız saha temasında; burada baş harfler kalıyor */
-.hmAvImg{display:none}
+  letter-spacing:-.01em;background:var(--n2);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+/* Portre burada bir personel dosyasına iliştirilmiş kimlik fotoğrafı: tam gri,
+   siyahları kaldırılmış. Kaldırma işini contrast<1 yapıyor — değerleri 0.5e
+   çektiği için gömlek, yaka ve omuz ayrımı kalıyor, yüz yine de anonim.
+   Görsele opacity verilmedi: yarı saydam bir fotoğrafın altından baş harfler
+   hayalet gibi sızıyordu. Soğuk gri tabakayı üstteki ::after taşıyor, o da
+   yedeği bozmuyor — görsel yüklenemezse onerror onu kaldırıyor ve baş
+   harfler olduğu gibi ortaya çıkıyor. */
+.hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) contrast(.92) brightness(1.45)}
+.hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:rgba(196,207,218,.1)}
 .hmCi{min-width:0}
 .hmLv{font-size:13.5px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -688,6 +699,30 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 .hmRise.empty .hmRiseIc{color:var(--txt3)}
 .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+
+/* Haftanın yükseleni: kartın solunda futbolcunun soluk bir baskısı.
+   invert() burada süs değil, zorunluluk: kaynak fotoğraf koyu zeminde koyu
+   figür, beyaz kartın üstünde soluk hali gri bir leke olarak okunuyordu.
+   Negatifi alınınca kağıt beyaz kalıyor ve yalnız figürün konturu basılıyor —
+   bir belgeye açık tonda basılmış fotoğrafın okunuşu. Maske sağa doğru
+   tamamen siliyor, sağ yarı metin için temiz kalıyor.
+   Katman ::before, kartın background sırtına binmiyor: :active zemini
+   değiştirdiğinde fotoğraf kaybolmuyor.
+   Boş durumda hiç çizilmiyor — yükselen yokken fotoğraf uydurma veri olurdu. */
+.hmRise{overflow:hidden}
+.hmRise>*{position:relative;z-index:1}
+/* Maske olmadan katman sert kenarlı bir dikdörtgen olarak kalır ve metnin
+   altında duran fotoğraf okunurluğu bozardı. Bu yüzden sanat yalnız maske
+   destekleniyorsa çiziliyor; desteklenmiyorsa kart eski haline döner. */
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
+  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
+    pointer-events:none;opacity:.55;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:invert(1) grayscale(1) contrast(1.35) brightness(1.08);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+  .hmRise.empty::before{display:none}
+}
 
 /* Dar telefonlarda etiketlere yer açmak için birkaç ölçü iner. */
 @media (max-width:365px){

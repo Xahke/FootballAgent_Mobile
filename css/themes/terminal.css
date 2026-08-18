@@ -579,8 +579,21 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);
   font-size:18px;font-weight:600;background:var(--n2);color:var(--txt2);
   box-shadow:inset 0 0 0 1px var(--line2)}
-/* portre görseli yalnız saha temasında; burada baş harfler kalıyor */
-.hmAvImg{display:none}
+/* Portre tek kanallı bir terminal taraması: gri -> sepya -> hue-rotate zinciri
+   kahverengiyi yeşile çeviriyor, doygunluk temanın kendi yeşiline yakın kalsın
+   diye düşük tutuluyor. Parlaklık 1'in altında: yüz anonim, gövde koyu.
+   ::after tarama çizgileri ve çok ince bir yeşil iç ton. Kutunun dışına ışık
+   sızdıran hiçbir gölge yok — glow bu temanın dili değil.
+   Görsele opacity verilmedi: yarı saydam fotoğrafın altından baş harfler
+   sızıyordu. Görsel yüklenemezse onerror onu kaldırıyor ve baş harfler
+   ortaya çıkıyor. */
+.hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) sepia(1) hue-rotate(72deg) saturate(1.5) brightness(1.3) contrast(.95)}
+.hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,rgba(0,0,0,.26) 0 1px,rgba(0,0,0,0) 1px 3px),
+    linear-gradient(180deg,rgba(79,156,107,.1),rgba(79,156,107,.03))}
 .hmCi{min-width:0}
 .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -698,6 +711,30 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 .hmRise.empty .hmRiseIc{color:var(--txt3)}
 .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+
+/* Haftanın yükseleni: solda koyu, tek kanallı yeşil bir tarama. Koyu zeminde
+   koyu fotoğraf zaten sessiz kaldığı için opaklık açık temalardakinden yüksek;
+   görünen asıl şey figürün kenar ışığı.
+   ::after yalnız fotoğrafın bandında tarama çizgisi taşıyor, aynı maskeyle
+   siliniyor. Dışarı taşan bir parlama yok.
+   Katman ::before olduğu için :active zemini değiştirdiğinde fotoğraf duruyor.
+   Boş durumda hiç çizilmiyor — yükselen yokken fotoğraf uydurma veri olurdu. */
+.hmRise{overflow:hidden}
+.hmRise>*{position:relative;z-index:1}
+/* Maske olmadan katman sert kenarlı bir dikdörtgen olarak kalır ve metnin
+   altında duran fotoğraf okunurluğu bozardı. Bu yüzden sanat yalnız maske
+   destekleniyorsa çiziliyor; desteklenmiyorsa kart eski haline döner. */
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
+  .hmRise::before,.hmRise::after{content:"";position:absolute;left:0;top:0;bottom:0;width:40%;
+    pointer-events:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 22%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 22%,transparent 100%)}
+  .hmRise::before{opacity:.35;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:grayscale(1) sepia(1) hue-rotate(72deg) saturate(1.4) brightness(1) contrast(1.05)}
+  .hmRise::after{background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,rgba(0,0,0,0) 1px 3px)}
+  .hmRise.empty::before,.hmRise.empty::after{display:none}
+}
 
 /* Dar telefonlarda etiketlere yer açmak için birkaç ölçü iner. */
 @media (max-width:365px){

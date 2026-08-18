@@ -579,8 +579,21 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
   display:flex;align-items:center;justify-content:center;font-family:var(--serif);
   font-size:19px;font-weight:700;background:var(--n2);color:var(--txt2);
   box-shadow:inset 0 0 0 1px var(--line2)}
-/* portre görseli yalnız saha temasında; burada baş harfler kalıyor */
-.hmAvImg{display:none}
+/* Portre bir gazete kupüründeki basılı fotoğraf: tam gri, üstüne hafif sepya,
+   mürekkep yoğunluğu kağıda oturacak kadar açılmış.
+   ::after gazete tramı — kağıt renginde bir ağ, mürekkebin üstünde nokta
+   dokusu bırakıyor. 3px adım 52px'lik künyede ~17 nokta demek: baskı hissi
+   veriyor, yüzü okunmaz hale getirmiyor.
+   Görsele opacity verilmedi: yarı saydam fotoğrafın altından baş harfler
+   sızıyordu. Görsel yüklenemezse onerror onu kaldırıyor, baş harfler kalıyor
+   ve tram kağıdın üstünde fark edilmiyor. */
+.hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) sepia(.34) contrast(.92) brightness(1.45)}
+.hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(250,248,244,0) 28%,rgba(250,248,244,.24) 72%) 0 0/2px 2px,
+    rgba(222,217,205,.12)}
 .hmCi{min-width:0}
 .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -696,6 +709,30 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 .hmRise.empty .hmRiseIc{color:var(--txt3)}
 .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+
+/* Haftanın yükseleni: solda eski bir kupürden kesilmiş gibi duran futbolcu.
+   invert() zorunlu: kaynak fotoğraf koyu zeminde koyu figür, kağıdın üstünde
+   soluk hali lekeye dönüyordu. Negatifi alınınca kağıt kağıt kalıyor, yalnız
+   figürün konturu mürekkep bırakıyor. Kontrast 1'in üstünde — gazete baskısı
+   ara tonları yutar — ve sepya mürekkebi kağıdın sıcaklığına oturtuyor.
+   Tram yok: kontur zaten ince, üstüne nokta koymak dokuyu değil gürültüyü
+   artırıyordu; baskı hissini künyedeki portre taşıyor.
+   Katman ::before olduğu için :active zemini değiştirdiğinde fotoğraf duruyor.
+   Boş durumda hiç çizilmiyor — yükselen yokken fotoğraf uydurma veri olurdu. */
+.hmRise{overflow:hidden}
+.hmRise>*{position:relative;z-index:1}
+/* Maske olmadan katman sert kenarlı bir dikdörtgen olarak kalır ve metnin
+   altında duran fotoğraf okunurluğu bozardı. Bu yüzden sanat yalnız maske
+   destekleniyorsa çiziliyor; desteklenmiyorsa kart eski haline döner. */
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
+  .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
+    pointer-events:none;opacity:.7;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:invert(1) grayscale(1) sepia(.4) contrast(1.55) brightness(1.08);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+  .hmRise.empty::before{display:none}
+}
 
 /* Dar telefonlarda etiketlere yer açmak için birkaç ölçü iner. */
 @media (max-width:365px){

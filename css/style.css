@@ -1290,7 +1290,13 @@ html[data-theme="gazete"] .hmAv{position:relative;overflow:hidden;width:52px;hei
   display:flex;align-items:center;justify-content:center;font-family:var(--serif);
   font-size:19px;font-weight:700;background:var(--n2);color:var(--txt2);
   box-shadow:inset 0 0 0 1px var(--line2)}
-html[data-theme="gazete"] .hmAvImg{display:none}
+html[data-theme="gazete"] .hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) sepia(.34) contrast(.92) brightness(1.45)}
+html[data-theme="gazete"] .hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(250,248,244,0) 28%,rgba(250,248,244,.24) 72%) 0 0/2px 2px,
+    rgba(222,217,205,.12)}
 html[data-theme="gazete"] .hmCi{min-width:0}
 html[data-theme="gazete"] .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -1392,6 +1398,15 @@ html[data-theme="gazete"] .hmRiseN{font-size:12px;font-weight:400;color:var(--tx
 html[data-theme="gazete"] .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 html[data-theme="gazete"] .hmRise.empty .hmRiseIc{color:var(--txt3)}
 html[data-theme="gazete"] .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+html[data-theme="gazete"] .hmRise{overflow:hidden}
+html[data-theme="gazete"] .hmRise>*{position:relative;z-index:1}
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="gazete"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
+    pointer-events:none;opacity:.7;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:invert(1) grayscale(1) sepia(.4) contrast(1.55) brightness(1.08);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+html[data-theme="gazete"] .hmRise.empty::before{display:none}}
 @media (max-width:365px){html[data-theme="gazete"] .hmWord{font-size:20px}
 html[data-theme="gazete"] .hmCard{gap:10px;padding:9px 10px}
 html[data-theme="gazete"] .hmAv{width:48px;height:48px}
@@ -1911,7 +1926,13 @@ html[data-theme="terminal"] .hmAv{position:relative;overflow:hidden;width:52px;h
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);
   font-size:18px;font-weight:600;background:var(--n2);color:var(--txt2);
   box-shadow:inset 0 0 0 1px var(--line2)}
-html[data-theme="terminal"] .hmAvImg{display:none}
+html[data-theme="terminal"] .hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) sepia(1) hue-rotate(72deg) saturate(1.5) brightness(1.3) contrast(.95)}
+html[data-theme="terminal"] .hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,rgba(0,0,0,.26) 0 1px,rgba(0,0,0,0) 1px 3px),
+    linear-gradient(180deg,rgba(79,156,107,.1),rgba(79,156,107,.03))}
 html[data-theme="terminal"] .hmCi{min-width:0}
 html[data-theme="terminal"] .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -2015,6 +2036,17 @@ html[data-theme="terminal"] .hmRiseN{font-size:12px;font-weight:400;color:var(--
 html[data-theme="terminal"] .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 html[data-theme="terminal"] .hmRise.empty .hmRiseIc{color:var(--txt3)}
 html[data-theme="terminal"] .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+html[data-theme="terminal"] .hmRise{overflow:hidden}
+html[data-theme="terminal"] .hmRise>*{position:relative;z-index:1}
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="terminal"] .hmRise::before,html[data-theme="terminal"] .hmRise::after{content:"";position:absolute;left:0;top:0;bottom:0;width:40%;
+    pointer-events:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 22%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 22%,transparent 100%)}
+html[data-theme="terminal"] .hmRise::before{opacity:.35;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:grayscale(1) sepia(1) hue-rotate(72deg) saturate(1.4) brightness(1) contrast(1.05)}
+html[data-theme="terminal"] .hmRise::after{background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 1px,rgba(0,0,0,0) 1px 3px)}
+html[data-theme="terminal"] .hmRise.empty::before,html[data-theme="terminal"] .hmRise.empty::after{display:none}}
 @media (max-width:365px){html[data-theme="terminal"] .hmWord{font-size:20px}
 html[data-theme="terminal"] .hmCard{gap:10px;padding:9px 10px}
 html[data-theme="terminal"] .hmAv{width:48px;height:48px}
@@ -2526,8 +2558,13 @@ html[data-theme="dosya"] .hmCard{display:grid;grid-template-columns:auto 1fr aut
   padding:11px 12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(22,25,29,.05)}
 html[data-theme="dosya"] .hmAv{position:relative;overflow:hidden;width:54px;height:54px;border-radius:9px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;
-  letter-spacing:-.01em;background:var(--n2);color:var(--txt2)}
-html[data-theme="dosya"] .hmAvImg{display:none}
+  letter-spacing:-.01em;background:var(--n2);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="dosya"] .hmAvImg{display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 40%;pointer-events:none;
+  filter:grayscale(1) contrast(.92) brightness(1.45)}
+html[data-theme="dosya"] .hmAv::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:rgba(196,207,218,.1)}
 html[data-theme="dosya"] .hmCi{min-width:0}
 html[data-theme="dosya"] .hmLv{font-size:13.5px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
@@ -2627,6 +2664,15 @@ html[data-theme="dosya"] .hmRiseN{font-size:12px;font-weight:400;color:var(--txt
 html[data-theme="dosya"] .hmRise.empty{cursor:default;border-left-color:var(--n4)}
 html[data-theme="dosya"] .hmRise.empty .hmRiseIc{color:var(--txt3)}
 html[data-theme="dosya"] .hmRiseNone{font-size:12.5px;color:var(--txt3);line-height:1.25}
+html[data-theme="dosya"] .hmRise{overflow:hidden}
+html[data-theme="dosya"] .hmRise>*{position:relative;z-index:1}
+@supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){html[data-theme="dosya"] .hmRise::before{content:"";position:absolute;left:0;top:0;bottom:0;width:46%;
+    pointer-events:none;opacity:.55;
+    background:url(../assets/ui/weekly-riser.webp) 45% 50%/cover no-repeat;
+    filter:invert(1) grayscale(1) contrast(1.35) brightness(1.08);
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0%,#000 25%,transparent 100%)}
+html[data-theme="dosya"] .hmRise.empty::before{display:none}}
 @media (max-width:365px){html[data-theme="dosya"] .hmWord{font-size:22px}
 html[data-theme="dosya"] .hmCard{gap:10px;padding:10px}
 html[data-theme="dosya"] .hmAv{width:50px;height:50px}
