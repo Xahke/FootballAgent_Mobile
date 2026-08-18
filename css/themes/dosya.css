@@ -647,6 +647,15 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmAgIc svg{width:21px;height:21px}
 .hmAgT{flex:1;min-width:0;font-size:13.5px;font-weight:400;line-height:1.3}
 .hmAgC{flex-shrink:0;color:var(--n4);font-size:18px;line-height:1}
+/* Müşterisiz başlangıçta gündem satırının yerini alan yönlendirme. Ayrı bir
+   kart değil, aynı satır dili: yalnız metin iki satıra ayrılıyor, ray ve ikon
+   vurgu rengine geçiyor. Yükseklik gündem satırının kendi ölçüsünden geliyor,
+   yani 56px eşiğinin üstünde ve büyüme sistemine bağlı kalıyor. */
+.hmAg.onb{border-left-color:var(--acc)}
+.hmAg.onb .hmAgIc{color:var(--acc)}
+.hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
+.hmAg.onb b{font-size:14px;font-weight:600;color:var(--txt);line-height:1.2}
+.hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
 .hmEmpty{background:var(--sur);border:1px solid var(--line);border-radius:var(--r-s);
   padding:14px 12px;margin-bottom:8px;color:var(--txt3);font-size:13px;text-align:center}
 

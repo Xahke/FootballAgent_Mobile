@@ -512,7 +512,17 @@ dash(){
       <span class="hmAgIc${hmHasBadge(x.ic)?' badge':''}">${hmIcon(x.ic,50)}</span>
       <span class="hmAgT">${esc(x.txt)}</span>
       <span class="hmAgC">›</span></button>`).join('')
-   :`<div class="hmEmpty">${S.clients.length?t('hmNoAgenda'):t('noClientsSub')}</div>`}
+   /* Müşteri yokken gündem boş olmaz, sadece tek bir iş vardır: piyasaya gidip
+      ilk oyuncuyu bulmak. O yüzden burası pasif bir "yapacak iş yok" metni
+      değil, satırın tamamı dokunulabilir bir yönlendirme. Gündem satırının
+      kendi ölçüsünü kullanıyor — ayrı bir kart eklemek ana ekranı 360x800'de
+      taşırıyordu ve aynı cümleyi iki kez söylüyordu. */
+   :S.clients.length
+     ?`<div class="hmEmpty">${t('hmNoAgenda')}</div>`
+     :`<button class="hmAg onb" onclick="navTo('market')">
+        <span class="hmAgIc${hmHasBadge('market')?' badge':''}">${hmIcon('market',50)}</span>
+        <span class="hmAgT"><b>${t('goMarket')}</b><i>${t('noClientsSub')}</i></span>
+        <span class="hmAgC">›</span></button>`}
 
   <div class="hmQuick">
     ${qCard('green','clients',t('hmMyPlayers'),`${S.clients.length}<small>/${maxClients()}</small>`,"navTo('clients')")}
@@ -534,10 +544,7 @@ dash(){
   :`<div class="hmRise empty">
     <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
     <span class="hmRiseT"><span class="hmRiseL">${t('hmRiser')}</span>
-    <span class="hmRiseNone">${t('hmNoRiser')}</span></span></div>`}
-
-  ${S.clients.length?'':`<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
-     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}`;
+    <span class="hmRiseNone">${t('hmNoRiser')}</span></span></div>`}`;
 },
 clients(){
   const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);

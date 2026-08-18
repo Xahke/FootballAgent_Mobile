@@ -662,6 +662,16 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .hmAgIc svg{width:28px;height:28px}
 .hmAgT{flex:1;min-width:0;font-size:14.5px;font-weight:600;line-height:1.32}
 .hmAgC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1}
+/* Müşterisiz başlangıçta gündem satırının yerini alan yönlendirme. Ayrı bir
+   kart değil, aynı satır dili: yalnız metin iki satıra ayrılıyor, ray ve ikon
+   vurgu rengine geçiyor. Yükseklik gündem satırının kendi ölçüsünden geliyor,
+   yani 56px eşiğinin üstünde ve büyüme sistemine bağlı kalıyor. */
+.hmAg.onb{box-shadow:inset 0 0 0 1px rgba(30,201,126,.28),0 5px 16px -14px #000}
+.hmAg.onb .hmAgIc{color:var(--acc)}
+.hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
+.hmAg.onb b{font-family:var(--cond);font-size:15.5px;font-weight:800;letter-spacing:.01em;
+  color:var(--txt);line-height:1.15}
+.hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
 .hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
   box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
 
