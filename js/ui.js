@@ -441,7 +441,7 @@ function clAvatar(p,tm){
   if(!usePortraits())return `<span class="clBadge">${tmBadge(tm,46)}</span>`;
   return `<span class="clBadge port">${tmBadge(tm,62)}<img class="clAvImg"
     src="${portraitOf(p.id)}" alt="" aria-hidden="true" width="62" height="62"
-    decoding="async" onerror="this.remove()"><span class="clAvTm">${tmBadge(tm,20)}</span></span>`;
+    decoding="async" onerror="this.remove()"><span class="clAvTm">${tmBadge(tm,16)}</span></span>`;
 }
 function clCard(p){
   const st=clState(p),tm=teamOf(p);

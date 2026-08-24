@@ -1258,11 +1258,15 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
   box-shadow:inset 0 0 0 1px var(--cl-t),inset 0 0 0 2px rgba(3,7,15,.35)}
 /* Köşe kulüp rozeti: yüzün üstüne değil, sağ alt köşeye. Portre yoksa görünmez. */
 .clAvTm{display:none}
-.clAvImg+.clAvTm{display:block;position:absolute;right:-3px;bottom:-3px;z-index:2}
-.clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px;
-  box-shadow:0 0 0 2px var(--sur)}
-/* 22px rozette renk şeridi orantısını koru; ince kalırsa kaybolur */
-.clAvTm>.tb>i{height:5px}
+/* Köşe rozeti: görünür 18px, portrenin sağ alt köşesinde, dışarı yalnız ~2px
+   taşar. Önceki tur 20px + 2px halka + 3px kayma ile 24px'lik bir leke yapıyor
+   ve portrenin yakasını örtüyordu (av-closeup'ta görüldü). Halka 1.5px'e indi:
+   rozeti karttan ayırmaya yetiyor, kalın bir dış gölge bırakmıyor. */
+.clAvImg+.clAvTm{display:block;position:absolute;right:-1px;bottom:-1px;z-index:2}
+.clAvTm>.tb{width:16px;height:16px;border-radius:5px;font-size:6.5px;letter-spacing:0;
+  box-shadow:0 0 0 1.5px var(--sur)}
+/* 18px rozette renk şeridi %22 oranında 4px kalıyor — daha incesi kayboluyor */
+.clAvTm>.tb>i{height:3.5px}
 
 /* Kart artık 62px portre taşıyor: metin sütununun payı 46px rozetteki kadar
    kalsın diye boşluk bir tık daralıyor. 360px'te ölçüldü, taşma yok. */
@@ -1270,6 +1274,35 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
 @media (max-width:365px){
   .clBadge.port{width:58px;height:58px}
   .clBadge.port>.tb{width:58px;height:58px}
-  .clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px}
+  .clAvTm>.tb{width:15px;height:15px;border-radius:4px;font-size:6px}
   .clCard{gap:9px}
+}
+
+/* ===================== ÜST ÇUBUK · 360px BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
+   Sorun ölçüldü, tahmin edilmedi: 360px'te .hrow iç genişliği 336px ve bunun
+   238'ini sabit kontroller (kasa 80 + itibar 47 + ayarlar 36 + Devam 75), 32'sini
+   de dört boşluk (4x8) yiyor. Başlığa 66px kalıyor, "Müşteriler" ise 15px'te
+   75px istiyor — tam 9px açık. Ellipsis bu açığı gizliyordu.
+
+   Çözüm açığı kapatmak: yatay dolgu 12→10, boşluk 8→6, kasa/itibar rozetlerinin
+   iç dolgusu 9→7. Kazanç 4+8+8 = 20px; başlık 86px'e çıkıyor. Üstüne başlık
+   punto 15→14 (brief'in izin verdiği kontrollü küçültme) ile metin ~70px'e
+   iniyor, yani 16px pay kalıyor ve alt satır ("Sezon 1 · Hafta 14", 66px) da
+   tek satırda duruyor.
+
+   Hiçbir kontrol kaldırılmadı, küçültülmedi ya da üst üste bindirilmedi; Devam
+   düğmesinin ölçüsüne dokunulmadı. Kural yalnız 374px altında ve yalnız
+   müşteriler ekranında geçerli — başka hiçbir ekran ve tema etkilenmiyor. */
+@media (max-width:374px){
+  body[data-view="clients"] header{padding-left:10px;padding-right:10px}
+  body[data-view="clients"] .hrow{gap:5px}
+  body[data-view="clients"] .hstat{padding:6px 7px}
+  body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+  /* Devam'ın yatay dolgusu 15→12: yüksekliğine ve dokunma hedefine dokunmadan
+     6px daha açıyor, sütun 92px'e çıkıyor. */
+  body[data-view="clients"] #btnNext{padding:0 12px}
+  /* Alt satır tek satırda kalmalı. 10.5px + .05em harf aralığıyla 18 karakter
+     107px istiyor ve sütuna sığmıyordu (ölçüldü; ilk denemede "SEZON 1 · HAFTA .."
+     diye kesildi). Harf aralığı sıfırlanıp punto 9.5'e inince ~88px'e düşüyor. */
+  body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0;white-space:nowrap}
 }
