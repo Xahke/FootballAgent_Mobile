@@ -1278,6 +1278,27 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
   .clCard{gap:9px}
 }
 
+/* ===================== ÜST ÇUBUK · 44px DOKUNMA HEDEFLERİ (yalnız saha/müşteriler)
+   Ayarlar düğmesi 36x36, Devam 36px yüksekti — ikisi de 44px eşiğinin altında.
+   (Bunlar global header'dan geliyor; kural burada yalnız müşteriler ekranına
+   kapsamlandığı için ana ekran ve diğer 13 görünüm ile üç tema değişmiyor.)
+
+   Elementin KENDİSİ büyütülüyor, pseudo-element ile görsel hile yok:
+   getBoundingClientRect() artık 44x44 ve 44px yükseklik veriyor.
+
+   Satır yüksekliği korunuyor. Header'ın dikey dolgusu 9→5 iniyor, böylece
+   5 + 44 + 5 + 1px alt çizgi = 55px; ölçülen mevcut yükseklik de 55-56px idi.
+   Yani 44px hedef bu satıra dolgudan alınan payla sığıyor, çubuk büyümüyor.
+   env(safe-area-inset-top) korunuyor — Android edge-to-edge şartı.
+
+   Köşe yarıçapı oranı sabit tutuldu (11/36 = .306 → 13/44 = .295), düğmeler
+   aynı karakterde duruyor. */
+body[data-view="clients"] header{
+  padding-top:calc(5px + env(safe-area-inset-top));
+  padding-bottom:5px}
+body[data-view="clients"] .hback{width:44px;height:44px;border-radius:13px}
+body[data-view="clients"] #btnNext{height:44px;border-radius:13px}
+
 /* ===================== ÜST ÇUBUK · BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
    Müşteriler ekranının başlığı uygulamadaki en uzun başlık ("Müşteriler" +
    "Sezon N · Hafta N"), üst çubuktaki sabit kontroller ise değişmiyor. Bütçe
@@ -1319,8 +1340,8 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
 @media (max-width:460px){
   body[data-view="clients"] header{padding-left:10px;padding-right:10px}
   body[data-view="clients"] .hrow{gap:5px}
-  body[data-view="clients"] .hstat{padding:6px 7px}
-  body[data-view="clients"] #btnNext{padding:0 12px}
+  body[data-view="clients"] .hstat{padding:6px 6px}
+  body[data-view="clients"] #btnNext{padding:0 10px}
   body[data-view="clients"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
 }
 /* 374px altında bir kademe daha: orada sabitler satırın %68'ini yiyor ve
@@ -1334,8 +1355,12 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
      dolgusu 7→5, ikon 13→12, rozet içi ve satır boşluğu 5→4 ile 16px daha
      açılıyor — punto daha da küçültülmeden. */
   body[data-view="clients"] .hrow{gap:4px}
-  body[data-view="clients"] .hstat{padding:6px 5px;gap:4px}
-  body[data-view="clients"] .hstat svg{width:12px;height:12px}
+  /* Ayarlar düğmesi 36→44 büyüyünce 374px altında telafi kalmamıştı (bu blok
+     zaten en sıkı değerlerdeydi) ve İngilizce geniş değerlerde alt satır tekrar
+     sarıyordu. Rozetlerin iç dolgusu 5→4, rozet içi boşluk 4→3 ve ikon 12→11
+     ile 8px geri alınıyor. */
+  body[data-view="clients"] .hstat{padding:6px 4px;gap:3px}
+  body[data-view="clients"] .hstat svg{width:11px;height:11px}
   /* Uzun sezon/hafta değerlerinde ("Season 30 · Week 38") İngilizce hâlâ 1-2px
      açık veriyordu; Devam'ın dolgusu 12→10 ile kapanıyor. Düğme metni 13px,
      yani genişliği hâlâ 44px'in çok üstünde. */
