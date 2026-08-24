@@ -925,15 +925,21 @@ html[data-theme="saha"] .clAvImg{position:absolute;inset:0;width:100%;height:100
   object-fit:cover;border-radius:12px;
   box-shadow:inset 0 0 0 1px var(--cl-t),inset 0 0 0 2px rgba(3,7,15,.35)}
 html[data-theme="saha"] .clAvTm{display:none}
-html[data-theme="saha"] .clAvImg+.clAvTm{display:block;position:absolute;right:-3px;bottom:-3px;z-index:2}
-html[data-theme="saha"] .clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px;
-  box-shadow:0 0 0 2px var(--sur)}
-html[data-theme="saha"] .clAvTm>.tb>i{height:5px}
+html[data-theme="saha"] .clAvImg+.clAvTm{display:block;position:absolute;right:-1px;bottom:-1px;z-index:2}
+html[data-theme="saha"] .clAvTm>.tb{width:16px;height:16px;border-radius:5px;font-size:6.5px;letter-spacing:0;
+  box-shadow:0 0 0 1.5px var(--sur)}
+html[data-theme="saha"] .clAvTm>.tb>i{height:3.5px}
 html[data-theme="saha"] .clCard{gap:10px}
 @media (max-width:365px){html[data-theme="saha"] .clBadge.port{width:58px;height:58px}
 html[data-theme="saha"] .clBadge.port>.tb{width:58px;height:58px}
-html[data-theme="saha"] .clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px}
+html[data-theme="saha"] .clAvTm>.tb{width:15px;height:15px;border-radius:4px;font-size:6px}
 html[data-theme="saha"] .clCard{gap:9px}}
+@media (max-width:374px){html[data-theme="saha"] body[data-view="clients"] header{padding-left:10px;padding-right:10px}
+html[data-theme="saha"] body[data-view="clients"] .hrow{gap:5px}
+html[data-theme="saha"] body[data-view="clients"] .hstat{padding:6px 7px}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+html[data-theme="saha"] body[data-view="clients"] #btnNext{padding:0 12px}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0;white-space:nowrap}}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
