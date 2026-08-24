@@ -2,7 +2,7 @@
    Oyun tamamen istemci tarafında; ağ yalnızca dosyaları indirmek için gerekiyor.
    Bu yüzden uygulama kabuğu kuruluşta önbelleğe alınır ve sonrasında ağ hiç beklenmez.
    CACHE sürümünü, önbelleğe alınan dosyalardan biri her değiştiğinde artır. */
-const CACHE = 'menajer-v22';
+const CACHE = 'menajer-v23';
 const SHELL = [
   './',
   './index.html',
@@ -29,6 +29,18 @@ const SHELL = [
   './icons/maskable-192.png',
   './icons/maskable-512.png',
   './icons/apple-touch-icon.png',
+  './assets/ui/player-portrait-01.webp',
+  './assets/ui/player-portrait-02.webp',
+  './assets/ui/player-portrait-03.webp',
+  './assets/ui/player-portrait-04.webp',
+  './assets/ui/player-portrait-05.webp',
+  './assets/ui/player-portrait-06.webp',
+  './assets/ui/player-portrait-07.webp',
+  './assets/ui/player-portrait-08.webp',
+  './assets/ui/player-portrait-09.webp',
+  './assets/ui/player-portrait-10.webp',
+  './assets/ui/player-portrait-11.webp',
+  './assets/ui/player-portrait-12.webp',
   './assets/ui/home-stadium-tunnel.webp',
   './assets/ui/agent-silhouette.webp',
   './assets/ui/weekly-riser.webp',
