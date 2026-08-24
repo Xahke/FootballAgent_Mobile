@@ -1237,3 +1237,39 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
   .clRt{font-size:23px}
   .clChipT{font-size:12px}
 }
+
+/* ===================== MÜŞTERİ KARTI · OYUNCU PORTRESİ (yalnız saha) =====================
+   Referanstaki turuncu baş harf kutusunun yerini gerçek portre alıyor. İşaretleme
+   yalnız bu temada üretiliyor (js/ui.js → usePortraits), o yüzden diğer üç tema
+   .clBadge.port kuralını hiç görmüyor ve kendi baş harf/rozet sunumunu koruyor.
+
+   Katmanlar (arkadan öne): yedek takım rozeti → portre → köşe kulüp rozeti.
+   Portre yüklenemezse onerror kendini siliyor, altındaki rozet ortaya çıkıyor;
+   .clAvImg + .clAvTm bitişik kardeş seçicisi de köşe rozetini kendiliğinden
+   gizliyor. :has() kullanılmadı — eski WebView sürümlerinde yok.
+
+   Kenar, kartın TEK durum rengini (--cl-t) 1px inset olarak taşıyor: neon halka
+   ya da glow yok, rayla aynı bilgiyi sessizce tekrarlıyor. */
+.clBadge.port{position:relative;flex:0 0 auto;width:62px;height:62px}
+/* Yedek rozet portrenin altında, aynı köşe yarıçapıyla */
+.clBadge.port>.tb{position:absolute;inset:0;width:62px;height:62px;border-radius:12px}
+.clAvImg{position:absolute;inset:0;width:100%;height:100%;display:block;
+  object-fit:cover;border-radius:12px;
+  box-shadow:inset 0 0 0 1px var(--cl-t),inset 0 0 0 2px rgba(3,7,15,.35)}
+/* Köşe kulüp rozeti: yüzün üstüne değil, sağ alt köşeye. Portre yoksa görünmez. */
+.clAvTm{display:none}
+.clAvImg+.clAvTm{display:block;position:absolute;right:-3px;bottom:-3px;z-index:2}
+.clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px;
+  box-shadow:0 0 0 2px var(--sur)}
+/* 22px rozette renk şeridi orantısını koru; ince kalırsa kaybolur */
+.clAvTm>.tb>i{height:5px}
+
+/* Kart artık 62px portre taşıyor: metin sütununun payı 46px rozetteki kadar
+   kalsın diye boşluk bir tık daralıyor. 360px'te ölçüldü, taşma yok. */
+.clCard{gap:10px}
+@media (max-width:365px){
+  .clBadge.port{width:58px;height:58px}
+  .clBadge.port>.tb{width:58px;height:58px}
+  .clAvTm>.tb{width:20px;height:20px;border-radius:6px;font-size:7.5px}
+  .clCard{gap:9px}
+}

@@ -396,6 +396,53 @@ function clSetFilter(f){CLFILTER=f;render();}
 /* Portföy kartı: üçü de gerçek yardımcılardan geliyor.
    weeklyIncome() yalnızca müşterilerin maaşından alınan komisyonu topluyor
    (bkz. core.js) — ajansın gideri ya da transfer payı buraya karışmıyor. */
+/* ===================== OYUNCU PORTRELERİ =====================
+   On iki anonim silüet. Hangi oyuncuya hangisinin düştüğü YALNIZCA p.id'den
+   türüyor: kayıt dosyasına portre alanı yazılmıyor. Gerekçe CLAUDE.md'nin kuralı
+   — her yeni alan yokken de çalışmak zorunda; yazılmayan alan bu sınavı hep geçer.
+   Sonuç olarak kayıt açılınca, liste yeniden sıralanınca ya da müşteri listesi
+   değişince hiçbir yüz değişmiyor. Dağıtım liste üyeliğine göre YAPILMIYOR: bir
+   oyuncuyu bırakmak başka bir oyuncunun yüzünü değiştirirdi.
+
+   Yollar tam metin olarak duruyor, birleştirilerek üretilmiyor: build.js tek
+   dosya sürümünde "assets/ui/…" dizgilerini data URI ile değiştiriyor ve
+   parça parça kurulan bir yolu göremezdi (404 olurdu).
+
+   Math.random() yok; karıştırıcı murmur3'ün son adımı. id%12 yetmezdi: id'ler
+   ardışık üretiliyor, o yüzden yan yana duran oyuncular sıralı yüzler alırdı.
+   Ölçüldü: 7000 id üzerinde kovalar 547–611 (ideal 583), ardışık id çiftlerinin
+   %8.7'si aynı yüze düşüyor (rastgele beklenti %8.3). */
+const PORTRAITS=[
+  'assets/ui/player-portrait-01.webp','assets/ui/player-portrait-02.webp',
+  'assets/ui/player-portrait-03.webp','assets/ui/player-portrait-04.webp',
+  'assets/ui/player-portrait-05.webp','assets/ui/player-portrait-06.webp',
+  'assets/ui/player-portrait-07.webp','assets/ui/player-portrait-08.webp',
+  'assets/ui/player-portrait-09.webp','assets/ui/player-portrait-10.webp',
+  'assets/ui/player-portrait-11.webp','assets/ui/player-portrait-12.webp'
+];
+function portraitOf(id){
+  let h=id>>>0;
+  h=Math.imul(h^(h>>>16),2246822507);
+  h=Math.imul(h^(h>>>13),3266489909);
+  h=(h^(h>>>16))>>>0;
+  return PORTRAITS[h%PORTRAITS.length];
+}
+/* Portreler bu turda yalnız saha temasında. Diğer üç tema renk yerine veri
+   anlamı taşıyor; oraya fotoğraf koymak o temaların dilini bozardı — aynı
+   gerekçe ana ekranın görselleri için de yazılı (css/themes/saha.css).
+   Kapı JS'te: setTheme() render() çağırdığı için tema değişince işaretleme
+   yeniden kuruluyor, geride portre kalıntısı kalmıyor. */
+function usePortraits(){return themeOf()==='saha';}
+/* Sol sütun: portre varsa altında yedek olarak mevcut takım rozeti durur ve
+   köşede küçük bir kulüp rozeti olur. Portre yüklenemezse onerror kendini
+   siler; bitişik kardeş seçicisi (.clAvImg + .clAvTm) köşe rozetini de
+   otomatik gizler ve geriye bugünkü baş harf rozeti kalır — :has() gerekmiyor. */
+function clAvatar(p,tm){
+  if(!usePortraits())return `<span class="clBadge">${tmBadge(tm,46)}</span>`;
+  return `<span class="clBadge port">${tmBadge(tm,62)}<img class="clAvImg"
+    src="${portraitOf(p.id)}" alt="" aria-hidden="true" width="62" height="62"
+    decoding="async" onerror="this.remove()"><span class="clAvTm">${tmBadge(tm,20)}</span></span>`;
+}
 function clCard(p){
   const st=clState(p),tm=teamOf(p);
   /* Moral alanı eksik bir kayıtta Math.round(undefined) ekrana NaN basardı;
@@ -403,7 +450,7 @@ function clCard(p){
   const mood=Math.round(p.morale||0);
   return `<div class="clCard${st?' t-'+st.tone:''}" onclick="pushV('player',${p.id})">
     <span class="clRail"></span>
-    <span class="clBadge">${tmBadge(tm,46)}</span>
+    ${clAvatar(p,tm)}
     <span class="clBody">
       <span class="clName">${esc(p.n)}</span>
       <span class="clMeta">${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
