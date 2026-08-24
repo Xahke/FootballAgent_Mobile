@@ -397,7 +397,13 @@ function clSetFilter(f){CLFILTER=f;render();}
    weeklyIncome() yalnızca müşterilerin maaşından alınan komisyonu topluyor
    (bkz. core.js) — ajansın gideri ya da transfer payı buraya karışmıyor. */
 /* ===================== OYUNCU PORTRELERİ =====================
-   On iki anonim silüet. Hangi oyuncuya hangisinin düştüğü YALNIZCA p.id'den
+   Sekiz anonim silüet. Kaynak tabakada on iki özne vardı ama dördü (01, 06, 07,
+   12) görüntünün sol/sağ kenarına yaslanmıştı: merkezli bir kare orada en fazla
+   344-436px olabiliyor, yani o dördü diğerlerinden belirgin daha yakın kadrajlı
+   çıkıyordu (baş genişliği 150-182px, diğerleri 114-125px). Pad/blur ile arka
+   plan uydurmak yerine havuzdan çıkarıldılar; tutarlılık çeşitlilikten önce.
+
+   Hangi oyuncuya hangisinin düştüğü YALNIZCA p.id'den
    türüyor: kayıt dosyasına portre alanı yazılmıyor. Gerekçe CLAUDE.md'nin kuralı
    — her yeni alan yokken de çalışmak zorunda; yazılmayan alan bu sınavı hep geçer.
    Sonuç olarak kayıt açılınca, liste yeniden sıralanınca ya da müşteri listesi
@@ -408,17 +414,19 @@ function clSetFilter(f){CLFILTER=f;render();}
    dosya sürümünde "assets/ui/…" dizgilerini data URI ile değiştiriyor ve
    parça parça kurulan bir yolu göremezdi (404 olurdu).
 
-   Math.random() yok; karıştırıcı murmur3'ün son adımı. id%12 yetmezdi: id'ler
+   Math.random() yok; karıştırıcı murmur3'ün son adımı. id%8 yetmezdi: id'ler
    ardışık üretiliyor, o yüzden yan yana duran oyuncular sıralı yüzler alırdı.
-   Ölçüldü: 7000 id üzerinde kovalar 547–611 (ideal 583), ardışık id çiftlerinin
-   %8.7'si aynı yüze düşüyor (rastgele beklenti %8.3). */
+   Havuz 8'e inince mod yalnız alt 3 biti kullanıyor — karıştırıcının alt bitleri
+   de yaydığı ölçüldü: 7000 id üzerinde kovalar 839–913 (ideal 875), ki-kare 4.76
+   (df=7, %95 eşiği 14.07). Ardışık id çiftlerinin %12.9'u aynı yüze düşüyor,
+   rastgele beklenti %12.5. Sekiz yüzle aynı listede tekrar normaldir; tekrarı
+   engellemek için listeye bakan bir kural KURULMADI, çünkü o kural yeni müşteri
+   eklendiğinde mevcut müşterilerin yüzünü değiştirirdi. */
 const PORTRAITS=[
-  'assets/ui/player-portrait-01.webp','assets/ui/player-portrait-02.webp',
-  'assets/ui/player-portrait-03.webp','assets/ui/player-portrait-04.webp',
-  'assets/ui/player-portrait-05.webp','assets/ui/player-portrait-06.webp',
-  'assets/ui/player-portrait-07.webp','assets/ui/player-portrait-08.webp',
-  'assets/ui/player-portrait-09.webp','assets/ui/player-portrait-10.webp',
-  'assets/ui/player-portrait-11.webp','assets/ui/player-portrait-12.webp'
+  'assets/ui/player-portrait-02.webp','assets/ui/player-portrait-03.webp',
+  'assets/ui/player-portrait-04.webp','assets/ui/player-portrait-05.webp',
+  'assets/ui/player-portrait-08.webp','assets/ui/player-portrait-09.webp',
+  'assets/ui/player-portrait-10.webp','assets/ui/player-portrait-11.webp'
 ];
 function portraitOf(id){
   let h=id>>>0;
