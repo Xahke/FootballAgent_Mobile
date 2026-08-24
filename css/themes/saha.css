@@ -1278,31 +1278,66 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
   .clCard{gap:9px}
 }
 
-/* ===================== ÜST ÇUBUK · 360px BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
-   Sorun ölçüldü, tahmin edilmedi: 360px'te .hrow iç genişliği 336px ve bunun
-   238'ini sabit kontroller (kasa 80 + itibar 47 + ayarlar 36 + Devam 75), 32'sini
-   de dört boşluk (4x8) yiyor. Başlığa 66px kalıyor, "Müşteriler" ise 15px'te
-   75px istiyor — tam 9px açık. Ellipsis bu açığı gizliyordu.
+/* ===================== ÜST ÇUBUK · BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
+   Müşteriler ekranının başlığı uygulamadaki en uzun başlık ("Müşteriler" +
+   "Sezon N · Hafta N"), üst çubuktaki sabit kontroller ise değişmiyor. Bütçe
+   ölçüldü, tahmin edilmedi — .htitle tek esnek öğe olduğu için kasa değerindeki
+   her genişleme doğrudan başlıktan kesiliyor.
 
-   Çözüm açığı kapatmak: yatay dolgu 12→10, boşluk 8→6, kasa/itibar rozetlerinin
-   iç dolgusu 9→7. Kazanç 4+8+8 = 20px; başlık 86px'e çıkıyor. Üstüne başlık
-   punto 15→14 (brief'in izin verdiği kontrollü küçültme) ile metin ~70px'e
-   iniyor, yani 16px pay kalıyor ve alt satır ("Sezon 1 · Hafta 14", 66px) da
-   tek satırda duruyor.
+   ÖLÇÜM (normal değerler; ihtiyaç = alt satırın gerçek genişliği, düzeltmeden
+   önce). Sabitler: kasa+itibar+ayarlar+Devam, artı dört boşluk.
 
-   Hiçbir kontrol kaldırılmadı, küçültülmedi ya da üst üste bindirilmedi; Devam
-   düğmesinin ölçüsüne dokunulmadı. Kural yalnız 374px altında ve yalnız
-   müşteriler ekranında geçerli — başka hiçbir ekran ve tema etkilenmiyor. */
-@media (max-width:374px){
+     genişlik  dil  satır  sabit  boşluk  sütun  alt satır ister  açık
+        360    tr    340    232      20     88        84         sığar
+        360    en    340    245      20     75        85          10px
+        390    tr    366    246      32     88       107          19px
+        390    en    366    259      32     75       109          34px
+        412    tr    388    246      32    110       107         sığar
+        412    en    388    259      32     97       109          12px
+
+   Yani önceki tur yalnız 374px altını ve yalnız TR'yi kapatmıştı; İngilizce
+   360'ta bile sarıyordu. Açık en fazla 34px.
+
+   Çözüm iki taraflı: ARZ tarafında yatay dolgu 12→10 (+4), boşluk 8→5 (+12),
+   kasa/itibar iç dolgusu 9→7 (+8), Devam'ın yatay dolgusu 15→12 (+6) = +30px.
+   TALEP tarafında alt satırın harf aralığı .05em→.01em ve punto 10.5→9.5px
+   = -17px. Toplam 47px pay, en kötü 34px açığa karşı.
+
+   white-space:nowrap KULLANILMADI. Denendi ve tehlikeli: sütun yetmediğinde
+   metin taşıp kasa rozetinin üstüne biniyor (ya da overflow:hidden ile
+   kırpılıyor — ikisi de yasak). Bunun yerine alt satır doğal genişliğiyle
+   sığacak kadar daraltıldı; olağandışı geniş bir kasa değerinde en kötü ihtimal
+   iki satıra sarması olur: bilgi kaybı yok, binme yok, taşma yok.
+
+   Sınır 460px: ölçümle bulundu. Sabitler ~281px, boşluklar 32px, dolgu 24px ve
+   en geniş alt satır ~115px toplandığında 452px'te doğal olarak sığıyor, yani
+   bunun üstünde kurala gerek yok. Gövde zaten 520px'te sınırlı.
+
+   Hiçbir kontrol kaldırılmadı, küçültülmedi, üst üste bindirilmedi; Devam'ın
+   ve ayarların ölçülerine dokunulmadı. Kural yalnız müşteriler ekranında ve
+   yalnız saha temasında — başka hiçbir ekran, tema ya da ana ekran etkilenmiyor. */
+@media (max-width:460px){
   body[data-view="clients"] header{padding-left:10px;padding-right:10px}
   body[data-view="clients"] .hrow{gap:5px}
   body[data-view="clients"] .hstat{padding:6px 7px}
-  body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-  /* Devam'ın yatay dolgusu 15→12: yüksekliğine ve dokunma hedefine dokunmadan
-     6px daha açıyor, sütun 92px'e çıkıyor. */
   body[data-view="clients"] #btnNext{padding:0 12px}
-  /* Alt satır tek satırda kalmalı. 10.5px + .05em harf aralığıyla 18 karakter
-     107px istiyor ve sütuna sığmıyordu (ölçüldü; ilk denemede "SEZON 1 · HAFTA .."
-     diye kesildi). Harf aralığı sıfırlanıp punto 9.5'e inince ~88px'e düşüyor. */
-  body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0;white-space:nowrap}
+  body[data-view="clients"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
+}
+/* 374px altında bir kademe daha: orada sabitler satırın %68'ini yiyor ve
+   yukarıdaki pay tek başına yetmiyordu (ölçüldü). Başlık puntosu 15→14,
+   alt satır 9.5→9 ve harf aralığı sıfır. */
+@media (max-width:374px){
+  body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+  body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0}
+  /* İngilizce 360'ta 10px daha açık veriyor: "Continue" düğmesi "Devam"dan
+     14px geniş ve bütün fark başlıktan kesiliyor (ölçüldü). Rozetlerin iç
+     dolgusu 7→5, ikon 13→12, rozet içi ve satır boşluğu 5→4 ile 16px daha
+     açılıyor — punto daha da küçültülmeden. */
+  body[data-view="clients"] .hrow{gap:4px}
+  body[data-view="clients"] .hstat{padding:6px 5px;gap:4px}
+  body[data-view="clients"] .hstat svg{width:12px;height:12px}
+  /* Uzun sezon/hafta değerlerinde ("Season 30 · Week 38") İngilizce hâlâ 1-2px
+     açık veriyordu; Devam'ın dolgusu 12→10 ile kapanıyor. Düğme metni 13px,
+     yani genişliği hâlâ 44px'in çok üstünde. */
+  body[data-view="clients"] #btnNext{padding:0 10px}
 }
