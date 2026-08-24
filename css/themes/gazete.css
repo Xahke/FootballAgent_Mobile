@@ -828,3 +828,98 @@ body[data-view="dash"] .hmRise{min-height:calc(76px + clamp(0px, calc(24.96vh - 
 .hmAdvTitle{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 .hmQv{font-size:calc(20px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(20px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 .hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+
+/* ===================== MÜŞTERİLER EKRANI =====================
+   Müşteriler ekranının işaretlemesi yenilendi (bkz. js/ui.js → clients).
+   Sanat yönü bu tur yalnız saha temasında değişti; burada iş, sayfayı gazete
+   dilinde doğru kurmak: kağıt zemin, serif başlık, hairline ayırıcı, kutu yok.
+
+   Durum rengi tek değişkenden (--cl-t) ve kart başına bir tane; bu temada
+   varsayılan mürekkep, yalnız gerçek uyarılar renk alıyor. */
+.clTop{padding:2px 0 10px;border-bottom:2px solid var(--n8);margin-bottom:12px}
+.clTitle{font-family:var(--serif);font-size:26px;font-weight:700;letter-spacing:-.02em;
+  line-height:1.15}
+.clSub{font-size:12.5px;color:var(--txt3);margin-top:3px;letter-spacing:.04em;
+  text-transform:uppercase}
+
+.clSum{display:flex;align-items:stretch;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);padding:11px 0;margin-bottom:13px}
+.clSum>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+.clSumI{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  gap:2px;padding:0 6px;text-align:center}
+.clSumV{font-family:var(--serif);font-size:19px;font-weight:700;line-height:1.15;
+  font-variant-numeric:tabular-nums}
+.clSumV small{font-size:13px;font-weight:400;color:var(--txt3)}
+.clSumL{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);
+  line-height:1.2}
+
+.clFil{display:flex;gap:8px;margin-bottom:12px}
+.clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
+  justify-content:center;gap:7px;padding:6px 8px;background:none;color:var(--txt2);
+  border:1px solid var(--line2);border-radius:var(--r-s);cursor:pointer;font-family:inherit}
+.clChip svg{width:15px;height:15px;flex-shrink:0}
+.clChipIc{display:flex;color:var(--txt3)}
+.clChipT{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  overflow-wrap:anywhere}
+.clChip b{font-size:12.5px;font-weight:700;color:var(--txt3);font-variant-numeric:tabular-nums}
+.clChip.on{background:var(--n8);border-color:var(--n8);color:var(--n0)}
+.clChip.on .clChipIc,.clChip.on b{color:var(--n0)}
+
+.clList{border-top:1px solid var(--line);margin-bottom:14px}
+.clCard{--cl-t:var(--n4);
+  position:relative;display:flex;align-items:center;gap:12px;padding:11px 0;
+  cursor:pointer;border-bottom:1px solid var(--line)}
+.clCard:active{background:var(--n1)}
+.clCard.t-bad {--cl-t:var(--bad)}
+.clCard.t-warn{--cl-t:var(--warn)}
+.clCard.t-gold{--cl-t:var(--n8)}
+.clCard.t-blue{--cl-t:var(--n7)}
+.clCard.t-acc {--cl-t:var(--acc)}
+/* Ray sayfa kenarına oturuyor — .pitem.mine ile aynı jest. Kaydırma dar
+   ekrandaki main dolgusuna (374px altında 12px) göre: daha büyük bir negatif
+   değer 360pxde ekranın soluna 2px taşıyordu. */
+.clRail{position:absolute;left:-12px;top:0;bottom:0;width:3px;background:var(--cl-t)}
+
+.clBadge{flex:0 0 auto;display:flex}
+.clBody{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.clName{font-family:var(--serif);font-size:16px;font-weight:700;letter-spacing:-.01em;
+  line-height:1.2;overflow-wrap:anywhere}
+.clMeta{font-size:12px;color:var(--txt3);line-height:1.3;overflow-wrap:anywhere}
+.clFacts{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;
+  color:var(--txt3);line-height:1.3;font-variant-numeric:tabular-nums}
+.clFacts b{color:var(--txt);font-weight:700}
+.clFacts>i{width:1px;height:10px;background:var(--line2);flex:0 0 1px}
+.clStat{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:11.5px;
+  font-weight:600;color:var(--cl-t);line-height:1.25}
+.clStat svg{width:12px;height:12px;flex:0 0 12px}
+.clStat>span{min-width:0;overflow-wrap:anywhere}
+
+.clRight{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:0}
+.clRt{font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.1;
+  font-variant-numeric:tabular-nums}
+.clRtL{font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);line-height:1.3}
+.clMood{display:block;width:28px;height:3px;background:var(--n3);overflow:hidden;margin-top:5px}
+.clMood i{display:block;height:100%}
+.clGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+
+.clCta{display:flex;align-items:center;gap:11px;width:100%;min-height:52px;padding:10px 13px;
+  background:none;color:var(--txt);border:1px solid var(--n8);border-radius:var(--r-s);
+  cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px}
+.clCta:active{background:var(--n1)}
+.clCtaIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.clCta svg{width:18px;height:18px}
+.clCtaT{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;overflow-wrap:anywhere}
+.clCtaGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+.clCta.full{cursor:default;border-color:var(--line2)}
+.clCta.full .clCtaT{font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;
+  color:var(--txt2);line-height:1.4}
+
+.clEmpty{display:flex;align-items:center;gap:11px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);padding:13px 0;margin-bottom:12px}
+.clEmptyIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.clEmpty svg{width:21px;height:21px}
+.clEmptyT{flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--txt2);line-height:1.4}
+.clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n8);color:var(--n0);
+  border:none;border-radius:var(--r-s);cursor:pointer;font-family:inherit;font-size:11.5px;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase}

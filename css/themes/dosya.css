@@ -817,3 +817,93 @@ body[data-view="dash"] .hmRise{min-height:calc(77px + clamp(0px, calc(24.96vh - 
 .hmAdvTitle{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 .hmQv{font-size:calc(20px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(20px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
 .hmRiseV{font-size:calc(19px + clamp(0px, calc(1.248vh - 9.984px), 1.92px));font-size:calc(19px + clamp(0px, calc(1.248dvh - 9.984px), 1.92px))}
+
+/* ===================== MÜŞTERİLER EKRANI =====================
+   Müşteriler ekranının işaretlemesi yenilendi (bkz. js/ui.js → clients).
+   Bu tur sanat yönü yalnız saha temasında değişti; burada amaç kendi dilini
+   konuşan, taşmayan ve çıplak kalmayan bir karşılık vermek: beyaz kart, ince
+   çizgi, tek sans, renk yalnız veri anlamı taşıdığında.
+
+   Durum rengi tek değişkenden geliyor (--cl-t) ve kart başına bir tane; bu
+   temada nötr mürekkep tonu varsayılan, yalnız gerçek uyarılar renkleniyor. */
+.clTop{padding:2px 0 12px}
+.clTitle{font-size:22px;font-weight:600;letter-spacing:-.025em;line-height:1.2}
+.clSub{font-size:13px;color:var(--txt3);margin-top:2px}
+
+.clSum{display:flex;align-items:stretch;background:var(--n0);border:1px solid var(--line);
+  border-radius:var(--r);padding:12px 4px;margin-bottom:12px}
+.clSum>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+.clSumI{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:0 6px;text-align:center}
+.clSumV{font-size:17px;font-weight:600;line-height:1.15;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.clSumV small{font-size:13px;font-weight:500;color:var(--txt3)}
+.clSumL{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);
+  line-height:1.2}
+
+.clFil{display:flex;gap:8px;margin-bottom:12px}
+.clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
+  justify-content:center;gap:7px;padding:6px 8px;background:var(--n0);color:var(--txt2);
+  border:1px solid var(--line2);border-radius:var(--r-s);cursor:pointer;font-family:inherit}
+.clChip svg{width:15px;height:15px;flex-shrink:0}
+.clChipIc{display:flex;color:var(--txt3)}
+.clChipT{font-size:12.5px;font-weight:500;letter-spacing:.02em;overflow-wrap:anywhere}
+.clChip b{font-size:12.5px;font-weight:600;color:var(--txt3);font-variant-numeric:tabular-nums}
+.clChip.on{background:var(--n8);border-color:var(--n8);color:var(--n0)}
+.clChip.on .clChipIc,.clChip.on b{color:var(--n0)}
+
+.clList{background:var(--n0);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;margin-bottom:14px}
+.clCard{--cl-t:var(--n4);
+  position:relative;display:flex;align-items:center;gap:12px;padding:13px 16px;
+  cursor:pointer;border-bottom:1px solid var(--line)}
+.clCard:last-child{border-bottom:none}
+.clCard:active{background:var(--n1)}
+.clCard.t-bad {--cl-t:var(--bad)}
+.clCard.t-warn{--cl-t:var(--warn)}
+.clCard.t-gold{--cl-t:var(--n7)}
+.clCard.t-blue{--cl-t:var(--n7)}
+.clCard.t-acc {--cl-t:var(--acc)}
+.clRail{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cl-t)}
+
+.clBadge{flex:0 0 auto;display:flex}
+.clBody{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.clName{font-size:15.5px;font-weight:500;letter-spacing:-.01em;line-height:1.2;
+  overflow-wrap:anywhere}
+.clMeta{font-size:12.5px;color:var(--txt3);line-height:1.3;overflow-wrap:anywhere}
+.clFacts{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12.5px;
+  color:var(--txt3);line-height:1.3;font-variant-numeric:tabular-nums}
+.clFacts b{color:var(--txt);font-weight:600}
+.clFacts>i{width:1px;height:10px;background:var(--line2);flex:0 0 1px}
+.clStat{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:12px;
+  font-weight:500;color:var(--cl-t);line-height:1.25}
+.clStat svg{width:13px;height:13px;flex:0 0 13px}
+.clStat>span{min-width:0;overflow-wrap:anywhere}
+
+.clRight{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px}
+.clRt{font-size:16px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.clRtL{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.2}
+.clMood{display:block;width:30px;height:3px;border-radius:2px;background:var(--n3);
+  overflow:hidden;margin-top:5px}
+.clMood i{display:block;height:100%}
+.clGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+
+.clCta{display:flex;align-items:center;gap:11px;width:100%;min-height:52px;padding:10px 14px;
+  background:var(--n0);color:var(--txt);border:1px solid var(--line2);border-radius:var(--r);
+  cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px}
+.clCta:active{background:var(--n1)}
+.clCtaIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.clCta svg{width:18px;height:18px}
+.clCtaT{flex:1 1 auto;min-width:0;font-size:14.5px;font-weight:500;overflow-wrap:anywhere}
+.clCtaGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+.clCta.full{cursor:default;background:var(--n1)}
+.clCta.full .clCtaT{font-size:13px;font-weight:400;color:var(--txt2);line-height:1.35}
+
+.clEmpty{display:flex;align-items:center;gap:11px;background:var(--n0);border:1px solid var(--line);
+  border-radius:var(--r);padding:13px 14px;margin-bottom:10px}
+.clEmptyIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.clEmpty svg{width:21px;height:21px}
+.clEmptyT{flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--txt2);line-height:1.4}
+.clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n8);color:var(--n0);
+  border:none;border-radius:var(--r-s);cursor:pointer;font-family:inherit;font-size:13px;
+  font-weight:500}

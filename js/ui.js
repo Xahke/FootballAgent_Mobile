@@ -360,6 +360,66 @@ function cupView(){
   }
   return `${conChips}${cupChips}${body}`;
 }
+/* ===================== MÜŞTERİ DURUMLARI =====================
+   Müşteriler ekranında her kart tek bir ana durum rengi taşıyor. Rengi seçen
+   yer burası ve sıralama deterministik: listede yukarıdaki kazanır, böylece aynı
+   oyuncu her çizimde aynı rengi taşır ve kartlar arasında renk enflasyonu olmaz.
+
+   Hiçbiri yeni alan okumuyor — hepsi simülasyonun zaten ürettiği durumlar; bu
+   yalnızca bir sunum önceliği, oyun mantığına dokunmuyor.
+
+   İkon kategoriyi söylüyor (uyarı / sözleşme / transfer / form), renk aciliyeti.
+   attn=1 olanlar "İlgi Gerektiren" filtresini besliyor: senden bir hamle
+   bekleyenler. Kulüp düşünüyor ya da ön anlaşma imzalandıysa iş sende değil,
+   o yüzden onlar bilgi (mavi) ve filtreye girmiyorlar. */
+const CL_ST=[
+  {k:'free', tone:'bad',  ic:'alert',    attn:1, is:p=>isFree(p),                     lbl:()=>t('faShort')},
+  {k:'poach',tone:'bad',  ic:'alert',    attn:1, is:p=>!!(S.poach&&S.poach.pid===p.id),lbl:()=>t('poachT')},
+  {k:'sign', tone:'gold', ic:'contract', attn:1, is:p=>!!pendCFor(p.id),              lbl:()=>t('signPending')},
+  /* Ön anlaşma sözleşme bitişinin önünde: transfer bağlandıysa eski sözleşmeyi
+     yenilemek artık senin işin değil. */
+  {k:'pend', tone:'blue', ic:'transfer', attn:0, is:p=>!!pendingFor(p.id),            lbl:()=>t('pendingTag')},
+  {k:'exp',  tone:'gold', ic:'contract', attn:1, is:p=>p.yrs<=1,                      lbl:()=>t('expiring')},
+  {k:'offer',tone:'blue', ic:'transfer', attn:0, is:p=>!!offerFor(p.id),              lbl:()=>t('considering')},
+  /* Eşik oyunun kendi eşiği: player() ekranı da mutsuzluğu 40'ın altında etiketliyor. */
+  {k:'mood', tone:'warn', ic:'alert',    attn:1, is:p=>p.morale<40,
+   lbl:p=>p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')},
+  /* "Formda" uydurma bir eşik değil: renewReason() iyi formu zaten böyle tanımlıyor. */
+  {k:'form', tone:'acc',  ic:'trend',    attn:0, is:p=>last5Avg(p)>=7.2,              lbl:()=>t('clInForm')}
+];
+function clState(p){for(let i=0;i<CL_ST.length;i++)if(CL_ST[i].is(p))return CL_ST[i];return null;}
+function clNeedsAttn(p){const s=clState(p);return !!(s&&s.attn);}
+/* Filtre yalnızca arayüz durumu. atlas.js'teki CAM ile aynı gerekçe: geçici olan
+   hiçbir şey kayda sızmasın — S'ye yazsaydık kayıt biçimini büyütürdü. */
+let CLFILTER='all';
+function clSetFilter(f){CLFILTER=f;render();}
+/* Portföy kartı: üçü de gerçek yardımcılardan geliyor.
+   weeklyIncome() yalnızca müşterilerin maaşından alınan komisyonu topluyor
+   (bkz. core.js) — ajansın gideri ya da transfer payı buraya karışmıyor. */
+function clCard(p){
+  const st=clState(p),tm=teamOf(p);
+  /* Moral alanı eksik bir kayıtta Math.round(undefined) ekrana NaN basardı;
+     ölçer genişliği de NaN% olurdu. Varsayılanla oku — trustOf() ile aynı gerekçe. */
+  const mood=Math.round(p.morale||0);
+  return `<div class="clCard${st?' t-'+st.tone:''}" onclick="pushV('player',${p.id})">
+    <span class="clRail"></span>
+    <span class="clBadge">${tmBadge(tm,46)}</span>
+    <span class="clBody">
+      <span class="clName">${esc(p.n)}</span>
+      <span class="clMeta">${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+      <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b>${isFree(p)?''
+        :`<i></i><span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
+      ${st?`<span class="clStat">${ICONS[st.ic]}<span>${st.lbl(p)}</span></span>`:''}
+    </span>
+    <span class="clRight">
+      <span class="clRt num">${p.r}</span>
+      <span class="clRtL">${t('rating')}</span>
+      <span class="clMood" title="${t('morale')} ${mood}">
+        <i style="width:${mood}%;background:${moodColor(mood)}"></i></span>
+    </span>
+    <span class="clGo">›</span>
+  </div>`;
+}
 const VIEWS={
 /* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
    Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
@@ -547,10 +607,64 @@ dash(){
     <span class="hmRiseNone">${t('hmNoRiser')}</span></span></div>`}`;
 },
 clients(){
-  const ps=S.clients.map(byId).sort((a,b)=>b.r-a.r);
-  return `<h2 class="sec">${t('clients')} <span class="sub" style="font-weight:400">${ps.length}/${maxClients()}</span></h2>
-   ${ps.length?listWrap(ps.map(p=>playerRow(p,{lg:1})).join('')):`<div class="card">${emptyState('clients',t('noClients'),t('noClientsSub'))}
-     <button class="btn p" onclick="navTo('market')">${t('goMarket')}</button></div>`}`;
+  const ps=S.clients.map(byId).filter(Boolean).sort((a,b)=>b.r-a.r);
+  const cap=maxClients(),full=ps.length>=cap;
+  const attn=ps.filter(clNeedsAttn);
+  const shown=CLFILTER==='attn'?attn:ps;
+  /* Portföy değeri müşterilerin gerçek valueOf() toplamı; haftalık gelir de
+     yalnızca onların maaşından gelen komisyon. İkisi de sabit yazılmıyor. */
+  const worth=ps.reduce((s,p)=>s+valueOf(p),0);
+  const head=`<div class="clTop">
+    <div class="clTitle">${t('clTitle')}</div>
+    <div class="clSub">${t('clSub')}</div>
+  </div>`;
+  if(!ps.length)
+    /* Boş durum kompakt: ana ekrandaki ilk-adım düzeltmesiyle aynı gerekçe —
+       devasa bir kart aynı cümleyi iki kez söylüyor ve 360x800'i taşırıyor.
+       Tek cümle, tek dokunulabilir yönlendirme. */
+    return `${head}
+    <div class="clEmpty">
+      <span class="clEmptyIc">${ICONS.clients}</span>
+      <span class="clEmptyT">${t('noClientsSub')}</span>
+    </div>
+    <button class="clCta" onclick="navTo('market')">
+      <span class="clCtaIc">${ICONS.market}</span>
+      <span class="clCtaT">${t('goMarket')}</span>
+      <span class="clCtaGo">›</span>
+    </button>`;
+  const chip=(k,lbl,n)=>`<button class="clChip${CLFILTER===k?' on':''}" onclick="clSetFilter('${k}')">
+    <span class="clChipIc">${ICONS[k==='attn'?'alert':'clients']}</span>
+    <span class="clChipT">${lbl}</span><b class="num">${n}</b></button>`;
+  return `${head}
+  <div class="clSum">
+    <div class="clSumI"><span class="clSumV"><b class="num">${ps.length}</b><small class="num">/${cap}</small></span>
+      <span class="clSumL">${t('clientCount')}</span></div>
+    <i></i>
+    <div class="clSumI"><span class="clSumV gold num">${fmtM(worth)}</span>
+      <span class="clSumL">${t('clValue')}</span></div>
+    <i></i>
+    <div class="clSumI"><span class="clSumV gold num">${fmtK(weeklyIncome())}</span>
+      <span class="clSumL">${t('weeklyIncome')}</span></div>
+  </div>
+  <div class="clFil">${chip('all',t('all'),ps.length)}${chip('attn',t('clAttn'),attn.length)}</div>
+  ${shown.length
+    ?`<div class="clList">${shown.map(clCard).join('')}</div>`
+    /* Filtre boş dönebilir ve bu iyi haberdir; çıkışı olmayan bir ekran bırakmamak
+       için dönüş düğmesi burada. */
+    :`<div class="clEmpty">
+       <span class="clEmptyIc">${ICONS.clients}</span>
+       <span class="clEmptyT">${t('clNoAttn')}</span>
+       <button class="clBack" onclick="clSetFilter('all')">${t('all')}</button>
+     </div>`}
+  ${full
+    /* Kapasite doluyken aktif bir çağrı yalan olurdu: dokunsa piyasada
+       imza atamaz. Aynı satır pasif bir açıklamaya dönüyor. */
+    ?`<div class="clCta full"><span class="clCtaIc">${ICONS.clients}</span>
+       <span class="clCtaT">${t('clFullNote')}</span></div>`
+    :`<button class="clCta" onclick="navTo('market')">
+       <span class="clCtaIc">${ICONS.market}</span>
+       <span class="clCtaT">${t('clFind')}</span>
+       <span class="clCtaGo">›</span></button>`}`;
 },
 market(){
   S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
