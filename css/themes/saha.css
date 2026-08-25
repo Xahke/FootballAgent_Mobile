@@ -143,6 +143,12 @@ h2.sec{font-size:17px;font-weight:800;margin:2px 0 12px;letter-spacing:-.02em}
   letter-spacing:.02em;position:relative;overflow:hidden;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 2px 6px rgba(0,0,0,.35)}
 .tb i{position:absolute;left:0;right:0;bottom:0;height:22%;font-style:normal}
+/* Vektör rozet: silueti artık SVG taşıyor, kutu kare değil. Kare gölge ve
+   iç çizgi kalkıyor, yoksa kalkanın etrafında kare bir hale kalırdı.
+   svg %100: .clBadge.port>.tb ve .clAvTm>.tb gibi kutuyu zorlayan mevcut
+   kurallar çalışmaya devam etsin, SVG de onlarla birlikte küçülsün. */
+.tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
+.tb.tbv>svg{display:block;width:100%;height:100%}
 
 /* ===================== PLAYER CARDS ===================== */
 .pitem{display:flex;align-items:center;gap:11px;padding:11px 13px;cursor:pointer;border-bottom:1px solid var(--line);

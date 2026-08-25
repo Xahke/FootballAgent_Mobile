@@ -128,6 +128,9 @@ h2.sec{font-size:22px;font-weight:600;margin:0 0 10px;letter-spacing:-.025em}
 .tb{border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;
   position:relative;overflow:hidden;font-size:10px}
 .tb i{position:absolute;left:0;right:0;bottom:0;height:20%;font-style:normal}
+/* Vektör rozet: kutu artık kare değil, köşe yarıçapı ve kırpma anlamsız. */
+.tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
+.tb.tbv>svg{display:block;width:100%;height:100%}
 
 /* ===================== PLAYER ROWS ===================== */
 .pitem{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;

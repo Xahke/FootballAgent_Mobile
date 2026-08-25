@@ -1,67 +1,66 @@
-/* Prosedürel takım arması prototipi — veri katmanı (SADECE geliştirici aracı).
+'use strict';
+/* js/badges.js — prosedürel takım arması motoru.
  *
- * Bu dosya oyuna dahil DEĞİLDİR: index.html, build.js order dizisi ve sw.js SHELL
- * listesi bilerek dokunulmadan bırakıldı. Amaç, tmBadge() yerine geçecek modüler
- * bir arma sisteminin önce görsel olarak onaylanması; onay gelmeden çalışma
- * zamanına hiçbir şey taşınmaz.
+ * tmBadge() eskiden baş harfli renkli bir kare döndürüyordu. Artık takımın
+ * kimliğinden türeyen bir vektör arma döndürüyor: çerçeve + forma deseni +
+ * amblem, hepsi takımın kendi c1/c2 renkleriyle. İmza değişmedi, 32 çağrı
+ * yerinin hiçbirine dokunulmadı — değişen yalnız üretim.
  *
- * 2. tur: amblem havuzu 24'e çıktı ve laboratuvar artık sahte takım adları yerine
- * js/data.js'teki GERÇEK 436 takımı okuyor (badge-lab.html o dosyayı <script> ile
- * yüklüyor — okuyor, değiştirmiyor).
+ * TEK KAYNAK. Geometri, semantik eşleme ve descriptor mantığı yalnız burada
+ * tanımlı. tools/badge-lab.html bu dosyayı doğrudan yükler; laboratuvarda
+ * ikinci bir kopya YOK, dolayısıyla senkron kaçağı da yok.
  *
- * Amblem geometrisi iki PNG tabakadan çıkarıldı ve gerçek SVG path verisine
- * çevrildi — raster gömülü DEĞİL. Yöntem ve ayarlar tools/badge-vectorize.js'te.
- * Çerçeveler kaynak tabaka referans alınarak parametrik yeniden çizildi, çünkü
- * mekanik iz sürme ne simetriyi ne de tutarlı kenar kalınlığını koruyabiliyor.
+ * Raster yok: bütün amblemler gerçek SVG path verisi. Kaynak Midjourney PNG'leri
+ * repoda değil, çalışma zamanına da girmiyor (bkz. tools/badge-vectorize.js —
+ * çıkarma yöntemi ve ayarları orada kayıtlı).
+ *
+ * KAYDA HİÇBİR ŞEY YAZMAZ. Arma tamamen türetilmiş veridir; S.known ve p.ra ile
+ * aynı mantık. Descriptor'lar yalnız bellekte, kanonik takım anahtarına göre
+ * önbelleklenir.
  */
 
-/* Tüm geometri 0 0 64 64 kutusunda. Tek birim kutusu, ölçekleri tek yerden
- * yönetmeyi ve "amblem kutu dışına taşmasın" testini tek satıra indirmeyi sağlıyor. */
+/* Tüm geometri 0 0 64 64 kutusunda. */
 const BOX = 64;
 
-/* Kenar, iç içe path yerine CLIP'LENMIŞ STROKE ile çiziliyor. Bir stroke tanımı
+/* Kenar iç içe path yerine CLIP'LENMIŞ STROKE ile çiziliyor. Bir stroke tanımı
  * gereği her yerde aynı genişlikte; iç içe path'te sivri uçtaki inset çarpanını
  * elle tutturmak gerekiyordu ve armanın alt ucunda kenar iki katına çıkıyordu
- * (ölçüldü: hedef 2.0 birime karşı 4.14). Şeritler dıştan içe: önce 0..EDGE_KEY
- * accent, onun üstüne 0..EDGE_INK ink. Yani dışta ink, içte accent keyline —
- * brief'in istediği "dış sınır + iç sınır" tek path'ten çıkıyor.
- * Stroke genişliği bunun iki katı verilir, clip yarısını keser. */
+ * (ölçüldü: hedef 2.0 birime karşı 4.14). Dıştan içe: önce 0..EDGE_KEY accent,
+ * üstüne 0..EDGE_INK ink. Stroke genişliği bunun iki katı verilir, clip yarısını
+ * keser. */
 const EDGE_INK = 2.3;
 const EDGE_KEY = 3.5;
 
-/* NANO EŞİĞİ. Bu boyutun altında iç accent keyline, taban çubuğu ve karmaşık
- * desenler çiziminden düşüyor; amblem mikro geometriye ve daha geniş fit
- * kutusuna geçiyor. 20 seçildi çünkü lig tablosu 26px, en küçük yer 18px. */
-const NANO_AT = 20;
-const NANO_EDGE = 2.3;   // nano'da tek dış çerçeve
+/* NANO EŞİĞİ. Bu boyut ve altında iç accent keyline, taban çubuğu ve karmaşık
+ * desenler düşer; amblem mikro geometriye ve daha geniş fitAS kutusuna geçer.
+ * 24 seçildi çünkü gerçek çağrı yerlerinin 13'ü 16–24px arasında (16, 18,
+ * 20x8, 22, 24x2) ve 26px lig tablosu tam sınırın üstünde kalıyor. */
+const NANO_AT = 24;
+const NANO_EDGE = 2.0;   // nano'da tek dış çerçeve, ölçüye göre daha ince
 
-/* Amblemin etrafındaki kontur. Takım renkleri açık/koyu karışık alanlar
- * ürettiği için tek renk amblem bazı desenlerin yarısında kayboluyor; kontur
- * bunu tek ve tutarlı bir tasarım aracıyla çözüyor. */
+/* Mikro amblem geometrisine geçiş. Nano'dan ayrı: 26px lig tablosu tam
+ * çerçeveyi hak ediyor ama tam geometriyi taşıyamıyor. */
+const MICRO_AT = 26;
+
+/* Amblem konturu. Alanın iki rengi de amblem tonuna yakın düşerse tek renk
+ * amblem desenin yarısında kaybolur; kontur bunu tek ve tutarlı bir araçla
+ * çözüyor. Nano'da inceliyor, orada zaten 0.5 CSS px'e denk geliyor. */
 const EMB_EDGE = 1.7;
-/* Nano'da kontur inceliyor: 18px'te 1.7 birim zaten 0.48 CSS px, ince olmasi
- * gorunumu bozmuyor ama koruma payini 0.25 birim serbest birakiyor ve baklavanin
- * amblemi 5.9px'ten 6.08px'e cikiyor — 18px kabul esigi tam orada. */
 const EMB_EDGE_NANO = 1.2;
 
-/* Amblemin kenardan koruma payı. fit dikdörtgenleri bu paya göre RASTERDE
- * ölçülerek bulundu, elle tahmin edilmedi — "amblem çerçeveye değmesin" böyle
- * garanti ediliyor. Nano'da iç keyline olmadığı için pay küçülüyor, amblem de
- * kendiliğinden büyüyor. */
-const EMB_CLEAR = 5.6;
-const EMB_CLEAR_NANO = 4.0;
+/* Amblem kutusu oran merdiveni. Tek sabit kutu, oranı kareden uzak amblemleri
+ * gereksiz küçültüyordu (taş köprü 1.9 en/boy ile baklava içinde 18px'te
+ * 3.19px'e düşüyordu). Amblemin kendi oranına logaritmik olarak en yakın satır
+ * seçiliyor; satır çerçeveye sığdığı ölçülmüş olduğu için amblem de sığar. */
+const FIT_ASPECTS = [0.55, 0.7, 0.85, 1.0, 1.2, 1.45, 1.75, 2.1];
 
 const R2 = v => Math.round(v * 100) / 100;
 
-/* Amblem kutusu oran merdiveni. Amblemin kendi en/boy oranına logaritmik
- * olarak en yakın satır seçilir; satır çerçeveye sığdığı için amblem de sığar. */
-const FIT_ASPECTS = [0.55, 0.7, 0.85, 1.0, 1.2, 1.45, 1.75, 2.1];
-
 /* ---------------------------------------------------------------- amblemler */
-/* cell = A/B tabaka + satırxsütun. A = team-emblems-source.png (4x4),
- * B = team-emblems-supplement.png (4x3). bb = normalize edilmiş sınır kutusu.
+/* cell = A/B tabaka + satırxsütun. A = ilk amblem tabakası (4x4),
+ * B = ek tabaka (4x3). bb = normalize edilmiş sınır kutusu.
  * d = 26px üstü için tam geometri, dm = 26px ve altı için sadeleştirilmiş mikro
- * sürüm (bulanıklaştırma değil, path noktası azaltma). */
+ * sürüm (bulanıklaştırma değil, path noktası azaltma + gövde kalınlaştırma). */
 const EMBLEMS = [
   { id: 'lion', cell: 'A1x1', name: { tr: 'Aslan', en: 'Lion' },
     bb: [8.2, 7.93, 55.78, 57.78], pts: 84, sub: 4, mpts: 39, msub: 2, ink: 0.395, mink: 0.3968,
@@ -163,21 +162,14 @@ const EMBLEMS = [
 
 /* ---------------------------------------------------------------- çerçeveler */
 /* Her çerçeve tek bir KAPALI dış path (d) veriyor. Aynı path üç iş yapıyor:
- * desenin clip alanı, accent keyline stroke'u ve ink kenar stroke'u. Tek kaynak
- * olduğu için üçü birbirinden kaçamaz.
+ * desenin clip alanı, accent keyline stroke'u ve ink kenar stroke'u.
  *
- * fitA  = amblemin sığdırıldığı kutuların ORAN MERDİVENİ, FIT_ASPECTS ile aynı
- *         sırada: her en/boy oranı için çerçeveye sığan en büyük [g, y, merkez y]
- * fitAS = nano (<=20px) karşılığı; iç keyline çizilmediği için pay küçük, kutu büyük
+ * fitA  = amblem kutularının ORAN MERDİVENİ, FIT_ASPECTS ile aynı sırada
+ * fitAS = nano karşılığı; iç keyline çizilmediği için pay küçük, kutu büyük
  * bar   = accent taban çubuğunun y'si (nano'da çizilmiyor)
  *
- * Neden tek kutu değil de merdiven? Tek kare kutu, oranı kareden uzak amblemleri
- * gereksiz küçültüyordu: taş köprü (en/boy 1.9) baklava içinde 18px'te 3.19px'e,
- * şimşek (0.57) 3.44px'e düşüyordu. Amblemin oranına en yakın satır seçilince
- * aynı çerçevede ~%30 daha büyük çiziliyor ve oran hiç bozulmuyor.
- *
- * Değerler raster üzerinde arandı: alan EMB_CLEAR kadar aşındırılıp o oranda
- * içine sığan en büyük dikdörtgen bulundu. Elle tahmin yok. */
+ * Değerler raster üzerinde ölçüldü: alan koruma payı kadar aşındırılıp o oranda
+ * içine sığan en büyük dikdörtgen arandı. Elle tahmin yok. */
 const FRAMES = [
   { id: 'classic-point', cell: '1x1', name: { tr: 'Klasik sivri', en: 'Classic point' },
     fitA: [[20.4, 37.2, 26.5], [23.9, 34.2, 26.0], [26.5, 31.2, 26.0], [28.6, 28.6, 26.0], [30.8, 25.6, 26.0], [32.6, 22.5, 26.0], [34.2, 19.5, 26.0], [35.5, 16.9, 26.0]],
@@ -295,187 +287,474 @@ const FRAMES = [
     } },
 ];
 
+/* Baklava 26px altında kullanılmaz: içine sığan en büyük kare 21.6 birim, yani
+ * 18px'te 6.1px — bir eşkenar dörtgenin geometrik tavanı bu ve yassı amblemler
+ * orada 4px'e iniyor. Descriptor'daki kimlik DEĞİŞMEZ, yalnız çizim aşamasında
+ * geniş iç alanlı compact-shield'a düşer; 26px ve üstünde baklava geri gelir. */
+const DIAMOND_MIN = 26;
+const DIAMOND_ALT = 'compact-shield';
+
 /* ------------------------------------------------------------------ desenler */
-/* Desenler yalnız primary + secondary kullanıyor; accent ambleme ve kenar
- * keyline'ına ayrıldı. İki renkle sınırlamak, 18px'te alanların birbirine
- * karışmasını engelleyen asıl şey.
+/* Desenler yalnız primary + secondary kullanıyor; amblem rengi ayrı hesaplanır.
+ * İki renkle sınırlamak, 18px'te alanların birbirine karışmasını engelleyen
+ * asıl şey. Şerit sayısı da düşük: 5 dikey / 4 yatay bant, 18px'te bant başına
+ * ≈3.6px.
  *
- * nano = 20px altında kullanılacak sadeleştirilmiş karşılık. Yalnız 18px'te
- * gerçekten çamura dönen ikisi sadeleşiyor (5 dikey bant → 1 orta şerit,
- * 4 yatay bant → 2); geri kalanı zaten blok hâlinde, dokunulmuyor. */
+ * f(p)   → SVG parçaları
+ * at(x,y)→ o noktadaki alan rengi (0 = primary, 1 = secondary). Amblemin
+ *          arkasındaki baskın rengi ÖLÇMEK için var; amblem tonu ona göre
+ *          açık ya da koyu seçiliyor, sabit değil.
+ * nano   → 24px ve altında yerine çizilecek sadeleşmiş desen */
 const PATTERNS = [
   { id: 'solid', name: { tr: 'Düz', en: 'Solid' }, nano: 'solid',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>'],
+    at: () => 0 },
 
   { id: 'vertical-halves', name: { tr: 'Dikey yarım', en: 'Vertical halves' }, nano: 'vertical-halves',
-    f: p => ['<rect x="0" y="0" width="32" height="64" fill="' + p.primary + '"/>',
-      '<rect x="32" y="0" width="32" height="64" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="32" height="64" fill="' + p.primary + '"/>',
+      '<rect x="32" width="32" height="64" fill="' + p.secondary + '"/>'],
+    at: x => (x < 32 ? 0 : 1) },
 
   { id: 'horizontal-halves', name: { tr: 'Yatay yarım', en: 'Horizontal halves' }, nano: 'horizontal-halves',
-    f: p => ['<rect x="0" y="0" width="64" height="32" fill="' + p.primary + '"/>',
-      '<rect x="0" y="32" width="64" height="32" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="32" fill="' + p.primary + '"/>',
+      '<rect y="32" width="64" height="32" fill="' + p.secondary + '"/>'],
+    at: (x, y) => (y < 32 ? 0 : 1) },
 
   { id: 'vertical-stripes', name: { tr: 'Dikey çubuk', en: 'Vertical stripes' }, nano: 'center-stripe',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<rect x="12.8" y="0" width="12.8" height="64" fill="' + p.secondary + '"/>',
-      '<rect x="38.4" y="0" width="12.8" height="64" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<rect x="12.8" width="12.8" height="64" fill="' + p.secondary + '"/>',
+      '<rect x="38.4" width="12.8" height="64" fill="' + p.secondary + '"/>'],
+    at: x => (((x >= 12.8 && x < 25.6) || (x >= 38.4 && x < 51.2)) ? 1 : 0) },
 
   { id: 'horizontal-hoops', name: { tr: 'Yatay bant', en: 'Horizontal hoops' }, nano: 'horizontal-halves',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<rect x="0" y="16" width="64" height="16" fill="' + p.secondary + '"/>',
-      '<rect x="0" y="48" width="64" height="16" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<rect y="16" width="64" height="16" fill="' + p.secondary + '"/>',
+      '<rect y="48" width="64" height="16" fill="' + p.secondary + '"/>'],
+    at: (x, y) => (((y >= 16 && y < 32) || y >= 48) ? 1 : 0) },
 
   { id: 'center-stripe', name: { tr: 'Orta şerit', en: 'Centre stripe' }, nano: 'center-stripe',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<rect x="23" y="0" width="18" height="64" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<rect x="23" width="18" height="64" fill="' + p.secondary + '"/>'],
+    at: x => ((x >= 23 && x < 41) ? 1 : 0) },
 
   { id: 'diagonal-split', name: { tr: 'Çapraz bölünme', en: 'Diagonal split' }, nano: 'diagonal-split',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<path d="M0 0L64 64L0 64Z" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<path d="M0 0L64 64L0 64Z" fill="' + p.secondary + '"/>'],
+    at: (x, y) => (y > x ? 1 : 0) },
 
   { id: 'diagonal-sash', name: { tr: 'Çapraz kuşak', en: 'Diagonal sash' }, nano: 'diagonal-split',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<path d="M12 0L64 52L64 64L52 64L0 12L0 0Z" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<path d="M12 0L64 52L64 64L52 64L0 12L0 0Z" fill="' + p.secondary + '"/>'],
+    at: (x, y) => (Math.abs(y - x) <= 12 ? 1 : 0) },
 
   { id: 'quarters', name: { tr: 'Çeyrekler', en: 'Quarters' }, nano: 'quarters',
-    f: p => ['<rect x="0" y="0" width="32" height="32" fill="' + p.primary + '"/>',
-      '<rect x="32" y="0" width="32" height="32" fill="' + p.secondary + '"/>',
-      '<rect x="0" y="32" width="32" height="32" fill="' + p.secondary + '"/>',
-      '<rect x="32" y="32" width="32" height="32" fill="' + p.primary + '"/>'] },
+    f: p => ['<rect width="32" height="32" fill="' + p.primary + '"/>',
+      '<rect x="32" width="32" height="32" fill="' + p.secondary + '"/>',
+      '<rect y="32" width="32" height="32" fill="' + p.secondary + '"/>',
+      '<rect x="32" y="32" width="32" height="32" fill="' + p.primary + '"/>'],
+    at: (x, y) => ((x < 32) === (y < 32) ? 0 : 1) },
 
   { id: 'chevron', name: { tr: 'Ters V', en: 'Chevron' }, nano: 'chevron',
-    f: p => ['<rect x="0" y="0" width="64" height="64" fill="' + p.primary + '"/>',
-      '<path d="M0 16L32 40L64 16L64 32L32 56L0 32Z" fill="' + p.secondary + '"/>'] },
+    f: p => ['<rect width="64" height="64" fill="' + p.primary + '"/>',
+      '<path d="M0 16L32 40L64 16L64 32L32 56L0 32Z" fill="' + p.secondary + '"/>'],
+    at: (x, y) => {
+      const up = 16 + (x <= 32 ? x * 0.75 : (64 - x) * 0.75);
+      return (y >= up && y <= up + 16) ? 1 : 0;
+    } },
 ];
 
 /* ------------------------------------------------------- semantik eşleme */
-/* Kategoriler brief'in başlangıç listesinden DEĞİL, js/data.js'teki gerçek
- * havuzdan çıkarıldı: 436 takım, adın son kelimesi kimlik kelimesi, 68 farklı
- * kelime (tools/badge-names.js). Başlangıç listesindeki "tideway, marina, port,
- * halyard, granite, ridge, peak, grove, forest, fortress, signal, storm,
- * thunder, volt, royal, king, sovereign" kelimelerinin hiçbiri gerçek havuzda
- * yok; buna karşılık "corsairs, masons, weavers, amphora, aqueduct, looms,
- * tanners, northwind, herons" gibi kelimeler var ve tablo onlara göre kuruldu.
+/* Kimlik kelimesi = takım adının SON kelimesi. Adlar "Şehir Sıfat" biçiminde ve
+ * 436 adın 401'i iki, 34'ü üç, 1'i dört kelime; şehir her zaman önde.
  *
- * words = normalize edilmiş token (küçük harf, aksansız, yalnız a-z).
- * emblems = kategoriye uygun amblemler; hangisinin düşeceği takımın kanonik
- * anahtarından türeyen salted hash ile seçiliyor, böylece aynı kelimeye sahip
- * takımlar aynı amblemi almak zorunda kalmıyor. */
-const SEMANTIC = [
-  { id: 'maritime', name: { tr: 'Denizcilik', en: 'Maritime' },
-    emblems: ['anchor', 'ocean-wave', 'sailor-knot', 'lighthouse'],
-    words: ['corsairs', 'lagoons', 'coves', 'harbour', 'anchors', 'frigates', 'lighthouse', 'wharf', 'clippers'] },
-
-  { id: 'navigation', name: { tr: 'Yön bulma', en: 'Navigation' },
-    emblems: ['compass', 'star', 'lighthouse'],
-    words: ['voyagers', 'pioneers', 'nomads', 'compass', 'meridian', 'northwind'] },
-
-  { id: 'industry', name: { tr: 'Sanayi', en: 'Industry' },
-    emblems: ['anvil', 'crossed-hammers', 'industrial-cog', 'torch-spear'],
-    words: ['ironworks', 'foundry', 'forges', 'bellows', 'kilns', 'saltworks', 'refiners', 'colliers'] },
-
-  { id: 'craft', name: { tr: 'Zanaat', en: 'Craft' },
-    emblems: ['crossed-hammers', 'industrial-cog', 'mill-wheel'],
-    words: ['masons', 'coopers', 'weavers', 'looms', 'millers', 'tanners'] },
-
-  { id: 'agriculture', name: { tr: 'Tarım', en: 'Agriculture' },
-    emblems: ['oak', 'mill-wheel'],
-    words: ['harvest', 'granaries', 'orchards', 'pastures', 'vintners', 'pines', 'willows'] },
-
-  { id: 'geography', name: { tr: 'Coğrafya', en: 'Geography' },
-    emblems: ['mountain', 'gemstone'],
-    words: ['highlands', 'cliffs', 'quarry', 'basalt', 'summit', 'terraces'] },
-
-  { id: 'sky', name: { tr: 'Gök ve hava', en: 'Sky and weather' },
-    emblems: ['lightning', 'star'],
-    words: ['rainfall', 'meteors', 'comets', 'frost'] },
-
-  { id: 'defence', name: { tr: 'Savunma', en: 'Defence' },
-    emblems: ['castle', 'fortified-gate', 'spear-shield'],
-    words: ['sentinels', 'citadels', 'ramparts', 'wardens', 'vanguard', 'vaults', 'bastions', 'spires'] },
-
-  { id: 'civic', name: { tr: 'Şehir yapıları', en: 'Civic structures' },
-    emblems: ['stone-bridge', 'fortified-gate'],
-    words: ['aqueduct', 'arches', 'bridges', 'cisterns'] },
-
-  { id: 'light', name: { tr: 'Işık', en: 'Light' },
-    emblems: ['lighthouse', 'torch-spear'],
-    words: ['beacons', 'lanterns'] },
-
-  /* Aslan buraya heraldik gerekçeyle giriyor: arma sanatının asıl hayvanı
-   * aslandır ve "heralds" kelimesi doğrudan armacılık demek. Yoksa gerçek
-   * havuzda aslan/kurt/boğa karşılığı hiç yok — bkz. dokümandaki kapsam notu. */
-  { id: 'heraldry', name: { tr: 'Armacılık ve asalet', en: 'Heraldry and nobility' },
-    emblems: ['crown', 'lion', 'star'],
-    words: ['heralds', 'dominion'] },
-
-  { id: 'wildlife', name: { tr: 'Hayvanlar', en: 'Wildlife' },
-    emblems: ['eagle', 'bull'],
-    words: ['kestrels', 'herons', 'ospreys', 'stags'] },
-
-  { id: 'treasure', name: { tr: 'Değerli eşya', en: 'Treasure' },
-    emblems: ['gemstone'],
-    words: ['amphora'] },
-];
-
-/* Kimlik kelimesi doğrudan bir amblemin karşılığıysa o amblem tercih edilir —
- * "İstanbul Compass"a yıldız düşmesi oyuncuya yanlış geliyor. Ama KİLİT değil:
- * ayrı bir tuzla yazı-tura atılıyor, yarısı birebir amblemi, yarısı kategorinin
- * geri kalanını alıyor. Böylece aynı kelimeye sahip takımlar tek tip olmuyor. */
+ * SEM_EXACT: kelime doğrudan bir amblemin adıysa YAZI-TURA YOK, o amblem düşer.
+ * Değer bir dizi ise (ör. ironworks) o küçük küme içinden salted hash seçer —
+ * genel sanayi/savunma gruplarında birden fazla doğru cevap var, birebir amblem
+ * adlarında yok. */
 const SEM_EXACT = {
   compass: 'compass',
   lighthouse: 'lighthouse',
-  anchors: 'anchor',
-  bridges: 'stone-bridge',
+  anchor: 'anchor', anchors: 'anchor',
+  bridge: 'stone-bridge', bridges: 'stone-bridge', aqueduct: 'stone-bridge', aqueducts: 'stone-bridge',
+  anvil: 'anvil', anvils: 'anvil',
+  hammer: 'crossed-hammers', hammers: 'crossed-hammers',
+  ironworks: ['industrial-cog', 'anvil'],
+  foundry: ['anvil', 'crossed-hammers'], foundries: ['anvil', 'crossed-hammers'],
+  forge: ['anvil', 'crossed-hammers'], forges: ['anvil', 'crossed-hammers'],
+  mill: 'mill-wheel', mills: 'mill-wheel', millers: 'mill-wheel',
+  wave: 'ocean-wave', waves: 'ocean-wave', tideway: 'ocean-wave',
+  knot: 'sailor-knot', knots: 'sailor-knot', halyard: 'sailor-knot',
+  gate: 'fortified-gate', gates: 'fortified-gate',
+  castle: ['castle', 'fortified-gate'], castles: ['castle', 'fortified-gate'],
+  citadel: ['castle', 'fortified-gate'], citadels: ['castle', 'fortified-gate'],
+  fortress: ['castle', 'fortified-gate'], fortresses: ['castle', 'fortified-gate'],
+  bastion: ['castle', 'fortified-gate'], bastions: ['castle', 'fortified-gate'],
+  gem: 'gemstone', gems: 'gemstone', gemstone: 'gemstone', cobalt: 'gemstone', crystal: 'gemstone',
+  lightning: 'lightning', thunder: 'lightning', volt: 'lightning', volts: 'lightning',
+  lion: 'lion', lions: 'lion',
+  eagle: 'eagle', eagles: 'eagle', falcon: 'eagle', falcons: 'eagle',
+  kestrel: 'eagle', kestrels: 'eagle',
+  wolf: 'wolf', wolves: 'wolf',
+  bull: 'bull', bulls: 'bull',
+  crown: 'crown', crowns: 'crown', royal: 'crown', royals: 'crown', king: 'crown', kings: 'crown',
+  oak: 'oak', oaks: 'oak',
+  mountain: 'mountain', mountains: 'mountain', peak: 'mountain', peaks: 'mountain',
+  summit: 'mountain', ridge: 'mountain', ridges: 'mountain', cliffs: 'mountain',
+  granite: 'mountain', highlands: 'mountain',
+
+  /* Özel düzeltmeler. "otters" 2. turda hiçbir kategoriye girmiyordu ve hash'e
+     düşüyordu; su samuru bir nehir hayvanı, dalga onu dürüstçe karşılıyor.
+     "frost" yıldıza bağlanmıştı (kristal benzetmesi), dağ daha doğru. */
+  otter: 'ocean-wave', otters: 'ocean-wave',
+  frost: 'mountain',
 };
 
-/* Yaklaşık eşleşmeler: gerekçesi tartışmaya açık olanlar burada işaretli, ki
- * rapor "her şey oturdu" demesin. Uydurma eşleme yapılmadı; bu üçü de görsel
- * bir aile bağına dayanıyor ama birebir değil. */
-const SEM_LOOSE = {
-  stags: 'boynuzlu dört ayaklı — boğa amblemine görsel aile yakınlığı',
-  amphora: 'antik kap — havuzda kap yok, değerli eşya olarak taşa bağlandı',
-  frost: 'kristal — yıldıza biçim yakınlığı',
-};
+/* Kelime birebir bir amblem değilse anlam ailesine düşer; aile içinden seçim
+ * takımın kanonik anahtarından türer, böylece aynı kelimeye sahip takımlar aynı
+ * armayı almak zorunda kalmaz.
+ *
+ * Tablo brief'in başlangıç listesinden değil, oyunun GERÇEK ad havuzundan
+ * çıkarıldı (bkz. tools/badge-names.js): 436 takım, 68 farklı kimlik kelimesi. */
+const SEMANTIC = [
+  { id: 'maritime', name: { tr: 'Denizcilik', en: 'Maritime' },
+    emblems: ['anchor', 'ocean-wave', 'sailor-knot', 'lighthouse'],
+    words: ['corsairs', 'lagoons', 'coves', 'harbour', 'harbours', 'frigates', 'wharf', 'clippers'] },
 
-/* ------------------------------------------------------------- renk tonları */
-/* accent (amblem dolgusu + iç keyline) takımın c1/c2'sinden TÜRETİLMEZ, bu
- * nötr merdivenden seçilir: iki takım rengiyle en yüksek asgari kontrastı
- * veren aday kazanır. Takım renkleri değiştirilmiyor, yalnız üstüne okunacak
- * ton seçiliyor. Merdiven açık tonlardan oluşuyor çünkü ink her zaman koyu:
- * koyu ink siluetin hem açık hem koyu zeminde durmasını sağlıyor. */
-const TONES = [
-  { id: 'snow', hex: '#F5F7F9' },
-  { id: 'cream', hex: '#EFE7D6' },
-  { id: 'silver', hex: '#C7CED6' },
+  { id: 'navigation', name: { tr: 'Yön bulma', en: 'Navigation' },
+    emblems: ['compass', 'star', 'lighthouse'],
+    words: ['voyagers', 'pioneers', 'nomads', 'meridian', 'northwind'] },
+
+  { id: 'industry', name: { tr: 'Sanayi', en: 'Industry' },
+    emblems: ['anvil', 'crossed-hammers', 'industrial-cog', 'torch-spear'],
+    words: ['bellows', 'kilns', 'saltworks', 'refiners', 'colliers', 'cinder'] },
+
+  { id: 'craft', name: { tr: 'Zanaat', en: 'Craft' },
+    emblems: ['crossed-hammers', 'industrial-cog', 'mill-wheel'],
+    words: ['masons', 'coopers', 'weavers', 'looms', 'tanners'] },
+
+  { id: 'agriculture', name: { tr: 'Tarım', en: 'Agriculture' },
+    emblems: ['oak', 'mill-wheel'],
+    words: ['harvest', 'granaries', 'orchards', 'pastures', 'vintners', 'pines', 'willows', 'grove', 'groves'] },
+
+  { id: 'geography', name: { tr: 'Coğrafya', en: 'Geography' },
+    emblems: ['mountain', 'gemstone'],
+    words: ['quarry', 'basalt', 'terraces'] },
+
+  { id: 'sky', name: { tr: 'Gök ve hava', en: 'Sky and weather' },
+    emblems: ['lightning', 'star'],
+    words: ['rainfall', 'meteors', 'comets', 'storm', 'storms'] },
+
+  { id: 'defence', name: { tr: 'Savunma', en: 'Defence' },
+    emblems: ['castle', 'fortified-gate', 'spear-shield'],
+    words: ['sentinels', 'ramparts', 'wardens', 'vanguard', 'vaults', 'spires'] },
+
+  { id: 'civic', name: { tr: 'Şehir yapıları', en: 'Civic structures' },
+    emblems: ['stone-bridge', 'fortified-gate'],
+    words: ['arches', 'cisterns'] },
+
+  { id: 'light', name: { tr: 'Işık', en: 'Light' },
+    emblems: ['lighthouse', 'torch-spear'],
+    words: ['beacons', 'beacon', 'lanterns', 'lantern', 'signal', 'signals'] },
+
+  /* Aslan buraya heraldik gerekçeyle giriyor: arma sanatının asıl hayvanı
+     aslandır ve "heralds" doğrudan armacılık demek. */
+  { id: 'heraldry', name: { tr: 'Armacılık ve asalet', en: 'Heraldry and nobility' },
+    emblems: ['crown', 'lion', 'star'],
+    words: ['heralds', 'dominion', 'sovereign'] },
+
+  { id: 'wildlife', name: { tr: 'Hayvanlar', en: 'Wildlife' },
+    emblems: ['eagle'],
+    words: ['herons', 'ospreys'] },
 ];
 
-/* Eski (1. tur) tamamen hash tabanlı prototipin paleti. Yalnız "önce/sonra"
- * karşılaştırması için duruyor; yeni sistem takımın gerçek renklerini kullanır. */
-const PALETTES = [
-  { id: 'p01', primary: '#B5232B', secondary: '#14243F', accent: '#F0E4CC', ink: '#0C1526' },
-  { id: 'p02', primary: '#1B45A8', secondary: '#F2F4F8', accent: '#E5B23C', ink: '#0E1F49' },
-  { id: 'p03', primary: '#0E7A54', secondary: '#14171B', accent: '#EFF3F1', ink: '#05100B' },
-  { id: 'p04', primary: '#D2661C', secondary: '#16294A', accent: '#F4F6F9', ink: '#0B1730' },
-  { id: 'p05', primary: '#5B2A83', secondary: '#E8C25A', accent: '#F5F0FA', ink: '#2A0F42' },
-  { id: 'p06', primary: '#3A8FD0', secondary: '#172C52', accent: '#F3F7FB', ink: '#0C1A34' },
-  { id: 'p07', primary: '#7A1F35', secondary: '#8FBFD9', accent: '#DFB65C', ink: '#3B0E1D' },
-  { id: 'p08', primary: '#C02A24', secondary: '#18191C', accent: '#F2F3F5', ink: '#0A0B0D' },
-  { id: 'p09', primary: '#1D8C93', secondary: '#E1674F', accent: '#F6EDD9', ink: '#0B3C41' },
-  { id: 'p10', primary: '#E8C21E', secondary: '#1A1A1C', accent: '#FAFAF7', ink: '#0E0E10' },
-  { id: 'p11', primary: '#1E5533', secondary: '#8FBF3F', accent: '#F1EEDC', ink: '#0B2415' },
-  { id: 'p12', primary: '#2B2F7A', secondary: '#2FA8C4', accent: '#F0F4F8', ink: '#14163F' },
-  { id: 'p13', primary: '#6B1B33', secondary: '#D98BA5', accent: '#F5E9DE', ink: '#330C19' },
-  { id: 'p14', primary: '#1A50B0', secondary: '#E07A28', accent: '#F3F6FA', ink: '#0A2258' },
-  { id: 'p15', primary: '#2C3138', secondary: '#4FA96B', accent: '#C9D0D8', ink: '#12151A' },
-  { id: 'p16', primary: '#16294F', secondary: '#6FC9A8', accent: '#DDB963', ink: '#08132B' },
-];
+/* "stags" ve "amphora" bilerek tabloda YOK. Geyiği boğaya, amforayı değerli
+ * taşa bağlamak görsel bir benzetmeydi, semantik bir eşleşme değil. İkisi de
+ * deterministik yedeğe düşüyor ve descriptor'da usedFallback ile işaretleniyor.
+ * Havuza gerçek karşılıkları eklenirse buraya taşınmalılar. */
 
-/* Lig tablosu simülasyonu için sahte sezon verisi. Oyunun S.fx / S.teams
- * yapısına bilerek bağlanmadı — bu bölüm yalnız 26px okunabilirlik testi. */
-const LEAGUE_ROWS = [
-  { pl: 34, gd: 41, pts: 78 }, { pl: 34, gd: 33, pts: 71 }, { pl: 34, gd: 25, pts: 67 },
-  { pl: 34, gd: 12, pts: 60 }, { pl: 34, gd: 8, pts: 55 }, { pl: 34, gd: 1, pts: 48 },
-  { pl: 34, gd: -4, pts: 44 }, { pl: 34, gd: -11, pts: 39 }, { pl: 34, gd: -19, pts: 33 },
-  { pl: 34, gd: -28, pts: 26 },
-];
+/* ------------------------------------------------------------------ hash */
+/* FNV-1a. Kripto değil; dağılımı düzgün ve Math.random'a hiç ihtiyaç
+ * duymadan deterministik: aynı takım her açılışta aynı armayı verir. */
+function bHash(str) {
+  let h = 0x811c9dc5 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+/* Her katman AYRI tuzla hash'lenir. Tek bir hash'in alt bitlerini üçe birden
+ * dağıtmak katmanları birbirine kilitler; o zaman çerçeve değişince desen de
+ * değişir ve gerçek çeşitlilik çıkmaz. */
+function bPick(seed, salt, n) { return bHash(seed + '|' + salt) % n; }
+
+/* --------------------------------------------------- takımın kanonik kimliği */
+/* Neden ad + kısaltma?
+ *  - tm.n hiçbir yerde çevrilmiyor: js/i18n.js ve js/ui.js'te tek bir takım adı
+ *    geçmiyor, adlar js/data.js'ten olduğu gibi basılıyor. Yani dilden bağımsız.
+ *  - tm.ab tek başına YETMEZ: 436 takımda yalnız 383 farklı kısaltma var
+ *    (46 çakışma, ör. İSP = İstanbul Spires ve İstanbul Pastures).
+ *  - tm.lg tohuma KATILMADI: küme düşen takımın ligi değişir, arması değişmemeli.
+ *  - Takımın listedeki sırası da katılmadı, aynı sebeple. */
+function badgeKey(tm) { return tm.n + '|' + (tm.ab || ''); }
+
+/* Türkçe 'İ' bazı ortamlarda toLowerCase ile birleşik noktalı 'i̇' veriyor;
+ * NFD + birleşen işaretleri atmak aynı kelimenin iki ayrı token üretmesini
+ * engelliyor. */
+function badgeToken(name) {
+  const parts = String(name).trim().split(/\s+/);
+  return parts[parts.length - 1]
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z]/g, '');
+}
+
+const EMB_BY_ID = {};
+EMBLEMS.forEach(e => { EMB_BY_ID[e.id] = e; });
+const FRM_BY_ID = {};
+FRAMES.forEach(f => { FRM_BY_ID[f.id] = f; });
+const PAT_BY_ID = {};
+PATTERNS.forEach(p => { PAT_BY_ID[p.id] = p; });
+const SEM_INDEX = {};
+SEMANTIC.forEach(c => c.words.forEach(w => { SEM_INDEX[w] = c; }));
+
+/* ------------------------------------------------------------------ renk */
+function bRgb(h) {
+  const n = parseInt(h.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function bHex(r) {
+  return '#' + r.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+/* WCAG bağıl parlaklık. core.js'teki lum() basit ağırlıklı ortalama ve yalnız
+ * baş harf rengini seçmek için var; kontrast oranı hesaplamak için yetmiyor. */
+function bLum(hex) {
+  return bRgb(hex).map(v => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+}
+function bContrast(a, b) {
+  const x = bLum(a), y = bLum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+function bMix(a, b, t) {
+  const A = bRgb(a), B = bRgb(b);
+  return bHex(A.map((v, i) => v + (B[i] - v) * t));
+}
+
+/* Amblem tonu SABİT DEĞİL. Açık ve koyu iki nötr aday var; amblemin ARKASINDAKİ
+ * baskın alan rengi ölçülüp hangisi daha yüksek kontrast veriyorsa o seçiliyor.
+ * Tonlar oyunun mevcut tasarım diliyle uyumlu: krem beyaz ve lacivere çalan
+ * siyah, ikisi de dört temada da yabancı durmuyor. */
+const TONE_LIGHT = '#F2EFE6';
+const TONE_DARK = '#0E1520';
+
+/* c1/c2 bozuksa eski tmBadge() davranışına dönmek için: renk geçerli değilse
+ * takım kimliğinden deterministik bir yedek seçilir, rastgelelik yok. */
+const BADGE_FALLBACK_C = ['#B5232B', '#1B45A8', '#0E7A54', '#D2661C', '#5B2A83', '#16294F'];
+function bValidHex(h) { return typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h); }
+
+/* Amblemin oturduğu kutuyu 9x9 örnekleyip desenin orada hangi rengi daha çok
+ * gösterdiğini bulur. "Baskın renk" bu; amblem tonu ona göre seçiliyor. */
+function bDominant(pattern, fit, colors) {
+  let a = 0, b = 0;
+  const x0 = 32 - fit[0] / 2, y0 = fit[2] - fit[1] / 2;
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      const x = x0 + fit[0] * (i + 0.5) / 9;
+      const y = y0 + fit[1] * (j + 0.5) / 9;
+      if (pattern.at(x, y)) b++; else a++;
+    }
+  }
+  return b > a ? colors.secondary : colors.primary;
+}
+
+/* ---------------------------------------------------------- fit ve dönüşüm */
+function badgeFitRow(frame, emblem, nano) {
+  const bb = emblem.bb;
+  const a = (bb[2] - bb[0]) / (bb[3] - bb[1]);
+  let bi = 0, bd = Infinity;
+  for (let i = 0; i < FIT_ASPECTS.length; i++) {
+    const d = Math.abs(Math.log(FIT_ASPECTS[i]) - Math.log(a));
+    if (d < bd) { bd = d; bi = i; }
+  }
+  return (nano ? frame.fitAS : frame.fitA)[bi];
+}
+
+function badgeTransform(frame, emblem, nano) {
+  const fit = badgeFitRow(frame, emblem, nano);
+  const bb = emblem.bb;
+  const s = Math.min(fit[0] / (bb[2] - bb[0]), fit[1] / (bb[3] - bb[1]));
+  return { s, tx: 32 - s * (bb[0] + bb[2]) / 2, ty: fit[2] - s * (bb[1] + bb[3]) / 2, fit };
+}
+
+/* --------------------------------------------------------- descriptor */
+/* Saf fonksiyon: aynı takım nesnesi her zaman aynı sonucu verir. Dil, tema,
+ * sıralama, kayıt açma ve render sayısı sonucu değiştirmez. */
+const BADGE_CACHE = new Map();
+
+function badgeBuild(tm, salt) {
+  const key = badgeKey(tm);
+  const sx = salt ? '#' + salt : '';
+  const token = badgeToken(tm.n);
+  let emblem = null, category = null, usedFallback = false, exact = false;
+
+  const ex = SEM_EXACT[token];
+  if (ex) {
+    /* Birebir amblem adı: yazı-tura yok. Dizi verilmişse küçük kümeden salted
+       hash seçer — "ironworks" hem dişli hem örs olabilir, "compass" olamaz. */
+    emblem = EMB_BY_ID[Array.isArray(ex) ? ex[bPick(key, 'exact' + sx, ex.length)] : ex];
+    exact = true;
+    category = SEM_INDEX[token] ? SEM_INDEX[token].id : 'exact';
+  } else if (SEM_INDEX[token]) {
+    const cat = SEM_INDEX[token];
+    emblem = EMB_BY_ID[cat.emblems[bPick(key, 'emblem@' + cat.id + sx, cat.emblems.length)]];
+    category = cat.id;
+  } else {
+    emblem = EMBLEMS[bPick(key, 'emblem*' + sx, EMBLEMS.length)];
+    usedFallback = true;
+  }
+  if (!emblem) { emblem = EMBLEMS[bPick(key, 'emblem*' + sx, EMBLEMS.length)]; usedFallback = true; }
+
+  const frame = FRAMES[bPick(key, 'frame' + sx, FRAMES.length)];
+  const pattern = PATTERNS[bPick(key, 'pattern' + sx, PATTERNS.length)];
+
+  const primary = bValidHex(tm.c1) ? tm.c1 : BADGE_FALLBACK_C[bPick(key, 'c1', BADGE_FALLBACK_C.length)];
+  const secondary = bValidHex(tm.c2) ? tm.c2 : BADGE_FALLBACK_C[bPick(key, 'c2', BADGE_FALLBACK_C.length)];
+  /* Dış kenar her zaman koyu: silueti hem koyu saha zemininde hem açık kağıt
+     temalarında tutan şey bu. Takımın ana rengine karıştırıldığı için nötr
+     siyah değil, takımın tonunu taşıyor. */
+  const ink = bMix(primary, '#0A0C10', 0.78);
+
+  const dom = bDominant(pattern, badgeFitRow(frame, emblem, false), { primary, secondary });
+  const emb = bContrast(TONE_LIGHT, dom) >= bContrast(TONE_DARK, dom) ? TONE_LIGHT : TONE_DARK;
+  /* Amblem konturu her zaman tonun tersi, böylece amblem alanın öteki rengine
+     taştığında da kenarı okunur kalıyor. */
+  const embEdge = emb === TONE_LIGHT ? ink : TONE_LIGHT;
+
+  return {
+    frame, pattern, emblem,
+    primary, secondary, ink, accent: emb, embEdge,
+    dominant: dom,
+    semanticKey: token, semanticCategory: category, semanticExact: exact,
+    usedFallback, salt: salt || 0, key,
+    combo: frame.id + '|' + pattern.id + '|' + emblem.id + '|' + primary + '|' + secondary,
+  };
+}
+
+/* Çakışma çözümü. İki takım aynı çerçeve + desen + amblem + iki kimlik rengini
+   birden tutturursa ayırt edilemezler; oyunun kendi verisinde bir örneği var:
+   Bristol Quarry ve Wrexham Basalt ikisi de EN2'de, ikisi de #00A0C6/#141414 ve
+   ikisi de coğrafya ailesinden.
+
+   Çözüm LİG İÇİNDE yapılamaz: küme düşen takımın ligi değişir, arması
+   değişmemeli. Bu yüzden tuz tablosu 436 takımın TAMAMI üzerinde, kanonik ada
+   göre sıralanmış tek bir geçişte kuruluyor — lig, sıra, sezon ve kayıt durumu
+   sonucu etkilemiyor. TEAMS sabit veri olduğu için tablo da sabit.
+
+   Tablo ilk rozet çiziminde bir kez kurulur ve yalnız bellekte durur. */
+let BADGE_SALT = null;
+function badgeSalts() {
+  if (BADGE_SALT) return BADGE_SALT;
+  BADGE_SALT = new Map();
+  if (typeof TEAMS === 'undefined') return BADGE_SALT;
+  const list = [];
+  TEAMS.forEach(lgTeams => lgTeams.forEach(r => list.push({ n: r[0], ab: r[1], c1: r[2], c2: r[3] })));
+  /* localeCompare DEĞİL: kod birimi karşılaştırması motordan motora değişmez. */
+  list.sort((a, b) => (a.n < b.n ? -1 : a.n > b.n ? 1 : 0));
+  const used = new Set();
+  list.forEach(t => {
+    for (let s = 0; s < 64; s++) {
+      const c = badgeBuild(t, s).combo;
+      if (!used.has(c)) { used.add(c); if (s) BADGE_SALT.set(badgeKey(t), s); return; }
+    }
+  });
+  return BADGE_SALT;
+}
+
+function badgeDescriptor(tm) {
+  if (!tm || typeof tm.n !== 'string' || !tm.n.trim()) return null;
+  const key = badgeKey(tm);
+  const hit = BADGE_CACHE.get(key);
+  if (hit) return hit;
+  const d = badgeBuild(tm, badgeSalts().get(key) || 0);
+  BADGE_CACHE.set(key, d);
+  return d;
+}
+
+/* ------------------------------------------------------------------ çizim */
+/* clipPath ve path tanımları belgeye TEK KEZ, gizli bir sprite olarak konur.
+ * Her armaya kopyalansaydı hem aynı id defalarca tekrar ederdi (geçersiz HTML)
+ * hem de bir lig tablosunda 20 rozet için ~26 KB fazladan HTML çıkardı; sprite
+ * ile rozet başına ~350 karakter kalıyor. Artan sayaçlı id ise "aynı takım →
+ * aynı HTML" kuralını bozardı. */
+let BADGE_DEFS_IN = false;
+function badgeDefsHTML() {
+  const out = ['<svg id="bdgDefs" aria-hidden="true" focusable="false" '
+    + 'style="position:absolute;width:0;height:0;overflow:hidden"><defs>'];
+  FRAMES.forEach(f => {
+    out.push('<clipPath id="bcl-' + f.id + '"><path d="' + f.d() + '"/></clipPath>');
+    /* fill/linejoin her kullanımda aynı; use'a değil tanıma yazılıyor —
+       rozet başına ~100 bayt HTML tasarrufu. stroke ve stroke-width use'da
+       kalıyor çünkü takıma göre değişiyor ve tanım onları belirtmediği için
+       kalıtım yoluyla iniyor. */
+    out.push('<path id="bfr-' + f.id + '" d="' + f.d() + '" fill="none" stroke-linejoin="round"/>');
+  });
+  EMBLEMS.forEach(e => {
+    const a = '" fill-rule="evenodd" stroke-linejoin="round" paint-order="stroke"/>';
+    out.push('<path id="bem-' + e.id + '" d="' + e.d + a);
+    out.push('<path id="bemm-' + e.id + '" d="' + e.dm + a);
+  });
+  out.push('</defs></svg>');
+  return out.join('');
+}
+function ensureBadgeDefs() {
+  if (BADGE_DEFS_IN || typeof document === 'undefined' || !document.body) return;
+  if (!document.getElementById('bdgDefs')) {
+    document.body.insertAdjacentHTML('afterbegin', badgeDefsHTML());
+  }
+  BADGE_DEFS_IN = true;
+}
+
+/* Boyut politikası tek yerde. Descriptor'a dokunmaz: aynı takım her ölçekte
+ * aynı kimliği taşır, değişen yalnız çizim. */
+function badgeSVG(d, size) {
+  const px = size || 36;
+  const nano = px <= NANO_AT;
+  /* Baklava küçük ölçekte iç alanı yetmediği için geçici olarak geniş bir
+     çerçeveye düşer — kimlik değişmez, yalnız o boyuttaki çizim değişir. */
+  const frame = (d.frame.id === 'diamond' && px < DIAMOND_MIN) ? FRM_BY_ID[DIAMOND_ALT] : d.frame;
+  const pat = nano ? PAT_BY_ID[d.pattern.nano] : d.pattern;
+  const t = badgeTransform(frame, d.emblem, nano);
+  const edge = nano ? NANO_EDGE : EDGE_INK;
+  const eid = (px <= MICRO_AT ? 'bemm-' : 'bem-') + d.emblem.id;
+
+  let g = pat.f(d).join('');
+  if (!nano) {
+    g += '<rect x="20" y="' + frame.bar + '" width="24" height="1.5" fill="' + d.accent + '"/>'
+      + '<use href="#bfr-' + frame.id + '" stroke="' + d.accent
+      + '" stroke-width="' + (EDGE_KEY * 2) + '"/>';
+  }
+  g += '<use href="#bfr-' + frame.id + '" stroke="' + d.ink
+    + '" stroke-width="' + (edge * 2) + '"/>';
+
+  return '<svg class="tbSvg" width="' + px + '" height="' + px + '" viewBox="0 0 64 64" '
+    + 'aria-hidden="true" focusable="false">'
+    + '<g clip-path="url(#bcl-' + frame.id + ')">' + g + '</g>'
+    + '<use href="#' + eid + '" transform="translate(' + R2(t.tx) + ' ' + R2(t.ty)
+    + ') scale(' + R2(t.s) + ')" fill="' + d.accent + '" stroke="' + d.embEdge
+    + '" stroke-width="' + R2((nano ? EMB_EDGE_NANO : EMB_EDGE) / t.s) + '"/></svg>';
+}
+
+/* tmBadge()'in çağırdığı üretim girişi. Hiçbir koşulda ATMAZ: descriptor
+ * kurulamazsa null döner ve çağıran eski baş harfli rozete düşer. */
+function badgeVector(tm, size) {
+  try {
+    const d = badgeDescriptor(tm);
+    if (!d || !d.frame || !d.pattern || !d.emblem || !d.emblem.d) return null;
+    ensureBadgeDefs();
+    return badgeSVG(d, size);
+  } catch (e) {
+    return null;
+  }
+}

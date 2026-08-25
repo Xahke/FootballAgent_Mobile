@@ -52,11 +52,30 @@ function commissionPct(){return Math.round(commissionRate()*100);}
 function transferRate(){return +clamp(commissionRate()*(1+skillBonus('fee')),0.03,0.35).toFixed(3);}
 function transferPct(){return Math.round(transferRate()*100);}
 function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255);}
+/* Takım rozeti. İmza bilerek değişmedi: 32 çağrı yerinin hiçbirine dokunulmuyor,
+   değişen yalnız içeride ne üretildiği. Asıl arma js/badges.js'te çiziliyor;
+   burası yalnız sarmalayıcı ve yedek yol.
+
+   Yedek NEDEN duruyor: badgeVector() takım nesnesi eksik/bozuksa, geometri
+   bulunamazsa ya da beklenmedik bir eski kayıt gelirse null döner. O durumda
+   eski baş harfli rozet çiziliyor — ekranda undefined/NaN görünmesindense
+   tanınabilir bir kutu görünsün. Yedek kendisi atmaz. */
 function tmBadge(tm,size){
-  const s=size||36, f=Math.round(s*0.28);
-  const txt=lum(tm.c1)>150?'#16181c':'#fff';
-  return `<div class="tb" style="width:${s}px;height:${s}px;font-size:${f}px;color:${txt};background:${tm.c1}">
-    ${tm.ab||tm.n.slice(0,3)}<i style="background:${tm.c2}"></i></div>`;
+  const s=size||36;
+  const v=(typeof badgeVector==='function')?badgeVector(tm,s):null;
+  if(v)return `<div class="tb tbv" style="width:${s}px;height:${s}px">${v}</div>`;
+  return tmBadgeLetter(tm,s);
+}
+function tmBadgeLetter(tm,size){
+  const s=size||36, f=Math.round(s*0.28), t=tm||{};
+  const hex=h=>/^#[0-9a-fA-F]{6}$/.test(h);
+  /* Eski davranışta c1/c2 doğrudan okunuyordu; bozuk kayıtta parseInt NaN
+     üretip stile "#NaN" sızdırıyordu. Nötr iki ton o deliği kapatıyor. */
+  const c1=hex(t.c1)?t.c1:'#2a3346', c2=hex(t.c2)?t.c2:'#101725';
+  const txt=lum(c1)>150?'#16181c':'#fff';
+  const lbl=t.ab||(typeof t.n==='string'?t.n.slice(0,3):'')||'—';
+  return `<div class="tb" style="width:${s}px;height:${s}px;font-size:${f}px;color:${txt};background:${c1}">
+    ${typeof esc==='function'?esc(lbl):lbl}<i style="background:${c2}"></i></div>`;
 }
 let PID=1;
 function genName(nat){
