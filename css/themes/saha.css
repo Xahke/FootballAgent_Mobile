@@ -1118,17 +1118,17 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    aileye ait görünsün diye seçici ORTAK yazıldı: kopyalansaydı biri düzeltilip
    diğeri unutulduğunda sessizce ayrışırlardı. Görsel de aynı görsel — yeni bir
    varlık üretilmiyor, home-stadium-tunnel.webp ikinci kez kullanılıyor. */
-.clTop,.mkTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
-.clTop::before,.mkTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
+.clTop,.mkTop,.lgTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
+.clTop::before,.mkTop::before,.lgTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
   left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.92) 30%,rgba(11,17,30,.55) 62%,rgba(11,17,30,.25) 100%),
     linear-gradient(180deg,rgba(11,17,30,.5) 0%,rgba(11,17,30,.08) 34%,rgba(11,17,30,.8) 80%,var(--bg) 100%),
     url(../assets/ui/home-stadium-tunnel.webp) 64% 46%/cover no-repeat;
   background-color:var(--bg)}
-.clTitle,.mkTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
+.clTitle,.mkTitle,.lgTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
   letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.75)}
-.clSub,.mkSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.clSub,.mkSub,.lgSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 
 /* --- portföy özeti: üç gerçek sayı, eşit paylı tek kart --- */
 .clSum{display:flex;align-items:stretch;background:var(--sur);border:1px solid var(--line);
@@ -1234,7 +1234,7 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
 
 /* --- 360px: rozet ve güç sütunu biraz daralıyor, hiçbir şey kırpılmıyor --- */
 @media (max-width:365px){
-  .clTitle,.mkTitle{font-size:27px}
+  .clTitle,.mkTitle,.lgTitle{font-size:27px}
   .clCard{gap:9px;padding:10px 8px 10px 12px}
   .clSumV{font-size:17.5px}
   .clSumL{font-size:9.5px;letter-spacing:.05em}
@@ -1301,11 +1301,11 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    Piyasa ekranı da aynı kurala giriyor: başlığı ("Piyasa" / "Market") müşteriler
    ekranınınkinden kısa, yani bütçe daha rahat; ama 44px dokunma hedefi ekrandan
    ekrana değişmemeli. Seçiciler ortak yazıldı, ayrı blok kopyalanmadı. */
-body[data-view="clients"] header,body[data-view="market"] header{
+body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header{
   padding-top:calc(5px + env(safe-area-inset-top));
   padding-bottom:5px}
-body[data-view="clients"] .hback,body[data-view="market"] .hback{width:44px;height:44px;border-radius:13px}
-body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{height:44px;border-radius:13px}
+body[data-view="clients"] .hback,body[data-view="market"] .hback,body[data-view="league"] .hback{width:44px;height:44px;border-radius:13px}
+body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{height:44px;border-radius:13px}
 
 /* ===================== ÜST ÇUBUK · BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
    Müşteriler ekranının başlığı uygulamadaki en uzun başlık ("Müşteriler" +
@@ -1346,33 +1346,33 @@ body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{height:44px
    ve ayarların ölçülerine dokunulmadı. Kural yalnız müşteriler ekranında ve
    yalnız saha temasında — başka hiçbir ekran, tema ya da ana ekran etkilenmiyor. */
 @media (max-width:460px){
-  body[data-view="clients"] header,body[data-view="market"] header{padding-left:10px;padding-right:10px}
-  body[data-view="clients"] .hrow,body[data-view="market"] .hrow{gap:5px}
-  body[data-view="clients"] .hstat,body[data-view="market"] .hstat{padding:6px 6px}
-  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{padding:0 10px}
-  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
+  body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header{padding-left:10px;padding-right:10px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow{gap:5px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat{padding:6px 6px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{padding:0 10px}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
 }
 /* 374px altında bir kademe daha: orada sabitler satırın %68'ini yiyor ve
    yukarıdaki pay tek başına yetmiyordu (ölçüldü). Başlık puntosu 15→14,
    alt satır 9.5→9 ve harf aralığı sıfır. */
 @media (max-width:374px){
-  body[data-view="clients"] .htitle .t1,body[data-view="market"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2{font-size:9px;letter-spacing:0}
+  body[data-view="clients"] .htitle .t1,body[data-view="market"] .htitle .t1,body[data-view="league"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2{font-size:9px;letter-spacing:0}
   /* İngilizce 360'ta 10px daha açık veriyor: "Continue" düğmesi "Devam"dan
      14px geniş ve bütün fark başlıktan kesiliyor (ölçüldü). Rozetlerin iç
      dolgusu 7→5, ikon 13→12, rozet içi ve satır boşluğu 5→4 ile 16px daha
      açılıyor — punto daha da küçültülmeden. */
-  body[data-view="clients"] .hrow,body[data-view="market"] .hrow{gap:4px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow{gap:4px}
   /* Ayarlar düğmesi 36→44 büyüyünce 374px altında telafi kalmamıştı (bu blok
      zaten en sıkı değerlerdeydi) ve İngilizce geniş değerlerde alt satır tekrar
      sarıyordu. Rozetlerin iç dolgusu 5→4, rozet içi boşluk 4→3 ve ikon 12→11
      ile 8px geri alınıyor. */
-  body[data-view="clients"] .hstat,body[data-view="market"] .hstat{padding:6px 4px;gap:3px}
-  body[data-view="clients"] .hstat svg,body[data-view="market"] .hstat svg{width:11px;height:11px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat{padding:6px 4px;gap:3px}
+  body[data-view="clients"] .hstat svg,body[data-view="market"] .hstat svg,body[data-view="league"] .hstat svg{width:11px;height:11px}
   /* Uzun sezon/hafta değerlerinde ("Season 30 · Week 38") İngilizce hâlâ 1-2px
      açık veriyordu; Devam'ın dolgusu 12→10 ile kapanıyor. Düğme metni 13px,
      yani genişliği hâlâ 44px'in çok üstünde. */
-  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{padding:0 10px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{padding:0 10px}
 }
 
 /* ===================== PİYASA EKRANI (yalnız saha) =====================
@@ -1504,4 +1504,229 @@ body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{height:44px
   .mkNetSub{font-size:11px}
   .mkNet{gap:10px;padding:11px 10px}
   .mkNetIc{width:38px;height:38px}
+}
+
+/* ===================== LİG EKRANI (yalnız saha) =====================
+   Ekranın tek sorusu: "ligde şu anda ne oluyor ve müşterilerim bu tablonun
+   neresinde?" Düzen o soruyu sırayla cevaplıyor — kimlik, sekme, haftanın maçı,
+   tablo.
+
+   İmza öğe: müşteri rayı. Müşterin olan satır sol kenarında şerit taşıyor ve
+   takım adının altında gerçek sayıyı yazıyor ("2 müşterin"). Müşteriler ve
+   Piyasa kartlarındaki rayın devamı; dışarıdan gelen bir fikir değil.
+
+   BÖLGE RENKLERİ UYDURULMUYOR. Ray rengini lgZoneOf() seçiyor ve o da yalnızca
+   oyunda gerçekten olan iki kuraldan türüyor (TIERS ve CUPQ). Bölgesi olmayan
+   ligde ray nötr kalıyor; orada tabloyu boyamak yalan olurdu.
+
+   Satır başına TEK yapısal renk var: ray bölgeyi söylüyor, müşteri bilgisi
+   yeşil metinle ayrı kanalda duruyor. İkisi aynı öğeye binmiyor.
+
+   İşaretleme yalnız bu temada üretiliyor (js/ui.js → useSahaLeague), o yüzden
+   dosya/gazete/terminal bu bloğun tek bir kuralını bile görmüyor. */
+
+/* --- kimlik kartı --- */
+.lgId{display:flex;align-items:center;gap:11px;width:100%;min-height:56px;padding:10px 12px;
+  margin-bottom:10px;background:var(--sur);color:var(--txt);border:1px solid var(--line);
+  border-radius:var(--r);cursor:pointer;font-family:inherit;text-align:left;box-shadow:var(--sh);
+  transition:transform var(--tap),background var(--tap)}
+.lgId:active{transform:scale(.99);background:var(--sur2)}
+/* Lig kodu bir arma değil: veride duran kısaltma. Yeni görsel varlık yok. */
+.lgMark{flex:0 0 auto;min-width:40px;height:36px;padding:0 7px;border-radius:11px;display:flex;
+  align-items:center;justify-content:center;background:var(--sur3);color:var(--txt2);
+  font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.06em;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.lgIdT{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.lgIdN{font-family:var(--cond);font-weight:700;font-size:18px;line-height:1.15;
+  letter-spacing:-.005em;overflow-wrap:anywhere}
+.lgIdM{font-size:11.5px;color:var(--txt2);line-height:1.3;font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}
+.lgIdGo{flex:0 0 auto;color:var(--txt3);font-size:19px;line-height:1}
+
+/* --- sezon tarayıcısı: yalnız arşiv varsa çiziliyor --- */
+.lgSeas{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lgSeasB{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:var(--sur2);
+  border:1px solid var(--line);color:var(--txt);font-size:19px;line-height:1;cursor:pointer;
+  font-family:inherit}
+.lgSeasB:disabled{opacity:.35;cursor:default}
+.lgSeasB:active:not(:disabled){transform:scale(.96)}
+.lgSeasT{flex:1 1 auto;min-width:0;text-align:center;font-family:var(--cond);font-weight:700;
+  font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--txt2);
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+/* --- birincil sekmeler: üçünün de gerçek karşılığı var --- */
+.lgTabs{display:flex;gap:8px;margin-bottom:11px}
+.lgTab{flex:1 1 0;min-width:0;min-height:44px;padding:6px 8px;display:flex;align-items:center;
+  justify-content:center;line-height:1.15;background:var(--sur2);color:var(--txt2);
+  border:1px solid var(--line);border-radius:13px;cursor:pointer;font-family:var(--cond);
+  font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
+  overflow-wrap:anywhere;transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.lgTab:active{transform:scale(.97)}
+.lgTab.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+
+/* --- haftanın maçı --- */
+.lgFeat{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px 10px 11px;margin-bottom:11px;box-shadow:var(--sh)}
+.lgFeatTop{display:flex;align-items:baseline;gap:8px;margin:0 2px 8px}
+.lgFeatL{flex:1 1 auto;min-width:0;font-family:var(--cond);font-weight:700;font-size:12px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);overflow-wrap:anywhere}
+.lgFeatW{flex:0 0 auto;font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--txt2);font-variant-numeric:tabular-nums}
+.lgFeatRow{display:flex;align-items:stretch;gap:6px}
+.lgSide{flex:1 1 0;min-width:0;min-height:44px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;padding:4px;background:none;border:none;
+  border-radius:12px;cursor:pointer;color:var(--txt);font-family:inherit;
+  transition:background var(--tap)}
+.lgSide:active{background:var(--sur2)}
+.lgSideN{font-family:var(--cond);font-weight:700;font-size:13.5px;line-height:1.2;
+  text-align:center;overflow-wrap:anywhere}
+/* Müşterinin takımı: sakin yeşil metin, rozetin üstüne halka eklemeden. */
+.lgSide.mine .lgSideN{color:var(--acc)}
+.lgScore{flex:0 0 auto;align-self:center;min-width:64px;text-align:center;
+  font-family:var(--cond);font-weight:800;font-size:22px;line-height:1;letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums;color:var(--txt)}
+/* Oynanmamış maçta skor yok; veride başlama saati de yok, tire dürüst olan. */
+.lgScore.pend{color:var(--txt3);font-size:19px}
+.lgFeatTag{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:9px;
+  font-size:11.5px;font-weight:700;color:var(--acc);line-height:1.25}
+.lgFeatTag svg{width:14px;height:14px;flex:0 0 14px}
+.lgFeatTag>span{min-width:0;overflow-wrap:anywhere;text-align:center}
+
+/* --- puan durumu ---
+   Sütun bütçesi 360px'te ölçüldü: 20 sıra + 26 rozet + 24 O + 32 AV + 30 P ve
+   beş boşluk sabit; kalanı takım adına gidiyor. Uzun ad kırpılmıyor, satır
+   içinde sarıyor — puan sütunu yerinden oynamıyor. */
+.lgGrpT{font-family:var(--cond);font-weight:700;font-size:12.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3);margin:2px 2px 7px}
+.lgTable{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;margin-bottom:11px;box-shadow:var(--sh)}
+.lgHead,.lgRow{display:grid;grid-template-columns:20px 26px minmax(0,1fr) 24px 32px 30px;
+  align-items:center;gap:8px;padding:0 10px}
+.lgHead{height:34px;border-bottom:1px solid var(--line);background:var(--sur2)}
+.lgHead span{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3)}
+.lgH-p{text-align:center}
+.lgH-n{text-align:center}
+.lgRow{position:relative;min-height:48px;padding-top:7px;padding-bottom:7px;cursor:pointer;
+  border-bottom:1px solid var(--line);transition:background var(--tap)}
+.lgRow:last-child{border-bottom:none}
+.lgRow:active{background:var(--sur2)}
+/* imza öğe: durum rayı — rengi bölgeden, varlığı müşteriden geliyor */
+.lgRail{position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent}
+.lgRow.z-ch .lgRail{background:var(--gold)}
+.lgRow.z-ec1 .lgRail{background:var(--blue)}
+.lgRow.z-ec2 .lgRail{background:rgba(77,159,255,.6)}
+.lgRow.z-ec3 .lgRail{background:rgba(77,159,255,.32)}
+.lgRow.z-up .lgRail{background:var(--acc)}
+.lgRow.z-down .lgRail{background:var(--bad)}
+/* Müşterin varsa satır hafif yeşil zemin alıyor; bölgesi yoksa ray da yeşile
+   döner. Böylece bir satırda iki yapısal renk çakışmıyor. */
+.lgRow.mine{background:rgba(30,201,126,.06)}
+.lgRow.mine:not([class*="z-"]) .lgRail{background:var(--acc)}
+.lgPos{text-align:center;font-family:var(--cond);font-weight:700;font-size:14px;color:var(--txt2)}
+.lgRow.z-ch .lgPos{color:var(--gold)}
+.lgRow.z-down .lgPos{color:var(--bad)}
+.lgBadge{display:flex}
+.lgTeam{min-width:0;display:flex;flex-direction:column;gap:1px}
+.lgTeamN{font-family:var(--cond);font-weight:700;font-size:15px;line-height:1.18;
+  color:var(--txt);overflow-wrap:anywhere}
+.lgTeamC{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+  color:var(--acc);line-height:1.2}
+.lgTeamC svg{width:11px;height:11px;flex:0 0 11px}
+.lgTeamC>span{min-width:0;overflow-wrap:anywhere}
+.lgN{text-align:center;font-size:12.5px;color:var(--txt2);font-variant-numeric:tabular-nums}
+.lgN.neg{color:var(--bad)}
+.lgN.pts{font-family:var(--cond);font-weight:800;font-size:16px;color:var(--txt)}
+.lgNote{background:var(--sur2);border-radius:12px;padding:10px 12px;margin-bottom:10px;
+  font-size:12px;color:var(--txt2);line-height:1.4}
+
+/* --- bölge göstergesi: yalnız o ligde gerçekten olan bölgeler yazılıyor --- */
+.lgKeys{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 2px 11px}
+.lgKey{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--txt3)}
+.lgKey i{width:10px;height:10px;border-radius:3px;flex:0 0 10px}
+.lgKey.z-ch i{background:var(--gold)}
+.lgKey.z-ec1 i{background:var(--blue)}
+.lgKey.z-ec2 i{background:rgba(77,159,255,.6)}
+.lgKey.z-ec3 i{background:rgba(77,159,255,.32)}
+.lgKey.z-up i{background:var(--acc)}
+.lgKey.z-down i{background:var(--bad)}
+
+/* --- fikstür --- */
+.lgWk{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lgWkB{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:var(--sur2);
+  border:1px solid var(--line);color:var(--txt);font-size:19px;line-height:1;cursor:pointer;
+  font-family:inherit}
+.lgWkB:disabled{opacity:.35;cursor:default}
+.lgWkB:active:not(:disabled){transform:scale(.96)}
+.lgWkT{flex:1 1 auto;min-width:0;text-align:center;font-family:var(--cond);font-weight:800;
+  font-size:16px;letter-spacing:.04em;text-transform:uppercase;font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}
+.lgWkT i{font-style:normal;font-weight:600;color:var(--txt3);font-size:13px}
+.lgFix{display:flex;align-items:stretch;gap:6px;min-height:52px;padding:5px 8px;
+  background:var(--sur);border:1px solid var(--line);border-radius:13px;margin-bottom:7px}
+.lgFix.mine{background:rgba(30,201,126,.06);border-color:rgba(30,201,126,.28)}
+.lgFixS{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;gap:7px;
+  padding:4px 5px;background:none;border:none;border-radius:10px;cursor:pointer;color:var(--txt);
+  font-family:inherit;text-align:left;transition:background var(--tap)}
+.lgFixS.r{justify-content:flex-end;text-align:right}
+.lgFixS:active{background:var(--sur2)}
+.lgFixN{min-width:0;font-family:var(--cond);font-weight:700;font-size:13.5px;line-height:1.18;
+  overflow-wrap:anywhere}
+.lgFixSc{flex:0 0 auto;align-self:center;min-width:56px;text-align:center;font-family:var(--cond);
+  font-weight:800;font-size:16px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+  color:var(--txt)}
+.lgFixSc.pend{color:var(--txt3);font-weight:700}
+
+/* --- istatistik: bugün de çalışan dört alt sekme --- */
+.lgSubs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
+.lgSub2{flex:1 1 46%;min-width:0;min-height:44px;padding:6px 8px;display:flex;align-items:center;
+  justify-content:center;line-height:1.15;background:var(--sur2);color:var(--txt2);
+  border:1px solid var(--line);border-radius:12px;cursor:pointer;font-family:var(--cond);
+  font-weight:700;font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;
+  overflow-wrap:anywhere;transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.lgSub2:active{transform:scale(.97)}
+.lgSub2.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+
+/* --- tüm fikstür: gerçekten başka bir görünüme gidiyor (hafta tarayıcısı) --- */
+.lgAll{display:flex;align-items:center;gap:11px;width:100%;min-height:52px;padding:10px 13px;
+  background:transparent;color:var(--acc);cursor:pointer;border:1px dashed rgba(30,201,126,.45);
+  border-radius:var(--r);font-family:inherit;text-align:left;transition:background var(--tap)}
+.lgAll:active{background:var(--acc-soft);transform:scale(.99)}
+.lgAllIc{display:flex;flex:0 0 auto}
+.lgAllIc svg{width:19px;height:19px}
+.lgAllT{flex:1 1 auto;min-width:0;font-family:var(--cond);font-weight:700;font-size:15px;
+  letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.lgAllGo{flex:0 0 auto;font-size:19px;line-height:1;opacity:.8}
+
+/* --- boş durumlar: sahte maç ya da sahte takım yok --- */
+.lgEmpty{display:flex;align-items:center;gap:11px;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r);padding:13px;margin-bottom:11px}
+.lgEmptyIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.lgEmptyIc svg{width:22px;height:22px}
+.lgEmptyT{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--txt2);line-height:1.35}
+
+/* --- lig seçici (modal) --- */
+.lgPickList{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.lgGrp{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3);margin:8px 2px 2px}
+.lgOpt{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 10px;
+  background:var(--sur2);color:var(--txt);border:1px solid var(--line);border-radius:13px;
+  cursor:pointer;font-family:inherit;text-align:left;transition:background var(--tap)}
+.lgOpt:active{transform:scale(.99)}
+.lgOpt.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4)}
+.lgOpt.on .lgOptT{color:var(--acc)}
+.lgOpt .lgMark{min-width:38px;height:32px;font-size:13px}
+.lgOptT{flex:1 1 auto;min-width:0;font-family:var(--cond);font-weight:700;font-size:15px;
+  line-height:1.2;overflow-wrap:anywhere}
+.lgOptN{flex:0 0 auto;font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums}
+
+/* --- 360px: sütun bütçesi korunuyor, yalnız tipografi bir tık iniyor --- */
+@media (max-width:365px){
+  .lgHead,.lgRow{grid-template-columns:18px 24px minmax(0,1fr) 22px 30px 28px;gap:6px;padding:0 8px}
+  .lgTeamN{font-size:14px}
+  .lgN.pts{font-size:15px}
+  .lgTab{font-size:12px;letter-spacing:.02em}
+  .lgIdN{font-size:16.5px}
+  .lgScore{min-width:56px;font-size:20px}
+  .lgFixSc{min-width:48px;font-size:15px}
 }
