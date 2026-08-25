@@ -8440,12 +8440,32 @@ function pctOf(x){const n=Math.round(x*100);return L==='tr'?'%'+n:n+'%';}
 let MKQ='';
 let MKF=false;
 const MK_PAGE=50;
+/* ETKİLİ FİLTRE — tema sızıntısının kapandığı tek yer.
+   S.f dört temanın ORTAK filtresi ve kayda yazılıyor; 'cl' (kulüplü) ise yalnız
+   saha piyasasının çipi. İkisi yan yana durunca sahada bir kez seçilen çip,
+   dosya/gazete/terminal ekranlarını da sessizce kulüplü oyuncularla
+   filtreliyordu — o üç temada böyle bir seçenek, çip ya da açıklama olmadığı
+   için liste sebepsiz kısalıyordu.
+
+   Çözüm okuma tarafında: saha dışında 'cl' yalnız ÇİZİM sırasında 'all' gibi
+   davranıyor. S.f'nin kendisine dokunulmuyor ve save() çağrılmıyor — tema
+   değiştirmek kullanıcının seçimini silmemeli, sahaya dönüldüğünde 'cl' hâlâ
+   seçili olmalı. Kopya sığ ve alan adı saymıyor: S.f'ye ileride bir alan
+   eklenirse kendiliğinden taşınır.
+
+   Diğer filtreler (fa, lig indeksi, mevki, yaş, sıralama, erişilebilirlik) dört
+   temada da ortak kalıyor; onların hepsinin karşılığı her temanın seçicisinde
+   var, yani paylaşılmaları yalan söylemiyor. */
+function mkEffF(){
+  S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
+  const f=S.f;
+  return (f.lg==='cl'&&!useSahaMarket())?Object.assign({},f,{lg:'all'}):f;
+}
 /* Liste tek yerden türüyor: ilk çizim de, aramadaki kısmi güncelleme de aynı
    sonucu görsün. Filtre zinciri bugünküyle aynı sırada — yalnız 'cl' (kulüplü)
    dalı ve ada göre arama eklendi, ikisi de saha kapısının arkasında. */
 function mkData(){
-  S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
-  const f=S.f;
+  const f=mkEffF();
   let list=S.players.filter(p=>p.agent===null&&knownLg(teamOf(p).lg));
   if(f.elig)list=list.filter(p=>profileOf(p)<=repCap());
   if(f.lg==='fa')list=list.filter(p=>isFree(p));
@@ -8518,15 +8538,15 @@ function mkRowsHtml(d){
     ?`<div class="mkFoot">${t('mkShown').replace('{n}',d.rows.length).replace('{t}',d.total)}</div>`:'';
   return `<div class="mkList">${d.rows.map(mkCard).join('')}</div>${foot}`;
 }
-/* Lig seçici iki dünyada da aynı: 'cl' seçeneği yalnız saha piyasasında (ya da
-   zaten seçiliyse) yazılıyor, böylece diğer üç temanın seçicisi ne değişiyor ne
-   de seçili olmayan bir değeri gizleyerek yalan söylüyor. */
+/* Lig seçici iki dünyada da aynı; tek fark 'cl' seçeneği ve o KOŞULSUZ olarak
+   yalnız saha piyasasında yazılıyor. Seçici yalan söylemiyor çünkü mkEffF()
+   saha dışında f.lg'yi zaten 'all'a indiriyor: seçenek yoksa o değer de yok. */
 function mkLgSel(f){
   return `<label class="fitem"><span>${t('league')}</span>
     <select class="fsel" onchange="setF('lg',this.value)">
     <option value="all" ${f.lg==='all'?'selected':''}>${t('all')}</option>
     <option value="fa" ${f.lg==='fa'?'selected':''}>${t('freeAgentsF')} (${freeAgents().filter(p=>p.agent===null).length})</option>${
-    useSahaMarket()||f.lg==='cl'?`\n    <option value="cl" ${f.lg==='cl'?'selected':''}>${t('mkChipClub')}</option>`:''}
+    useSahaMarket()?`\n    <option value="cl" ${f.lg==='cl'?'selected':''}>${t('mkChipClub')}</option>`:''}
     ${Object.keys(CTRYS).map(cc=>{
       const opts=LEAGUES.map((lg,i)=>lg.ctry===cc&&knownLg(i)?
         `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lgName(i)}</option>`:'').join('');
