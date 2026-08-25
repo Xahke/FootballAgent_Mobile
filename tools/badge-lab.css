@@ -1,0 +1,156 @@
+/* Arma laboratuvarı — geliştirici sayfası. Oyunun temalarıyla ilgisi yok;
+ * css/themes/ ve css/style.css bilerek dokunulmadı.
+ *
+ * Sayfa nötr ve düşük doygunlukta: burası bir renk provası, arayüzün kendisi
+ * renk yargısını bozmamalı. Bütün doygunluk numunelerde. */
+
+:root {
+  --bg: #191a1d;
+  --panel: #1f2125;
+  --tile: #26292e;
+  --line: #33373d;
+  --ink: #d6dae0;
+  --dim: #8b929b;
+  --faint: #616873;
+  --spec: #e4e8ee;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 96px; }
+
+/* Başlık: sayfanın tek tipografik jesti. Numuneler renkli olduğu için
+ * kontrast ağırlıktan ve harf aralığından geliyor, renkten değil. */
+header { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 36px; }
+header .top { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+h1 {
+  margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.015em;
+}
+header p { margin: 10px 0 0; color: var(--dim); max-width: 62ch; font-size: 13px; }
+header .meta {
+  margin-top: 14px; font: 400 11.5px/1.7 var(--mono); color: var(--faint);
+  letter-spacing: 0.02em;
+}
+header .meta b { color: var(--dim); font-weight: 400; }
+
+#lang {
+  margin-left: auto; background: var(--tile); color: var(--ink); border: 1px solid var(--line);
+  font: 500 12px/1 var(--mono); letter-spacing: 0.06em;
+  padding: 8px 14px; border-radius: 3px; cursor: pointer; min-height: 32px;
+}
+#lang:hover { border-color: var(--dim); }
+#lang:focus-visible { outline: 2px solid #6f8fb8; outline-offset: 2px; }
+
+section { margin: 0 0 56px; }
+h2 {
+  margin: 0 0 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--dim);
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+}
+h3 {
+  margin: 28px 0 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: var(--ink);
+}
+h3 em { color: var(--faint); font-style: normal; font-family: var(--mono); font-size: 11px; margin-left: 6px; }
+h4 { margin: 0 0 12px; font: 500 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+
+/* ------------------------------------------------------------------ ızgara */
+.grid { display: grid; gap: 12px; }
+.g6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.cell { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.cell-art {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tile); padding: 14px 8px; min-height: 84px;
+}
+.cell figcaption { padding: 9px 10px 11px; border-top: 1px solid var(--line); }
+.cell figcaption b { display: block; font-size: 12px; font-weight: 550; line-height: 1.35; overflow-wrap: anywhere; }
+.cell figcaption span {
+  display: block; margin-top: 3px; font: 400 10.5px/1.45 var(--mono);
+  color: var(--faint); overflow-wrap: anywhere;
+}
+.cell figcaption .code { color: var(--dim); letter-spacing: 0.02em; }
+
+.pal .pal-bar { display: flex; height: 56px; }
+.pal .pal-bar i { flex: 1; }
+
+/* ------------------------------------------------------------------ ölçek */
+/* Ölçek testi gerçek width/height ile çiziliyor; hiçbir yerde transform:scale
+ * yok, olsaydı test yalan söylerdi. */
+.scroll { overflow-x: auto; }
+
+table { border-collapse: collapse; }
+.scale { width: 100%; min-width: 560px; }
+.scale th, .scale td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: center; vertical-align: middle; }
+.scale thead th { font: 500 11px/1 var(--mono); color: var(--faint); letter-spacing: 0.08em; padding-bottom: 12px; }
+.scale tbody th {
+  text-align: left; font-size: 12px; font-weight: 550; white-space: nowrap; padding-right: 18px;
+}
+.scale tbody th .code { display: block; font: 400 10.5px/1.5 var(--mono); color: var(--faint); }
+.sz { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sz i { font: 400 10px/1 var(--mono); color: var(--faint); font-style: normal; }
+
+/* ------------------------------------------------------------------ zemin */
+.ground { padding: 20px; border-radius: 4px; border: 1px solid var(--line); }
+.ground + .ground, .scroll + .scroll { margin-top: 14px; }
+.ground.dark { background: #10203a; }
+.ground.light { background: #eef1f5; }
+.ground.light h4 { color: #6a7280; }
+/* Satır sarmalanıyor: zemin testi yan kaydırmaya girerse dar ekranda
+ * numunelerin yarısı görülmeden değerlendirilmiş olur. */
+.ground .row { display: flex; flex-wrap: wrap; gap: 18px; }
+.stack { display: flex; align-items: flex-end; gap: 6px; }
+
+/* ------------------------------------------------------------- lig tablosu */
+.tablewrap { overflow-x: auto; }
+.league { width: 100%; min-width: 420px; font-size: 13px; color: #dbe4f0; }
+.league th {
+  font: 500 10.5px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: #7f92ad; text-align: right; padding: 0 8px 10px; border-bottom: 1px solid #1e3556;
+}
+.league th:nth-child(3) { text-align: left; }
+.league td { padding: 5px 8px; text-align: right; border-bottom: 1px solid #17293f; }
+.league .rk { width: 26px; color: #7f92ad; font-family: var(--mono); font-size: 12px; }
+.league .bd { width: 34px; line-height: 0; padding: 3px 4px 3px 0; }
+.league .tm { text-align: left; white-space: nowrap; }
+.league .pt { font-weight: 650; }
+
+/* ------------------------------------------------------------------- rapor */
+.report { width: 100%; min-width: 620px; font: 400 12px/1.5 var(--mono); }
+.report th {
+  text-align: left; color: var(--faint); font-weight: 400; padding: 0 10px 8px;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.report td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.report td:first-child { width: 22px; }
+.report tr.ok td:first-child { color: #63b98a; }
+.report tr.no td:first-child { color: #d8746b; }
+.report tr.no td:nth-child(3) { color: #d8746b; }
+.report td:last-child { color: var(--faint); }
+
+/* --------------------------------------------------------------- responsive */
+@media (max-width: 900px) {
+  .g6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .wrap { padding: 24px 14px 72px; }
+  .g6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h1 { font-size: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
