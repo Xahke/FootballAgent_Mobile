@@ -805,9 +805,19 @@ function lgSahaView(){
   {
     const con0=S.curCon||'eu';
     const list0=[...new Set(LEAGUES.filter(x=>x.con===con0).map(x=>x.ctry))];
-    if(!list0.includes(S.curCtry))S.curCtry=list0[0];
-    if(!LEAGUES[S.curLg]||LEAGUES[S.curLg].ctry!==S.curCtry)
-      S.curLg=LEAGUES.findIndex(x=>x.ctry===S.curCtry);
+    /* Ligi olmayan bir kıta kodu (bozuk ya da ileriden gelmiş bir kayıt) list0'ı
+       boş bırakıyor. Eski hâlde S.curCtry=undefined ve findIndex -1 yazılıyordu:
+       ekran S.curLg=-1 ile patlıyor ve bu değer ortak kayda sızıyordu. Böyle bir
+       durumda ilk lige dönüyoruz — setCurLg(0) ile aynı üçlü, yalnız render
+       çağrısı olmadan; yeni alan eklenmiyor. */
+    if(!list0.length){S.curLg=0;S.curCtry=LEAGUES[0].ctry;S.curCon=LEAGUES[0].con;}
+    else{
+      if(!list0.includes(S.curCtry))S.curCtry=list0[0];
+      if(!LEAGUES[S.curLg]||LEAGUES[S.curLg].ctry!==S.curCtry){
+        const f=LEAGUES.findIndex(x=>x.ctry===S.curCtry);
+        S.curLg=f<0?0:f;
+      }
+    }
   }
   const lg=S.curLg,l2=LEAGUES[lg];
   const tab=S.ltab||'table';
