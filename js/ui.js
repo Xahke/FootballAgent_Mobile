@@ -693,6 +693,377 @@ function mkSahaView(d){
     :`<div class="clCta full"><span class="clCtaIc">${ICONS.clients}</span>
       <span class="clCtaT">${t('clFullNote')}</span></div>`}`;
 }
+
+/* ===================== LİG EKRANI (yalnız saha) =====================
+   Ekranın tek sorusu var: "ligde şu anda ne oluyor ve müşterilerim bu tablonun
+   neresinde?" Sıralama o soruya göre: kimlik → sekme → haftanın maçı → tablo.
+
+   Kapı market()/clients() ile aynı desen (useSahaMarket, usePortraits): yeni
+   işaretleme yalnız saha temasında üretiliyor, diğer üç tema bugünkü lig
+   ekranını harfi harfine koruyor.
+
+   Sekmeler S.ltab'ı kullanıyor — bu alan zaten kayıtta var, yeni alan
+   eklenmiyor. Üç birincil sekmenin de gerçek karşılığı var:
+     table -> leagueTable()/groupTable()
+     fix   -> S.fx[lg] haftalık fikstür (weekFixHtml ile aynı veri)
+     istatistik -> scorers/assists (S.players[].g/.a), transferler (S.tlog),
+                   tarihçe (S.lgHist) — dördü de bugün de çalışan sekmeler,
+                   yalnız ikinci bir satırda toplandılar. */
+function useSahaLeague(){return themeOf()==='saha';}
+
+/* Müşteri kulüpleri: takım kimliği -> müşteri sayısı. Tek kaynak; hem haftanın
+   maçı seçimi hem de tablodaki vurgu buradan okuyor, böylece iki yer farklı
+   sayı gösteremiyor. Kulüpsüz müşteri (team<0) sayılmıyor. */
+function lgClientTeams(){
+  const m={};
+  (S.clients||[]).forEach(id=>{
+    const p=byId(id);
+    if(!p||p.team<0)return;
+    m[p.team]=(m[p.team]||0)+1;
+  });
+  return m;
+}
+function lgClientsLbl(n){return n===1?t('lgClient1'):t('lgClientsN').replace('{n}',n);}
+
+/* Bölgeler TÜRETİLİYOR, boyanmıyor. Oyunda gerçekten olan iki kural var:
+     · TIERS (data.js): üst ligin son 3'ü düşer, alt ligin ilk 3'ü çıkar
+     · CUPQ (core.js): yalnız sekiz ligin 1-2 / 3-4 / 5-6. sıraları kupalara gider
+   Bu iki kuralın dışındaki liglerde düşme ya da Avrupa bölgesi YOK; oralarda
+   tabloyu renklendirmek uydurma olurdu. Gruplu ligde (AR1/US1) grup lideri
+   finale gider — o da gerçek bir mekanik (bkz. weekFixHtml). */
+function lgTierDown(lg){const c=LEAGUES[lg].c;return TIERS.some(x=>x[0]===c);}
+function lgTierUp(lg){const c=LEAGUES[lg].c;return TIERS.some(x=>x[1]===c);}
+function lgHasCups(lg){return typeof CUPQ!=='undefined'&&CUPQ.indexOf(LEAGUES[lg].c)>=0;}
+function lgZoneOf(lg,pos,total){
+  const l=LEAGUES[lg];
+  if(l.grp)return pos===1?'ch':'';
+  if(lgTierUp(lg))return pos<=3?'up':'';
+  if(lgTierDown(lg)&&pos>total-3)return 'down';
+  if(pos===1)return 'ch';
+  if(lgHasCups(lg))return pos<=2?'ec1':pos<=4?'ec2':pos<=6?'ec3':'';
+  return '';
+}
+/* Gösterge yalnız o ligde gerçekten var olan bölgeleri yazıyor. */
+function lgLegend(lg,total){
+  const seen=[];
+  for(let p=1;p<=total;p++){const z=lgZoneOf(lg,p,total);if(z&&seen.indexOf(z)<0)seen.push(z);}
+  const lbl={ch:t('champion'),up:t('lgUpZone'),down:t('lgDownZone'),
+    ec1:(CUPS[0]||{n:{}}).n[L]||'',ec2:(CUPS[1]||{n:{}}).n[L]||'',ec3:(CUPS[2]||{n:{}}).n[L]||''};
+  if(!seen.length)return '';
+  return `<div class="lgKeys">${seen.map(z=>
+    `<span class="lgKey z-${z}"><i></i>${esc(lbl[z]||'')}</span>`).join('')}</div>`;
+}
+
+/* Haftanın maçı: önce müşterinin takımı, yoksa tablodaki en iyi iki takımın
+   eşleşmesi. Uydurma bir "öne çıkan maç" alanı yok — seçim tamamen mevcut
+   fikstürden ve teamPos()'tan türüyor. */
+function lgFeat(lg){
+  const fx=(S.fx||[])[lg]||[];
+  if(!fx.length)return null;
+  const wk=Math.max(0,Math.min((S.week||1)-1,fx.length-1));
+  const ms=fx[wk]||[];
+  if(!ms.length)return null;
+  const cnt=lgClientTeams();
+  let best=null,bs=-1e9;
+  ms.forEach(m=>{
+    const mine=(cnt[m.h]||0)+(cnt[m.a]||0);
+    const sc=(mine?1e6+mine*1000:0)-(teamPos(m.h)+teamPos(m.a));
+    if(sc>bs){bs=sc;best=m;}
+  });
+  return best?{m:best,wk:wk,mine:(cnt[best.h]||0)+(cnt[best.a]||0)}:null;
+}
+
+/* Lig kodu bir arma değil, veride zaten duran kısaltma (LEAGUES[i].c). Yeni
+   raster varlık üretmemek için tipografik işaret kullanılıyor; takım rozetleri
+   ise her yerdeki tmBadge() ile çiziliyor. */
+function lgMark(i){return `<span class="lgMark">${esc(LEAGUES[i].c)}</span>`;}
+
+/* Seçici gerçek: 22 lig, beş kıta ve kupalar. Sahte açılır menü yok — dokunulunca
+   mevcut setCurLg/setCon çağrılıyor, yani diğer temalarla aynı durum yazılıyor. */
+function lgPickOpen(){
+  const cur=S.curLg;
+  const groups=CONTS.filter(x=>x[0]!=='cup').map(([cc,nm])=>{
+    const items=LEAGUES.map((l,i)=>l.con===cc?
+      `<button class="lgOpt${i===cur&&(S.curCon||'eu')!=='cup'?' on':''}" onclick="lgPickSet(${i})">
+        ${lgMark(i)}<span class="lgOptT">${esc(lgName(i))}</span>
+        <span class="lgOptN">${S.teams.filter(tm=>tm&&tm.lg===i).length}</span></button>`:'').join('');
+    return items?`<div class="lgGrp">${esc(nm[L])}</div>${items}`:'';
+  }).join('');
+  const cupBtn=`<div class="lgGrp">${esc((CONTS.find(x=>x[0]==='cup')||[,{}])[1][L]||'')}</div>
+    <button class="lgOpt${(S.curCon||'eu')==='cup'?' on':''}" onclick="lgPickCup()">
+      <span class="lgMark">EC</span><span class="lgOptT">${esc(CUPS.map(c=>c.n[L]).join(' · '))}</span></button>`;
+  openModal(`<h2>${t('lgPick')}</h2><div class="lgPickList">${groups}${cupBtn}</div>`);
+}
+function lgPickSet(i){closeModal();setCurLg(i);}
+function lgPickCup(){closeModal();setCon('cup');}
+
+function lgSahaView(){
+  /* Kıta/ülke/lig seçimi dört temanın ortak S alanlarında duruyor. Diğer temada
+     bir kıta seçilip saha'ya dönüldüğünde seçili ülke ile lig uyuşmayabilir;
+     league()'in kendi düzeltmesinin aynısı burada da yapılıyor, aksi hâlde
+     ekran o ligin adını yazıp başka bir ligin tablosunu çizerdi. */
+  {
+    const con0=S.curCon||'eu';
+    const list0=[...new Set(LEAGUES.filter(x=>x.con===con0).map(x=>x.ctry))];
+    if(!list0.includes(S.curCtry))S.curCtry=list0[0];
+    if(!LEAGUES[S.curLg]||LEAGUES[S.curLg].ctry!==S.curCtry)
+      S.curLg=LEAGUES.findIndex(x=>x.ctry===S.curCtry);
+  }
+  const lg=S.curLg,l2=LEAGUES[lg];
+  const tab=S.ltab||'table';
+  /* Üç birincil sekme; istatistik dalı bugünkü dört alt sekmeyi taşıyor. */
+  const prim=tab==='table'?'table':tab==='fix'?'fix':'stat';
+  S.arch=S.arch||LEAGUES.map(()=>[]);
+  const archL=S.arch[lg]||[];
+  const live=S.season,minSe=archL.length?archL[0].se:live;
+  let vSe=S.vSe===undefined?live:S.vSe;
+  vSe=Math.max(minSe,Math.min(live,vSe));
+  const isLive=vSe===live;
+  /* tm&&: bozuk bir kayıtta S.teams deliği olabilir. leagueTable() bunu bugün de
+     kaldıramıyor (dört temada da aynı), ama bu ekranın kendi saydığı yerler en
+     azından patlamasın. */
+  const nTeams=S.teams.filter(tm=>tm&&tm.lg===lg).length;
+
+  const head=`<div class="lgTop">
+    <div class="lgTitle">${t('lgHub')}</div>
+    <div class="lgSub">${t('lgHubSub')}</div>
+  </div>`;
+
+  /* --- kimlik kartı: gerçek lig, gerçek sezon; arşiv okları yalnız arşiv varsa --- */
+  const idCard=`<button class="lgId" onclick="lgPickOpen()">
+    ${lgMark(lg)}
+    <span class="lgIdT">
+      <span class="lgIdN">${esc(lgName(lg))}</span>
+      <span class="lgIdM">${t('season')} ${vSe} · ${isLive?t('liveLbl'):t('archLbl')} · ${nTeams} ${t('lgTeamsN')}</span>
+    </span>
+    <span class="lgIdGo">›</span>
+  </button>
+  ${minSe<live&&(prim==='table'||prim==='stat')?`<div class="lgSeas">
+    <button class="lgSeasB" ${vSe<=minSe?'disabled':''} onclick="S.vSe=${vSe-1};render()" aria-label="‹">‹</button>
+    <span class="lgSeasT">${t('season')} ${vSe} · ${isLive?t('liveLbl'):t('archLbl')}</span>
+    <button class="lgSeasB" ${vSe>=live?'disabled':''} onclick="S.vSe=${vSe+1};render()" aria-label="›">›</button>
+  </div>`:''}`;
+
+  const tabBtn=(k,lbl,go)=>`<button class="lgTab${prim===k?' on':''}" onclick="${go}">${lbl}</button>`;
+  const tabs=`<div class="lgTabs">
+    ${tabBtn('table',t('standings'),"S.ltab='table';render()")}
+    ${tabBtn('fix',t('fixtures'),"S.ltab='fix';render()")}
+    ${tabBtn('stat',t('lgStats'),"S.ltab='scorers';render()")}
+  </div>`;
+
+  let body='';
+  if(prim==='table')body=lgTableHtml(lg,isLive,archL.find(x=>x.se===vSe),l2);
+  else if(prim==='fix')body=lgFixHtml(lg);
+  else body=lgStatHtml(lg,tab);
+
+  /* Haftanın maçı yalnız puan durumu sekmesinde: fikstür sekmesi zaten maç
+     listesi, orada aynı maçı ikinci kez göstermek tekrar olurdu. */
+  const feat=prim==='table'&&isLive?lgFeatHtml(lg):'';
+  /* "Tüm fikstürü gör" gerçekten başka bir görünüme gidiyor: 34-38 haftalık
+     fikstür tarayıcısı. Aynı içeriği tekrar açan düğme eklenmedi. */
+  const allFix=prim==='table'&&isLive&&(S.fx||[])[lg]&&S.fx[lg].length
+    ?`<button class="lgAll" onclick="S.ltab='fix';render()">
+       <span class="lgAllIc">${ICONS.calendar}</span>
+       <span class="lgAllT">${t('lgAllFix')}</span><span class="lgAllGo">›</span></button>`:'';
+  return `${head}${idCard}${tabs}${feat}${body}${allFix}`;
+}
+
+/* --- haftanın maçı --- */
+function lgFeatHtml(lg){
+  const f=lgFeat(lg);
+  if(!f)return `<div class="lgEmpty"><span class="lgEmptyIc">${ICONS.calendar}</span>
+    <span class="lgEmptyT">${t('lgNoFix')}</span></div>`;
+  const m=f.m,h=S.teams[m.h],a=S.teams[m.a];
+  const cnt=lgClientTeams();
+  const played=m.hg!==null&&m.hg!==undefined;
+  const side=(tm,mine)=>`<button class="lgSide${mine?' mine':''}" onclick="pushV('team',${tm.id})">
+    ${tmBadge(tm,34)}<span class="lgSideN">${esc(tm.n)}</span></button>`;
+  return `<div class="lgFeat">
+    <div class="lgFeatTop">
+      <span class="lgFeatL">${t('lgMatchWk')}</span>
+      <span class="lgFeatW">${f.wk+1}. ${t('week')}</span>
+    </div>
+    <div class="lgFeatRow">
+      ${side(h,cnt[h.id])}
+      <span class="lgScore${played?'':' pend'}">${played?m.hg+' : '+m.ag:'–'}</span>
+      ${side(a,cnt[a.id])}
+    </div>
+    ${f.mine?`<div class="lgFeatTag">${ICONS.clients}<span>${t('lgClientClub')}</span></div>`:''}
+  </div>`;
+}
+
+/* --- puan durumu --- */
+function lgTableHtml(lg,isLive,aEntry,l2){
+  const cnt=lgClientTeams();
+  const glbl=g=>l2.gl?l2.gl[g][L==='tr'?0:1]:null;
+  const toRows=tbl=>tbl.map(tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga]);
+  let parts=null;
+  if(isLive){
+    parts=l2.grp?[[glbl(0),toRows(groupTable(lg,0))],[glbl(1),toRows(groupTable(lg,1))]]
+                :[[null,toRows(leagueTable(lg))]];
+  } else if(aEntry){
+    parts=aEntry.tabs?[[glbl(0),aEntry.tabs[0]],[glbl(1),aEntry.tabs[1]]]:[[null,aEntry.tab]];
+  }
+  if(!parts)return `<div class="lgEmpty"><span class="lgEmptyIc">${ICONS.league}</span>
+    <span class="lgEmptyT">${t('notArch')}</span></div>`;
+  const anyPlayed=parts.some(([,rows])=>rows.some(r=>r[2]+r[3]+r[4]>0));
+  const block=([lbl,rows])=>{
+    if(!rows.length)return `<div class="lgEmpty"><span class="lgEmptyIc">${ICONS.league}</span>
+      <span class="lgEmptyT">${t('lgNoTable')}</span></div>`;
+    return `${lbl?`<div class="lgGrpT">${esc(lbl)}</div>`:''}
+    <div class="lgTable">
+      <div class="lgHead"><span class="lgH-p">#</span><span class="lgH-t">${t('team')}</span>
+        <span class="lgH-n">${t('P')}</span><span class="lgH-n">${t('GD')}</span><span class="lgH-n">${t('PTS')}</span></div>
+      ${rows.map((r,i)=>{
+        const tm=S.teams[r[0]];
+        if(!tm)return '';
+        const z=lgZoneOf(lg,i+1,rows.length);
+        const n=cnt[tm.id]||0;
+        const gd=r[5]-r[6];
+        return `<div class="lgRow${z?' z-'+z:''}${n?' mine':''}" onclick="pushV('team',${tm.id})">
+          <span class="lgRail"></span>
+          <span class="lgPos num">${i+1}</span>
+          <span class="lgBadge">${tmBadge(tm,26)}</span>
+          <span class="lgTeam">
+            <span class="lgTeamN">${esc(tm.n)}</span>
+            ${n?`<span class="lgTeamC">${ICONS.clients}<span>${esc(lgClientsLbl(n))}</span></span>`:''}
+          </span>
+          <span class="lgN num">${r[2]+r[3]+r[4]}</span>
+          <span class="lgN num${gd<0?' neg':''}">${gd>0?'+':''}${gd}</span>
+          <span class="lgN pts num">${r[1]}</span>
+        </div>`;}).join('')}
+    </div>`;
+  };
+  const total=parts[0][1].length;
+  return `${!anyPlayed?`<div class="lgNote">${t('lgNotStarted')}</div>`:''}
+    ${parts.map(block).join('')}${lgLegend(lg,total)}`;
+}
+
+/* --- fikstür: bugünkü hafta tarayıcısının aynısı, saha diliyle --- */
+function lgFixHtml(lg){
+  const fx=(S.fx||[])[lg]||[];
+  if(!fx.length)return `<div class="lgEmpty"><span class="lgEmptyIc">${ICONS.calendar}</span>
+    <span class="lgEmptyT">${t('lgNoFix')}</span></div>`;
+  const len=fx.length,lim=len-1+(LEAGUES[lg].grp?1:0);
+  const wk=Math.min(S.fxWeek!==undefined?S.fxWeek:Math.min((S.week||1)-1,lim),lim);
+  const lbl=wk<len?`${wk+1}. ${t('week')}`:t('finalLbl');
+  const cnt=lgClientTeams();
+  let rows;
+  if(LEAGUES[lg].grp&&wk===len){
+    /* Gruplu ligin final sayfası — weekFixHtml ile aynı kaynak. */
+    const f=(S.finals||{})[lg];
+    let h,a,sc;
+    if(f&&f.se===S.season){h=S.teams[f.h];a=S.teams[f.a];sc=f.hg+' : '+f.ag;}
+    else{h=groupTable(lg,0)[0];a=groupTable(lg,1)[0];sc=null;}
+    rows=h&&a?[{h:h.id,a:a.id,sc:sc}]:[];
+  } else rows=(fx[wk]||[]).map(m=>({h:m.h,a:m.a,sc:m.hg===null||m.hg===undefined?null:m.hg+' : '+m.ag}));
+  const body=rows.length?rows.map(r=>{
+    const h=S.teams[r.h],a=S.teams[r.a];
+    if(!h||!a)return '';
+    const mine=(cnt[h.id]||0)+(cnt[a.id]||0);
+    return `<div class="lgFix${mine?' mine':''}">
+      <button class="lgFixS r" onclick="pushV('team',${h.id})">
+        <span class="lgFixN">${esc(h.n)}</span>${tmBadge(h,24)}</button>
+      <span class="lgFixSc${r.sc?'':' pend'}">${r.sc||'–'}</span>
+      <button class="lgFixS" onclick="pushV('team',${a.id})">
+        ${tmBadge(a,24)}<span class="lgFixN">${esc(a.n)}</span></button>
+    </div>`;}).join('')
+   :`<div class="lgEmpty"><span class="lgEmptyIc">${ICONS.calendar}</span>
+     <span class="lgEmptyT">${t('lgNoFix')}</span></div>`;
+  return `<div class="lgWk">
+    <button class="lgWkB" ${wk<=0?'disabled':''} onclick="S.fxWeek=${Math.max(0,wk-1)};render()" aria-label="‹">‹</button>
+    <span class="lgWkT">${lbl}<i>/${len}</i></span>
+    <button class="lgWkB" ${wk>=lim?'disabled':''} onclick="S.fxWeek=${Math.min(lim,wk+1)};render()" aria-label="›">›</button>
+  </div>${body}`;
+}
+
+/* --- istatistik: bugün de var olan dört alt sekme --- */
+function lgStatHtml(lg,tab){
+  const sub=(k,lbl)=>`<button class="lgSub2${tab===k?' on':''}" onclick="S.ltab='${k}';render()">${lbl}</button>`;
+  const bar=`<div class="lgSubs">${sub('scorers',t('scorers'))}${sub('assists',t('assistsT'))}
+    ${sub('tr',t('transfersT'))}${sub('hist',t('history'))}</div>`;
+  /* Alt sekmelerin gövdesi dört temanın ortak işaretlemesi; kendi kartlarını
+     zaten taşıdığı için ayrıca sarmalanmıyor. vSe/arşiv hesabı league() ile
+     birebir aynı olsun diye lgLegacyTab kendi içinde yapıyor. */
+  return bar+lgLegacyTab(lg,tab);
+}
+/* Gol/asist krallığı, transferler ve tarihçe sekmelerinin gövdesi. Dört tema da
+   aynı işaretlemeyi kullanıyor: league() buradan okuyor, saha lig ekranı da.
+   Kopyalanmadı çünkü iki kopya er ya da geç ayrışırdı — piyasa ekranındaki
+   mkLgSel() ile aynı gerekçe. */
+function lgLegacyTab(lg,tab,isLive,aEntry){
+  /* league() bu iki değeri zaten hesaplayıp geçiyor; saha lig ekranı geçmiyor,
+     o yüzden burada aynı kuralla türetiliyorlar. İki yerde de sonuç aynı olsun
+     diye hesap league()'inkiyle birebir. */
+  if(isLive===undefined){
+    const archL=(S.arch||[])[lg]||[];
+    const live=S.season,minSe=archL.length?archL[0].se:live;
+    const vSe=Math.max(minSe,Math.min(live,S.vSe===undefined?live:S.vSe));
+    isLive=vSe===live;
+    aEntry=isLive?null:archL.find(x=>x.se===vSe);
+  }
+  let body='';
+  if(tab==='tr'){
+    const rows=(S.tlog||[]).filter(x=>(x.a>=0&&S.teams[x.a].lg===lg)||S.teams[x.b].lg===lg);
+    if(!rows.length)body=`<div class="card">${emptyState('market',t('noTransfers'),'')}</div>`;
+    else body=`<div class="sub" style="margin:0 2px 10px">${t('transfersSub')}</div>
+    ${listWrap(rows.map(x=>{
+      const from=x.a>=0?S.teams[x.a].n:t('faShort'),to=S.teams[x.b];
+      return `<div class="pitem" onclick="pushV('team',${to.id})">
+        ${tmBadge(to,34)}
+        <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${x.n}</span>
+          <span class="natc">${POSL[L][x.pos]}</span></div>
+        <div class="psub">${from} → <b style="color:var(--txt2)">${to.n}</b> · ${x.age} · S${x.se}/${t('wk')}${x.w}</div></div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="num" style="font-size:12px;font-weight:800;color:var(--gold)">${x.f?fmtM(x.f):t('freeFee')}</div>
+          <div class="l" style="font-size:9px;color:var(--txt3)">${t('feeL')}</div></div>
+        <div class="rt ${rtClass(x.r)}">${x.r}</div></div>`;
+    }).join(''))}`;
+  } else if(tab==='hist'){
+    const h=((S.lgHist||[])[lg]||[]).slice().reverse();
+    if(!h.length)body=`<div class="card"><div class="empty">${t('noHist')}</div></div>`;
+    else{
+      const counts={};
+      ((S.lgHist||[])[lg]||[]).forEach(x=>counts[x.tid]=(counts[x.tid]||0)+1);
+      const bestId=+Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+      const bestTm=S.teams[bestId];
+      body=`<div class="card">
+        <div class="sect">${t('mostTitles')}</div>
+        <div class="row" style="cursor:pointer" onclick="pushV('team',${bestId})">
+          ${tmBadge(bestTm,36)}
+          <div><b>${bestTm.n}</b><div class="sub">${counts[bestId]} ${t('titles')}</div></div>
+        </div></div>
+      <div class="list">
+      ${h.map(x=>{
+        const tm=S.teams[x.tid];
+        return `<div class="pitem" onclick="pushV('team',${x.tid})">
+          <span class="posn" style="width:30px">S${x.se}</span>
+          ${tmBadge(tm,30)}
+          <div class="pinfo"><div class="pname">${tm.n}</div>
+          <div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div></div>
+          <span class="faint">›</span></div>`;
+      }).join('')}
+      </div>`;
+    }
+  } else {
+    const key=tab==='scorers'?'g':'a';
+    let rows;
+    if(isLive){
+      rows=S.players.filter(p=>p[key]>0&&teamOf(p).lg===lg).sort((a,b)=>b[key]-a[key]).slice(0,15)
+        .map(p=>[p.n,p.team,p[key],p.id,p.agent==='you']);
+    } else rows=aEntry?(key==='g'?aEntry.sc:aEntry.as).map(r=>[r[0],r[1],r[2],null,false]):null;
+    if(!rows)body=`<div class="card">${emptyState('league',t('notArch'),'')}</div>`;
+    else body=`<div class="card tight"><table>
+    <tr><th></th><th>${t('player')}</th><th>${t('team')}</th><th class="c">${key==='g'?t('goals'):t('assists')}</th></tr>
+    ${rows.map((r,i)=>`<tr class="${r[3]?'click':''} ${r[4]?'hl':''} ${i<3?'top3':''}" ${r[3]?`onclick="pushV('player',${r[3]})"`:''}>
+    <td><span class="posn ${i===0?'zone1':''}">${i+1}</span></td>
+    <td><b>${r[0]}</b>${r[4]?' <span class="star">★</span>':''}</td>
+    <td><div class="row" style="gap:6px">${tmBadge(S.teams[r[1]],18)}<span class="sub">${S.teams[r[1]].n}</span></div></td>
+    <td class="c"><b>${r[2]}</b></td></tr>`).join('')}
+    ${!rows.length?`<tr><td colspan="4" class="empty">—</td></tr>`:''}</table></div>`;
+  }
+  return body;
+}
 const VIEWS={
 /* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
    Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
@@ -963,6 +1334,9 @@ market(){
 },
 league(){
   if((S.curCon||'eu')==='cup')return cupView();
+  /* Kapı market()/clients() ile aynı: yeni ekran yalnız saha temasında üretiliyor,
+     aşağıdaki gövde diğer üç tema için harfi harfine bugünkü hâlinde kalıyor. */
+  if(useSahaLeague())return lgSahaView();
   const lg=S.curLg;
   const tab=S.ltab||'table';
   /* season browser */
@@ -1032,65 +1406,7 @@ league(){
       <b style="font-variant-numeric:tabular-nums">${lbl}</b>
       <button class="btn s" style="width:42px;padding:7px" onclick="S.fxWeek=${Math.min(lim,wk+1)};render()">›</button></div>
       ${weekFixHtml(lg,wk)}</div>`;
-  } else if(tab==='tr'){
-    const rows=(S.tlog||[]).filter(x=>(x.a>=0&&S.teams[x.a].lg===lg)||S.teams[x.b].lg===lg);
-    if(!rows.length)body=`<div class="card">${emptyState('market',t('noTransfers'),'')}</div>`;
-    else body=`<div class="sub" style="margin:0 2px 10px">${t('transfersSub')}</div>
-    ${listWrap(rows.map(x=>{
-      const from=x.a>=0?S.teams[x.a].n:t('faShort'),to=S.teams[x.b];
-      return `<div class="pitem" onclick="pushV('team',${to.id})">
-        ${tmBadge(to,34)}
-        <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${x.n}</span>
-          <span class="natc">${POSL[L][x.pos]}</span></div>
-        <div class="psub">${from} → <b style="color:var(--txt2)">${to.n}</b> · ${x.age} · S${x.se}/${t('wk')}${x.w}</div></div>
-        <div style="text-align:right;flex-shrink:0">
-          <div class="num" style="font-size:12px;font-weight:800;color:var(--gold)">${x.f?fmtM(x.f):t('freeFee')}</div>
-          <div class="l" style="font-size:9px;color:var(--txt3)">${t('feeL')}</div></div>
-        <div class="rt ${rtClass(x.r)}">${x.r}</div></div>`;
-    }).join(''))}`;
-  } else if(tab==='hist'){
-    const h=((S.lgHist||[])[lg]||[]).slice().reverse();
-    if(!h.length)body=`<div class="card"><div class="empty">${t('noHist')}</div></div>`;
-    else{
-      const counts={};
-      ((S.lgHist||[])[lg]||[]).forEach(x=>counts[x.tid]=(counts[x.tid]||0)+1);
-      const bestId=+Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
-      const bestTm=S.teams[bestId];
-      body=`<div class="card">
-        <div class="sect">${t('mostTitles')}</div>
-        <div class="row" style="cursor:pointer" onclick="pushV('team',${bestId})">
-          ${tmBadge(bestTm,36)}
-          <div><b>${bestTm.n}</b><div class="sub">${counts[bestId]} ${t('titles')}</div></div>
-        </div></div>
-      <div class="list">
-      ${h.map(x=>{
-        const tm=S.teams[x.tid];
-        return `<div class="pitem" onclick="pushV('team',${x.tid})">
-          <span class="posn" style="width:30px">S${x.se}</span>
-          ${tmBadge(tm,30)}
-          <div class="pinfo"><div class="pname">${tm.n}</div>
-          <div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div></div>
-          <span class="faint">›</span></div>`;
-      }).join('')}
-      </div>`;
-    }
-  } else {
-    const key=tab==='scorers'?'g':'a';
-    let rows;
-    if(isLive){
-      rows=S.players.filter(p=>p[key]>0&&teamOf(p).lg===lg).sort((a,b)=>b[key]-a[key]).slice(0,15)
-        .map(p=>[p.n,p.team,p[key],p.id,p.agent==='you']);
-    } else rows=aEntry?(key==='g'?aEntry.sc:aEntry.as).map(r=>[r[0],r[1],r[2],null,false]):null;
-    if(!rows)body=`<div class="card">${emptyState('league',t('notArch'),'')}</div>`;
-    else body=`<div class="card tight"><table>
-    <tr><th></th><th>${t('player')}</th><th>${t('team')}</th><th class="c">${key==='g'?t('goals'):t('assists')}</th></tr>
-    ${rows.map((r,i)=>`<tr class="${r[3]?'click':''} ${r[4]?'hl':''} ${i<3?'top3':''}" ${r[3]?`onclick="pushV('player',${r[3]})"`:''}>
-    <td><span class="posn ${i===0?'zone1':''}">${i+1}</span></td>
-    <td><b>${r[0]}</b>${r[4]?' <span class="star">★</span>':''}</td>
-    <td><div class="row" style="gap:6px">${tmBadge(S.teams[r[1]],18)}<span class="sub">${S.teams[r[1]].n}</span></div></td>
-    <td class="c"><b>${r[2]}</b></td></tr>`).join('')}
-    ${!rows.length?`<tr><td colspan="4" class="empty">—</td></tr>`:''}</table></div>`;
-  }
+  } else body=lgLegacyTab(lg,tab,isLive,aEntry);
   const con=S.curCon||'eu';
   const ctryList=[...new Set(LEAGUES.filter(l2=>l2.con===con).map(l2=>l2.ctry))];
   let ctry=S.curCtry;

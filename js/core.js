@@ -180,10 +180,15 @@ function makeFixtures(idList,targetW){
 /* ===== continental cups ===== */
 function seedPair(ids){const r=[];for(let i=0;i<ids.length/2;i++)r.push({h:ids[i],a:ids[ids.length-1-i],hg:null,ag:null});return r;}
 function consPair(ids){const r=[];for(let i=0;i<ids.length;i+=2)r.push({h:ids[i],a:ids[i+1],hg:null,ag:null});return r;}
+/* Kıta kupalarına oyuncu gönderen sekiz lig. Modül düzeyinde duruyor çünkü iki
+   yerden okunuyor: seedCups() katılımcıları buradan çekiyor, arayüz de puan
+   durumunda hangi sıraların gerçekten Avrupa'ya gittiğini buradan öğreniyor.
+   Liste seedCups()'ın içinde kalsaydı arayüz onu kopyalamak zorunda kalırdı ve
+   iki kopya er ya da geç ayrışırdı. */
+const CUPQ=['EN1','ES1','DE1','IT1','FR1','TR1','NL1','PT1'];
 function seedCups(){
   /* katılım: 8 Avrupa liginin bitiş sıralamasından — 1-2. sıra EC1, 3-4. EC2, 5-6. EC3 */
-  const order=['EN1','ES1','DE1','IT1','FR1','TR1','NL1','PT1'];
-  const perLg=order.map(c=>{
+  const perLg=CUPQ.map(c=>{
     const i=LEAGUES.findIndex(l=>l.c===c);
     return leagueTable(i).map(tm=>tm.id);
   });
