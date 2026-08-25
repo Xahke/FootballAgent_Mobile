@@ -475,6 +475,204 @@ function clCard(p){
     <span class="clGo">›</span>
   </div>`;
 }
+/* ===================== PİYASA DURUMLARI =====================
+   Müşteri kartlarındaki CL_ST ile aynı fikir, başka bir soru: müşteride "senden
+   ne bekleniyor", burada "bu oyuncuya bugün ulaşabilir misin". Sıra
+   deterministik, ilk eşleşen kazanır; kart başına tek renk.
+
+   Dördü de piyasa satırının (playerRow) bugün zaten yazdığı durumlar; yeni alan
+   okunmuyor, yeni mekanik eklenmiyor. Uydurma "fırsat" ya da "takip listesinde"
+   durumu YOK — oyunda karşılığı olmayan bir rozet listeyi süsler ama yalan söyler. */
+const MK_ST=[
+  /* Rakip aynı oyuncuyu kovalıyor: acele etmenin tek gerçek sebebi. */
+  {k:'chase',tone:'bad', ic:'alert',   is:p=>!!chaseFor(p.id),
+   lbl:p=>t('chaseTag')+' · '+chaseLeft(chaseFor(p.id))+' '+t('wk')},
+  /* İtibarın yetmiyor: oyuncunun profili repCap()'in üstünde. */
+  {k:'rep',  tone:'blue',ic:'rep',     is:p=>profileOf(p)>repCap(),
+   lbl:p=>t('rep')+' '+repNeedFor(profileOf(p))+'+'},
+  /* Görüşme soğuma süresi dolmadı. */
+  {k:'cd',   tone:'warn',ic:'calendar',is:p=>pitchCd(p)>0,
+   lbl:p=>pitchCd(p)+' '+t('wk')},
+  /* Geriye tek durum kalıyor: görüşmeye açık. Sayı gerçek pitchChance(), etiketi
+     de piyasanın kendi sıralama seçeneğiyle aynı sözcük ("İmza şansı") — yeni
+     bir terim uydurmuyoruz, oyuncu bu ifadeyi filtre panelinde zaten görüyor. */
+  {k:'open', tone:'acc', ic:'clients',  is:()=>true,
+   lbl:p=>t('chance')+' '+pctOf(pitchChance(p))}
+];
+function mkState(p){for(let i=0;i<MK_ST.length;i++)if(MK_ST[i].is(p))return MK_ST[i];return null;}
+
+/* Yeni işaretleme yalnız saha temasında üretiliyor — usePortraits() ile aynı
+   gerekçe ve aynı kapı. Diğer üç tema bugünkü piyasa ekranını harfi harfine
+   koruyor: market() onlar için hiç dallanmıyor. */
+function useSahaMarket(){return themeOf()==='saha';}
+/* Yüzde işareti Türkçede önde, İngilizcede arkada durur (ana ekranla aynı kural). */
+function pctOf(x){const n=Math.round(x*100);return L==='tr'?'%'+n:n+'%';}
+
+/* Arama metni ve filtre panelinin açıklığı yalnızca arayüz durumu; CLFILTER ve
+   atlas.js'teki CAM ile aynı gerekçe — S'ye yazsaydık kayıt biçimini büyütürdü
+   ve eski kayıtlar için yeni bir "yokken de çalış" sınavı açardı. */
+let MKQ='';
+let MKF=false;
+const MK_PAGE=50;
+/* Liste tek yerden türüyor: ilk çizim de, aramadaki kısmi güncelleme de aynı
+   sonucu görsün. Filtre zinciri bugünküyle aynı sırada — yalnız 'cl' (kulüplü)
+   dalı ve ada göre arama eklendi, ikisi de saha kapısının arkasında. */
+function mkData(){
+  S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
+  const f=S.f;
+  let list=S.players.filter(p=>p.agent===null&&knownLg(teamOf(p).lg));
+  if(f.elig)list=list.filter(p=>profileOf(p)<=repCap());
+  if(f.lg==='fa')list=list.filter(p=>isFree(p));
+  else if(f.lg==='cl')list=list.filter(p=>!isFree(p));
+  else if(f.lg!=='all')list=list.filter(p=>teamOf(p).lg===+f.lg);
+  if(f.pos!=='all')list=list.filter(p=>p.pos===f.pos);
+  if(f.age==='u18')list=list.filter(p=>p.age<=18);
+  else if(f.age==='u21')list=list.filter(p=>p.age<=21);
+  else if(f.age==='u24')list=list.filter(p=>p.age<=24);
+  else if(f.age==='o25')list=list.filter(p=>p.age>=25);
+  /* Arama yalnız ada bakıyor; yeni bir sorgu dili yok. Küçültme dile duyarlı:
+     Türkçede 'I' -> 'ı', İngilizcede 'I' -> 'i'. */
+  const q=useSahaMarket()?MKQ.trim().toLocaleLowerCase(L):'';
+  if(q)list=list.filter(p=>String(p.n).toLocaleLowerCase(L).indexOf(q)>=0);
+  const sorts={r:(a,b)=>b.r-a.r,pot:(a,b)=>b.pot-a.pot||b.r-a.r,age:(a,b)=>a.age-b.age||b.pot-a.pot,ch:(a,b)=>pitchChance(b)-pitchChance(a)||b.r-a.r};
+  list.sort(sorts[f.sort]||sorts.r);
+  return {f:f,total:list.length,rows:list.slice(0,MK_PAGE)};
+}
+function mkSetQ(v){
+  MKQ=String(v==null?'':v);
+  /* Her tuşta render() çağırmıyoruz: render() #view'i baştan yazıyor ve odak da
+     imleç konumu da kaybolurdu. Yalnız liste ve sayaç tazeleniyor; ikisi de aynı
+     mkData() okumasından geldiği için birbirine düşmüyor. */
+  const d=mkData();
+  const box=document.getElementById('mkListBox');
+  if(box)box.innerHTML=mkRowsHtml(d);
+  const num=document.getElementById('mkNumBox');
+  if(num)num.textContent=String(d.total);
+}
+function mkTogF(){MKF=!MKF;render();}
+/* Boş sonuçtan çıkış: aramayı ve filtreleri kurulum değerlerine döndürür. */
+function mkReset(){MKQ='';S.f={lg:'all',pos:'all',age:'all',sort:'r',elig:true};save();render();}
+
+/* Kart müşteri kartının görsel dilini aynen sürdürüyor (aynı sınıflar); tek
+   farkı sağdaki moral ölçeri yerine oyuncunun ulaşılabilirlik durumu. */
+function mkCard(p){
+  const st=mkState(p),tm=teamOf(p);
+  /* Gerçek wonderkid işareti — playerRow'daki eşiğin aynısı, uydurma değil. */
+  const gem=(p.age<=21&&p.pot-p.r>=14)?`<span class="mkGem">${ICONS.gem}</span>`:'';
+  return `<div class="clCard mkCard${st?' t-'+st.tone:''}" onclick="pushV('player',${p.id})">
+    <span class="clRail"></span>
+    ${clAvatar(p,tm)}
+    <span class="clBody">
+      <span class="clName">${esc(p.n)}${gem}</span>
+      <span class="clMeta">${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+      <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b><i></i>${isFree(p)
+        ?`<span class="mkFree">${t('faShort')}</span>`
+        :`<span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
+      ${st?`<span class="clStat">${ICONS[st.ic]}<span>${st.lbl(p)}</span></span>`:''}
+    </span>
+    <span class="clRight">
+      <span class="clRt num">${p.r}</span>
+      <span class="clRtL">${t('rating')}</span>
+    </span>
+    <span class="clGo">›</span>
+  </div>`;
+}
+/* Liste gövdesi ayrı bir parça: arama sırasında yalnız burası yeniden yazılıyor. */
+function mkRowsHtml(d){
+  if(!d.rows.length)
+    /* Çıkışı olmayan boş ekran bırakmıyoruz: temizleme düğmesi gerçek bir eylem. */
+    return `<div class="mkEmpty">
+      <span class="mkEmptyIc">${ICONS.market}</span>
+      <span class="mkEmptyB"><b>${t('noResults')}</b><span>${t('noResultsSub')}</span></span>
+      <button class="mkClear" onclick="mkReset()">${t('mkClear')}</button>
+    </div>`;
+  /* "Daha fazla oyuncu gör" düğmesi YOK: oyunda sayfalama mekaniği yok, düğme
+     yalan olurdu. Onun yerine listenin gerçekten nerede kesildiği yazıyor. */
+  const foot=d.total>d.rows.length
+    ?`<div class="mkFoot">${t('mkShown').replace('{n}',d.rows.length).replace('{t}',d.total)}</div>`:'';
+  return `<div class="mkList">${d.rows.map(mkCard).join('')}</div>${foot}`;
+}
+/* Lig seçici iki dünyada da aynı: 'cl' seçeneği yalnız saha piyasasında (ya da
+   zaten seçiliyse) yazılıyor, böylece diğer üç temanın seçicisi ne değişiyor ne
+   de seçili olmayan bir değeri gizleyerek yalan söylüyor. */
+function mkLgSel(f){
+  return `<label class="fitem"><span>${t('league')}</span>
+    <select class="fsel" onchange="setF('lg',this.value)">
+    <option value="all" ${f.lg==='all'?'selected':''}>${t('all')}</option>
+    <option value="fa" ${f.lg==='fa'?'selected':''}>${t('freeAgentsF')} (${freeAgents().filter(p=>p.agent===null).length})</option>${
+    useSahaMarket()||f.lg==='cl'?`\n    <option value="cl" ${f.lg==='cl'?'selected':''}>${t('mkChipClub')}</option>`:''}
+    ${Object.keys(CTRYS).map(cc=>{
+      const opts=LEAGUES.map((lg,i)=>lg.ctry===cc&&knownLg(i)?
+        `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lgName(i)}</option>`:'').join('');
+      return opts?`<optgroup label="${CTRYS[cc][L]}">${opts}</optgroup>`:'';
+    }).join('')}
+    </select></label>`;
+}
+function mkSahaView(d){
+  const f=d.f;
+  const known=(S.known||[]).length,lgN=LEAGUES.length;
+  const pct=Math.round(known/lgN*100);
+  const terrs=terrList(),disc=terrs.filter(terrDiscovered).length;
+  const pend=(S.scout||[]).length;
+  const slots=Math.max(0,maxClients()-S.clients.length);
+  /* Filtre düğmesindeki nokta: kurulum dışında açık bir filtre var mı? */
+  const fOn=f.lg!=='all'||f.pos!=='all'||f.age!=='all'||f.sort!=='r'||!f.elig;
+  const chip=(v,lbl)=>`<button class="mkChip${String(f.lg)===v?' on':''}" onclick="setF('lg','${v}')">${lbl}</button>`;
+  const sel=(k,opts)=>`<label class="fitem"><span>${t(k==='pos'?'posF':k==='age'?'ageF':'sortF')}</span>
+    <select class="fsel" onchange="setF('${k}',this.value)">${opts.map(([v,lbl])=>
+    `<option value="${v}" ${String(f[k])===String(v)?'selected':''}>${lbl}</option>`).join('')}</select></label>`;
+  return `<div class="mkTop">
+    <div class="mkTitle">${t('mkTitle')}</div>
+    <div class="mkSub">${t('mkSub')}</div>
+  </div>
+  <div class="clSum">
+    <div class="clSumI"><span class="clSumV num" id="mkNumBox">${d.total}</span>
+      <span class="clSumL">${t('found')}</span></div>
+    <i></i>
+    <div class="clSumI"><span class="clSumV acc num">${pctOf(known/lgN)}</span>
+      <span class="clSumL">${t('scoutNet')}</span></div>
+    <i></i>
+    <div class="clSumI"><span class="clSumV num${slots?'':' bad'}">${slots}</span>
+      <span class="clSumL">${t('mkSlots')}</span></div>
+  </div>
+  <button class="mkNet" onclick="pushV('atlas')">
+    <span class="mkNetIc">${ICONS.scout}</span>
+    <span class="mkNetT">
+      <span class="mkNetTitle">${t('scoutNet')}</span>
+      <span class="mkNetBar"><i style="width:${pct}%"></i></span>
+      <span class="mkNetSub">${pctOf(known/lgN)} ${t('mkCoverage')} · ${disc}/${terrs.length} ${t('mkRegions')}${
+        pend?' · '+pend+' '+t('scoutPendingT'):''}</span>
+    </span>
+    <span class="mkNetGo">›</span>
+  </button>
+  <div class="mkFind">
+    <span class="mkBox">
+      <span class="mkBoxIc">${ICONS.market}</span>
+      <input class="mkInp" id="mkQinp" type="text" inputmode="search" autocomplete="off"
+        placeholder="${esc(t('mkSearch'))}" aria-label="${esc(t('mkSearch'))}"
+        value="${esc(MKQ)}" oninput="mkSetQ(this.value)">
+    </span>
+    <button class="mkFbtn${MKF?' on':''}${fOn?' dot':''}" onclick="mkTogF()"
+      aria-label="${esc(t('mkFilters'))}" aria-expanded="${MKF?'true':'false'}">${ICONS.filters}</button>
+  </div>
+  <div class="mkChips">${chip('all',t('all'))}${chip('fa',t('mkChipFree'))}${chip('cl',t('mkChipClub'))}</div>
+  ${MKF?`<div class="mkPanel">
+    <div class="fgrid">
+      ${mkLgSel(f)}
+      ${sel('pos',[['all',t('all')],['KL',POSFULL[L].KL],['DF',POSFULL[L].DF],['OS',POSFULL[L].OS],['FV',POSFULL[L].FV]])}
+      ${sel('age',[['all',t('all')],['u18','≤ 18'],['u21','≤ 21'],['u24','≤ 24'],['o25','25+']])}
+      ${sel('sort',[['r',t('sortR')],['pot',t('sortPot')],['age',t('sortAge')],['ch',t('sortCh')]])}
+    </div>
+    <button class="ftoggle ${f.elig?'on':''}" onclick="setF('elig',${!f.elig})">
+      <span class="sw"></span>${t('onlyElig')}<span class="spacer"></span></button>
+    <div class="mkHint">${t('marketHint')}</div>
+  </div>`:''}
+  <div class="mkBody" id="mkListBox">${mkRowsHtml(d)}</div>
+  ${slots?''
+    /* Kapasite doluyken imza atılamaz; müşteriler ekranındaki pasif satırın aynısı. */
+    :`<div class="clCta full"><span class="clCtaIc">${ICONS.clients}</span>
+      <span class="clCtaT">${t('clFullNote')}</span></div>`}`;
+}
 const VIEWS={
 /* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
    Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
@@ -722,34 +920,13 @@ clients(){
        <span class="clCtaGo">›</span></button>`}`;
 },
 market(){
-  S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};
-  const f=S.f;
-  let free=S.players.filter(p=>p.agent===null&&knownLg(teamOf(p).lg));
-  if(f.elig)free=free.filter(p=>profileOf(p)<=repCap());
-  if(f.lg==='fa')free=free.filter(p=>isFree(p));
-  else if(f.lg!=='all')free=free.filter(p=>teamOf(p).lg===+f.lg);
-  if(f.pos!=='all')free=free.filter(p=>p.pos===f.pos);
-  if(f.age==='u18')free=free.filter(p=>p.age<=18);
-  else if(f.age==='u21')free=free.filter(p=>p.age<=21);
-  else if(f.age==='u24')free=free.filter(p=>p.age<=24);
-  else if(f.age==='o25')free=free.filter(p=>p.age>=25);
-  const sorts={r:(a,b)=>b.r-a.r,pot:(a,b)=>b.pot-a.pot||b.r-a.r,age:(a,b)=>a.age-b.age||b.pot-a.pot,ch:(a,b)=>pitchChance(b)-pitchChance(a)||b.r-a.r};
-  free.sort(sorts[f.sort]||sorts.r);
-  const total=free.length;
-  free=free.slice(0,50);
+  const d=mkData();
+  if(useSahaMarket())return mkSahaView(d);
+  const f=d.f,total=d.total,free=d.rows;
   const sel=(k,opts)=>`<label class="fitem"><span>${t(k==='lg'?'league':k==='pos'?'posF':k==='age'?'ageF':'sortF')}</span>
     <select class="fsel" onchange="setF('${k}',this.value)">${opts.map(([v,lbl])=>
     `<option value="${v}" ${String(f[k])===String(v)?'selected':''}>${lbl}</option>`).join('')}</select></label>`;
-  const lgSel=`<label class="fitem"><span>${t('league')}</span>
-    <select class="fsel" onchange="setF('lg',this.value)">
-    <option value="all" ${f.lg==='all'?'selected':''}>${t('all')}</option>
-    <option value="fa" ${f.lg==='fa'?'selected':''}>${t('freeAgentsF')} (${freeAgents().filter(p=>p.agent===null).length})</option>
-    ${Object.keys(CTRYS).map(cc=>{
-      const opts=LEAGUES.map((lg,i)=>lg.ctry===cc&&knownLg(i)?
-        `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lgName(i)}</option>`:'').join('');
-      return opts?`<optgroup label="${CTRYS[cc][L]}">${opts}</optgroup>`:'';
-    }).join('')}
-    </select></label>`;
+  const lgSel=mkLgSel(f);
   return `<h2 class="sec">${t('freeAgents')}</h2>
    <div class="sub" style="margin-bottom:12px">${t('marketHint')}</div>
    <button class="btn b" style="margin-bottom:12px" onclick="pushV('atlas')">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
@@ -1353,6 +1530,8 @@ const ICONS={
 dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
 clients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
 market:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+/* Filtre düğmesi: aynı 1.8 kalınlıkta üç sürgü. Diğer ikonlarla aynı çizim dili. */
+filters:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h11M19 7h1"/><path d="M4 12h3M11 12h9"/><path d="M4 17h9M17 17h3"/><circle cx="17" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>',
 league:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M6 3h12v6a6 6 0 0 1-12 0z"/><path d="M6 5H3v2a4 4 0 0 0 4 4"/><path d="M18 5h3v2a4 4 0 0 1-4 4"/></svg>',
 inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
 cash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9"/><path d="M14.8 9.2c-.6-.8-1.7-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1 1.7 2.8 2c1.8.3 2.8 1 2.8 2s-1.2 2-2.8 2c-1.1 0-2.2-.4-2.8-1.2"/></svg>',

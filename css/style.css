@@ -815,17 +815,17 @@ html[data-theme="saha"] .hmAdvIc.badge{width:calc(58px + clamp(0px, calc(3.952vh
 html[data-theme="saha"] .hmAgIc.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
 html[data-theme="saha"] .hmQi.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
 html[data-theme="saha"] .hmRiseIc.badge{width:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
-html[data-theme="saha"] .clTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
-html[data-theme="saha"] .clTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
+html[data-theme="saha"] .clTop,html[data-theme="saha"] .mkTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
+html[data-theme="saha"] .clTop::before,html[data-theme="saha"] .mkTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
   left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.92) 30%,rgba(11,17,30,.55) 62%,rgba(11,17,30,.25) 100%),
     linear-gradient(180deg,rgba(11,17,30,.5) 0%,rgba(11,17,30,.08) 34%,rgba(11,17,30,.8) 80%,var(--bg) 100%),
     url(../assets/ui/home-stadium-tunnel.webp) 64% 46%/cover no-repeat;
   background-color:var(--bg)}
-html[data-theme="saha"] .clTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
+html[data-theme="saha"] .clTitle,html[data-theme="saha"] .mkTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
   letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.75)}
-html[data-theme="saha"] .clSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+html[data-theme="saha"] .clSub,html[data-theme="saha"] .mkSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 html[data-theme="saha"] .clSum{display:flex;align-items:stretch;background:var(--sur);border:1px solid var(--line);
   border-radius:var(--r);padding:11px 4px;margin-bottom:11px;box-shadow:var(--sh)}
 html[data-theme="saha"] .clSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
@@ -913,7 +913,7 @@ html[data-theme="saha"] .clBack{flex:0 0 auto;min-height:44px;padding:0 13px;bac
   border:none;border-radius:11px;cursor:pointer;font-family:var(--cond);font-weight:700;
   font-size:13px;letter-spacing:.04em;text-transform:uppercase}
 html[data-theme="saha"] .clBack:active{transform:scale(.96)}
-@media (max-width:365px){html[data-theme="saha"] .clTitle{font-size:27px}
+@media (max-width:365px){html[data-theme="saha"] .clTitle,html[data-theme="saha"] .mkTitle{font-size:27px}
 html[data-theme="saha"] .clCard{gap:9px;padding:10px 8px 10px 12px}
 html[data-theme="saha"] .clSumV{font-size:17.5px}
 html[data-theme="saha"] .clSumL{font-size:9.5px;letter-spacing:.05em}
@@ -934,22 +934,101 @@ html[data-theme="saha"] .clCard{gap:10px}
 html[data-theme="saha"] .clBadge.port>.tb{width:58px;height:58px}
 html[data-theme="saha"] .clAvTm>.tb{width:15px;height:15px;border-radius:4px;font-size:6px}
 html[data-theme="saha"] .clCard{gap:9px}}
-html[data-theme="saha"] body[data-view="clients"] header{
+html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header{
   padding-top:calc(5px + env(safe-area-inset-top));
   padding-bottom:5px}
-html[data-theme="saha"] body[data-view="clients"] .hback{width:44px;height:44px;border-radius:13px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext{height:44px;border-radius:13px}
-@media (max-width:460px){html[data-theme="saha"] body[data-view="clients"] header{padding-left:10px;padding-right:10px}
-html[data-theme="saha"] body[data-view="clients"] .hrow{gap:5px}
-html[data-theme="saha"] body[data-view="clients"] .hstat{padding:6px 6px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext{padding:0 10px}
-html[data-theme="saha"] body[data-view="clients"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}}
-@media (max-width:374px){html[data-theme="saha"] body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-html[data-theme="saha"] body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0}
-html[data-theme="saha"] body[data-view="clients"] .hrow{gap:4px}
-html[data-theme="saha"] body[data-view="clients"] .hstat{padding:6px 4px;gap:3px}
-html[data-theme="saha"] body[data-view="clients"] .hstat svg{width:11px;height:11px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext{padding:0 10px}}
+html[data-theme="saha"] body[data-view="clients"] .hback,html[data-theme="saha"] body[data-view="market"] .hback{width:44px;height:44px;border-radius:13px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext{height:44px;border-radius:13px}
+@media (max-width:460px){html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header{padding-left:10px;padding-right:10px}
+html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow{gap:5px}
+html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat{padding:6px 6px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext{padding:0 10px}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}}
+@media (max-width:374px){html[data-theme="saha"] body[data-view="clients"] .htitle .t1,html[data-theme="saha"] body[data-view="market"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2{font-size:9px;letter-spacing:0}
+html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow{gap:4px}
+html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat{padding:6px 4px;gap:3px}
+html[data-theme="saha"] body[data-view="clients"] .hstat svg,html[data-theme="saha"] body[data-view="market"] .hstat svg{width:11px;height:11px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext{padding:0 10px}}
+html[data-theme="saha"] .clSumV.acc{color:var(--acc)}
+html[data-theme="saha"] .clSumV.bad{color:var(--bad)}
+html[data-theme="saha"] .mkNet{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;
+  padding:11px 12px;margin-bottom:11px;background:var(--sur);color:var(--txt);
+  border:1px solid rgba(30,201,126,.28);border-radius:var(--r);cursor:pointer;
+  font-family:inherit;text-align:left;box-shadow:var(--sh);
+  transition:transform var(--tap),background var(--tap)}
+html[data-theme="saha"] .mkNet:active{transform:scale(.99);background:var(--sur2)}
+html[data-theme="saha"] .mkNetIc{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;color:var(--acc);
+  background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+html[data-theme="saha"] .mkNetIc svg{width:21px;height:21px}
+html[data-theme="saha"] .mkNetT{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
+html[data-theme="saha"] .mkNetTitle{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1.1}
+html[data-theme="saha"] .mkNetBar{display:block;height:4px;border-radius:2px;background:var(--sur3);overflow:hidden}
+html[data-theme="saha"] .mkNetBar i{display:block;height:100%;border-radius:2px;background:var(--acc);
+  transition:width .3s ease}
+html[data-theme="saha"] .mkNetSub{font-size:11.5px;color:var(--txt2);line-height:1.3;overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .mkNetGo{flex:0 0 auto;color:var(--txt3);font-size:19px;line-height:1}
+html[data-theme="saha"] .mkFind{display:flex;gap:8px;margin-bottom:9px}
+html[data-theme="saha"] .mkBox{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;min-height:44px;
+  padding:0 12px;background:var(--sur2);border:1px solid var(--line);border-radius:13px}
+html[data-theme="saha"] .mkBox:focus-within{border-color:rgba(30,201,126,.45);
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.35)}
+html[data-theme="saha"] .mkBoxIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+html[data-theme="saha"] .mkBoxIc svg{width:17px;height:17px}
+html[data-theme="saha"] .mkInp{flex:1 1 auto;min-width:0;padding:11px 0;background:none;border:none;outline:none;
+  color:var(--txt);font-family:inherit;font-size:14px;font-weight:600;
+  -webkit-appearance:none;appearance:none}
+html[data-theme="saha"] .mkInp::placeholder{color:var(--txt3);font-weight:500}
+html[data-theme="saha"] .mkFbtn{position:relative;flex:0 0 auto;width:44px;height:44px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  background:var(--sur2);border:1px solid var(--line);color:var(--txt2);
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+html[data-theme="saha"] .mkFbtn svg{width:19px;height:19px}
+html[data-theme="saha"] .mkFbtn:active{transform:scale(.96)}
+html[data-theme="saha"] .mkFbtn.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+html[data-theme="saha"] .mkFbtn.dot::after{content:'';position:absolute;top:6px;right:6px;width:6px;height:6px;
+  border-radius:50%;background:var(--gold)}
+html[data-theme="saha"] .mkChips{display:flex;gap:8px;margin-bottom:11px}
+html[data-theme="saha"] .mkChip{flex:1 1 0;min-width:0;min-height:44px;padding:6px 8px;display:flex;
+  align-items:center;justify-content:center;line-height:1.15;
+  background:var(--sur2);color:var(--txt2);border:1px solid var(--line);border-radius:13px;
+  cursor:pointer;font-family:var(--cond);font-weight:700;font-size:13px;
+  letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+html[data-theme="saha"] .mkChip:active{transform:scale(.97)}
+html[data-theme="saha"] .mkChip.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+html[data-theme="saha"] .mkPanel{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;margin-bottom:11px;box-shadow:var(--sh)}
+html[data-theme="saha"] .mkPanel .fsel{min-height:44px}
+html[data-theme="saha"] .mkPanel .ftoggle{min-height:44px;margin-bottom:0}
+html[data-theme="saha"] .mkHint{font-size:11.5px;color:var(--txt3);line-height:1.5;margin-top:10px}
+html[data-theme="saha"] .mkList{display:flex;flex-direction:column;gap:9px}
+html[data-theme="saha"] .mkGem{display:inline-flex;align-items:center;margin-left:5px;vertical-align:-1px}
+html[data-theme="saha"] .mkGem svg{width:12px;height:12px;color:var(--gold)}
+html[data-theme="saha"] .mkFree{color:var(--acc);font-weight:700}
+html[data-theme="saha"] .mkFoot{margin:10px 2px 0;text-align:center;font-family:var(--cond);font-weight:600;
+  font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .mkBody+.clCta{margin-top:11px}
+html[data-theme="saha"] .mkEmpty{display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px}
+html[data-theme="saha"] .mkEmptyIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+html[data-theme="saha"] .mkEmptyIc svg{width:22px;height:22px}
+html[data-theme="saha"] .mkEmptyB{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-theme="saha"] .mkEmptyB b{font-family:var(--cond);font-weight:700;font-size:15.5px;letter-spacing:.02em}
+html[data-theme="saha"] .mkEmptyB span{font-size:11.5px;color:var(--txt3);line-height:1.4}
+html[data-theme="saha"] .mkClear{flex:1 1 100%;min-height:44px;margin-top:4px;background:var(--sur3);color:var(--txt);
+  border:none;border-radius:12px;cursor:pointer;font-family:var(--cond);font-weight:700;
+  font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+html[data-theme="saha"] .mkClear:active{transform:scale(.98)}
+@media (max-width:365px){html[data-theme="saha"] .mkChip{font-size:12px;letter-spacing:.02em}
+html[data-theme="saha"] .mkNetTitle{font-size:13px}
+html[data-theme="saha"] .mkNetSub{font-size:11px}
+html[data-theme="saha"] .mkNet{gap:10px;padding:11px 10px}
+html[data-theme="saha"] .mkNetIc{width:38px;height:38px}}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{

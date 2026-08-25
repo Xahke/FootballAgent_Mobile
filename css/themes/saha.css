@@ -1113,18 +1113,22 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    duran kulüp rozeti. Rakam okumadan, kaydırırken bile listenin nabzı görünüyor.
    Zaten var olan .pitem.mine rayının devamı — dışarıdan gelen bir fikir değil. */
 
-/* --- üst kimlik: tünel yalnız bu bandın arkasında --- */
-.clTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
-.clTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
+/* --- üst kimlik: tünel yalnız bu bandın arkasında ---
+   Aynı reçeteyi piyasa ekranı da kullanıyor (.mkTop). İki liste ekranı tek bir
+   aileye ait görünsün diye seçici ORTAK yazıldı: kopyalansaydı biri düzeltilip
+   diğeri unutulduğunda sessizce ayrışırlardı. Görsel de aynı görsel — yeni bir
+   varlık üretilmiyor, home-stadium-tunnel.webp ikinci kez kullanılıyor. */
+.clTop,.mkTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
+.clTop::before,.mkTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
   left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.92) 30%,rgba(11,17,30,.55) 62%,rgba(11,17,30,.25) 100%),
     linear-gradient(180deg,rgba(11,17,30,.5) 0%,rgba(11,17,30,.08) 34%,rgba(11,17,30,.8) 80%,var(--bg) 100%),
     url(../assets/ui/home-stadium-tunnel.webp) 64% 46%/cover no-repeat;
   background-color:var(--bg)}
-.clTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
+.clTitle,.mkTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
   letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.75)}
-.clSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.clSub,.mkSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 
 /* --- portföy özeti: üç gerçek sayı, eşit paylı tek kart --- */
 .clSum{display:flex;align-items:stretch;background:var(--sur);border:1px solid var(--line);
@@ -1230,7 +1234,7 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
 
 /* --- 360px: rozet ve güç sütunu biraz daralıyor, hiçbir şey kırpılmıyor --- */
 @media (max-width:365px){
-  .clTitle{font-size:27px}
+  .clTitle,.mkTitle{font-size:27px}
   .clCard{gap:9px;padding:10px 8px 10px 12px}
   .clSumV{font-size:17.5px}
   .clSumL{font-size:9.5px;letter-spacing:.05em}
@@ -1292,12 +1296,16 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    env(safe-area-inset-top) korunuyor — Android edge-to-edge şartı.
 
    Köşe yarıçapı oranı sabit tutuldu (11/36 = .306 → 13/44 = .295), düğmeler
-   aynı karakterde duruyor. */
-body[data-view="clients"] header{
+   aynı karakterde duruyor.
+
+   Piyasa ekranı da aynı kurala giriyor: başlığı ("Piyasa" / "Market") müşteriler
+   ekranınınkinden kısa, yani bütçe daha rahat; ama 44px dokunma hedefi ekrandan
+   ekrana değişmemeli. Seçiciler ortak yazıldı, ayrı blok kopyalanmadı. */
+body[data-view="clients"] header,body[data-view="market"] header{
   padding-top:calc(5px + env(safe-area-inset-top));
   padding-bottom:5px}
-body[data-view="clients"] .hback{width:44px;height:44px;border-radius:13px}
-body[data-view="clients"] #btnNext{height:44px;border-radius:13px}
+body[data-view="clients"] .hback,body[data-view="market"] .hback{width:44px;height:44px;border-radius:13px}
+body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{height:44px;border-radius:13px}
 
 /* ===================== ÜST ÇUBUK · BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
    Müşteriler ekranının başlığı uygulamadaki en uzun başlık ("Müşteriler" +
@@ -1338,31 +1346,162 @@ body[data-view="clients"] #btnNext{height:44px;border-radius:13px}
    ve ayarların ölçülerine dokunulmadı. Kural yalnız müşteriler ekranında ve
    yalnız saha temasında — başka hiçbir ekran, tema ya da ana ekran etkilenmiyor. */
 @media (max-width:460px){
-  body[data-view="clients"] header{padding-left:10px;padding-right:10px}
-  body[data-view="clients"] .hrow{gap:5px}
-  body[data-view="clients"] .hstat{padding:6px 6px}
-  body[data-view="clients"] #btnNext{padding:0 10px}
-  body[data-view="clients"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
+  body[data-view="clients"] header,body[data-view="market"] header{padding-left:10px;padding-right:10px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow{gap:5px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat{padding:6px 6px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{padding:0 10px}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
 }
 /* 374px altında bir kademe daha: orada sabitler satırın %68'ini yiyor ve
    yukarıdaki pay tek başına yetmiyordu (ölçüldü). Başlık puntosu 15→14,
    alt satır 9.5→9 ve harf aralığı sıfır. */
 @media (max-width:374px){
-  body[data-view="clients"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-  body[data-view="clients"] .htitle .t2{font-size:9px;letter-spacing:0}
+  body[data-view="clients"] .htitle .t1,body[data-view="market"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2{font-size:9px;letter-spacing:0}
   /* İngilizce 360'ta 10px daha açık veriyor: "Continue" düğmesi "Devam"dan
      14px geniş ve bütün fark başlıktan kesiliyor (ölçüldü). Rozetlerin iç
      dolgusu 7→5, ikon 13→12, rozet içi ve satır boşluğu 5→4 ile 16px daha
      açılıyor — punto daha da küçültülmeden. */
-  body[data-view="clients"] .hrow{gap:4px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow{gap:4px}
   /* Ayarlar düğmesi 36→44 büyüyünce 374px altında telafi kalmamıştı (bu blok
      zaten en sıkı değerlerdeydi) ve İngilizce geniş değerlerde alt satır tekrar
      sarıyordu. Rozetlerin iç dolgusu 5→4, rozet içi boşluk 4→3 ve ikon 12→11
      ile 8px geri alınıyor. */
-  body[data-view="clients"] .hstat{padding:6px 4px;gap:3px}
-  body[data-view="clients"] .hstat svg{width:11px;height:11px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat{padding:6px 4px;gap:3px}
+  body[data-view="clients"] .hstat svg,body[data-view="market"] .hstat svg{width:11px;height:11px}
   /* Uzun sezon/hafta değerlerinde ("Season 30 · Week 38") İngilizce hâlâ 1-2px
      açık veriyordu; Devam'ın dolgusu 12→10 ile kapanıyor. Düğme metni 13px,
      yani genişliği hâlâ 44px'in çok üstünde. */
-  body[data-view="clients"] #btnNext{padding:0 10px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext{padding:0 10px}
+}
+
+/* ===================== PİYASA EKRANI (yalnız saha) =====================
+   Ekranın tek işi var: ulaşabildiğin dünyanın ne kadar büyük olduğunu söylemek
+   ve içindeki tek bir oyuncuya götürmek. Üç blok sırayla o cümleyi kuruyor —
+   özet (arz), keşif ağı (erişim), liste (tek tek oyuncular).
+
+   İmza öğe: keşif ağı satırındaki kapsama ölçeri. Ekrandaki tek grafik ve aynı
+   zamanda ekranın tezi: piyasan ancak ağın kadar geniş. Sayı gerçek
+   (S.known / LEAGUES.length), süs değil — ve satır dokunulunca haritaya gidiyor.
+
+   Renk rolleri müşteriler ekranıyla birebir aynı; iki ekran arasında yeni bir
+   dil öğrenilmiyor:
+     altın  = para (değer) · yeşil = erişim/aksiyon · mavi = bilgi (itibar eşiği)
+     kırmızı = engel (rakip kovalıyor, kontenjan bitti) · kehribar = bekleme
+   Kart başına TEK durum rengi; onu MK_ST sıralaması seçiyor (js/ui.js).
+
+   İşaretleme yalnız bu temada üretiliyor (js/ui.js → useSahaMarket), o yüzden
+   dosya/gazete/terminal bu bloğun tek bir kuralını bile görmüyor ve bugünkü
+   piyasa ekranlarını harfi harfine koruyorlar. */
+
+/* --- özet: müşteriler ekranındaki .clSum kartının aynısı, iki renk rolü daha.
+   Altın burada YOK: bu ekranda altın yalnız oyuncunun değerini gösteriyor ve
+   kontenjan para değil. Kontenjan bitince kırmızıya dönüyor — dolu kadroyla
+   listeye bakmanın anlamı değişiyor, sayının rengi de onu söylüyor. */
+.clSumV.acc{color:var(--acc)}
+.clSumV.bad{color:var(--bad)}
+
+/* --- imza: keşif ağı satırı + kapsama ölçeri --- */
+.mkNet{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;
+  padding:11px 12px;margin-bottom:11px;background:var(--sur);color:var(--txt);
+  border:1px solid rgba(30,201,126,.28);border-radius:var(--r);cursor:pointer;
+  font-family:inherit;text-align:left;box-shadow:var(--sh);
+  transition:transform var(--tap),background var(--tap)}
+.mkNet:active{transform:scale(.99);background:var(--sur2)}
+.mkNetIc{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;color:var(--acc);
+  background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+.mkNetIc svg{width:21px;height:21px}
+.mkNetT{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
+.mkNetTitle{font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1.1}
+/* Ölçer: tek 4px'lik şerit. Halka, glow ya da ikinci çember yok — ekranın tek
+   grafiği olduğu için sessiz kalması gerekiyor. */
+.mkNetBar{display:block;height:4px;border-radius:2px;background:var(--sur3);overflow:hidden}
+.mkNetBar i{display:block;height:100%;border-radius:2px;background:var(--acc);
+  transition:width .3s ease}
+.mkNetSub{font-size:11.5px;color:var(--txt2);line-height:1.3;overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums}
+.mkNetGo{flex:0 0 auto;color:var(--txt3);font-size:19px;line-height:1}
+
+/* --- arama + filtre düğmesi: ikisi de 44px --- */
+.mkFind{display:flex;gap:8px;margin-bottom:9px}
+.mkBox{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;min-height:44px;
+  padding:0 12px;background:var(--sur2);border:1px solid var(--line);border-radius:13px}
+.mkBox:focus-within{border-color:rgba(30,201,126,.45);
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.35)}
+.mkBoxIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.mkBoxIc svg{width:17px;height:17px}
+.mkInp{flex:1 1 auto;min-width:0;padding:11px 0;background:none;border:none;outline:none;
+  color:var(--txt);font-family:inherit;font-size:14px;font-weight:600;
+  -webkit-appearance:none;appearance:none}
+.mkInp::placeholder{color:var(--txt3);font-weight:500}
+.mkFbtn{position:relative;flex:0 0 auto;width:44px;height:44px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  background:var(--sur2);border:1px solid var(--line);color:var(--txt2);
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.mkFbtn svg{width:19px;height:19px}
+.mkFbtn:active{transform:scale(.96)}
+.mkFbtn.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+/* Altın nokta: kurulum dışında bir filtre açık. Panel kapalıyken de görünüyor,
+   yoksa "neden liste bu kadar kısa" sorusunun cevabı ekranda hiç durmuyordu. */
+.mkFbtn.dot::after{content:'';position:absolute;top:6px;right:6px;width:6px;height:6px;
+  border-radius:50%;background:var(--gold)}
+
+/* --- kapsam çipleri: üçü de gerçekten listeyi değiştiriyor --- */
+.mkChips{display:flex;gap:8px;margin-bottom:11px}
+.mkChip{flex:1 1 0;min-width:0;min-height:44px;padding:6px 8px;display:flex;
+  align-items:center;justify-content:center;line-height:1.15;
+  background:var(--sur2);color:var(--txt2);border:1px solid var(--line);border-radius:13px;
+  cursor:pointer;font-family:var(--cond);font-weight:700;font-size:13px;
+  letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.mkChip:active{transform:scale(.97)}
+.mkChip.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+
+/* --- filtre paneli: bugünkü dört seçici ve erişim anahtarı, gizlenip açılıyor --- */
+.mkPanel{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;margin-bottom:11px;box-shadow:var(--sh)}
+/* Paylaşılan .fsel/.ftoggle 38-40px yüksekliğinde; bu ekranda 44px eşiğine
+   çıkıyorlar. Ölçü yalnız panelin içinde değişiyor, başka ekranı etkilemiyor. */
+.mkPanel .fsel{min-height:44px}
+.mkPanel .ftoggle{min-height:44px;margin-bottom:0}
+.mkHint{font-size:11.5px;color:var(--txt3);line-height:1.5;margin-top:10px}
+
+/* --- oyuncu kartları: müşteri kartının kendisi (.clCard) + piyasaya özgü ekler --- */
+.mkList{display:flex;flex-direction:column;gap:9px}
+/* Wonderkid işareti adın yanında; ayrı bir rozet satırı açmaya değmiyor. */
+.mkGem{display:inline-flex;align-items:center;margin-left:5px;vertical-align:-1px}
+.mkGem svg{width:12px;height:12px;color:var(--gold)}
+/* Kulüpsüz oyuncu: bonservissiz demek, yani paradan sonra gelen ikinci gerçek. */
+.mkFree{color:var(--acc);font-weight:700}
+/* Listenin gerçekten nerede kesildiği. "Daha fazla" düğmesi yok çünkü
+   sayfalama mekaniği yok. */
+.mkFoot{margin:10px 2px 0;text-align:center;font-family:var(--cond);font-weight:600;
+  font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);
+  font-variant-numeric:tabular-nums}
+/* Kontenjan dolu uyarısı listeden sonra geliyor; müşteriler ekranındaki pasif
+   satırın aynısı, yalnız araya boşluk gerekiyor. */
+.mkBody+.clCta{margin-top:11px}
+
+/* --- boş sonuç: tek cümle ve gerçek bir çıkış --- */
+.mkEmpty{display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px}
+.mkEmptyIc{display:flex;flex:0 0 auto;color:var(--txt3)}
+.mkEmptyIc svg{width:22px;height:22px}
+.mkEmptyB{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mkEmptyB b{font-family:var(--cond);font-weight:700;font-size:15.5px;letter-spacing:.02em}
+.mkEmptyB span{font-size:11.5px;color:var(--txt3);line-height:1.4}
+.mkClear{flex:1 1 100%;min-height:44px;margin-top:4px;background:var(--sur3);color:var(--txt);
+  border:none;border-radius:12px;cursor:pointer;font-family:var(--cond);font-weight:700;
+  font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+.mkClear:active{transform:scale(.98)}
+
+/* --- 360px: yalnız tipografi bir tık iniyor, hiçbir şey kırpılmıyor --- */
+@media (max-width:365px){
+  .mkChip{font-size:12px;letter-spacing:.02em}
+  .mkNetTitle{font-size:13px}
+  .mkNetSub{font-size:11px}
+  .mkNet{gap:10px;padding:11px 10px}
+  .mkNetIc{width:38px;height:38px}
 }
