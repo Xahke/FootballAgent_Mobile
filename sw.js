@@ -2,7 +2,7 @@
    Oyun tamamen istemci tarafında; ağ yalnızca dosyaları indirmek için gerekiyor.
    Bu yüzden uygulama kabuğu kuruluşta önbelleğe alınır ve sonrasında ağ hiç beklenmez.
    CACHE sürümünü, önbelleğe alınan dosyalardan biri her değiştiğinde artır. */
-const CACHE = 'menajer-v30';
+const CACHE = 'menajer-v31';
 const SHELL = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const SHELL = [
   './js/worldgeo.js',
   './js/atlas.js',
   './js/rivals.js',
+  './js/badges.js',
   './js/core.js',
   './js/sim.js',
   './js/market.js',

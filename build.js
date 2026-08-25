@@ -31,7 +31,7 @@ function inlineJsAssets(js){
 }
 
 const css=inlineCssAssets(fs.readFileSync('css/style.css','utf8'));
-const order=['js/i18n.js','js/store.js','js/saves.js','js/data.js','js/worldgeo.js','js/atlas.js','js/rivals.js','js/core.js','js/sim.js','js/market.js','js/events.js','js/skills.js','js/sfx.js','js/actions.js','js/ui.js','js/main.js'];
+const order=['js/i18n.js','js/store.js','js/saves.js','js/data.js','js/worldgeo.js','js/atlas.js','js/rivals.js','js/badges.js','js/core.js','js/sim.js','js/market.js','js/events.js','js/skills.js','js/sfx.js','js/actions.js','js/ui.js','js/main.js'];
 /* \r?\n: depo Windows'ta CRLF ile checkout ediliyor. Yalnız \n arayan desen
    hiç eşleşmiyordu, yani çıktı çalışma kopyasının satır sonlarına göre
    değişiyordu — tek dosya sürümü tekrar üretilebilir olmuyordu. */
