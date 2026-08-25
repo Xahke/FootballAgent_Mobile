@@ -12,21 +12,26 @@
 <div class="wrap">
   <header>
     <div class="top">
-      <h1>Prosedürel takım arması — prototip</h1>
+      <h1>Prosedürel takım arması — prototip 2</h1>
       <button id="lang" type="button">EN</button>
     </div>
     <p>Modüler arma sisteminin görsel prototipi. Oyun çalışma zamanına bağlı değil:
-      <code>tmBadge()</code>, <code>js/ui.js</code> ve tema stilleri dokunulmadı. Buradaki
-      takım adları sahte laboratuvar girdisi; <code>js/data.js</code> değiştirilmedi.</p>
+      <code>tmBadge()</code>, <code>js/ui.js</code> ve tema stilleri dokunulmadı, kayıt
+      şemasına alan eklenmedi. Bu sayfa <code>js/data.js</code>'i <b>okur</b> — takımlar,
+      adlar ve renkler oyunun kendi verisinden geliyor, kopya değil.</p>
     <p class="meta">
-      <b>amblem</b> 12 · team-emblems-source.png 4×4 &nbsp;
-      <b>çerçeve</b> 10 · team-frames-source.png 5×4 &nbsp;
-      <b>desen</b> 10 &nbsp; <b>palet</b> 16 &nbsp;
-      <b>kombinasyon</b> 19 200 &nbsp; <b>örnek</b> 30
+      <b>amblem</b> 24 · iki tabaka (4×4 + 4×3) &nbsp;
+      <b>çerçeve</b> 10 · 5×4 tabaka &nbsp;
+      <b>desen</b> 10 &nbsp;
+      <b>takım</b> 436 · 22 lig &nbsp;
+      <b>kimlik kelimesi</b> 68 &nbsp;
+      <b>semantik kategori</b> 13
     </p>
   </header>
   <main id="view"></main>
 </div>
+<!-- Oyunun gerçek takım verisi. Salt okunur: bu sayfa data.js'i değiştirmez. -->
+<script src="../js/data.js"></script>
 <script src="badge-lab-data.js"></script>
 <script src="badge-lab.js"></script>
 </body>

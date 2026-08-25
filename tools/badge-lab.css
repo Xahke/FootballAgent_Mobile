@@ -68,7 +68,9 @@ h4 { margin: 0 0 12px; font: 500 11px/1 var(--mono); letter-spacing: 0.1em; text
 /* ------------------------------------------------------------------ ızgara */
 .grid { display: grid; gap: 12px; }
 .g6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .cell { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
 .cell-art {
@@ -143,14 +145,40 @@ table { border-collapse: collapse; }
 /* --------------------------------------------------------------- responsive */
 @media (max-width: 900px) {
   .g6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g4, .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .wrap { padding: 24px 14px 72px; }
-  .g6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g6, .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g4, .g3 { grid-template-columns: 1fr; }
   h1 { font-size: 21px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ------------------------------------------------- 2. tur eklemeleri */
+.lead { margin: 0 0 18px; font-size: 13px; color: var(--dim); }
+.lead b { color: var(--ink); font-weight: 600; }
+
+/* Renk çipleri: takımın GERÇEK c1/c2'si, kartın kendisinde okunsun diye. */
+.cell figcaption .sw { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+.cell figcaption .sw i {
+  width: 11px; height: 11px; border-radius: 2px; flex: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+.cell figcaption i.warn { font-style: normal; color: #d9a05b; }
+
+/* Semantik kategori kartlarının sanatı yok, yalnız metin. */
+.sem figcaption { border-top: 0; padding: 12px; }
+.sem figcaption .code { color: var(--dim); margin-top: 5px; }
+
+/* Nano testi: aynı armanın 18px'i koyu ve açık zeminde yan yana, sağında
+ * 26 ve 64px referans. Hiçbir yerde transform:scale yok. */
+.nanoart { gap: 10px; align-items: flex-end; }
+.nanoart .on-d, .nanoart .on-l { line-height: 0; padding: 5px; border-radius: 3px; }
+.nanoart .on-d { background: #10203a; }
+.nanoart .on-l { background: #eef1f5; }
+.nano figcaption b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; }
