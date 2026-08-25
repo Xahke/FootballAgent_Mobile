@@ -12,27 +12,29 @@
 <div class="wrap">
   <header>
     <div class="top">
-      <h1>Prosedürel takım arması — prototip 2</h1>
+      <h1>Prosedürel takım arması — üretim motoru</h1>
       <button id="lang" type="button">EN</button>
     </div>
-    <p>Modüler arma sisteminin görsel prototipi. Oyun çalışma zamanına bağlı değil:
-      <code>tmBadge()</code>, <code>js/ui.js</code> ve tema stilleri dokunulmadı, kayıt
-      şemasına alan eklenmedi. Bu sayfa <code>js/data.js</code>'i <b>okur</b> — takımlar,
-      adlar ve renkler oyunun kendi verisinden geliyor, kopya değil.</p>
+    <p>Bu sayfa artık prototip değil, <b>üretim motorunun kendisini</b> gösteriyor:
+      <code>js/badges.js</code> ve <code>js/data.js</code> doğrudan yükleniyor.
+      Buradaki her arma, oyunda <code>tmBadge()</code>'in çizdiği armanın aynısı —
+      ikinci bir geometri kopyası yok. Kayıt şemasına alan eklenmedi.</p>
     <p class="meta">
       <b>amblem</b> 24 · iki tabaka (4×4 + 4×3) &nbsp;
       <b>çerçeve</b> 10 · 5×4 tabaka &nbsp;
       <b>desen</b> 10 &nbsp;
       <b>takım</b> 436 · 22 lig &nbsp;
       <b>kimlik kelimesi</b> 68 &nbsp;
-      <b>semantik kategori</b> 13
+      <b>semantik aile</b> 12 &nbsp; <b>birebir anahtar</b> 62
     </p>
   </header>
   <main id="view"></main>
 </div>
-<!-- Oyunun gerçek takım verisi. Salt okunur: bu sayfa data.js'i değiştirmez. -->
+<!-- Oyunun GERÇEK dosyaları. Salt okunur: bu sayfa hiçbirini değiştirmez.
+     badges.js tek kaynak — laboratuvarda geometri/eşleme kopyası yok. -->
 <script src="../js/data.js"></script>
-<script src="badge-lab-data.js"></script>
+<script src="../js/badges.js"></script>
+<script src="badge-lab-legacy.js"></script>
 <script src="badge-lab.js"></script>
 </body>
 </html>

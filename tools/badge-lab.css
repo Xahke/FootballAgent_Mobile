@@ -182,3 +182,15 @@ table { border-collapse: collapse; }
 .nanoart .on-d { background: #10203a; }
 .nanoart .on-l { background: #eef1f5; }
 .nano figcaption b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; }
+
+/* --------------------------------------------- üretim motoru bölümleri */
+/* Birebir eşleşme listesi: 62 anahtar, kart yığını yerine yoğun bir şerit —
+   asıl soru "hangi kelime hangi ambleme gidiyor?", her biri ayrı kutu değil. */
+.exact { display: flex; flex-wrap: wrap; gap: 6px; }
+.exk {
+  font: 400 11px/1.35 var(--mono); color: var(--dim);
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 3px; padding: 4px 8px; white-space: nowrap;
+}
+.exk b { color: var(--faint); font-weight: 400; }
+.cell figcaption i.good { font-style: normal; color: #63b98a; }

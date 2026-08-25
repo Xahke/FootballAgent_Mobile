@@ -53,8 +53,12 @@ load order is the contract.
 
 `npm run www` copies `js/` wholesale, so there is no fourth place.
 
+`js/badges.js` was the most recent file to go through this, and it is a worked
+example: it sits after `data.js` (badges read a team object) and before `core.js`
+(where `tmBadge()` lives), and the same position appears in all three lists.
+
 Load order:
-`i18n → saves → data → worldgeo → atlas → rivals → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → store → saves → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -78,6 +82,7 @@ call time. The parts that are load-time real:
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
+| `js/badges.js` | Procedural team badges: 24 emblems, 10 frames, 10 patterns, the semantic name→emblem map and `badgeDescriptor()`. `tmBadge()` draws from here |
 | `js/core.js` | Game state `S`, fixtures, cups, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |

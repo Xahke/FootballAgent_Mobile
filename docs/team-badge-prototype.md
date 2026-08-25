@@ -2,24 +2,37 @@
 
 [← Geliştirici Notları](DEVELOPMENT.md)
 
-Modüler ve deterministik bir takım arması sisteminin **görsel prototipi**. Bu belge
-iki turu birlikte anlatır; 2. tur amblem havuzunu 24'e çıkarır ve armayı gerçek takım
-kimliğine bağlar.
+Modüler ve deterministik takım arması sistemi. Bu belge üç turu birlikte anlatır:
+geometri çıkarımı, semantik eşleme ve **üretim entegrasyonu**.
 
-**Bu prototip onaylanmadan `tmBadge()` veya oyun ekranları değiştirilmeyecek.**
+**Sistem artık çalışma zamanında.** `tmBadge(tm, size)` imzası değişmedi; 31 satırdaki
+32 çağrının hiçbirine dokunulmadı, değişen yalnız fonksiyonun içeride ne ürettiği.
 
 | | |
 |---|---|
+| **Üretim motoru** | `js/badges.js` — geometri, semantik eşleme, descriptor, çizim |
+| `tmBadge()` sarmalayıcı ve harfli yedek | `js/core.js` |
 | Laboratuvar | `tools/badge-lab.html` — tarayıcıda doğrudan aç |
-| Veri | `tools/badge-lab-data.js` |
-| Çizim, semantik eşleme, ölçüm | `tools/badge-lab.js` |
-| Stil | `tools/badge-lab.css` |
+| Laboratuvara özel yardımcılar | `tools/badge-lab-legacy.js`, `tools/badge-lab.js`, `tools/badge-lab.css` |
+| Kabul testleri | `tools/badge-selftest.js` — `node tools/badge-selftest.js` |
 | Ad havuzu analizi | `tools/badge-names.js` — `node tools/badge-names.js` |
 | Vektörleştirme ayarları | `tools/badge-vectorize.js` |
 
-Hiçbiri `index.html`'e, `build.js`'in `order` dizisine veya `sw.js`'in `SHELL`
-listesine eklenmedi. Laboratuvar `js/data.js`'i `<script>` ile **okur** — takımlar,
-adlar ve renkler oyunun kendi verisinden gelir, kopya tutulmaz, veri değiştirilmez.
+## Tek kaynak
+
+Geometri, semantik eşleme ve descriptor mantığı **yalnız `js/badges.js`'te** tanımlı.
+Laboratuvar bu dosyayı `<script src="../js/badges.js">` ile doğrudan yükler; `tools/`
+altında ikinci bir kopya yoktur, dolayısıyla senkron kaçağı yapısal olarak imkânsız.
+Eski `tools/badge-lab-data.js` bu yüzden silindi. Laboratuvarın ölçüm bölümü yine de
+motorun gerçekten yüklendiğini ve çizimin `js/badges.js`'ten geldiğini denetler.
+
+## Yükleme zinciri
+
+`js/badges.js` üç yerde de aynı konumda: `index.html`, `build.js`'in `order` dizisi ve
+`sw.js`'in `SHELL` listesi. Konum `data.js`'ten **sonra** (arma bir takım nesnesi okur)
+ve `core.js`'ten **önce** (`tmBadge()` orada). `i18n` ilk, `main` son kuralı korundu.
+Çalışma zamanı JS değiştiği için service worker önbelleği `menajer-v30 → menajer-v31`
+yükseltildi.
 
 ## Kaynaklar
 
