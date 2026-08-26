@@ -130,6 +130,9 @@ skUnlocked:'{n} açıldı.',skUnlockBtn:'Aç',skEffects:'Etkiler',skReq:'Gereken
 skNeedPts:'{n} puan gerekiyor',skReqLock:'Bağlı bir düğümü önce açmalısın.',
 skLvUp:'Seviye atladın',skLvUpB:'Ajansın büyüdü. Yetenek ağacında harcayacak {n} puanın var.',
 skOpenTree:'Ağacı Aç',skBranchProg:'{a}/{b} düğüm',
+/* Saha yetenek ekranı: kimlik bandı, puan özeti ve kart durumları. */
+skTitle:'Yetenek Merkezi',skSub:'Ajansını geliştir',skPointsL:'Yetenek puanı',
+skProgress:'Gelişim',skPoorShort:'Puan yetersiz',skUpgradeBtn:'Geliştir',skLockedBtn:'Kilitli',
 settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
@@ -289,6 +292,9 @@ skUnlocked:'{n} unlocked.',skUnlockBtn:'Unlock',skEffects:'Effects',skReq:'Requi
 skNeedPts:'Needs {n} pts',skReqLock:'Unlock a connected node first.',
 skLvUp:'Level up',skLvUpB:'Your agency has grown. You have {n} points to spend on the skill tree.',
 skOpenTree:'Open the Tree',skBranchProg:'{a}/{b} nodes',
+/* Saha talent screen: identity band, point summary and card states. */
+skTitle:'Talent Centre',skSub:'Grow your agency',skPointsL:'Skill points',
+skProgress:'Progress',skPoorShort:'Not enough points',skUpgradeBtn:'Unlock',skLockedBtn:'Locked',
 settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',

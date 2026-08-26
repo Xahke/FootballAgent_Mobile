@@ -1625,6 +1625,9 @@ team(id){
   }).join('')}`;
 },
 skills(){
+  /* Kapı market()/clients()/league() ile aynı: aşağıdaki gövde diğer üç tema
+     için harfi harfine bugünkü hâlinde kalıyor. */
+  if(useSahaSkills())return skSahaView();
   const pts=skillPoints(), spent=skillSpent(), earned=skillEarned();
   /* Künyedeki ok dalın yön vektöründen türetiliyor — yeni bir dal eklendiğinde
      burada elle yazılacak bir şey kalmasın. */
@@ -1973,6 +1976,7 @@ function skTreeSvg(){
 function skOpen(id){
   const sk=skById(id);
   if(!sk)return;
+  if(useSahaSkills())return skSahaSheet(sk);
   const st=skillState(sk), br=skBranch(sk.br);
   const effs=Object.keys(sk.eff||{}).map(k=>
     `<span class="tag ${st==='owned'?'g':'n'}">${skEffLabel(k,sk.eff[k])}</span>`).join('');
@@ -1997,6 +2001,157 @@ function skOpen(id){
    ${reqs&&st!=='owned'?`<div class="sub" style="margin-top:10px">${t('skReq')}: ${reqs}</div>`:''}
    <div style="margin-top:16px">${foot}</div>`);
 }
+/* ===================== YETENEK EKRANI (yalnız saha) =====================
+   Ekranın üç sorusu var ve sıralama o üçünü izliyor: kaç puanım var (özet kart),
+   şimdi neyi alabilirim (dal sekmesi + kartlar), alırsam ne değişir (detay).
+
+   Kapı market()/clients()/league() ile aynı desen: yeni işaretleme yalnız saha
+   temasında üretiliyor, diğer üç tema bugünkü ağaç ekranını harfi harfine
+   koruyor — skills() ve skOpen() onlar için hiç dallanmıyor.
+
+   NEDEN AĞAÇ DEĞİL DE KART: ağacın kendisi doğru bir resim ama telefonda
+   okunmuyor; 25 düğümlük tek SVG'de düğüm çapı 34px'e kadar iniyor ve etkiyi
+   görmek için her düğüme tek tek dokunmak gerekiyor. Kart ızgarası aynı veriyi
+   —ad, simge, gerçek etki, gerçek maliyet, gerçek durum— dokunmadan gösteriyor.
+   Bağımlılık kaybolmuyor: kilitli kartın alt şeridi gereken düğümün ADINI
+   yazıyor. Gerçek olan tek ilişki bu, ve yazıyla göstermek çizgiyle göstermekten
+   hem daha dar ekranda hem de ekran okuyucuda daha iyi çalışıyor.
+
+   MEKANİK OLDUĞU GİBİ: düğümler ikili (alınmış / alınmamış), seviyeleri yok.
+   Ekranda "2/5" gibi bir kademe, "sonraki seviye etkisi" ya da tekrar tekrar
+   yükseltme yok — çünkü oyunda yok. skillState()'in dört durumu neyse ekranın
+   dört durumu da o: owned / open / poor / lock. */
+function useSahaSkills(){return themeOf()==='saha';}
+
+/* Seçili dal yalnızca arayüz durumu — MKQ ve atlas.js'teki CAM ile aynı gerekçe.
+   S'ye yazsaydık kayıt biçimini büyütür ve eski kayıtlar için yeni bir "yokken de
+   çalış" sınavı açardı; üstelik hangi sekmede kaldığın kariyerin bir parçası
+   değil. Tema değiştirip geri dönmek puanları ya da alınmışları etkilemiyor,
+   yalnız bu değişken duruyor. */
+let SKTAB=SK_BRANCH[0].id;
+function skSetTab(b){if(skBranch(b)){SKTAB=b;render();}}
+
+/* Kart ve detay aynı işaretleri kullanıyor; ikisi de buradan okuyor. */
+const SK_TICK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.6 4.6L19 7.4"/></svg>';
+const SK_LOCKI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="10.4" width="14.8" height="10" rx="2.4"/><path d="M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8"/></svg>';
+
+/* Durumun tek sözlüğü: alt şeridin simgesi ve metni. Kart da detay da buradan
+   okuyor, yani ekranda iki farklı gerekçe yazamaz. Kilitte gereken düğümün adı
+   veriliyor — "biri açıksa açılır" kuralı gereği aralarında "/" var. */
+function skFoot(sk,st){
+  if(st==='owned')return {ic:SK_TICK,t:t('skOwned')};
+  if(st==='lock'){
+    const r=(sk.req||[]).map(x=>skById(x)).filter(Boolean).map(x=>x.n[L]).join(' / ');
+    return {ic:SK_LOCKI,t:t('skReq')+': '+r};
+  }
+  if(st==='poor')return {ic:'',t:t('skPoorShort')};
+  return {ic:'',t:t('skUpgradeBtn')};
+}
+/* Maliyet her zaman gerçek sk.cost; çoğul eki de oyunun kendi anahtarlarından. */
+function skCostTxt(c){return c+' '+(c>1?t('skPts'):t('skPt'));}
+function skSvg(inner,cls){
+  return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+    stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+}
+/* Kartın simgesi düğümün kendi çizimi; yoksa dal glifine düşüyor (bkz. skIcon). */
+function skNodeIcon(sk){return skIcon(sk.id)||SKICONS[sk.br||'hub']||SKICONS.hub;}
+
+function skCardHtml(sk){
+  const st=skillState(sk), f=skFoot(sk,st);
+  const effs=Object.keys(sk.eff||{}).map(k=>
+    `<span class="skCardE">${skEffLabel(k,sk.eff[k])}</span>`).join('');
+  return `<button class="skCard ${st}" style="--skc:var(--sk-${sk.br||'hub'})"
+    onclick="skOpen('${sk.id}')" aria-label="${esc(sk.n[L])} · ${esc(f.t)}">
+    <span class="skCardH">
+      <span class="skCardIc">${skSvg(skNodeIcon(sk))}</span>
+      ${st==='owned'
+        ?`<span class="skCost ok">${SK_TICK}</span>`
+        :`<span class="skCost"><b class="num">${sk.cost}</b>${ICONS.gem}</span>`}
+    </span>
+    <span class="skCardN">${sk.n[L]}</span>
+    <span class="skCardEs">${effs}</span>
+    <span class="skCardF">${f.ic?`<i>${f.ic}</i>`:''}<span>${f.t}</span></span>
+  </button>`;
+}
+
+function skSahaView(){
+  const pts=skillPoints(), spent=skillSpent(), total=skillTreeCost();
+  const lp=levelProgress();
+  const br=skBranch(SKTAB)?SKTAB:SK_BRANCH[0].id;
+  const tabs=SK_BRANCH.map(b=>{
+    const got=branchTaken(b.id), tot=branchTotal(b.id);
+    return `<button class="skTab${b.id===br?' on':''}" style="--skc:var(--sk-${b.id})"
+      onclick="skSetTab('${b.id}')" aria-pressed="${b.id===br?'true':'false'}">
+      <span class="skTabIc">${skSvg(SKICONS[b.id])}</span>
+      <span class="skTabN">${b.n[L]}</span>
+      <span class="skTabP num">${got}/${tot}</span></button>`;
+  }).join('');
+  /* Seviye satırı puanın NEREDEN geldiğini söylüyor: puan seviyeden, seviye
+     itibardan. Onsuz özet kart "9" diyor ve onuncunun nereden geleceğini
+     söylemiyor. */
+  const lvLine=lp.need
+    ? `${t('skLvShort')} ${lp.lv} · ${t('skNext')} <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(L)}`
+    : `${t('skLvShort')} ${lp.lv} · ${t('skMaxLv')}`;
+  const bpct=total?Math.round(spent/total*100):0;
+  return `<div class="skTop">
+    <div class="skTitle">${t('skTitle')}</div>
+    <div class="skSub">${t('skSub')}</div>
+  </div>
+  <div class="skSum">
+    <div class="skSumP">
+      <b class="skSumV num${pts?' hot':''}">${pts}</b>
+      <span class="skSumL">${t('skPointsL')}</span>
+    </div>
+    <i></i>
+    <div class="skSumR">
+      <div class="skSumT"><b class="num">${spent}/${total}</b><span>${t('skProgress')}</span></div>
+      <div class="skPrg"><i style="width:${bpct}%"></i></div>
+      <div class="skSumLv">${lvLine}</div>
+    </div>
+  </div>
+  <div class="skTabs">${tabs}</div>
+  <div class="skBrD">${skBranch(br).d[L]}</div>
+  <div class="skGrid">${SKILLS.filter(sk=>sk.br===br).map(skCardHtml).join('')}</div>
+  <div class="skNote">${t('skHint').replace('{n}',LV.bonus)}</div>`;
+}
+
+/* Detay: mevcut modal/sheet sistemine giriyor, kendi kapatma yolunu açmıyor —
+   dışarı dokunma ve Android geri düğmesi bugünkü davranışında kalıyor.
+   "Sonraki seviye" bölümü YOK: düğümün ikinci bir kademesi yok. */
+function skSahaSheet(sk){
+  const st=skillState(sk), br=skBranch(sk.br), f=skFoot(sk,st);
+  /* Etiket ile değer iki sütuna ayrılıyor ama biçimlendirme YENİDEN YAZILMIYOR:
+     skEffLabel her zaman "ad + boşluk + değer" üretiyor, burada yalnız adın
+     uzunluğu kadar kesiliyor. Yüzde işaretinin dile göre yer değiştirmesi gibi
+     kurallar tek yerde, skills.js'te kalıyor. */
+  const effs=Object.keys(sk.eff||{}).map(k=>{
+    const n=SK_KEY[k]?SK_KEY[k].n[L]:k, full=skEffLabel(k,sk.eff[k]);
+    return `<div class="skDE"><span>${n}</span><b>${full.slice(n.length+1)||full}</b></div>`;
+  }).join('');
+  const cta=
+    st==='owned'? `<div class="skCta done">${SK_TICK}<span>${t('skOwned')}</span></div>`
+   :st==='open' ? `<button class="skCta go" onclick="skillBuy('${sk.id}')">
+                     <span>${t('skUpgradeBtn')}</span><i class="num">${skCostTxt(sk.cost)}</i></button>`
+   :st==='poor' ? `<div class="skCta no">${t('skNeedPts').replace('{n}',sk.cost)}</div>`
+   /* Kilidin gerekçesi hemen üstteki satırda, gereken yeteneğin ADIYLA duruyor;
+      düğme yalnız durumu söylüyor. skReqLock ağacın sözlüğünden ("bağlı düğüm")
+      konuşuyor ve bu ekranda düğüm yok — o anahtar diğer üç temada yerinde. */
+   :              `<div class="skCta no">${t('skLockedBtn')}</div>`;
+  openModal(`<div class="skSheet ${st}" style="--skc:var(--sk-${sk.br||'hub'})">
+    <div class="skSheetH">
+      <span class="skSheetIc">${skSvg(skNodeIcon(sk))}</span>
+      <div class="skSheetT">
+        <h2>${sk.n[L]}</h2>
+        <div class="sub">${br?br.n[L]:t('agency')} · <b class="num">${skCostTxt(sk.cost)}</b></div>
+      </div>
+    </div>
+    <div class="skSheetD">${sk.dsc[L]}</div>
+    ${effs?`<div class="sect">${t('skEffects')}</div><div class="skDEs">${effs}</div>`:''}
+    ${st==='lock'?`<div class="skSheetR"><i>${SK_LOCKI}</i><span>${f.t}</span></div>`:''}
+    ${cta}
+  </div>`);
+}
+
 /* Seviye atlama: haftanın sonunda sıraya giren küçük kutlama. */
 function showLevelUp(){
   /* Gösterecek bir şey yoksa sırayı kilitlemeden bir sonrakine geç: modal

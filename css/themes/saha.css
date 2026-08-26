@@ -1124,17 +1124,17 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    aileye ait görünsün diye seçici ORTAK yazıldı: kopyalansaydı biri düzeltilip
    diğeri unutulduğunda sessizce ayrışırlardı. Görsel de aynı görsel — yeni bir
    varlık üretilmiyor, home-stadium-tunnel.webp ikinci kez kullanılıyor. */
-.clTop,.mkTop,.lgTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
-.clTop::before,.mkTop::before,.lgTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
+.clTop,.mkTop,.lgTop,.skTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
+.clTop::before,.mkTop::before,.lgTop::before,.skTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
   left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.92) 30%,rgba(11,17,30,.55) 62%,rgba(11,17,30,.25) 100%),
     linear-gradient(180deg,rgba(11,17,30,.5) 0%,rgba(11,17,30,.08) 34%,rgba(11,17,30,.8) 80%,var(--bg) 100%),
     url(../assets/ui/home-stadium-tunnel.webp) 64% 46%/cover no-repeat;
   background-color:var(--bg)}
-.clTitle,.mkTitle,.lgTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
+.clTitle,.mkTitle,.lgTitle,.skTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
   letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.75)}
-.clSub,.mkSub,.lgSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.clSub,.mkSub,.lgSub,.skSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 
 /* --- portföy özeti: üç gerçek sayı, eşit paylı tek kart --- */
 .clSum{display:flex;align-items:stretch;background:var(--sur);border:1px solid var(--line);
@@ -1307,11 +1307,11 @@ body[data-view="dash"] .hmRise{min-height:calc(68px + clamp(0px, calc(20.8vh - 1
    Piyasa ekranı da aynı kurala giriyor: başlığı ("Piyasa" / "Market") müşteriler
    ekranınınkinden kısa, yani bütçe daha rahat; ama 44px dokunma hedefi ekrandan
    ekrana değişmemeli. Seçiciler ortak yazıldı, ayrı blok kopyalanmadı. */
-body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header{
+body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header,body[data-view="skills"] header{
   padding-top:calc(5px + env(safe-area-inset-top));
   padding-bottom:5px}
-body[data-view="clients"] .hback,body[data-view="market"] .hback,body[data-view="league"] .hback{width:44px;height:44px;border-radius:13px}
-body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{height:44px;border-radius:13px}
+body[data-view="clients"] .hback,body[data-view="market"] .hback,body[data-view="league"] .hback,body[data-view="skills"] .hback{width:44px;height:44px;border-radius:13px}
+body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext,body[data-view="skills"] #btnNext{height:44px;border-radius:13px}
 
 /* ===================== ÜST ÇUBUK · BAŞLIK BÜTÇESİ (yalnız saha/müşteriler)
    Müşteriler ekranının başlığı uygulamadaki en uzun başlık ("Müşteriler" +
@@ -1352,33 +1352,33 @@ body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-v
    ve ayarların ölçülerine dokunulmadı. Kural yalnız müşteriler ekranında ve
    yalnız saha temasında — başka hiçbir ekran, tema ya da ana ekran etkilenmiyor. */
 @media (max-width:460px){
-  body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header{padding-left:10px;padding-right:10px}
-  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow{gap:5px}
-  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat{padding:6px 6px}
-  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{padding:0 10px}
-  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
+  body[data-view="clients"] header,body[data-view="market"] header,body[data-view="league"] header,body[data-view="skills"] header{padding-left:10px;padding-right:10px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow,body[data-view="skills"] .hrow{gap:5px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat,body[data-view="skills"] .hstat{padding:6px 6px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext,body[data-view="skills"] #btnNext{padding:0 10px}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2,body[data-view="skills"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}
 }
 /* 374px altında bir kademe daha: orada sabitler satırın %68'ini yiyor ve
    yukarıdaki pay tek başına yetmiyordu (ölçüldü). Başlık puntosu 15→14,
    alt satır 9.5→9 ve harf aralığı sıfır. */
 @media (max-width:374px){
-  body[data-view="clients"] .htitle .t1,body[data-view="market"] .htitle .t1,body[data-view="league"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2{font-size:9px;letter-spacing:0}
+  body[data-view="clients"] .htitle .t1,body[data-view="market"] .htitle .t1,body[data-view="league"] .htitle .t1,body[data-view="skills"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+  body[data-view="clients"] .htitle .t2,body[data-view="market"] .htitle .t2,body[data-view="league"] .htitle .t2,body[data-view="skills"] .htitle .t2{font-size:9px;letter-spacing:0}
   /* İngilizce 360'ta 10px daha açık veriyor: "Continue" düğmesi "Devam"dan
      14px geniş ve bütün fark başlıktan kesiliyor (ölçüldü). Rozetlerin iç
      dolgusu 7→5, ikon 13→12, rozet içi ve satır boşluğu 5→4 ile 16px daha
      açılıyor — punto daha da küçültülmeden. */
-  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow{gap:4px}
+  body[data-view="clients"] .hrow,body[data-view="market"] .hrow,body[data-view="league"] .hrow,body[data-view="skills"] .hrow{gap:4px}
   /* Ayarlar düğmesi 36→44 büyüyünce 374px altında telafi kalmamıştı (bu blok
      zaten en sıkı değerlerdeydi) ve İngilizce geniş değerlerde alt satır tekrar
      sarıyordu. Rozetlerin iç dolgusu 5→4, rozet içi boşluk 4→3 ve ikon 12→11
      ile 8px geri alınıyor. */
-  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat{padding:6px 4px;gap:3px}
-  body[data-view="clients"] .hstat svg,body[data-view="market"] .hstat svg,body[data-view="league"] .hstat svg{width:11px;height:11px}
+  body[data-view="clients"] .hstat,body[data-view="market"] .hstat,body[data-view="league"] .hstat,body[data-view="skills"] .hstat{padding:6px 4px;gap:3px}
+  body[data-view="clients"] .hstat svg,body[data-view="market"] .hstat svg,body[data-view="league"] .hstat svg,body[data-view="skills"] .hstat svg{width:11px;height:11px}
   /* Uzun sezon/hafta değerlerinde ("Season 30 · Week 38") İngilizce hâlâ 1-2px
      açık veriyordu; Devam'ın dolgusu 12→10 ile kapanıyor. Düğme metni 13px,
      yani genişliği hâlâ 44px'in çok üstünde. */
-  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext{padding:0 10px}
+  body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-view="league"] #btnNext,body[data-view="skills"] #btnNext{padding:0 10px}
 }
 
 /* ===================== PİYASA EKRANI (yalnız saha) =====================
@@ -1735,6 +1735,174 @@ body[data-view="clients"] #btnNext,body[data-view="market"] #btnNext,body[data-v
   .lgIdN{font-size:16.5px}
   .lgScore{min-width:56px;font-size:20px}
   .lgFixSc{min-width:48px;font-size:15px}
+}
+
+/* ===================== YETENEK EKRANI (yalnız saha) =====================
+   Ekranın tek sorusu üç parçalı: kaç puanım var, şimdi neyi alabilirim, alırsam
+   ne değişir. Sıralama da o: kimlik → puan özeti → dal sekmesi → kartlar.
+
+   İmza öğe: kartın alt şeridi. Durum rengini taşıyan tek yer orası, ve kartın
+   tam genişliğini kaplıyor — listeyi kaydırırken hangi yeteneği ALABİLECEĞİN
+   rakam okumadan, yalnız şerit renginden görünüyor. Kart gövdesi dört durumda da
+   sakin kalıyor; renk bir yerde toplanıyor, her yere serpilmiyor.
+
+   Renk rolleri ekranın geri kalanıyla aynı sözlükten:
+     yeşil = alınabilir (aksiyon)        · altın = puan ve gerçek maliyet
+     mavi  = gerçek ön koşul (bilgi)     · nötr  = alınmış, artık karar değil
+   KIRMIZI KULLANILMIYOR, çünkü bu ekranda gerçek bir hata durumu yok: puanın
+   yetmemesi de kilit de geçici ve beklenen durumlar. Kırmızıyı buraya koymak
+   oyuncuya yanlış bir alarm verirdi.
+
+   Yeni raster varlık üretilmedi: üst banttaki tünel .clTop/.mkTop/.lgTop ile
+   ORTAK seçicide, aynı home-stadium-tunnel.webp. */
+
+/* --- puan özeti: solda tek güçlü sayı, sağda gerçek ilerleme --- */
+.skSum{display:flex;align-items:stretch;gap:13px;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:12px;
+  box-shadow:var(--sh)}
+.skSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+.skSumP{flex:0 0 auto;min-width:88px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;text-align:center}
+/* Birincil sayı KULLANILABİLİR puan. 0, 9, 10+ ve büyük değerlerde satır
+   yüksekliği sabit kalsın diye line-height:1 ve tabular rakam. */
+.skSumV{font-family:var(--cond);font-weight:800;font-size:42px;line-height:1;
+  letter-spacing:-.03em;color:var(--txt3)}
+.skSumV.hot{color:var(--gold)}
+.skSumL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.2;overflow-wrap:anywhere}
+.skSumV.hot+.skSumL{color:var(--gold)}
+.skSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px}
+.skSumT{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.skSumT b{font-family:var(--cond);font-weight:800;font-size:22px;letter-spacing:-.01em;line-height:1.05}
+.skSumT span{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3)}
+/* Ad bilerek .skPrg: .skBar seviye halkasının yayı (bkz. .skring0 .skBar). */
+.skPrg{height:6px;border-radius:3px;background:var(--sur3);overflow:hidden}
+.skPrg>i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--accD),var(--acc))}
+.skSumLv{font-family:var(--cond);font-weight:600;font-size:11.5px;letter-spacing:.02em;
+  color:var(--txt3);line-height:1.3}
+.skSumLv b{color:var(--txt2);font-weight:700}
+
+/* --- dal sekmeleri: dördü de gerçek dal, sayaç gerçek düğüm sayısı --- */
+.skTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:11px}
+.skTab{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 4px;background:var(--sur2);border:1px solid var(--line);border-radius:13px;
+  color:var(--txt2);cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap),color var(--tap)}
+.skTab:active{transform:scale(.97)}
+.skTabIc{display:flex;color:var(--txt3);transition:color var(--tap)}
+.skTabIc svg{width:19px;height:19px}
+.skTabN{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.02em;
+  text-transform:uppercase;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.skTabP{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt3)}
+.skTab.on{background:var(--sur3);border-color:var(--skc);color:var(--txt)}
+.skTab.on .skTabIc,.skTab.on .skTabP{color:var(--skc)}
+.skBrD{font-size:12.5px;color:var(--txt3);line-height:1.45;margin:0 2px 11px}
+
+/* --- kartlar: iki sütun, gerçek etki ve gerçek maliyet kartın üstünde --- */
+.skGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px}
+.skCard{display:flex;flex-direction:column;align-items:stretch;gap:6px;
+  padding:11px 11px 0;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r);color:var(--txt);cursor:pointer;font-family:inherit;text-align:left;
+  overflow:hidden;box-shadow:var(--sh);-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap)}
+.skCard:active{transform:scale(.985)}
+.skCardH{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.skCardIc{display:flex;color:var(--skc)}
+.skCardIc svg{width:26px;height:26px}
+/* Maliyet rozeti hep altın: puan bu oyunun para birimi, rengi durumdan bağımsız. */
+.skCost{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;padding:3px 7px;
+  border-radius:9px;background:var(--gold-soft);color:var(--gold);
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.3)}
+.skCost b{font-family:var(--cond);font-weight:800;font-size:13.5px;line-height:1}
+.skCost svg{width:12px;height:12px}
+.skCost.ok{padding:4px;background:var(--acc-soft);color:var(--acc);
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.32)}
+.skCost.ok svg{width:14px;height:14px}
+.skCardN{font-family:var(--cond);font-weight:800;font-size:16px;line-height:1.14;
+  letter-spacing:-.01em;overflow-wrap:anywhere}
+.skCardEs{display:flex;flex-direction:column;gap:2px;padding-bottom:9px}
+.skCardE{font-size:11.5px;line-height:1.32;color:var(--txt2);overflow-wrap:anywhere}
+/* Alt şerit kartın tam genişliğinde: negatif kenar boşluğu gövdenin dolgusunu
+   geri alıyor, böylece şerit kartın kenarına oturuyor. */
+.skCardF{margin:auto -11px 0;display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:31px;padding:7px 9px;background:var(--sur2);color:var(--txt3);
+  font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.05em;
+  text-transform:uppercase;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.skCardF i{display:flex;flex-shrink:0}
+.skCardF i svg{width:14px;height:14px}
+
+.skCard.open{border-color:rgba(30,201,126,.4);
+  background:linear-gradient(180deg,rgba(30,201,126,.075),var(--sur) 60%)}
+.skCard.open .skCardF{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5}
+.skCard.poor{border-color:rgba(233,188,90,.3)}
+.skCard.poor .skCardF{background:var(--warn-soft);color:var(--warn)}
+/* Kilitli kart kesik kenarlı ve soluk: dokunulabilir kalıyor (koşulu okumak
+   için) ama sıradaki hamle olmadığı ilk bakışta belli oluyor. */
+.skCard.lock{border-style:dashed;border-color:rgba(77,159,255,.3);background:rgba(19,27,46,.5)}
+.skCard.lock .skCardIc,.skCard.lock .skCardN{color:var(--txt3)}
+.skCard.lock .skCost{background:rgba(77,159,255,.08);color:var(--txt3);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.skCard.lock .skCardF{background:var(--blue-soft);color:var(--blue)}
+.skCard.owned{background:var(--sur2);border-color:var(--line2)}
+.skCard.owned .skCardF{background:rgba(30,201,126,.1);color:var(--acc)}
+
+/* --- detay: mevcut sheet'in içinde, kendi kapatma yolu yok --- */
+.skSheet{--skc:var(--txt2)}
+.skSheetH{display:flex;align-items:flex-start;gap:12px}
+.skSheetIc{width:52px;height:52px;flex:0 0 52px;border-radius:15px;display:flex;
+  align-items:center;justify-content:center;background:var(--sur2);color:var(--skc);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.skSheetIc svg{width:28px;height:28px}
+.skSheetT{flex:1 1 0;min-width:0}
+.skSheetT h2{font-family:var(--cond);font-weight:800;font-size:23px;line-height:1.12;
+  letter-spacing:-.02em;overflow-wrap:anywhere}
+.skSheetT .sub{margin-top:3px}
+.skSheetD{margin:13px 0 15px;font-size:13px;line-height:1.55;color:var(--txt2)}
+.skDEs{display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border-radius:var(--r-s);overflow:hidden}
+.skDE{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;background:var(--sur2)}
+.skDE span{font-size:12.5px;line-height:1.3;color:var(--txt2);overflow-wrap:anywhere}
+.skDE b{font-family:var(--cond);font-weight:800;font-size:16.5px;color:var(--txt);
+  flex-shrink:0;letter-spacing:.01em}
+.skSheet.owned .skDE b{color:var(--acc)}
+.skSheetR{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;
+  border-radius:var(--r-s);background:var(--blue-soft);color:var(--blue);font-size:12.5px;
+  line-height:1.35;overflow-wrap:anywhere}
+.skSheetR i{display:flex;flex-shrink:0}
+.skSheetR i svg{width:17px;height:17px}
+/* Ana çağrı ana ekranın "Haftayı ilerlet" düğmesiyle aynı gradyanı konuşuyor. */
+.skCta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:50px;margin-top:16px;padding:10px 16px;border:none;border-radius:14px;
+  font-family:var(--cond);font-weight:800;font-size:17px;letter-spacing:.04em;
+  text-transform:uppercase;text-align:center;line-height:1.2;-webkit-appearance:none;appearance:none}
+.skCta.go{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5;cursor:pointer;box-shadow:0 10px 24px -18px #000}
+.skCta.go:active{transform:scale(.985)}
+.skCta.go i{font-family:var(--cond);font-weight:700;font-size:13.5px;font-style:normal;
+  letter-spacing:.02em;opacity:.82}
+.skCta.no{background:var(--sur2);color:var(--txt3);font-size:14px;cursor:default;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.skCta.done{background:var(--acc-soft);color:var(--acc);cursor:default;
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.28)}
+.skCta.done svg{width:19px;height:19px}
+.skNote{font-size:12px;line-height:1.5;color:var(--txt3);margin:0 2px}
+
+/* 360px: iki sütun dar kalıyor, kart içi dolgu ve puntolar bir kademe iniyor.
+   Sütun sayısı DEĞİŞMİYOR — tek sütuna düşmek altı kartı ekrandan taşırırdı. */
+@media (max-width:374px){
+  .skSum{padding:12px 11px;gap:11px}
+  .skSumP{min-width:76px}
+  .skSumV{font-size:37px}
+  .skTabs{gap:6px}
+  .skTabN{font-size:11px}
+  .skGrid{gap:8px}
+  .skCard{padding:10px 9px 0}
+  .skCardF{margin-left:-9px;margin-right:-9px;font-size:11px;letter-spacing:.03em}
+  .skCardN{font-size:15px}
 }
 
 /* ===================== KARİYER MENÜSÜ (açılış ekranı) =====================

@@ -217,6 +217,65 @@ const SKILLS=[
       en:'You build the transfer now. The clubs only sign it.'}}
 ];
 
+/* ===== düğüm simgeleri =====
+   Her düğümün kendi simgesi var. Ağaçta simgeye gerek yoktu — düğümü KONUMU
+   ayırt ediyordu, o yüzden dört dal glifi (SKICONS) yetiyordu. Kart ızgarasında
+   konum yok: bir dalın altı kartı yan yana durunca aynı glif altı kez tekrar
+   ederdi. Bu yüzden 24 düğümün her biri kendi çizimini taşıyor.
+
+   Simgeler yetenek kaydının yanında duruyor ki ad, etki ve simge birlikte
+   değişsin; arayüz yalnız skIcon() üzerinden okuyor, ikinci bir kopya yok.
+   SKICONS'taki beş dal/hub glifi yerinde kalıyor ve artık yalnız dal başlığında
+   kullanılıyor — orada tekrar kusur değil, gruplamanın kendisi.
+
+   Biçim: 24x24 kutu, fill="none", stroke="currentColor", 1.8 kalınlık, yuvarlak
+   uç ve köşe — uygulamanın geri kalanıyla aynı çizim dili (bkz. ICONS/ui.js).
+   Harf, rakam ve raster yok; dolu olan tek şey nokta işaretleri, onlar da
+   fill="currentColor" stroke="none" ile kendi kuralını taşıyor. Kaynak taslaklar
+   tek tek yeniden çizildi: dolu beyaz alanlar (spot konisi) monoline'a çevrildi,
+   sahte rakamlar ve mikro toz parçaları atıldı, 24px'te ayrışmayan çizgiler
+   birleştirildi. */
+const SK_ICON={
+ /* MASA — sözleşme, pazarlık, güven */
+ tb1:'<path d="M12 7.4v11.8"/><path d="M12 7.4C10.4 6.1 8.2 5.4 5.4 5.4H3.4v11.8h2c2.8 0 5 .7 6.6 2"/><path d="M12 7.4c1.6-1.3 3.8-2 6.6-2h2v11.8h-2c-2.8 0-5 .7-6.6 2"/><path d="M5.8 9.2h3.4"/><path d="M5.8 12.4h3.4"/><path d="M14.8 9.2h3.4"/><path d="M14.8 12.4h3.4"/>',
+ tb2:'<rect x="2.8" y="4" width="8.6" height="16" rx="2"/><path d="M5.1 7.6h4"/><circle cx="5.3" cy="11.8" r=".9" fill="currentColor" stroke="none"/><circle cx="8.9" cy="11.8" r=".9" fill="currentColor" stroke="none"/><circle cx="5.3" cy="15.4" r=".9" fill="currentColor" stroke="none"/><circle cx="8.9" cy="15.4" r=".9" fill="currentColor" stroke="none"/><path d="M13.4 17.8 16.4 13.8l2.4 2.4 2.8-4.6"/><path d="M17.6 11.6h4v4"/>',
+ tb3:'<path d="M7.4 13.8V7.6a1.5 1.5 0 0 1 3 0v3.6"/><path d="M10.4 11.2V5.8a1.5 1.5 0 0 1 3 0v5.4"/><path d="M13.4 11.2V6.6a1.5 1.5 0 0 1 3 0v4.6"/><path d="M16.4 11.4V8.8a1.5 1.5 0 0 1 3 0v5.4c0 3.5-2.8 6.4-6.4 6.4h-1.2a6.4 6.4 0 0 1-4.5-1.9l-3.5-3.5a1.6 1.6 0 0 1 2.2-2.2l2.4 2.3"/>',
+ tb4:'<path d="M10.1 3H4.6a1.7 1.7 0 0 0-1.7 1.7v14.6A1.7 1.7 0 0 0 4.6 21h6.4a1.7 1.7 0 0 0 1.7-1.7V5.6z"/><path d="M10.1 3v2.6h2.6"/><path d="M5.6 9.6h4.4"/><path d="M5.6 12.8h4.4"/><path d="M5.6 16h2.8"/><rect x="13.8" y="12.2" width="7.6" height="8.8" rx="1.5"/><path d="M13.8 15.2h7.6"/><path d="M16.2 10.8v2.6"/><path d="M19 10.8v2.6"/>',
+ tb5:'<path d="M4.6 3.4h2.8a1.6 1.6 0 0 1 1.58 1.34l.54 3.24a1.6 1.6 0 0 1-.86 1.71l-1.36.68a13.4 13.4 0 0 0 6.34 6.34l.68-1.36a1.6 1.6 0 0 1 1.71-.86l3.24.54A1.6 1.6 0 0 1 20.6 16.6v2.8a1.6 1.6 0 0 1-1.76 1.59C10.1 20.03 3.97 13.9 3.01 5.16A1.6 1.6 0 0 1 4.6 3.4z"/>',
+ tb6:'<rect x="9" y="2.6" width="6" height="3.6" rx="1.7"/><rect x="8.2" y="7.2" width="7.6" height="6.4" rx="2"/><path d="M4.8 11.2v2.4"/><path d="M19.2 11.2v2.4"/><path d="M4.8 11.6h3.4"/><path d="M15.8 11.6h3.4"/><path d="M2.8 13.6h18.4"/><path d="M4.6 13.6 3.4 20.8"/><path d="M19.4 13.6 20.6 20.8"/><path d="M5.6 17.4h12.8"/>',
+
+ /* SAHA — keşif, yetenek bulma, gelişim */
+ fd1:'<path d="M6.8 6.6 16.9 4.1a1.4 1.4 0 0 1 1.7 1l.45 1.9"/><rect x="4.4" y="7.6" width="15.2" height="10" rx="1.8"/><circle cx="9.2" cy="11.4" r="1.9"/><path d="M6.4 15.4a3.3 3.3 0 0 1 5.6 0"/><path d="M14.2 10.6h3.2"/><path d="M14.2 13.6h3.2"/>',
+ fd2:'<path d="M3.4 3.8h4.2a1.5 1.5 0 0 1 1.5 1.4l.3 4a2 2 0 0 0 1.4 1.72l6.1 1.8a3.1 3.1 0 0 1 2.3 2.99v.59a1.5 1.5 0 0 1-1.5 1.5H3.4z"/><path d="M3.4 15.2h13.4"/><path d="M5 6.6h2.8"/><path d="M5 9.4h3.2"/><path d="M6.6 17.8v1.7"/><path d="M11 17.8v1.7"/><path d="M15.4 17.8v1.7"/><path d="M2.6 19.9h18.8"/>',
+ fd3:'<rect x="3.4" y="3" width="10" height="18" rx="1.2"/><circle cx="10.8" cy="12.4" r="1" fill="currentColor" stroke="none"/><rect x="15.2" y="8.8" width="6.4" height="6.4" rx="2.4"/><path d="M15.2 10.9h6.4"/><path d="M15.2 13.1h6.4"/><path d="M15.2 12.7a1.35 1.35 0 0 1 0-2.7"/><path d="M15 7.2 14.2 5.8"/><path d="M17.6 6.6 17.8 5"/><path d="M20.4 7.4 21.6 6"/>',
+ fd4:'<circle cx="6.6" cy="10.6" r="3.3"/><circle cx="13.8" cy="10.6" r="3.3"/><path d="M9.9 9.4h1.2"/><path d="M4.5 7.9 5.1 4.3a1.1 1.1 0 0 1 1.08-.9h.84a1.1 1.1 0 0 1 1.08.9l.5 3.6"/><path d="M15.9 7.9 15.3 4.3a1.1 1.1 0 0 0-1.08-.9h-.84a1.1 1.1 0 0 0-1.08.9l-.5 3.6"/><path d="M14.9 17.7l2.9 2.9a1.1 1.1 0 0 0 1.56 0l1.84-1.84a1.1 1.1 0 0 0 0-1.56l-2.9-2.9a1.1 1.1 0 0 0-.84-.32l-2.02.12a1.1 1.1 0 0 0-1.03 1.03l-.12 2.02a1.1 1.1 0 0 0 .32.84z"/><circle cx="16.35" cy="16.15" r=".8"/>',
+ fd5:'<rect x="3.2" y="3.4" width="17.6" height="13.2" rx="1.6"/><path d="M12 3.4v13.2"/><circle cx="12" cy="10" r="2.2"/><path d="M3.2 7.4h2.8v5.2H3.2"/><path d="M20.8 7.4H18v5.2h2.8"/><path d="M5.6 21.4 7.6 17.2l2 4.2z"/><path d="M14.4 21.4 16.4 17.2l2 4.2z"/>',
+ fd6:'<path d="M9.8 2.8h4.4l1.4 2.6H8.4z"/><path d="M8.4 5.4 4.4 16.2"/><path d="M15.6 5.4 19.6 16.2"/><circle cx="12" cy="11.8" r="2.5"/><path d="M7.6 21.2v-2a4.4 4.4 0 0 1 8.8 0v2"/>',
+
+ /* AJANS — para, gider, kapasite, ad duyurma */
+ ag1:'<path d="M9.2 3.4h2.6l.9 3.8H8.3z"/><path d="M8.3 7.2c-2.5 1.5-4.1 4.1-4.1 6.9 0 3.4 2.6 5.6 6.3 5.6s6.3-2.2 6.3-5.6c0-2.8-1.6-5.4-4.1-6.9"/><circle cx="10.5" cy="13.6" r="2.3"/><path d="M20 8.6v8"/><path d="M17.7 14.3 20 16.6l2.3-2.3"/>',
+ ag2:'<circle cx="9.4" cy="7.6" r="3.6"/><path d="M3 20.8v-1.4a6.4 6.4 0 0 1 12.8 0v1.4"/><path d="M19.4 8.6v6"/><path d="M16.4 11.6h6"/>',
+ ag3:'<rect x="3" y="3.2" width="10.4" height="17.6" rx="1.6"/><path d="M5.6 7.2h5.2"/><path d="M5.6 10.4h5.2"/><path d="M5.6 13.6h3.4"/><rect x="13.8" y="12.2" width="7.6" height="8.6" rx="1.4"/><path d="M13.8 15.4h7.6"/><path d="M13.8 18.2h7.6"/><circle cx="16" cy="15.4" r=".95" fill="currentColor" stroke="none"/><circle cx="19.2" cy="15.4" r=".95" fill="currentColor" stroke="none"/><circle cx="17.6" cy="18.2" r=".95" fill="currentColor" stroke="none"/><circle cx="20.4" cy="18.2" r=".95" fill="currentColor" stroke="none"/>',
+ ag4:'<rect x="3.2" y="9.2" width="7.2" height="11.4" rx="1"/><rect x="12" y="4.8" width="8.8" height="15.8" rx="1"/><path d="M2.4 20.6h19.2"/><path d="M5.6 12.2h1.8"/><path d="M5.6 15.6h1.8"/><path d="M14.4 8h1.8"/><path d="M17.8 8h1.8"/><path d="M14.4 12h1.8"/><path d="M17.8 12h1.8"/>',
+ ag5:'<rect x="4.4" y="2.8" width="5.8" height="9.8" rx="2.9"/><path d="M6.1 5.6h2.4"/><path d="M6.1 7.8h2.4"/><path d="M2.6 10.6a4.7 4.7 0 0 0 9.4 0"/><path d="M7.3 15.3v3.2"/><path d="M4.9 18.5h4.8"/><rect x="13.6" y="10.2" width="8" height="6" rx="1.2"/><path d="M17.6 10.2V8.4"/><path d="M15.4 12.4h1.4"/><path d="M15.4 14.2h3.4"/>',
+ ag6:'<path d="M3.6 12.4c1.9-4.6 3.7-6.6 4.8-6.1 1.1.5-.2 4.4-1.2 6.9-.7 1.7-.2 2.5.9 2.1 1.3-.5 2.4-2 3.4-3.1.9-1 1.7-.8 1.7.4 0 1.2.6 1.8 1.6 1.3 1-.5 2.4-1.8 3.8-3.2"/><rect x="5" y="17.4" width="14" height="4.2" rx="1.2"/><rect x="7.2" y="18.8" width="9.6" height="1.4" rx=".7"/>',
+
+ /* AĞ — kulüp ilişkileri, transfer masası, müşteriyi tutmak */
+ nw1:'<path d="M6.6 3.2h10.4a1.8 1.8 0 0 1 1.8 1.8v14a1.8 1.8 0 0 1-1.8 1.8H6.6z"/><path d="M6.6 3.2a2.2 2.2 0 0 0-2.2 2.2v13.2a2.2 2.2 0 0 0 2.2 2.2"/><path d="M18.8 7.4h2.2"/><path d="M18.8 11.4h2.2"/><path d="M18.8 15.4h2.2"/><path d="M10.4 3.2v5.2l1.9-1.5 1.9 1.5V3.2"/>',
+ nw2:'<path d="M10.2 13.8 8.4 15.6a3.6 3.6 0 0 1-5.1-5.1l3.2-3.2a3.6 3.6 0 0 1 5.1 0"/><path d="M13.8 10.2l1.8-1.8a3.6 3.6 0 0 1 5.1 5.1l-3.2 3.2a3.6 3.6 0 0 1-5.1 0"/>',
+ nw3:'<rect x="4.4" y="3.2" width="11" height="17.4" rx="1"/><path d="M15.4 5.4 20.6 3.2v17.4l-5.2-2.2z"/><circle cx="17" cy="12" r=".9" fill="currentColor" stroke="none"/><path d="M2.8 20.6h18.4"/>',
+ nw4:'<rect x="2.6" y="12.8" width="5.4" height="5" rx="1.8"/><rect x="16" y="12.8" width="5.4" height="5" rx="1.8"/><path d="M5.3 12.8v-1.2a14 8 0 0 1 13.4 0v1.2"/><path d="M8.6 8.2a4.8 4.8 0 0 1 6.8 0"/><path d="M6.2 5.6a8.4 8.4 0 0 1 11.6 0"/>',
+ nw5:'<circle cx="8.8" cy="7.6" r="3.4"/><path d="M2.8 20.8v-1.2a6 6 0 0 1 12 0v1.2"/><path d="m18 5 1.24 2.51 2.77.4-2 1.95.47 2.76-2.48-1.3-2.48 1.3.47-2.76-2-1.95 2.77-.4z"/>',
+ nw6:'<rect x="2.6" y="8.6" width="18.8" height="12" rx="2"/><path d="M8.6 8.6V6.9a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.7"/><path d="M2.6 12.8h18.8"/><circle cx="12" cy="16.4" r="2.6"/><path d="M12 14.9v3"/><path d="M13 15.6a1.3 1.3 0 0 0-1-.4c-.7 0-1.2.35-1.2.9s.45.75 1.2.9c.75.15 1.2.4 1.2.9s-.5.9-1.2.9c-.4 0-.8-.15-1-.4"/>'
+};
+/* Simgenin tek okuma noktası. Bilinmeyen bir düğüm için boş dönüyor; çağıran
+   taraf dal glifine düşer, böylece simgesiz eklenen bir düğüm boş kutu değil
+   dalının işaretini gösterir. */
+function skIcon(id){return SK_ICON[id]||'';}
+/* Ağacın tam bedeli: "kaç puanlık ağaç" sorusunun tek kaynağı. Özet karttaki
+   ilerleme oranı bunu okuyor — 32 sayısı hiçbir yere elle yazılmıyor. */
+function skillTreeCost(){return SKILLS.reduce((s,k)=>s+(k.cost||0),0);}
+
 /* ===== yerleşim =====
    Izgara birimi SK_GEO.unit; merkez (0,0). Dalın yönü (ax,ay) ise yan kollar
    bu vektörün dikine (-ay,ax) açılıyor. Böylece dört yön de tek formülle çiziliyor. */
