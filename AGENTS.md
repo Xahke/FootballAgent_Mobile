@@ -76,7 +76,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (373 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (380 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -87,7 +87,7 @@ call time. The parts that are load-time real:
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |
 | `js/events.js` | Event definitions (32, of which 8 are small), weighted selection, `applyEff` |
-| `js/skills.js` | Skill tree data and layout, level curve, point accounting, `skillBonus` |
+| `js/skills.js` | Skill tree data and layout, per-node icons (`SK_ICON`), level curve, point accounting, `skillBonus` |
 | `js/actions.js` | Contract negotiation, transfer offers and clauses, the client meeting (pitch), signing/releasing clients, inbox actions |
 | `js/ui.js` | `VIEWS` (14), `THEMES` (4), `NAVS` (6), rendering, navigation, modal queue, skill-tree SVG |
 | `js/main.js` | `save()` wrapper and boot (legacy migration, first render, service-worker registration) |
@@ -156,7 +156,26 @@ one means checking `SKILLS.map(skPos)` for duplicate coordinates first (currentl
 The four cardinal directions are collision-free by construction.
 
 Node state is read from one place, `skillState()` → `owned | open | poor | lock`, used by
-both the renderer and `skillBuy()`, so what you see is what you can buy.
+both the renderer and `skillBuy()`, so what you see is what you can buy. A node is
+**binary** — owned or not, bought once at `cost` points. There is no per-node level, no
+repeat upgrade and no "next level" value, so any screen that shows one would be lying.
+
+**Saha draws the same data as cards, not as the tree** (`useSahaSkills()`, the same gate
+as `useSahaMarket`/`useSahaLeague`/`usePortraits`). `skSahaView()` renders a point summary,
+the four real branches as tabs and the six nodes of the selected branch as a two-column
+grid; `skSahaSheet()` replaces the node card. The other three themes keep `skTreeSvg()`
+untouched — `skills()` and `skOpen()` branch on the gate and nothing else.
+
+The tree could afford one glyph per branch because **position** told the nodes apart. A
+card grid has no position, so six cards in a branch would repeat one glyph six times:
+`SK_ICON` in `skills.js` carries a drawing per node and is the single source — `js/ui.js`
+reads it through `skIcon()` and never keeps a copy. The five `SKICONS` branch/hub glyphs
+stay, now used only on the branch tabs, where repetition *is* the grouping. A locked card
+prints the required node by **name** instead of drawing a dependency line; the `req`
+relation is the only real one and a name reads better on a phone than an edge.
+
+The selected branch (`SKTAB`) is view state only, like `MKQ` and atlas `CAM` — it never
+reaches the save, so switching tabs or themes cannot touch points or owned nodes.
 
 Old saves are translated on read: `SK_LEGACY` maps the nine skill ids of the pre-tree
 layout onto their equivalents, and `skillsTaken()` drops anything `skById()` no longer
@@ -477,7 +496,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match (373 today). Objects returned from events, themes, branches and
+  counts must match (380 today). Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
   silently overwrote it.
