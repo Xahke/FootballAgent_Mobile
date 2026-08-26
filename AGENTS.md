@@ -76,7 +76,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (351 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (373 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -477,7 +477,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match (351 today). Objects returned from events, themes, branches and
+  counts must match (373 today). Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
   silently overwrote it.
