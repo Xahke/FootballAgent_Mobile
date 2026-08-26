@@ -272,6 +272,37 @@ const SK_ICON={
    taraf dal glifine düşer, böylece simgesiz eklenen bir düğüm boş kutu değil
    dalının işaretini gösterir. */
 function skIcon(id){return SK_ICON[id]||'';}
+/* ===== dal sekmesi simgeleri (yalnız saha) =====
+   SKICONS'taki dört dal glifi ağacın içindi: orada düğümün ne olduğunu KONUM
+   söylüyor, glif yalnızca hangi dala ait olduğunu işaretliyor. Saha'nın sekme
+   şeridinde ise glif tek başına dalın ADINI anlatmak zorunda ve 19px'te çiziliyor
+   (.skTabIc svg). Eski dördü orada zayıf kalıyordu: belge "sözleşme" diyordu ama
+   müzakereyi anlatmıyordu, nişangâh sahaya benzemiyordu, dolar ajansı yalnız
+   parayla eşliyordu.
+
+   Bu yüzden AYRI bir kaynak: SKICONS olduğu gibi duruyor ve dosya/gazete/terminal
+   temalarının ağacı hiç etkilenmiyor. Aşağıdakiler yalnız useSahaSkills() yolundan,
+   skBranchIcon() üzerinden okunuyor.
+
+   Dördü de 19px'te rasterize edilip denendi; kalabalık olan her ayrıntı atıldı:
+     tb — masanın iki yanında iki taraf, ortada evrak. Tokalaşma denenmedi bile,
+          önceki turda 24px'te mobilya gibi okunduğu ölçülmüştü.
+     fd — saha sınırı + orta çizgi + orta yuvarlak + iki ceza sahası. Ceza sahaları
+          19px'te ayrışıyor ve "futbol sahası" okumasını asıl onlar sağlıyor.
+     ag — tek kurumsal merkez: cephe, belirgin kemerli giriş, iki sıra pencere.
+          Şehir silueti değil (birden fazla bina jenerik duruyordu), para değil.
+     nw — merkez + dört temas noktası. Eski üç düğümlü glif paylaş düğmesine
+          benziyordu; dört yön simetrisi onu ağ yapıyor ve optik ağırlığı
+          diğer üçüyle eşitliyor. */
+const SK_SAHA_BRANCH_ICON={
+ tb:'<circle cx="6.6" cy="7.2" r="2.4"/><circle cx="17.4" cy="7.2" r="2.4"/><path d="M2.4 15h19.2"/><path d="M6.6 15v4.2"/><path d="M17.4 15v4.2"/><path d="M9.8 11.6h4.4v3.4H9.8z"/>',
+ fd:'<rect x="2.6" y="4.6" width="18.8" height="14.8" rx="1.5"/><path d="M12 4.6v14.8"/><circle cx="12" cy="12" r="2.9"/><path d="M2.6 8.8h2.6v6.4H2.6"/><path d="M21.4 8.8h-2.6v6.4h2.6"/>',
+ ag:'<path d="M4.8 20.8V6.2a1.6 1.6 0 0 1 1.6-1.6h11.2a1.6 1.6 0 0 1 1.6 1.6v14.6"/><path d="M2.6 20.8h18.8"/><path d="M10 20.8v-4a2 2 0 0 1 4 0v4"/><path d="M7.4 8.8h2.4"/><path d="M14.2 8.8h2.4"/><path d="M7.4 13h2.4"/><path d="M14.2 13h2.4"/>',
+ nw:'<circle cx="12" cy="12" r="2.7"/><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="19" r="1.9"/><circle cx="5" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/><path d="M12 7.3v2"/><path d="M12 14.7v2"/><path d="M7.3 12h2"/><path d="M14.7 12h2"/>'
+};
+/* Tek okuma noktası. Bilinmeyen dal için boş dönüyor; çağıran taraf SKICONS'a
+   düşer, yani yeni bir dal simgesiz eklense bile sekme boş kalmaz. */
+function skBranchIcon(id){return SK_SAHA_BRANCH_ICON[id]||'';}
 /* Ağacın tam bedeli: "kaç puanlık ağaç" sorusunun tek kaynağı. Özet karttaki
    ilerleme oranı bunu okuyor — 32 sayısı hiçbir yere elle yazılmıyor. */
 function skillTreeCost(){return SKILLS.reduce((s,k)=>s+(k.cost||0),0);}

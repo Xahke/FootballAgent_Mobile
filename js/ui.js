@@ -2082,7 +2082,7 @@ function skSahaView(){
     const got=branchTaken(b.id), tot=branchTotal(b.id);
     return `<button class="skTab${b.id===br?' on':''}" style="--skc:var(--sk-${b.id})"
       onclick="skSetTab('${b.id}')" aria-pressed="${b.id===br?'true':'false'}">
-      <span class="skTabIc">${skSvg(SKICONS[b.id])}</span>
+      <span class="skTabIc">${skSvg(skBranchIcon(b.id)||SKICONS[b.id])}</span>
       <span class="skTabN">${b.n[L]}</span>
       <span class="skTabP num">${got}/${tot}</span></button>`;
   }).join('');

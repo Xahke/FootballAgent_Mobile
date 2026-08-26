@@ -169,8 +169,11 @@ untouched — `skills()` and `skOpen()` branch on the gate and nothing else.
 The tree could afford one glyph per branch because **position** told the nodes apart. A
 card grid has no position, so six cards in a branch would repeat one glyph six times:
 `SK_ICON` in `skills.js` carries a drawing per node and is the single source — `js/ui.js`
-reads it through `skIcon()` and never keeps a copy. The five `SKICONS` branch/hub glyphs
-stay, now used only on the branch tabs, where repetition *is* the grouping. A locked card
+reads it through `skIcon()` and never keeps a copy. The branch tabs have their own four
+drawings, `SK_SAHA_BRANCH_ICON` (read through `skBranchIcon()`), because a tab glyph has to
+carry the branch's whole meaning on its own at 19px — a document, a crosshair and a dollar
+sign did not. The five `SKICONS` branch/hub glyphs are untouched and now belong entirely to
+the old tree, which is what the other three themes still draw. A locked card
 prints the required node by **name** instead of drawing a dependency line; the `req`
 relation is the only real one and a name reads better on a phone than an edge.
 
