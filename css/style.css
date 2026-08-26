@@ -817,17 +817,17 @@ html[data-theme="saha"] .hmAdvIc.badge{width:calc(58px + clamp(0px, calc(3.952vh
 html[data-theme="saha"] .hmAgIc.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
 html[data-theme="saha"] .hmQi.badge{width:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));width:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68vh - 37.44px), 7.2px));height:calc(46px + clamp(0px, calc(4.68dvh - 37.44px), 7.2px))}
 html[data-theme="saha"] .hmRiseIc.badge{width:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));width:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24vh - 49.92px), 9.6px));height:calc(48px + clamp(0px, calc(6.24dvh - 49.92px), 9.6px))}
-html[data-theme="saha"] .clTop,html[data-theme="saha"] .mkTop,html[data-theme="saha"] .lgTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
-html[data-theme="saha"] .clTop::before,html[data-theme="saha"] .mkTop::before,html[data-theme="saha"] .lgTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
+html[data-theme="saha"] .clTop,html[data-theme="saha"] .mkTop,html[data-theme="saha"] .lgTop,html[data-theme="saha"] .skTop{position:relative;z-index:0;padding:16px 0 18px;margin:-2px 0 12px}
+html[data-theme="saha"] .clTop::before,html[data-theme="saha"] .mkTop::before,html[data-theme="saha"] .lgTop::before,html[data-theme="saha"] .skTop::before{content:'';position:absolute;z-index:-1;top:-12px;bottom:0;
   left:var(--gutter-neg);right:var(--gutter-neg);
   background:
     linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.92) 30%,rgba(11,17,30,.55) 62%,rgba(11,17,30,.25) 100%),
     linear-gradient(180deg,rgba(11,17,30,.5) 0%,rgba(11,17,30,.08) 34%,rgba(11,17,30,.8) 80%,var(--bg) 100%),
     url(../assets/ui/home-stadium-tunnel.webp) 64% 46%/cover no-repeat;
   background-color:var(--bg)}
-html[data-theme="saha"] .clTitle,html[data-theme="saha"] .mkTitle,html[data-theme="saha"] .lgTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
+html[data-theme="saha"] .clTitle,html[data-theme="saha"] .mkTitle,html[data-theme="saha"] .lgTitle,html[data-theme="saha"] .skTitle{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1.14;
   letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.75)}
-html[data-theme="saha"] .clSub,html[data-theme="saha"] .mkSub,html[data-theme="saha"] .lgSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+html[data-theme="saha"] .clSub,html[data-theme="saha"] .mkSub,html[data-theme="saha"] .lgSub,html[data-theme="saha"] .skSub{font-size:12.5px;color:var(--txt2);margin-top:2px;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 html[data-theme="saha"] .clSum{display:flex;align-items:stretch;background:var(--sur);border:1px solid var(--line);
   border-radius:var(--r);padding:11px 4px;margin-bottom:11px;box-shadow:var(--sh)}
 html[data-theme="saha"] .clSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
@@ -936,22 +936,22 @@ html[data-theme="saha"] .clCard{gap:10px}
 html[data-theme="saha"] .clBadge.port>.tb{width:58px;height:58px}
 html[data-theme="saha"] .clAvTm>.tb{width:15px;height:15px;border-radius:4px;font-size:6px}
 html[data-theme="saha"] .clCard{gap:9px}}
-html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header,html[data-theme="saha"] body[data-view="league"] header{
+html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header,html[data-theme="saha"] body[data-view="league"] header,html[data-theme="saha"] body[data-view="skills"] header{
   padding-top:calc(5px + env(safe-area-inset-top));
   padding-bottom:5px}
-html[data-theme="saha"] body[data-view="clients"] .hback,html[data-theme="saha"] body[data-view="market"] .hback,html[data-theme="saha"] body[data-view="league"] .hback{width:44px;height:44px;border-radius:13px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext{height:44px;border-radius:13px}
-@media (max-width:460px){html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header,html[data-theme="saha"] body[data-view="league"] header{padding-left:10px;padding-right:10px}
-html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow,html[data-theme="saha"] body[data-view="league"] .hrow{gap:5px}
-html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat,html[data-theme="saha"] body[data-view="league"] .hstat{padding:6px 6px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext{padding:0 10px}
-html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2,html[data-theme="saha"] body[data-view="league"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}}
-@media (max-width:374px){html[data-theme="saha"] body[data-view="clients"] .htitle .t1,html[data-theme="saha"] body[data-view="market"] .htitle .t1,html[data-theme="saha"] body[data-view="league"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
-html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2,html[data-theme="saha"] body[data-view="league"] .htitle .t2{font-size:9px;letter-spacing:0}
-html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow,html[data-theme="saha"] body[data-view="league"] .hrow{gap:4px}
-html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat,html[data-theme="saha"] body[data-view="league"] .hstat{padding:6px 4px;gap:3px}
-html[data-theme="saha"] body[data-view="clients"] .hstat svg,html[data-theme="saha"] body[data-view="market"] .hstat svg,html[data-theme="saha"] body[data-view="league"] .hstat svg{width:11px;height:11px}
-html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext{padding:0 10px}}
+html[data-theme="saha"] body[data-view="clients"] .hback,html[data-theme="saha"] body[data-view="market"] .hback,html[data-theme="saha"] body[data-view="league"] .hback,html[data-theme="saha"] body[data-view="skills"] .hback{width:44px;height:44px;border-radius:13px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext,html[data-theme="saha"] body[data-view="skills"] #btnNext{height:44px;border-radius:13px}
+@media (max-width:460px){html[data-theme="saha"] body[data-view="clients"] header,html[data-theme="saha"] body[data-view="market"] header,html[data-theme="saha"] body[data-view="league"] header,html[data-theme="saha"] body[data-view="skills"] header{padding-left:10px;padding-right:10px}
+html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow,html[data-theme="saha"] body[data-view="league"] .hrow,html[data-theme="saha"] body[data-view="skills"] .hrow{gap:5px}
+html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat,html[data-theme="saha"] body[data-view="league"] .hstat,html[data-theme="saha"] body[data-view="skills"] .hstat{padding:6px 6px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext,html[data-theme="saha"] body[data-view="skills"] #btnNext{padding:0 10px}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2,html[data-theme="saha"] body[data-view="league"] .htitle .t2,html[data-theme="saha"] body[data-view="skills"] .htitle .t2{font-size:9.5px;letter-spacing:.01em}}
+@media (max-width:374px){html[data-theme="saha"] body[data-view="clients"] .htitle .t1,html[data-theme="saha"] body[data-view="market"] .htitle .t1,html[data-theme="saha"] body[data-view="league"] .htitle .t1,html[data-theme="saha"] body[data-view="skills"] .htitle .t1{font-size:14px;letter-spacing:-.02em}
+html[data-theme="saha"] body[data-view="clients"] .htitle .t2,html[data-theme="saha"] body[data-view="market"] .htitle .t2,html[data-theme="saha"] body[data-view="league"] .htitle .t2,html[data-theme="saha"] body[data-view="skills"] .htitle .t2{font-size:9px;letter-spacing:0}
+html[data-theme="saha"] body[data-view="clients"] .hrow,html[data-theme="saha"] body[data-view="market"] .hrow,html[data-theme="saha"] body[data-view="league"] .hrow,html[data-theme="saha"] body[data-view="skills"] .hrow{gap:4px}
+html[data-theme="saha"] body[data-view="clients"] .hstat,html[data-theme="saha"] body[data-view="market"] .hstat,html[data-theme="saha"] body[data-view="league"] .hstat,html[data-theme="saha"] body[data-view="skills"] .hstat{padding:6px 4px;gap:3px}
+html[data-theme="saha"] body[data-view="clients"] .hstat svg,html[data-theme="saha"] body[data-view="market"] .hstat svg,html[data-theme="saha"] body[data-view="league"] .hstat svg,html[data-theme="saha"] body[data-view="skills"] .hstat svg{width:11px;height:11px}
+html[data-theme="saha"] body[data-view="clients"] #btnNext,html[data-theme="saha"] body[data-view="market"] #btnNext,html[data-theme="saha"] body[data-view="league"] #btnNext,html[data-theme="saha"] body[data-view="skills"] #btnNext{padding:0 10px}}
 html[data-theme="saha"] .clSumV.acc{color:var(--acc)}
 html[data-theme="saha"] .clSumV.bad{color:var(--bad)}
 html[data-theme="saha"] .mkNet{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;
@@ -1202,6 +1202,132 @@ html[data-theme="saha"] .lgTab{font-size:12px;letter-spacing:.02em}
 html[data-theme="saha"] .lgIdN{font-size:16.5px}
 html[data-theme="saha"] .lgScore{min-width:56px;font-size:20px}
 html[data-theme="saha"] .lgFixSc{min-width:48px;font-size:15px}}
+html[data-theme="saha"] .skSum{display:flex;align-items:stretch;gap:13px;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:12px;
+  box-shadow:var(--sh)}
+html[data-theme="saha"] .skSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="saha"] .skSumP{flex:0 0 auto;min-width:88px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;text-align:center}
+html[data-theme="saha"] .skSumV{font-family:var(--cond);font-weight:800;font-size:42px;line-height:1;
+  letter-spacing:-.03em;color:var(--txt3)}
+html[data-theme="saha"] .skSumV.hot{color:var(--gold)}
+html[data-theme="saha"] .skSumL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.2;overflow-wrap:anywhere}
+html[data-theme="saha"] .skSumV.hot+.skSumL{color:var(--gold)}
+html[data-theme="saha"] .skSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px}
+html[data-theme="saha"] .skSumT{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+html[data-theme="saha"] .skSumT b{font-family:var(--cond);font-weight:800;font-size:22px;letter-spacing:-.01em;line-height:1.05}
+html[data-theme="saha"] .skSumT span{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .skPrg{height:6px;border-radius:3px;background:var(--sur3);overflow:hidden}
+html[data-theme="saha"] .skPrg>i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--accD),var(--acc))}
+html[data-theme="saha"] .skSumLv{font-family:var(--cond);font-weight:600;font-size:11.5px;letter-spacing:.02em;
+  color:var(--txt3);line-height:1.3}
+html[data-theme="saha"] .skSumLv b{color:var(--txt2);font-weight:700}
+html[data-theme="saha"] .skTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:11px}
+html[data-theme="saha"] .skTab{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 4px;background:var(--sur2);border:1px solid var(--line);border-radius:13px;
+  color:var(--txt2);cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap),color var(--tap)}
+html[data-theme="saha"] .skTab:active{transform:scale(.97)}
+html[data-theme="saha"] .skTabIc{display:flex;color:var(--txt3);transition:color var(--tap)}
+html[data-theme="saha"] .skTabIc svg{width:19px;height:19px}
+html[data-theme="saha"] .skTabN{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.02em;
+  text-transform:uppercase;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+html[data-theme="saha"] .skTabP{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt3)}
+html[data-theme="saha"] .skTab.on{background:var(--sur3);border-color:var(--skc);color:var(--txt)}
+html[data-theme="saha"] .skTab.on .skTabIc,html[data-theme="saha"] .skTab.on .skTabP{color:var(--skc)}
+html[data-theme="saha"] .skBrD{font-size:12.5px;color:var(--txt3);line-height:1.45;margin:0 2px 11px}
+html[data-theme="saha"] .skGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px}
+html[data-theme="saha"] .skCard{display:flex;flex-direction:column;align-items:stretch;gap:6px;
+  padding:11px 11px 0;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r);color:var(--txt);cursor:pointer;font-family:inherit;text-align:left;
+  overflow:hidden;box-shadow:var(--sh);-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap)}
+html[data-theme="saha"] .skCard:active{transform:scale(.985)}
+html[data-theme="saha"] .skCardH{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+html[data-theme="saha"] .skCardIc{display:flex;color:var(--skc)}
+html[data-theme="saha"] .skCardIc svg{width:26px;height:26px}
+html[data-theme="saha"] .skCost{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;padding:3px 7px;
+  border-radius:9px;background:var(--gold-soft);color:var(--gold);
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.3)}
+html[data-theme="saha"] .skCost b{font-family:var(--cond);font-weight:800;font-size:13.5px;line-height:1}
+html[data-theme="saha"] .skCost svg{width:12px;height:12px}
+html[data-theme="saha"] .skCost.ok{padding:4px;background:var(--acc-soft);color:var(--acc);
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.32)}
+html[data-theme="saha"] .skCost.ok svg{width:14px;height:14px}
+html[data-theme="saha"] .skCardN{font-family:var(--cond);font-weight:800;font-size:16px;line-height:1.14;
+  letter-spacing:-.01em;overflow-wrap:anywhere}
+html[data-theme="saha"] .skCardEs{display:flex;flex-direction:column;gap:2px;padding-bottom:9px}
+html[data-theme="saha"] .skCardE{font-size:11.5px;line-height:1.32;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .skCardF{margin:auto -11px 0;display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:31px;padding:7px 9px;background:var(--sur2);color:var(--txt3);
+  font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.05em;
+  text-transform:uppercase;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+html[data-theme="saha"] .skCardF i{display:flex;flex-shrink:0}
+html[data-theme="saha"] .skCardF i svg{width:14px;height:14px}
+html[data-theme="saha"] .skCard.open{border-color:rgba(30,201,126,.4);
+  background:linear-gradient(180deg,rgba(30,201,126,.075),var(--sur) 60%)}
+html[data-theme="saha"] .skCard.open .skCardF{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5}
+html[data-theme="saha"] .skCard.poor{border-color:rgba(233,188,90,.3)}
+html[data-theme="saha"] .skCard.poor .skCardF{background:var(--warn-soft);color:var(--warn)}
+html[data-theme="saha"] .skCard.lock{border-style:dashed;border-color:rgba(77,159,255,.3);background:rgba(19,27,46,.5)}
+html[data-theme="saha"] .skCard.lock .skCardIc,html[data-theme="saha"] .skCard.lock .skCardN{color:var(--txt3)}
+html[data-theme="saha"] .skCard.lock .skCost{background:rgba(77,159,255,.08);color:var(--txt3);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="saha"] .skCard.lock .skCardF{background:var(--blue-soft);color:var(--blue)}
+html[data-theme="saha"] .skCard.owned{background:var(--sur2);border-color:var(--line2)}
+html[data-theme="saha"] .skCard.owned .skCardF{background:rgba(30,201,126,.1);color:var(--acc)}
+html[data-theme="saha"] .skSheet{--skc:var(--txt2)}
+html[data-theme="saha"] .skSheetH{display:flex;align-items:flex-start;gap:12px}
+html[data-theme="saha"] .skSheetIc{width:52px;height:52px;flex:0 0 52px;border-radius:15px;display:flex;
+  align-items:center;justify-content:center;background:var(--sur2);color:var(--skc);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="saha"] .skSheetIc svg{width:28px;height:28px}
+html[data-theme="saha"] .skSheetT{flex:1 1 0;min-width:0}
+html[data-theme="saha"] .skSheetT h2{font-family:var(--cond);font-weight:800;font-size:23px;line-height:1.12;
+  letter-spacing:-.02em;overflow-wrap:anywhere}
+html[data-theme="saha"] .skSheetT .sub{margin-top:3px}
+html[data-theme="saha"] .skSheetD{margin:13px 0 15px;font-size:13px;line-height:1.55;color:var(--txt2)}
+html[data-theme="saha"] .skDEs{display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border-radius:var(--r-s);overflow:hidden}
+html[data-theme="saha"] .skDE{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;background:var(--sur2)}
+html[data-theme="saha"] .skDE span{font-size:12.5px;line-height:1.3;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .skDE b{font-family:var(--cond);font-weight:800;font-size:16.5px;color:var(--txt);
+  flex-shrink:0;letter-spacing:.01em}
+html[data-theme="saha"] .skSheet.owned .skDE b{color:var(--acc)}
+html[data-theme="saha"] .skSheetR{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;
+  border-radius:var(--r-s);background:var(--blue-soft);color:var(--blue);font-size:12.5px;
+  line-height:1.35;overflow-wrap:anywhere}
+html[data-theme="saha"] .skSheetR i{display:flex;flex-shrink:0}
+html[data-theme="saha"] .skSheetR i svg{width:17px;height:17px}
+html[data-theme="saha"] .skCta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:50px;margin-top:16px;padding:10px 16px;border:none;border-radius:14px;
+  font-family:var(--cond);font-weight:800;font-size:17px;letter-spacing:.04em;
+  text-transform:uppercase;text-align:center;line-height:1.2;-webkit-appearance:none;appearance:none}
+html[data-theme="saha"] .skCta.go{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5;cursor:pointer;box-shadow:0 10px 24px -18px #000}
+html[data-theme="saha"] .skCta.go:active{transform:scale(.985)}
+html[data-theme="saha"] .skCta.go i{font-family:var(--cond);font-weight:700;font-size:13.5px;font-style:normal;
+  letter-spacing:.02em;opacity:.82}
+html[data-theme="saha"] .skCta.no{background:var(--sur2);color:var(--txt3);font-size:14px;cursor:default;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="saha"] .skCta.done{background:var(--acc-soft);color:var(--acc);cursor:default;
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.28)}
+html[data-theme="saha"] .skCta.done svg{width:19px;height:19px}
+html[data-theme="saha"] .skNote{font-size:12px;line-height:1.5;color:var(--txt3);margin:0 2px}
+@media (max-width:374px){html[data-theme="saha"] .skSum{padding:12px 11px;gap:11px}
+html[data-theme="saha"] .skSumP{min-width:76px}
+html[data-theme="saha"] .skSumV{font-size:37px}
+html[data-theme="saha"] .skTabs{gap:6px}
+html[data-theme="saha"] .skTabN{font-size:11px}
+html[data-theme="saha"] .skGrid{gap:8px}
+html[data-theme="saha"] .skCard{padding:10px 9px 0}
+html[data-theme="saha"] .skCardF{margin-left:-9px;margin-right:-9px;font-size:11px;letter-spacing:.03em}
+html[data-theme="saha"] .skCardN{font-size:15px}}
 html[data-theme="saha"] body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 html[data-theme="saha"] .cmTop{position:relative;margin:2px 0 14px}
 html[data-theme="saha"] .cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
