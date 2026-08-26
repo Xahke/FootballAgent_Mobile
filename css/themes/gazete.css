@@ -926,3 +926,175 @@ body[data-view="dash"] .hmRise{min-height:calc(76px + clamp(0px, calc(24.96vh - 
 .clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n8);color:var(--n0);
   border:none;border-radius:var(--r-s);cursor:pointer;font-family:inherit;font-size:11.5px;
   font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+/* ===================== KARİYER MENÜSÜ (açılış ekranı) =====================
+   Yapı dört temada da aynı; renk, yarıçap ve gölge değişkenlerden geldiği için
+   her tema kendi diliyle çiziyor. Tema dosyalarının altındaki kısa blok yalnız
+   karakter farkını taşıyor (saha'da tünel bandı ve daraltılmış tipografi,
+   gazete'de serif başlık ve kural çizgileri gibi).
+
+   İki kural bu blokta pazarlığa kapalı:
+   1) Her dokunma hedefi en az 44x44. Satırların yüksekliği içeriğinden değil bu
+      eşikten geliyor.
+   2) Ad taşıyan her metin tek satır + ellipsis. Kariyer adı 24 karaktere kadar
+      girilebiliyor, ajans adı da öyle; kırpma düzeni bozmamalı.
+
+   Gölge burada tek değer olarak yazılıyor: --sh üç temada 'none' ve
+   "inset ..., none" geçersiz bir box-shadow listesi olurdu, kural sessizce
+   düşerdi. Katmanlı gölgeyi yalnız saha kendi bloğunda kuruyor. */
+
+/* Menüde alt gezinme yok; gövdenin çubuk için ayırdığı boşluk da olmamalı.
+   92px'lik ölü alan 360x800'de listenin son satırını ekran dışına itiyordu. */
+body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+
+/* --- üst kimlik bandı --- */
+.cmTop{position:relative;margin:2px 0 14px}
+.cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+.cmTool{min-width:44px;min-height:44px;padding:0 12px;border:none;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line)}
+.cmTool svg{width:20px;height:20px;flex-shrink:0}
+.cmTool:active{transform:scale(.94)}
+.cmTitle{font-size:29px;font-weight:800;letter-spacing:-.03em;line-height:1.08;
+  text-transform:uppercase;color:var(--txt)}
+.cmSub{font-size:13px;color:var(--txt2);margin-top:4px}
+
+/* --- birincil kariyer kartı --- */
+/* Kart yüzeyi tıklanabilir değil: yükleme yalnız "Devam et"ten geçiyor, üç
+   nokta düğmesi de kazara kaydı açmasın. */
+.cmMain{display:block;width:100%;text-align:left;border:none;
+  background:var(--sur2);border-radius:20px;padding:16px 15px 15px;margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+.cmHead{display:flex;align-items:center;gap:13px}
+.cmAv,.cmAvS{position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+.cmAv{width:58px;height:58px;border-radius:16px;font-size:20px}
+.cmAvS{width:40px;height:40px;border-radius:12px;font-size:14px}
+/* Siluet <img> olarak geliyor; yüklenemezse onerror onu kaldırıyor ve altta
+   duran baş harfler ortaya çıkıyor. Görsel yalnız saha temasında gösteriliyor —
+   ana ekrandaki .hmAvImg ile aynı davranış. */
+.cmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
+.cmHi{flex:1;min-width:0}
+/* line-height 1.1 kutuyu harflerin altina sokuyordu: overflow:hidden ile birlikte
+   terminal temasinda alt uzantilar (g, j, y) 2px kirpiliyordu — olculdu. */
+.cmName{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.25;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmWho{font-size:12.5px;color:var(--txt2);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmMore{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;cursor:pointer;
+  background:none;color:var(--txt3);display:flex;align-items:center;justify-content:center;
+  font-family:inherit;padding:0}
+.cmMore svg{width:18px;height:18px}
+.cmMore:active{transform:scale(.9)}
+.cmWk{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+/* İmza öğe: kartın ayıracı aynı zamanda sezon ölçeği. Süs değil — dolu kısım
+   haftanın sezon içindeki yeri, yani "bu kariyer sezonun neresinde". Ayrı bir
+   çizgi eklenmiyor, var olan ayıracın kendisi ölçüyor. */
+.cmRule{height:3px;border-radius:2px;background:var(--sur4);overflow:hidden}
+.cmRule i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+.cmStats{display:flex;align-items:stretch;margin-top:14px}
+.cmStats>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+.cmStat{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:0 6px;text-align:center}
+/* Kirpma icin overflow:hidden gerekiyor, ama dar satir yuksekligi Barlow
+   Condensed in uzun ust uzantilarini kutunun disinda birakiyordu — olculdu. */
+.cmStatV{display:block;max-width:100%;font-size:20px;font-weight:800;line-height:1.3;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmStatV.gold{color:var(--gold)}
+.cmStatL{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+.cmWhen{font-size:11.5px;color:var(--txt3);margin-top:13px;text-align:center;
+  font-variant-numeric:tabular-nums}
+.cmGo{width:100%;min-height:54px;margin-top:13px;border:none;border-radius:15px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--acc);color:var(--accT)}
+.cmGo:active{transform:scale(.985)}
+
+/* --- diğer yuvalar --- */
+.cmSect{margin-top:20px}
+.cmRow{position:relative;display:flex;align-items:center;margin-bottom:9px;overflow:hidden;
+  background:var(--sur);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.cmRowGo{flex:1;min-width:0;display:flex;align-items:center;gap:11px;min-height:64px;
+  padding:10px 2px 10px 12px;border:none;background:none;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--txt)}
+.cmRowGo:active{opacity:.72}
+.cmRowI{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cmRowN{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmRowN.acc{color:var(--acc)}
+.cmRowM{font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmRowC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1;padding:0 2px}
+/* Satırın alt kenarı birincil karttaki sezon çubuğunun aynısı: listeyi
+   kaydırırken hangi kariyerin sezonun neresinde olduğu okumadan görünüyor. */
+.cmRowRule{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.6}
+.cmMore.sq{border-radius:0;margin-right:2px}
+/* Boş yuva satırı. Ayrıca bir "Yeni kariyer" düğmesi yok — o aynı yuvayı ikinci
+   kez göstermek olurdu; boş yuvanın kendisi o düğme. */
+.cmNewRow{width:100%;min-height:64px;padding:10px 12px;gap:11px;cursor:pointer;
+  text-align:left;font-family:inherit;background:none;box-shadow:none;
+  border:1px dashed var(--line2)}
+.cmPlus,.cmNewIc{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;line-height:1;color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.cmPlus{width:40px;height:40px;border-radius:50%;font-size:22px}
+.cmWait{min-height:64px;padding:10px 12px}
+/* Silme eylemi 44px eşiğini kendi taşıyor: .btn ölçüsü temadan temaya değişiyor
+   ve saha temasında 41px'e düşüyordu (ölçüldü). */
+.cmDel{min-height:48px;display:flex;align-items:center;justify-content:center;width:100%}
+
+/* --- kayıt yokken birincil yerdeki davet --- */
+.cmNewMain{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:174px;cursor:pointer;background:none;box-shadow:none;text-align:center;
+  border:1px dashed var(--line2)}
+.cmNewIc{width:56px;height:56px;border-radius:50%;font-size:30px}
+.cmNewT{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--acc)}
+.cmNewS{font-size:12px;color:var(--txt3);max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Klavyeyle gezinen için görünür odak — dokunma hedefleri düğme olduğu için
+   sekme sırası zaten doğru, eksik olan yalnızca işaretti. */
+.cmTool:focus-visible,.cmGo:focus-visible,.cmMore:focus-visible,.cmRowGo:focus-visible,
+.cmNewRow:focus-visible,.cmNewMain:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* --- kariyer menüsü (gazete) ---
+   Ekranın dili kutu değil kural çizgisi: kartlar zemin almıyor, üst ve alt
+   kuralla ayrılıyor — tıpkı .card ve .list gibi. Başlıklar serif. */
+.cmTop{border-bottom:2px solid var(--n8);padding-bottom:12px;margin-bottom:16px}
+.cmTitle{font-family:var(--serif);font-weight:700;font-size:30px;letter-spacing:-.02em;line-height:1.1}
+.cmSub{font-size:12.5px;color:var(--txt3);letter-spacing:.04em;margin-top:4px}
+.cmTool{background:none;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line2);color:var(--txt2)}
+.cmMain{background:none;border-radius:0;box-shadow:none;padding:14px 0 16px;
+  border-top:1px solid var(--line);border-bottom:2px solid var(--n8)}
+.cmAv{width:52px;height:52px;font-size:18px}
+.cmAv,.cmAvS{border-radius:0;background:var(--n2);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+/* Ajans adı en geniş kimlik satırı. Bu tema daraltılmış bir başlık yüzü
+   kullanmadığı için 360px de "Karaca Menajerlik" gibi tipik bir ad 22px te
+   kırpılıyordu; ölçü ada göre değil, adın sığdığı yere göre seçildi. */
+.cmName{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.cmWk{font-size:9.5px;letter-spacing:.09em}
+.cmRule{background:var(--n3);border-radius:0;height:2px}
+.cmRule i{background:var(--n8);border-radius:0}
+.cmStatV{font-family:var(--serif);font-weight:700;font-size:20px}
+.cmStatL{font-size:9.5px;letter-spacing:.09em}
+.cmGo{border-radius:4px;min-height:48px;background:var(--n8);color:var(--n0);
+  font-size:14px;font-weight:700;letter-spacing:.09em}
+.cmRow{background:none;border-radius:0;box-shadow:none;margin-bottom:0;
+  border-top:1px solid var(--line)}
+.cmRowGo{padding-left:0}
+.cmRowN{font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:-.01em}
+.cmRowM{font-size:11px;letter-spacing:.03em}
+.cmRowRule{background:var(--n8);opacity:.8}
+.cmNewRow{border:1px dashed var(--line2);margin:9px 0 0}
+.cmNewRow .cmRowGo,.cmNewRow{padding-left:12px}
+.cmPlus,.cmNewIc{border-radius:0}
+.cmNewMain{border:1px dashed var(--n4);border-radius:0;padding:16px;margin-bottom:14px}
+.cmNewT{font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:-.01em}

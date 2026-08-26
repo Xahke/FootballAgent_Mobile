@@ -57,6 +57,172 @@ function askDeleteCareer(){
   stack=[{v:'menu'}];lastSig=null;pendSlot=0;
   toast(t('slotDeleted'));render();
 }
+/* ================= KARİYER MENÜSÜ =================
+   Ekranın işi bir yuva listesi göstermek değil, oyuncunun bıraktığı kariyere
+   geri dönmesi. Bu yüzden hiyerarşi tek bir soruya göre kurulu: en son hangi
+   kariyer oynandı? O kariyer büyük kartı alıyor, kalan yuvalar tek satıra
+   iniyor, devam edilecek bir şey yoksa büyük kartın yerini yeni kariyer daveti
+   alıyor. Yuva sayısı SLOTS'tan geliyor — burada üç varsayımı yok.
+
+   Ekran YALNIZ yuva özetini okuyor (js/saves.js, metaOf). Tam kayıt ~7000
+   oyuncu; menüde bir tanesini bile açmak telefonda görünür bir bekleme demek.
+   Bunun bedeli, özette olmayan hiçbir şeyin çizilememesi:
+
+   - Müşteri KAPASİTESİ yok. maxClients() S'yi, satın alınmış yetenekleri ve
+     ajans etkilerini okuyor; özetten türetilemez. Kartta yalnız müşteri sayısı
+     var — "5/7" yazmak ya kaydı açmak ya da paydayı uydurmak olurdu.
+   - Kayıt başına TEMA yok. Tema bu ayrımdan beri cihaz tercihi (PREFS), kayıtta
+     tutulmuyor. Kart için şemaya alan eklemedik.
+   - KULÜP yok, olmamalı: oyuncu kulüp menajeri değil, futbolcu temsilcisi.
+     Kartta rastgele bir kulüp arması "senin kulübün" derdi ve yalan olurdu.
+     Kimlik işareti ajans adı, menajerin baş harfleri ve ana ekrandaki menajer
+     silueti — üçü de gerçek kayıttan geliyor. */
+
+/* Özeti savunmacı okur: eski ya da yarım yazılmış bir özet menüyü çökertmesin.
+   Eksik alan null döner ve çizim tarafı o parçayı hiç basmaz — "undefined" ya
+   da "NaN" ekrana çıkmaz. */
+function cmSlot(n){
+  const s=slotMeta(n);
+  if(!s||typeof s!=='object')return null;
+  const num=v=>(typeof v==='number'&&isFinite(v))?v:null;
+  const str=v=>(typeof v==='string'&&v.trim())?v.trim():'';
+  return {n:n,name:str(s.agent),agency:str(s.agency),
+          season:num(s.season),week:num(s.week),cash:num(s.cash),
+          rep:num(s.rep),clients:num(s.clients),ts:num(s.ts)};
+}
+/* Kartın büyük satırı: ajans adı. Yoksa menajerin adı, o da yoksa yuva numarası
+   — hangi yuvaya dokunduğu her durumda belli olsun. */
+function cmLabel(c){return c.agency||c.name||t('slotN').replace('{n}',c.n);}
+function cmIni(c){
+  const p=(c.name||'').split(/\s+/).filter(Boolean);
+  if(!p.length)return '—';
+  /* Ana ekrandaki baş harflerle aynı hesap (VIEWS.dash), aynı kariyer iki
+     ekranda iki farklı işaret taşımasın. */
+  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase();
+}
+/* "2 dk önce" gibi bir satır ancak ts varsa çizilir. Cihaz saati geri alınmışsa
+   gelecekten bir kayıt görünür; "-3 dk önce" yazmak yerine tarihe düşüyoruz. */
+function cmAgo(ts){
+  const d=Date.now()-ts;
+  if(!isFinite(d)||d<0)return cmDate(ts);
+  const m=Math.floor(d/60000);
+  if(m<1)return t('cmNow');
+  if(m<60)return t('cmMinAgo').replace('{n}',m);
+  const h=Math.floor(m/60);
+  if(h<24)return t('cmHourAgo').replace('{n}',h);
+  const dd=Math.floor(h/24);
+  if(dd<7)return t('cmDayAgo').replace('{n}',dd);
+  return cmDate(ts);
+}
+function cmDate(ts){try{return new Date(ts).toLocaleDateString(L);}catch(e){return '';}}
+/* Sezon çubuğu: kartın ayıracı aynı zamanda ölçü. Payda SEASONW — en kalabalık
+   ligin çift devresi, yani sezonun tam uzunluğu; metaOf() haftayı zaten en uzun
+   fikstüre kırpıp yazıyor, bu yüzden oran gerçek. Veri değişip en uzun lig
+   kısalırsa çubuk eksik dolar, taşmaz. */
+function cmPct(w){
+  const tot=(typeof SEASONW==='number'&&SEASONW>0)?SEASONW:38;
+  return Math.max(0,Math.min(100,Math.round(w/tot*100)));
+}
+/* Menajer işareti: baş harfler altta, siluet üstte. Görsel yüklenemezse
+   onerror onu kaldırıyor ve harfler ortaya çıkıyor — ana ekranın .hmAv'ıyla
+   birebir aynı davranış. */
+function cmAvHtml(c,cls){
+  return `<span class="${cls}" aria-hidden="true">${esc(cmIni(c))}<img class="cmAvImg" src="assets/ui/agent-silhouette.webp" alt="" onerror="this.remove()"></span>`;
+}
+function cmWkText(c){
+  return (c.season!==null&&c.week!==null)?`${t('season')} ${c.season} · ${t('week')} ${c.week}`:'';
+}
+/* Üst kimlik bandı. Yalnız gerçekten bir hedefi olan iki kontrol var: ayarlar
+   ekranı ve dil değiştirme. "Hakkında" diye bir ekran olmadığı için düğmesi de
+   yok — işlevi olmayan düğme koymuyoruz. */
+function cmTopHtml(){
+  return `<div class="cmTop">
+    <div class="cmTools">
+      <button class="cmTool" onclick="pushV('settings')" aria-label="${esc(t('settings'))}">${ICONS.settings}</button>
+      <button class="cmTool wide" onclick="toggleLang()" aria-label="${esc(t('langLbl'))}">${ICONS.globe}<span>${L==='tr'?'English':'Türkçe'}</span></button>
+    </div>
+    <h1 class="cmTitle">${t('cmTitle')}</h1>
+    <div class="cmSub">${t('cmSub')}</div>
+  </div>`;
+}
+/* Birincil kart. Kart yüzeyinin kendisi tıklanabilir değil: yükleme tek bir
+   yerden, "Devam et" düğmesinden geçiyor. İki ayrı tıklama hedefi aynı işi
+   yapsaydı üç nokta düğmesi de kazara kaydı açardı. */
+function cmMainHtml(c){
+  const bits=[];
+  if(c.clients!==null)bits.push([String(c.clients),t('clientCount'),'']);
+  if(c.rep!==null)bits.push([String(c.rep),t('rep'),'']);
+  if(c.cash!==null)bits.push([fmtK(c.cash),t('hmBalance'),' gold']);
+  const wk=cmWkText(c),when=c.ts===null?'':cmAgo(c.ts);
+  return `<div class="cmMain">
+    <div class="cmHead">
+      ${cmAvHtml(c,'cmAv')}
+      <div class="cmHi">
+        <div class="cmName">${esc(cmLabel(c))}</div>
+        ${(c.agency&&c.name)?`<div class="cmWho">${esc(c.name)}</div>`:''}
+      </div>
+      <button class="cmMore" onclick="cmOptions(${c.n})" aria-label="${esc(t('cmOpts'))}">${ICONS.more}</button>
+    </div>
+    ${wk?`<div class="cmWk">${esc(wk)}</div>`:''}
+    <div class="cmRule">${c.week!==null?`<i style="width:${cmPct(c.week)}%"></i>`:''}</div>
+    ${bits.length?`<div class="cmStats">${bits.map((b,i)=>
+      `${i?'<i></i>':''}<div class="cmStat"><span class="cmStatV${b[2]}">${esc(b[0])}</span><span class="cmStatL">${esc(b[1])}</span></div>`
+    ).join('')}</div>`:''}
+    ${when?`<div class="cmWhen">${esc(t('slotLast'))} · ${esc(when)}</div>`:''}
+    <button class="cmGo" onclick="openSlot(${c.n})">${t('slotContinue')}</button>
+  </div>`;
+}
+/* Diğer kayıtlar: satırın tamamı yükleme düğmesi, üç nokta ayrı bir düğme.
+   Sağda ok YOK — okla üç nokta yan yana durunca hangisinin kaydı açtığı belirsiz
+   kalıyordu. Boş yuva satırında üç nokta olmadığı için ok orada duruyor.
+   Alt kenardaki ince şerit birincil karttaki sezon çubuğunun aynısı — listeyi
+   kaydırırken hangi kariyerin sezonun neresinde olduğu okumadan görünüyor. */
+function cmRowHtml(c){
+  const meta=[cmWkText(c),c.ts===null?'':cmAgo(c.ts)].filter(Boolean).join(' · ');
+  return `<div class="cmRow">
+    <button class="cmRowGo" onclick="openSlot(${c.n})">
+      ${cmAvHtml(c,'cmAvS')}
+      <span class="cmRowI">
+        <span class="cmRowN">${esc(cmLabel(c))}</span>
+        ${meta?`<span class="cmRowM">${esc(meta)}</span>`:''}
+      </span>
+    </button>
+    <button class="cmMore sq" onclick="cmOptions(${c.n})" aria-label="${esc(t('cmOpts'))}">${ICONS.more}</button>
+    ${c.week!==null?`<i class="cmRowRule" style="width:${cmPct(c.week)}%"></i>`:''}
+  </div>`;
+}
+/* Boş yuva. Kendi başına yeni kariyer düğmesi — ayrıca bir "Yeni kariyer"
+   düğmesi eklemiyoruz, o aynı yuvayı ikinci kez göstermek olurdu. */
+function cmEmptyRowHtml(n){
+  return `<button class="cmRow cmNewRow" onclick="newCareerSlot(${n})">
+    <span class="cmPlus">+</span>
+    <span class="cmRowI">
+      <span class="cmRowN acc">${t('slotNew')}</span>
+      <span class="cmRowM">${t('slotN').replace('{n}',n)} · ${t('slotEmpty')}</span>
+    </span>
+    <span class="cmRowC">›</span>
+  </button>`;
+}
+/* Hiç kayıt yokken birincil yerin sahibi. Boş ekran üç eşit boşluk listelemek
+   yerine tek bir davet olmalı. */
+function cmNewMainHtml(n){
+  return `<button class="cmMain cmNewMain" onclick="newCareerSlot(${n})">
+    <span class="cmNewIc">+</span>
+    <span class="cmNewT">${t('slotNew')}</span>
+    <span class="cmNewS">${t('slotN').replace('{n}',n)} · ${t('slotEmptyHint')}</span>
+  </button>`;
+}
+/* Kariyer işlemleri. Silme kartın yüzünde kırmızı bir düğme değil: parmağın
+   "devam et"e giderken geçtiği yerde durmuyor. Silmenin kendisi değişmedi —
+   askDeleteSlot() ve onun onayı aynen çağrılıyor. */
+function cmOptions(n){
+  const c=cmSlot(n);
+  if(!c)return;
+  openModal(`<h2>${esc(cmLabel(c))}</h2>
+    <div class="sub" style="margin:6px 0 14px">${esc(t('slotN').replace('{n}',n))}${(c.name&&c.agency)?' · '+esc(c.name):''}</div>
+    <button class="btn d cmDel" onclick="cmDeleteSlot(${n})">${t('deleteCareer')}</button>`);
+}
+function cmDeleteSlot(n){closeModal();askDeleteSlot(n);}
 /* ================= TEMALAR =================
    Her tema css/themes/*.css içinde ayrı bir stylesheet; tools/build-themes.js
    hepsini html[data-theme="ad"] altına kapsamlayıp css/style.css'i üretir. */
@@ -1075,61 +1241,37 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
   return body;
 }
 const VIEWS={
-/* Menü tam kayıtları açmaz — yuva başına yazılan küçük özeti okur (js/saves.js).
-   Üç kaydı ayrıştırmak ~7000 oyuncu demek olurdu ve menü telefonda beklerdi. */
+/* Kariyer menüsü. Kurgusu ve özetin neden tek kaynak olduğu yukarıda,
+   "KARİYER MENÜSÜ" bloğunda yazıyor. */
 menu(){
-  const m=allMeta(),rows=[];
   /* Kayıtlar henüz okunmadı (ya da eski sürümden göç ediyor). Boş yuva çizmek
      ilerlemenin silindiğini düşündürürdü — bekleyen bir satır dürüst olan. */
   if(!storeReady){
-    for(let n=1;n<=SLOTS;n++)rows.push(`<div class="pitem">
-      <div class="pinfo"><div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
-      <div class="psub">${t('slotLoading')}</div></div></div>`);
-    return `
-    <div class="hero" style="margin-top:10px">
-      <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
-      <div class="hname">Menajer</div>
-      <div class="hsub">${t('menuSub')}</div>
-    </div>
-    <div class="sect">${t('slotsLbl')}</div>
-    ${listWrap(rows.join(''))}`;
+    let wait='';
+    for(let n=1;n<=SLOTS;n++)wait+=`<div class="cmRow cmWait">
+      <span class="cmRowI"><span class="cmRowN">${t('slotN').replace('{n}',n)}</span>
+      <span class="cmRowM">${t('slotLoading')}</span></span></div>`;
+    return cmTopHtml()+`<div class="sect cmSect">${t('slotsLbl')}</div>`+wait;
   }
+  /* Birincil kart en son oynanan kariyer. ts'i olmayan çok eski bir özet 0
+     sayılıyor; sıralamanın hiç olmaması listeyi rastgele gösterirdi. */
+  let head=null;
   for(let n=1;n<=SLOTS;n++){
-    const s=m['s'+n];
-    if(s){
-      const when=s.ts?' · '+new Date(s.ts).toLocaleDateString(L):'';
-      rows.push(`<div class="pitem" onclick="openSlot(${n})">
-        <div class="pinfo">
-          <div class="pname">${esc(s.agent)||t('slotN').replace('{n}',n)}</div>
-          <div class="psub">${esc(s.agency)}${when}</div>
-          <div class="psub">${t('season')} ${s.season} · ${t('week')} ${s.week} · ${fmtK(s.cash)} · ${t('rep')} ${s.rep} · ${t('clients')} ${s.clients}</div>
-        </div>
-        <button class="btn s" style="width:auto;min-height:34px;padding:0 12px;font-size:12.5px"
-          onclick="event.stopPropagation();askDeleteSlot(${n})">${t('slotDelete')}</button>
-      </div>`);
-    }else{
-      rows.push(`<div class="pitem" onclick="newCareerSlot(${n})">
-        <div class="pinfo">
-          <div class="pname" style="color:var(--txt3)">${t('slotN').replace('{n}',n)}</div>
-          <div class="psub">${t('slotEmptyHint')}</div>
-        </div>
-        <span class="trk">+</span>
-      </div>`);
-    }
+    const c=cmSlot(n);
+    if(c&&(!head||(c.ts||0)>(head.ts||0)))head=c;
   }
-  return `
-  <div class="hero" style="margin-top:10px">
-    <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
-    <div class="hname">Menajer</div>
-    <div class="hsub">${t('menuSub')}</div>
-  </div>
-  <div class="sect">${t('slotsLbl')}</div>
-  ${listWrap(rows.join(''))}
-  ${listWrap(`<div class="pitem" onclick="pushV('settings')">
-    <div class="pinfo"><div class="pname">${t('settings')}</div>
-    <div class="psub">${t('appearance')} · ${t('langLbl')}</div></div>
-    <span class="trk">›</span></div>`)}
-  <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
+  const rest=[];
+  for(let n=1;n<=SLOTS;n++){
+    if(head&&n===head.n)continue;
+    const c=cmSlot(n);
+    rest.push(c?cmRowHtml(c):cmEmptyRowHtml(n));
+  }
+  /* Devam edilecek kariyer yoksa birincil yeri yeni kariyer alıyor ve o yuva
+     listeden düşüyor — aynı yuva iki kez görünmesin. */
+  let first;
+  if(head)first=cmMainHtml(head);
+  else{first=cmNewMainHtml(1);rest.shift();}
+  return cmTopHtml()+first+`<div class="sect cmSect">${t('slotsLbl')}</div>`+rest.join('');
 },
 setup(){return setupHtml();},
 dash(){
@@ -1873,6 +2015,11 @@ function showLevelUp(){
 }
 /* ================= RENDER ================= */
 const ICONS={
+/* Kariyer menüsünün iki ikonu. Dil düğmesi küre, kariyer işlemleri üç nokta —
+   üçünü de nokta olarak CSS ile çizmek yerine tek SVG, dört temada da
+   currentColor ile boyanıyor ve ayrıca kural gerektirmiyor. */
+globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5S14.2 18.2 12 20.5c-2.2-2.3-3.4-5.3-3.4-8.5S9.8 5.8 12 3.5z"/></svg>',
+more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>',
 dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
 clients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
 market:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
@@ -1961,8 +2108,10 @@ function render(){
     if(b0)b0.classList.remove('show');   // ayarlara menüden giriliyor
     showChrome(false);
     document.getElementById('hT1').textContent=c.v==='settings'?t('settings'):'Menajer';
-    document.getElementById('hT2').textContent=
-      c.v==='setup'?t('setupTitle'):c.v==='menu'?t('mainMenu'):'';
+    /* Menü ekranı kendi başlığını taşıyor (KARİYERLERİM); üst çubukta ikinci
+       kez "Ana Menü" yazmak aynı şeyi iki kez söylemek olurdu. Üst çubuk burada
+       yalnız uygulama kimliğini gösteriyor. */
+    document.getElementById('hT2').textContent=c.v==='setup'?t('setupTitle'):'';
     document.getElementById('nav').innerHTML='';
     const vw0=document.getElementById('view');
     vw0.innerHTML=(VIEWS[c.v]||VIEWS.menu)(c.id);

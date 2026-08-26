@@ -139,6 +139,11 @@ slotEmptyHint:'Yeni kariyer başlat',slotNew:'Yeni Kariyer',slotContinue:'Devam 
 slotDelete:'Sil',slotDeleteQ:'{n} yuvasındaki kariyer silinecek. Bu geri alınamaz. Emin misin?',
 slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynanan',
 slotLoading:'Yükleniyor…',slotNewer:'Bu kayıt oyunun daha yeni bir sürümüyle yazılmış.',
+/* kariyer menüsü — açılış ekranı. Göreli zaman yalnız özetin ts alanından
+   türetiliyor; ts yoksa satır hiç çizilmiyor. */
+cmTitle:'Kariyerlerim',cmSub:'Menajerlik yolculuğuna devam et',
+cmNow:'az önce',cmMinAgo:'{n} dk önce',cmHourAgo:'{n} sa önce',cmDayAgo:'{n} gün önce',
+cmOpts:'Kariyer işlemleri',
 /* ana ekran (dashboard) */
 hmAdvance:'Haftayı İlerlet',hmToday:'Bugünün Gündemi',hmLevel:'Kariyer Seviyesi',
 hmBalance:'Bakiye',hmRiser:'Haftanın Yükseleni',hmMyPlayers:'Oyuncularım',
@@ -293,6 +298,10 @@ slotEmptyHint:'Start a new career',slotNew:'New Career',slotContinue:'Continue',
 slotDelete:'Delete',slotDeleteQ:'The career in slot {n} will be deleted. This cannot be undone. Are you sure?',
 slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last played',
 slotLoading:'Loading…',slotNewer:'This save was written by a newer version of the game.',
+/* career menu — opening screen */
+cmTitle:'My careers',cmSub:'Continue your journey',
+cmNow:'just now',cmMinAgo:'{n} min ago',cmHourAgo:'{n} hr ago',cmDayAgo:'{n}d ago',
+cmOpts:'Career options',
 /* home screen (dashboard) */
 hmAdvance:'Advance Week',hmToday:'Today\'s Agenda',hmLevel:'Career Level',
 hmBalance:'Balance',hmRiser:'Riser of the Week',hmMyPlayers:'My Players',
