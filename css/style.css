@@ -1202,6 +1202,126 @@ html[data-theme="saha"] .lgTab{font-size:12px;letter-spacing:.02em}
 html[data-theme="saha"] .lgIdN{font-size:16.5px}
 html[data-theme="saha"] .lgScore{min-width:56px;font-size:20px}
 html[data-theme="saha"] .lgFixSc{min-width:48px;font-size:15px}}
+html[data-theme="saha"] body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+html[data-theme="saha"] .cmTop{position:relative;margin:2px 0 14px}
+html[data-theme="saha"] .cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+html[data-theme="saha"] .cmTool{min-width:44px;min-height:44px;padding:0 12px;border:none;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .cmTool svg{width:20px;height:20px;flex-shrink:0}
+html[data-theme="saha"] .cmTool:active{transform:scale(.94)}
+html[data-theme="saha"] .cmTitle{font-size:29px;font-weight:800;letter-spacing:-.03em;line-height:1.08;
+  text-transform:uppercase;color:var(--txt)}
+html[data-theme="saha"] .cmSub{font-size:13px;color:var(--txt2);margin-top:4px}
+html[data-theme="saha"] .cmMain{display:block;width:100%;text-align:left;border:none;
+  background:var(--sur2);border-radius:20px;padding:16px 15px 15px;margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .cmHead{display:flex;align-items:center;gap:13px}
+html[data-theme="saha"] .cmAv,html[data-theme="saha"] .cmAvS{position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="saha"] .cmAv{width:58px;height:58px;border-radius:16px;font-size:20px}
+html[data-theme="saha"] .cmAvS{width:40px;height:40px;border-radius:12px;font-size:14px}
+html[data-theme="saha"] .cmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
+html[data-theme="saha"] .cmHi{flex:1;min-width:0}
+html[data-theme="saha"] .cmName{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.25;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmWho{font-size:12.5px;color:var(--txt2);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmMore{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;cursor:pointer;
+  background:none;color:var(--txt3);display:flex;align-items:center;justify-content:center;
+  font-family:inherit;padding:0}
+html[data-theme="saha"] .cmMore svg{width:18px;height:18px}
+html[data-theme="saha"] .cmMore:active{transform:scale(.9)}
+html[data-theme="saha"] .cmWk{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .cmRule{height:3px;border-radius:2px;background:var(--sur4);overflow:hidden}
+html[data-theme="saha"] .cmRule i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+html[data-theme="saha"] .cmStats{display:flex;align-items:stretch;margin-top:14px}
+html[data-theme="saha"] .cmStats>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="saha"] .cmStat{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:0 6px;text-align:center}
+html[data-theme="saha"] .cmStatV{display:block;max-width:100%;font-size:20px;font-weight:800;line-height:1.3;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmStatV.gold{color:var(--gold)}
+html[data-theme="saha"] .cmStatL{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+html[data-theme="saha"] .cmWhen{font-size:11.5px;color:var(--txt3);margin-top:13px;text-align:center;
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .cmGo{width:100%;min-height:54px;margin-top:13px;border:none;border-radius:15px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--acc);color:var(--accT)}
+html[data-theme="saha"] .cmGo:active{transform:scale(.985)}
+html[data-theme="saha"] .cmSect{margin-top:20px}
+html[data-theme="saha"] .cmRow{position:relative;display:flex;align-items:center;margin-bottom:9px;overflow:hidden;
+  background:var(--sur);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .cmRowGo{flex:1;min-width:0;display:flex;align-items:center;gap:11px;min-height:64px;
+  padding:10px 2px 10px 12px;border:none;background:none;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--txt)}
+html[data-theme="saha"] .cmRowGo:active{opacity:.72}
+html[data-theme="saha"] .cmRowI{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="saha"] .cmRowN{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmRowN.acc{color:var(--acc)}
+html[data-theme="saha"] .cmRowM{font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmRowC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1;padding:0 2px}
+html[data-theme="saha"] .cmRowRule{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.6}
+html[data-theme="saha"] .cmMore.sq{border-radius:0;margin-right:2px}
+html[data-theme="saha"] .cmNewRow{width:100%;min-height:64px;padding:10px 12px;gap:11px;cursor:pointer;
+  text-align:left;font-family:inherit;background:none;box-shadow:none;
+  border:1px dashed var(--line2)}
+html[data-theme="saha"] .cmPlus,html[data-theme="saha"] .cmNewIc{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;line-height:1;color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+html[data-theme="saha"] .cmPlus{width:40px;height:40px;border-radius:50%;font-size:22px}
+html[data-theme="saha"] .cmWait{min-height:64px;padding:10px 12px}
+html[data-theme="saha"] .cmDel{min-height:48px;display:flex;align-items:center;justify-content:center;width:100%}
+html[data-theme="saha"] .cmNewMain{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:174px;cursor:pointer;background:none;box-shadow:none;text-align:center;
+  border:1px dashed var(--line2)}
+html[data-theme="saha"] .cmNewIc{width:56px;height:56px;border-radius:50%;font-size:30px}
+html[data-theme="saha"] .cmNewT{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--acc)}
+html[data-theme="saha"] .cmNewS{font-size:12px;color:var(--txt3);max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .cmTool:focus-visible,html[data-theme="saha"] .cmGo:focus-visible,html[data-theme="saha"] .cmMore:focus-visible,html[data-theme="saha"] .cmRowGo:focus-visible,html[data-theme="saha"] .cmNewRow:focus-visible,html[data-theme="saha"] .cmNewMain:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-theme="saha"] .cmTop{z-index:0}
+html[data-theme="saha"] .cmTop::before{content:'';position:absolute;z-index:-1;top:-16px;bottom:-26px;
+  left:var(--gutter-neg);right:var(--gutter-neg);
+  background:
+    linear-gradient(90deg,var(--bg) 0%,rgba(11,17,30,.86) 26%,rgba(11,17,30,.34) 62%,rgba(11,17,30,.06) 100%),
+    linear-gradient(180deg,rgba(11,17,30,.18) 0%,rgba(11,17,30,0) 22%,rgba(11,17,30,.62) 56%,var(--bg) 84%),
+    url(../assets/ui/home-stadium-tunnel.webp) 50% 0/100% auto no-repeat;
+  background-color:var(--bg)}
+html[data-theme="saha"] .cmTitle{font-family:var(--cond);font-weight:900;font-size:34px;letter-spacing:-.02em;
+  text-shadow:0 2px 14px rgba(0,0,0,.75)}
+html[data-theme="saha"] .cmSub{text-shadow:0 1px 8px rgba(0,0,0,.7)}
+html[data-theme="saha"] .cmTool{background:rgba(19,27,46,.86);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2),0 4px 14px -8px #000}
+html[data-theme="saha"] .cmTool span{font-family:var(--cond);font-weight:700;font-size:13.5px;letter-spacing:.02em}
+html[data-theme="saha"] .cmMain{background:linear-gradient(152deg,#16223d 0%,#111a2e 62%,#0e1626 100%);
+  box-shadow:inset 0 0 0 1px var(--line),0 8px 24px -16px #000}
+html[data-theme="saha"] .cmAv,html[data-theme="saha"] .cmAvS{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.42),0 5px 16px -8px #000}
+html[data-theme="saha"] .cmAvImg{display:block;filter:brightness(1.08) saturate(1.04)}
+html[data-theme="saha"] .cmName{font-family:var(--cond);font-weight:900;font-size:25px;letter-spacing:-.03em}
+html[data-theme="saha"] .cmWk{font-family:var(--cond);font-weight:700;font-size:11.5px}
+html[data-theme="saha"] .cmStatV{font-family:var(--cond);font-weight:900;font-size:22px}
+html[data-theme="saha"] .cmStatL{font-family:var(--cond);font-weight:600;font-size:10.5px}
+html[data-theme="saha"] .cmGo{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);color:#eafff5;
+  font-family:var(--cond);font-weight:900;font-size:19px;letter-spacing:.03em;
+  box-shadow:0 10px 24px -18px #000}
+html[data-theme="saha"] .cmRow{background:linear-gradient(180deg,var(--sur2),var(--sur));
+  box-shadow:inset 0 0 0 1px var(--line),0 5px 16px -14px #000}
+html[data-theme="saha"] .cmRowN{font-family:var(--cond);font-weight:800;font-size:16.5px;letter-spacing:.01em}
+html[data-theme="saha"] .cmNewRow,html[data-theme="saha"] .cmNewMain{background:rgba(19,27,46,.35);box-shadow:none;
+  border:1px dashed rgba(30,201,126,.32)}
+html[data-theme="saha"] .cmNewT{font-family:var(--cond);font-weight:900;font-size:22px;letter-spacing:.01em}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
@@ -1920,6 +2040,122 @@ html[data-theme="gazete"] .clEmptyT{flex:1 1 auto;min-width:0;font-size:13.5px;c
 html[data-theme="gazete"] .clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n8);color:var(--n0);
   border:none;border-radius:var(--r-s);cursor:pointer;font-family:inherit;font-size:11.5px;
   font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+html[data-theme="gazete"] body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+html[data-theme="gazete"] .cmTop{position:relative;margin:2px 0 14px}
+html[data-theme="gazete"] .cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+html[data-theme="gazete"] .cmTool{min-width:44px;min-height:44px;padding:0 12px;border:none;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="gazete"] .cmTool svg{width:20px;height:20px;flex-shrink:0}
+html[data-theme="gazete"] .cmTool:active{transform:scale(.94)}
+html[data-theme="gazete"] .cmTitle{font-size:29px;font-weight:800;letter-spacing:-.03em;line-height:1.08;
+  text-transform:uppercase;color:var(--txt)}
+html[data-theme="gazete"] .cmSub{font-size:13px;color:var(--txt2);margin-top:4px}
+html[data-theme="gazete"] .cmMain{display:block;width:100%;text-align:left;border:none;
+  background:var(--sur2);border-radius:20px;padding:16px 15px 15px;margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="gazete"] .cmHead{display:flex;align-items:center;gap:13px}
+html[data-theme="gazete"] .cmAv,html[data-theme="gazete"] .cmAvS{position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="gazete"] .cmAv{width:58px;height:58px;border-radius:16px;font-size:20px}
+html[data-theme="gazete"] .cmAvS{width:40px;height:40px;border-radius:12px;font-size:14px}
+html[data-theme="gazete"] .cmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
+html[data-theme="gazete"] .cmHi{flex:1;min-width:0}
+html[data-theme="gazete"] .cmName{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.25;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmWho{font-size:12.5px;color:var(--txt2);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmMore{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;cursor:pointer;
+  background:none;color:var(--txt3);display:flex;align-items:center;justify-content:center;
+  font-family:inherit;padding:0}
+html[data-theme="gazete"] .cmMore svg{width:18px;height:18px}
+html[data-theme="gazete"] .cmMore:active{transform:scale(.9)}
+html[data-theme="gazete"] .cmWk{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .cmRule{height:3px;border-radius:2px;background:var(--sur4);overflow:hidden}
+html[data-theme="gazete"] .cmRule i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+html[data-theme="gazete"] .cmStats{display:flex;align-items:stretch;margin-top:14px}
+html[data-theme="gazete"] .cmStats>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="gazete"] .cmStat{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:0 6px;text-align:center}
+html[data-theme="gazete"] .cmStatV{display:block;max-width:100%;font-size:20px;font-weight:800;line-height:1.3;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmStatV.gold{color:var(--gold)}
+html[data-theme="gazete"] .cmStatL{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+html[data-theme="gazete"] .cmWhen{font-size:11.5px;color:var(--txt3);margin-top:13px;text-align:center;
+  font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .cmGo{width:100%;min-height:54px;margin-top:13px;border:none;border-radius:15px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--acc);color:var(--accT)}
+html[data-theme="gazete"] .cmGo:active{transform:scale(.985)}
+html[data-theme="gazete"] .cmSect{margin-top:20px}
+html[data-theme="gazete"] .cmRow{position:relative;display:flex;align-items:center;margin-bottom:9px;overflow:hidden;
+  background:var(--sur);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="gazete"] .cmRowGo{flex:1;min-width:0;display:flex;align-items:center;gap:11px;min-height:64px;
+  padding:10px 2px 10px 12px;border:none;background:none;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--txt)}
+html[data-theme="gazete"] .cmRowGo:active{opacity:.72}
+html[data-theme="gazete"] .cmRowI{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="gazete"] .cmRowN{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmRowN.acc{color:var(--acc)}
+html[data-theme="gazete"] .cmRowM{font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmRowC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1;padding:0 2px}
+html[data-theme="gazete"] .cmRowRule{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.6}
+html[data-theme="gazete"] .cmMore.sq{border-radius:0;margin-right:2px}
+html[data-theme="gazete"] .cmNewRow{width:100%;min-height:64px;padding:10px 12px;gap:11px;cursor:pointer;
+  text-align:left;font-family:inherit;background:none;box-shadow:none;
+  border:1px dashed var(--line2)}
+html[data-theme="gazete"] .cmPlus,html[data-theme="gazete"] .cmNewIc{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;line-height:1;color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+html[data-theme="gazete"] .cmPlus{width:40px;height:40px;border-radius:50%;font-size:22px}
+html[data-theme="gazete"] .cmWait{min-height:64px;padding:10px 12px}
+html[data-theme="gazete"] .cmDel{min-height:48px;display:flex;align-items:center;justify-content:center;width:100%}
+html[data-theme="gazete"] .cmNewMain{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:174px;cursor:pointer;background:none;box-shadow:none;text-align:center;
+  border:1px dashed var(--line2)}
+html[data-theme="gazete"] .cmNewIc{width:56px;height:56px;border-radius:50%;font-size:30px}
+html[data-theme="gazete"] .cmNewT{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--acc)}
+html[data-theme="gazete"] .cmNewS{font-size:12px;color:var(--txt3);max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="gazete"] .cmTool:focus-visible,html[data-theme="gazete"] .cmGo:focus-visible,html[data-theme="gazete"] .cmMore:focus-visible,html[data-theme="gazete"] .cmRowGo:focus-visible,html[data-theme="gazete"] .cmNewRow:focus-visible,html[data-theme="gazete"] .cmNewMain:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-theme="gazete"] .cmTop{border-bottom:2px solid var(--n8);padding-bottom:12px;margin-bottom:16px}
+html[data-theme="gazete"] .cmTitle{font-family:var(--serif);font-weight:700;font-size:30px;letter-spacing:-.02em;line-height:1.1}
+html[data-theme="gazete"] .cmSub{font-size:12.5px;color:var(--txt3);letter-spacing:.04em;margin-top:4px}
+html[data-theme="gazete"] .cmTool{background:none;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line2);color:var(--txt2)}
+html[data-theme="gazete"] .cmMain{background:none;border-radius:0;box-shadow:none;padding:14px 0 16px;
+  border-top:1px solid var(--line);border-bottom:2px solid var(--n8)}
+html[data-theme="gazete"] .cmAv{width:52px;height:52px;font-size:18px}
+html[data-theme="gazete"] .cmAv,html[data-theme="gazete"] .cmAvS{border-radius:0;background:var(--n2);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="gazete"] .cmName{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:-.02em}
+html[data-theme="gazete"] .cmWk{font-size:9.5px;letter-spacing:.09em}
+html[data-theme="gazete"] .cmRule{background:var(--n3);border-radius:0;height:2px}
+html[data-theme="gazete"] .cmRule i{background:var(--n8);border-radius:0}
+html[data-theme="gazete"] .cmStatV{font-family:var(--serif);font-weight:700;font-size:20px}
+html[data-theme="gazete"] .cmStatL{font-size:9.5px;letter-spacing:.09em}
+html[data-theme="gazete"] .cmGo{border-radius:4px;min-height:48px;background:var(--n8);color:var(--n0);
+  font-size:14px;font-weight:700;letter-spacing:.09em}
+html[data-theme="gazete"] .cmRow{background:none;border-radius:0;box-shadow:none;margin-bottom:0;
+  border-top:1px solid var(--line)}
+html[data-theme="gazete"] .cmRowGo{padding-left:0}
+html[data-theme="gazete"] .cmRowN{font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:-.01em}
+html[data-theme="gazete"] .cmRowM{font-size:11px;letter-spacing:.03em}
+html[data-theme="gazete"] .cmRowRule{background:var(--n8);opacity:.8}
+html[data-theme="gazete"] .cmNewRow{border:1px dashed var(--line2);margin:9px 0 0}
+html[data-theme="gazete"] .cmNewRow .cmRowGo,html[data-theme="gazete"] .cmNewRow{padding-left:12px}
+html[data-theme="gazete"] .cmPlus,html[data-theme="gazete"] .cmNewIc{border-radius:0}
+html[data-theme="gazete"] .cmNewMain{border:1px dashed var(--n4);border-radius:0;padding:16px;margin-bottom:14px}
+html[data-theme="gazete"] .cmNewT{font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:-.01em}
 
 /* ===== tema: terminal ===== */
 html[data-theme="terminal"]{
@@ -2642,6 +2878,124 @@ html[data-theme="terminal"] .clEmptyT{flex:1 1 auto;min-width:0;font-size:12.5px
 html[data-theme="terminal"] .clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n3);color:var(--txt);
   border:1px solid var(--n4);border-radius:var(--r-s);cursor:pointer;font-family:inherit;
   font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase}
+html[data-theme="terminal"] body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+html[data-theme="terminal"] .cmTop{position:relative;margin:2px 0 14px}
+html[data-theme="terminal"] .cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+html[data-theme="terminal"] .cmTool{min-width:44px;min-height:44px;padding:0 12px;border:none;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="terminal"] .cmTool svg{width:20px;height:20px;flex-shrink:0}
+html[data-theme="terminal"] .cmTool:active{transform:scale(.94)}
+html[data-theme="terminal"] .cmTitle{font-size:29px;font-weight:800;letter-spacing:-.03em;line-height:1.08;
+  text-transform:uppercase;color:var(--txt)}
+html[data-theme="terminal"] .cmSub{font-size:13px;color:var(--txt2);margin-top:4px}
+html[data-theme="terminal"] .cmMain{display:block;width:100%;text-align:left;border:none;
+  background:var(--sur2);border-radius:20px;padding:16px 15px 15px;margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="terminal"] .cmHead{display:flex;align-items:center;gap:13px}
+html[data-theme="terminal"] .cmAv,html[data-theme="terminal"] .cmAvS{position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .cmAv{width:58px;height:58px;border-radius:16px;font-size:20px}
+html[data-theme="terminal"] .cmAvS{width:40px;height:40px;border-radius:12px;font-size:14px}
+html[data-theme="terminal"] .cmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
+html[data-theme="terminal"] .cmHi{flex:1;min-width:0}
+html[data-theme="terminal"] .cmName{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.25;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmWho{font-size:12.5px;color:var(--txt2);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmMore{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;cursor:pointer;
+  background:none;color:var(--txt3);display:flex;align-items:center;justify-content:center;
+  font-family:inherit;padding:0}
+html[data-theme="terminal"] .cmMore svg{width:18px;height:18px}
+html[data-theme="terminal"] .cmMore:active{transform:scale(.9)}
+html[data-theme="terminal"] .cmWk{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .cmRule{height:3px;border-radius:2px;background:var(--sur4);overflow:hidden}
+html[data-theme="terminal"] .cmRule i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+html[data-theme="terminal"] .cmStats{display:flex;align-items:stretch;margin-top:14px}
+html[data-theme="terminal"] .cmStats>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="terminal"] .cmStat{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:0 6px;text-align:center}
+html[data-theme="terminal"] .cmStatV{display:block;max-width:100%;font-size:20px;font-weight:800;line-height:1.3;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmStatV.gold{color:var(--gold)}
+html[data-theme="terminal"] .cmStatL{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+html[data-theme="terminal"] .cmWhen{font-size:11.5px;color:var(--txt3);margin-top:13px;text-align:center;
+  font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .cmGo{width:100%;min-height:54px;margin-top:13px;border:none;border-radius:15px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--acc);color:var(--accT)}
+html[data-theme="terminal"] .cmGo:active{transform:scale(.985)}
+html[data-theme="terminal"] .cmSect{margin-top:20px}
+html[data-theme="terminal"] .cmRow{position:relative;display:flex;align-items:center;margin-bottom:9px;overflow:hidden;
+  background:var(--sur);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="terminal"] .cmRowGo{flex:1;min-width:0;display:flex;align-items:center;gap:11px;min-height:64px;
+  padding:10px 2px 10px 12px;border:none;background:none;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--txt)}
+html[data-theme="terminal"] .cmRowGo:active{opacity:.72}
+html[data-theme="terminal"] .cmRowI{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="terminal"] .cmRowN{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmRowN.acc{color:var(--acc)}
+html[data-theme="terminal"] .cmRowM{font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmRowC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1;padding:0 2px}
+html[data-theme="terminal"] .cmRowRule{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.6}
+html[data-theme="terminal"] .cmMore.sq{border-radius:0;margin-right:2px}
+html[data-theme="terminal"] .cmNewRow{width:100%;min-height:64px;padding:10px 12px;gap:11px;cursor:pointer;
+  text-align:left;font-family:inherit;background:none;box-shadow:none;
+  border:1px dashed var(--line2)}
+html[data-theme="terminal"] .cmPlus,html[data-theme="terminal"] .cmNewIc{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;line-height:1;color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+html[data-theme="terminal"] .cmPlus{width:40px;height:40px;border-radius:50%;font-size:22px}
+html[data-theme="terminal"] .cmWait{min-height:64px;padding:10px 12px}
+html[data-theme="terminal"] .cmDel{min-height:48px;display:flex;align-items:center;justify-content:center;width:100%}
+html[data-theme="terminal"] .cmNewMain{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:174px;cursor:pointer;background:none;box-shadow:none;text-align:center;
+  border:1px dashed var(--line2)}
+html[data-theme="terminal"] .cmNewIc{width:56px;height:56px;border-radius:50%;font-size:30px}
+html[data-theme="terminal"] .cmNewT{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--acc)}
+html[data-theme="terminal"] .cmNewS{font-size:12px;color:var(--txt3);max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="terminal"] .cmTool:focus-visible,html[data-theme="terminal"] .cmGo:focus-visible,html[data-theme="terminal"] .cmMore:focus-visible,html[data-theme="terminal"] .cmRowGo:focus-visible,html[data-theme="terminal"] .cmNewRow:focus-visible,html[data-theme="terminal"] .cmNewMain:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-theme="terminal"] .cmTop{border-bottom:1px solid var(--line2);padding-bottom:12px;margin-bottom:14px}
+html[data-theme="terminal"] .cmTitle{font-size:22px;font-weight:600;letter-spacing:.01em;line-height:1.15}
+html[data-theme="terminal"] .cmSub{font-family:var(--mono);font-size:11.5px;color:var(--txt3);letter-spacing:.02em}
+html[data-theme="terminal"] .cmTool{border-radius:6px;background:var(--n2);color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .cmTool span{font-family:var(--mono);font-size:12px;font-weight:500}
+html[data-theme="terminal"] .cmMain{background:var(--n1);border-radius:10px;padding:14px 13px 13px;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .cmAv{width:52px;height:52px;font-size:18px}
+html[data-theme="terminal"] .cmAv,html[data-theme="terminal"] .cmAvS{border-radius:6px;background:var(--n3);color:var(--n7);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .cmName{font-size:17px;font-weight:600;letter-spacing:0}
+html[data-theme="terminal"] .cmWho{font-family:var(--mono);font-size:11.5px}
+html[data-theme="terminal"] .cmWk{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.08em}
+html[data-theme="terminal"] .cmRule{height:2px;border-radius:0;background:var(--n3)}
+html[data-theme="terminal"] .cmRule i{border-radius:0}
+html[data-theme="terminal"] .cmStatV{font-family:var(--mono);font-size:17px;font-weight:600;letter-spacing:-.01em}
+html[data-theme="terminal"] .cmStatL{font-size:9px;letter-spacing:.1em}
+html[data-theme="terminal"] .cmWhen{font-family:var(--mono);font-size:11px}
+html[data-theme="terminal"] .cmGo{border-radius:6px;min-height:48px;font-size:14px;font-weight:600;letter-spacing:.07em}
+html[data-theme="terminal"] .cmRow{background:var(--n1);border-radius:8px;box-shadow:inset 0 0 0 1px var(--line2);
+  margin-bottom:8px}
+html[data-theme="terminal"] .cmRowN{font-size:14.5px;font-weight:600;letter-spacing:0}
+html[data-theme="terminal"] .cmRowM{font-family:var(--mono);font-size:11px}
+html[data-theme="terminal"] .cmNewRow,html[data-theme="terminal"] .cmNewMain{background:none;box-shadow:none;border:1px dashed var(--n4)}
+html[data-theme="terminal"] .cmNewRow{border-radius:8px}
+html[data-theme="terminal"] .cmNewMain{border-radius:10px;min-height:160px}
+html[data-theme="terminal"] .cmPlus,html[data-theme="terminal"] .cmNewIc{border-radius:6px}
+html[data-theme="terminal"] .cmNewT{font-size:17px;font-weight:600;letter-spacing:.05em}
+html[data-theme="terminal"] .cmNewS{font-family:var(--mono);font-size:11px}
 
 /* ===== tema: dosya ===== */
 html[data-theme="dosya"]{
@@ -3349,3 +3703,114 @@ html[data-theme="dosya"] .clEmptyT{flex:1 1 auto;min-width:0;font-size:13.5px;co
 html[data-theme="dosya"] .clBack{flex:0 0 auto;min-height:44px;padding:0 13px;background:var(--n8);color:var(--n0);
   border:none;border-radius:var(--r-s);cursor:pointer;font-family:inherit;font-size:13px;
   font-weight:500}
+html[data-theme="dosya"] body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+html[data-theme="dosya"] .cmTop{position:relative;margin:2px 0 14px}
+html[data-theme="dosya"] .cmTools{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+html[data-theme="dosya"] .cmTool{min-width:44px;min-height:44px;padding:0 12px;border:none;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="dosya"] .cmTool svg{width:20px;height:20px;flex-shrink:0}
+html[data-theme="dosya"] .cmTool:active{transform:scale(.94)}
+html[data-theme="dosya"] .cmTitle{font-size:29px;font-weight:800;letter-spacing:-.03em;line-height:1.08;
+  text-transform:uppercase;color:var(--txt)}
+html[data-theme="dosya"] .cmSub{font-size:13px;color:var(--txt2);margin-top:4px}
+html[data-theme="dosya"] .cmMain{display:block;width:100%;text-align:left;border:none;
+  background:var(--sur2);border-radius:20px;padding:16px 15px 15px;margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="dosya"] .cmHead{display:flex;align-items:center;gap:13px}
+html[data-theme="dosya"] .cmAv,html[data-theme="dosya"] .cmAvS{position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;letter-spacing:-.02em;
+  background:var(--sur4);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="dosya"] .cmAv{width:58px;height:58px;border-radius:16px;font-size:20px}
+html[data-theme="dosya"] .cmAvS{width:40px;height:40px;border-radius:12px;font-size:14px}
+html[data-theme="dosya"] .cmAvImg{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%}
+html[data-theme="dosya"] .cmHi{flex:1;min-width:0}
+html[data-theme="dosya"] .cmName{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.25;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmWho{font-size:12.5px;color:var(--txt2);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmMore{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;cursor:pointer;
+  background:none;color:var(--txt3);display:flex;align-items:center;justify-content:center;
+  font-family:inherit;padding:0}
+html[data-theme="dosya"] .cmMore svg{width:18px;height:18px}
+html[data-theme="dosya"] .cmMore:active{transform:scale(.9)}
+html[data-theme="dosya"] .cmWk{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .cmRule{height:3px;border-radius:2px;background:var(--sur4);overflow:hidden}
+html[data-theme="dosya"] .cmRule i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+html[data-theme="dosya"] .cmStats{display:flex;align-items:stretch;margin-top:14px}
+html[data-theme="dosya"] .cmStats>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="dosya"] .cmStat{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:0 6px;text-align:center}
+html[data-theme="dosya"] .cmStatV{display:block;max-width:100%;font-size:20px;font-weight:800;line-height:1.3;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmStatV.gold{color:var(--gold)}
+html[data-theme="dosya"] .cmStatL{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);line-height:1.2}
+html[data-theme="dosya"] .cmWhen{font-size:11.5px;color:var(--txt3);margin-top:13px;text-align:center;
+  font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .cmGo{width:100%;min-height:54px;margin-top:13px;border:none;border-radius:15px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+  background:var(--acc);color:var(--accT)}
+html[data-theme="dosya"] .cmGo:active{transform:scale(.985)}
+html[data-theme="dosya"] .cmSect{margin-top:20px}
+html[data-theme="dosya"] .cmRow{position:relative;display:flex;align-items:center;margin-bottom:9px;overflow:hidden;
+  background:var(--sur);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="dosya"] .cmRowGo{flex:1;min-width:0;display:flex;align-items:center;gap:11px;min-height:64px;
+  padding:10px 2px 10px 12px;border:none;background:none;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--txt)}
+html[data-theme="dosya"] .cmRowGo:active{opacity:.72}
+html[data-theme="dosya"] .cmRowI{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="dosya"] .cmRowN{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.3;
+  text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmRowN.acc{color:var(--acc)}
+html[data-theme="dosya"] .cmRowM{font-size:11.5px;color:var(--txt3);font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmRowC{flex-shrink:0;color:var(--txt3);font-size:19px;line-height:1;padding:0 2px}
+html[data-theme="dosya"] .cmRowRule{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);opacity:.6}
+html[data-theme="dosya"] .cmMore.sq{border-radius:0;margin-right:2px}
+html[data-theme="dosya"] .cmNewRow{width:100%;min-height:64px;padding:10px 12px;gap:11px;cursor:pointer;
+  text-align:left;font-family:inherit;background:none;box-shadow:none;
+  border:1px dashed var(--line2)}
+html[data-theme="dosya"] .cmPlus,html[data-theme="dosya"] .cmNewIc{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;line-height:1;color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+html[data-theme="dosya"] .cmPlus{width:40px;height:40px;border-radius:50%;font-size:22px}
+html[data-theme="dosya"] .cmWait{min-height:64px;padding:10px 12px}
+html[data-theme="dosya"] .cmDel{min-height:48px;display:flex;align-items:center;justify-content:center;width:100%}
+html[data-theme="dosya"] .cmNewMain{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:174px;cursor:pointer;background:none;box-shadow:none;text-align:center;
+  border:1px dashed var(--line2)}
+html[data-theme="dosya"] .cmNewIc{width:56px;height:56px;border-radius:50%;font-size:30px}
+html[data-theme="dosya"] .cmNewT{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--acc)}
+html[data-theme="dosya"] .cmNewS{font-size:12px;color:var(--txt3);max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="dosya"] .cmTool:focus-visible,html[data-theme="dosya"] .cmGo:focus-visible,html[data-theme="dosya"] .cmMore:focus-visible,html[data-theme="dosya"] .cmRowGo:focus-visible,html[data-theme="dosya"] .cmNewRow:focus-visible,html[data-theme="dosya"] .cmNewMain:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-theme="dosya"] .cmTop{margin-bottom:16px}
+html[data-theme="dosya"] .cmTitle{font-size:26px;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+html[data-theme="dosya"] .cmSub{font-size:13px;color:var(--txt3);margin-top:3px}
+html[data-theme="dosya"] .cmTool{background:var(--n0);border-radius:12px;color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="dosya"] .cmMain{background:var(--n0);border-radius:var(--r);padding:18px 16px 16px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="dosya"] .cmAv,html[data-theme="dosya"] .cmAvS{background:var(--n2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="dosya"] .cmAv{width:52px;height:52px;font-size:18px;border-radius:14px}
+html[data-theme="dosya"] .cmAvS{border-radius:10px}
+html[data-theme="dosya"] .cmName{font-size:18.5px;font-weight:600;letter-spacing:-.02em}
+html[data-theme="dosya"] .cmWk{font-weight:600;letter-spacing:.06em}
+html[data-theme="dosya"] .cmRule{background:var(--n3)}
+html[data-theme="dosya"] .cmStatV{font-size:19px;font-weight:600}
+html[data-theme="dosya"] .cmStatL{font-size:10.5px;letter-spacing:.06em;font-weight:500}
+html[data-theme="dosya"] .cmGo{border-radius:var(--r-s);min-height:52px;font-size:15px;font-weight:600;letter-spacing:.05em}
+html[data-theme="dosya"] .cmRow{background:var(--n0);border-radius:var(--r);box-shadow:inset 0 0 0 1px var(--line);
+  margin-bottom:10px}
+html[data-theme="dosya"] .cmRowN{font-size:15px;font-weight:600;letter-spacing:-.01em}
+html[data-theme="dosya"] .cmNewRow,html[data-theme="dosya"] .cmNewMain{background:none;box-shadow:none;border:1px dashed var(--line2)}
+html[data-theme="dosya"] .cmNewRow{border-radius:var(--r)}
+html[data-theme="dosya"] .cmNewMain{border-radius:var(--r)}
+html[data-theme="dosya"] .cmNewT{font-size:19px;font-weight:600;letter-spacing:-.01em}
