@@ -10646,18 +10646,18 @@ menu(){
     const c=cmSlot(n);
     if(c&&(!head||(c.ts||0)>(head.ts||0)))head=c;
   }
+  /* Hiç kayıt yokken ekranda tek bir iş var: ilk kariyeri kurmak. Boş yuvaları
+     ayrıca listelemek aynı eylemi SLOTS kez tekrarlamak olurdu — yuvalar hâlâ
+     üç, ama boşken aralarında seçim diye bir şey yok. Kart yine 1. yuvayı
+     hedefliyor; ilk kayıt düştüğü anda liste kendiliğinden geri geliyor. */
+  if(!head)return cmTopHtml()+cmNewMainHtml(1);
   const rest=[];
   for(let n=1;n<=SLOTS;n++){
-    if(head&&n===head.n)continue;
+    if(n===head.n)continue;
     const c=cmSlot(n);
     rest.push(c?cmRowHtml(c):cmEmptyRowHtml(n));
   }
-  /* Devam edilecek kariyer yoksa birincil yeri yeni kariyer alıyor ve o yuva
-     listeden düşüyor — aynı yuva iki kez görünmesin. */
-  let first;
-  if(head)first=cmMainHtml(head);
-  else{first=cmNewMainHtml(1);rest.shift();}
-  return cmTopHtml()+first+`<div class="sect cmSect">${t('slotsLbl')}</div>`+rest.join('');
+  return cmTopHtml()+cmMainHtml(head)+`<div class="sect cmSect">${t('slotsLbl')}</div>`+rest.join('');
 },
 setup(){return setupHtml();},
 dash(){
