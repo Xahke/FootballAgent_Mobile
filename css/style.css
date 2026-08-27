@@ -1513,6 +1513,140 @@ html[data-theme="saha"] .cmRowN{font-family:var(--cond);font-weight:800;font-siz
 html[data-theme="saha"] .cmNewRow,html[data-theme="saha"] .cmNewMain{background:rgba(19,27,46,.35);box-shadow:none;
   border:1px dashed rgba(30,201,126,.32)}
 html[data-theme="saha"] .cmNewT{font-family:var(--cond);font-weight:900;font-size:22px;letter-spacing:.01em}
+html[data-theme="saha"] wr* önekli ve bu blokta tanımlı.
+
+   Üç ekranın ortak imzası tek bir öğe: üstteki rozet halkası. Kategori vurgusu
+   ve sonuç valansı orada okunuyor,html[data-theme="saha"] geri kalan her şey sessiz kalıyor. Rozetin
+   kendi renklerine hiç dokunulmuyor — halka rozetin dışında,html[data-theme="saha"] ayrı bir katman. */
+
+ 
+.evTop{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:9px;padding:2px 0 0;margin-bottom:13px}
+html[data-theme="saha"] .evBadge{position:relative;width:72px;height:72px;flex:0 0 72px;display:flex;
+  align-items:center;justify-content:center;border-radius:50%}
+html[data-theme="saha"] .evBadge img{width:72px;height:72px;display:block;border-radius:50%}
+html[data-theme="saha"] .evBadge::after{content:'';position:absolute;inset:-5px;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 1.5px var(--evc,var(--line2)),0 0 18px -4px var(--evc,transparent)}
+html[data-theme="saha"] .evBadge.noimg{background:var(--sur2)}
+html[data-theme="saha"] .evBadge.good::after{box-shadow:0 0 0 2px var(--acc),0 0 22px -3px var(--acc)}
+html[data-theme="saha"] .evBadge.bad::after{box-shadow:0 0 0 2px var(--bad),0 0 22px -3px var(--bad)}
+html[data-theme="saha"] .evBadge.mid::after{box-shadow:0 0 0 2px var(--gold),0 0 22px -3px var(--gold)}
+html[data-theme="saha"] .evCat{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;
+  line-height:1;text-transform:uppercase;color:var(--evc,var(--txt2))}
+html[data-theme="saha"] h2.evTtl{font-size:19px;font-weight:800;letter-spacing:-.015em;line-height:1.3;
+  text-align:center;margin:0 0 4px}
+html[data-theme="saha"] h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
+  letter-spacing:.05em;text-transform:uppercase;margin:0}
+html[data-theme="saha"] .evLock,html[data-theme="saha"] .evVerdict{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:20px;font-family:var(--cond);font-weight:800;font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;line-height:1.2}
+html[data-theme="saha"] .evLock{background:var(--sur3);color:var(--txt2)}
+html[data-theme="saha"] .evLock svg{width:14px;height:14px;flex:0 0 14px}
+html[data-theme="saha"] .evVerdict.good{background:var(--acc-soft);color:var(--acc)}
+html[data-theme="saha"] .evVerdict.bad{background:var(--bad-soft);color:var(--bad)}
+html[data-theme="saha"] .evVerdict.mid{background:var(--gold-soft);color:var(--gold)}
+html[data-theme="saha"] .wrSum{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+html[data-theme="saha"] .wrCell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;min-height:60px;padding:9px 3px;background:var(--sur2);border-radius:12px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .wrCell b{font-size:19px;font-weight:800;line-height:1;color:var(--txt)}
+html[data-theme="saha"] .wrCell em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:10px;
+  letter-spacing:.06em;line-height:1.15;text-align:center;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .wrList{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+html[data-theme="saha"] .wrCard{display:flex;align-items:center;gap:11px;width:100%;min-height:64px;
+  padding:10px 12px 10px 15px;background:var(--sur);border:none;border-radius:14px;
+  position:relative;overflow:hidden;text-align:left;cursor:pointer;color:inherit;font:inherit;
+  -webkit-appearance:none;appearance:none;box-shadow:var(--sh);
+  transition:background var(--tap),transform var(--tap)}
+html[data-theme="saha"] .wrCard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3.5px;background:var(--sur4)}
+html[data-theme="saha"] .wrCard:active{transform:scale(.985);background:var(--sur2)}
+html[data-theme="saha"] .wrCard.mm{background:linear-gradient(90deg,rgba(233,188,90,.10),var(--sur) 62%)}
+html[data-theme="saha"] .wrCard.mm::before{background:var(--gold)}
+html[data-theme="saha"] .wrCard.out{opacity:.62}
+html[data-theme="saha"] .wrCrest{flex:0 0 auto;display:flex}
+html[data-theme="saha"] .wrMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="saha"] .wrName{display:flex;align-items:center;gap:7px;min-width:0;font-size:14px;font-weight:700;color:var(--txt)}
+html[data-theme="saha"] .wrNameT{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .wrName>i{flex:0 0 auto}
+html[data-theme="saha"] .wrMotm{font-family:var(--cond);font-style:normal;font-weight:800;font-size:9.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--gold);background:var(--gold-soft);
+  padding:2.5px 7px;border-radius:7px;white-space:nowrap}
+html[data-theme="saha"] .wrVs{font-size:11.5px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .wrRes{font-variant-numeric:tabular-nums;font-weight:800}
+html[data-theme="saha"] .wrRes.w{color:var(--acc)}
+html[data-theme="saha"] .wrRes.l{color:var(--bad)}
+html[data-theme="saha"] .wrRes.d{color:var(--warn)}
+html[data-theme="saha"] .wrStats{display:flex;gap:15px;margin-top:1px}
+html[data-theme="saha"] .wrStat{display:flex;align-items:baseline;gap:4px;font-style:normal}
+html[data-theme="saha"] .wrStat b{font-size:13px;font-weight:800;color:var(--txt2)}
+html[data-theme="saha"] .wrStat em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9.5px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .wrStat.on b{font-size:15px}
+html[data-theme="saha"] .wrStat.on em{color:var(--txt2)}
+html[data-theme="saha"] .wrStat.on.gl b{color:var(--acc)}
+html[data-theme="saha"] .wrStat.on.as b{color:var(--blue)}
+html[data-theme="saha"] .wrDnp{align-self:flex-start;margin-top:2px;font-family:var(--cond);font-weight:700;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);
+  background:var(--sur3);padding:3px 9px;border-radius:8px}
+html[data-theme="saha"] .wrRt{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:38px}
+html[data-theme="saha"] .wrRt b{font-size:17px;font-weight:800;line-height:1}
+html[data-theme="saha"] .wrRt em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .wrRt.g b{color:var(--acc)}
+html[data-theme="saha"] .wrRt.y b{color:var(--warn)}
+html[data-theme="saha"] .wrRt.o b{color:var(--bad)}
+html[data-theme="saha"] .evWho{display:flex;align-items:center;gap:11px;margin-bottom:12px;padding:11px 12px;
+  background:var(--sur2);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .evWho.slim{padding:9px 12px}
+html[data-theme="saha"] .evWhoCrest{flex:0 0 auto;display:flex}
+html[data-theme="saha"] .evWhoMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-theme="saha"] .evWhoName{font-size:14.5px;font-weight:700;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .evWhoSub{font-size:11.5px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="saha"] .evStats{flex:0 0 auto;display:flex;gap:12px}
+html[data-theme="saha"] .evStat{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:29px;font-style:normal}
+html[data-theme="saha"] .evStat b{font-size:14px;font-weight:800;line-height:1;color:var(--txt)}
+html[data-theme="saha"] .evStat em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .evCtx{margin-bottom:16px;font-size:13.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .evAsk{margin-bottom:9px;font-family:var(--cond);font-weight:800;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .evOpts{display:flex;flex-direction:column;gap:9px}
+html[data-theme="saha"] .evOpt{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;
+  padding:14px 12px 14px 16px;background:var(--sur2);border:none;border-radius:13px;
+  position:relative;overflow:hidden;text-align:left;cursor:pointer;color:var(--txt);
+  font:inherit;font-size:14px;line-height:1.4;-webkit-appearance:none;appearance:none;
+  box-shadow:var(--sh);transition:background var(--tap),transform var(--tap)}
+html[data-theme="saha"] .evOpt::before{content:'';position:absolute;left:0;top:11px;bottom:11px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--sur4);transition:background var(--tap)}
+html[data-theme="saha"] .evOpt:active{transform:scale(.985);background:var(--sur3)}
+html[data-theme="saha"] .evOpt:active::before{background:var(--acc)}
+html[data-theme="saha"] .evOptT{flex:1;min-width:0}
+html[data-theme="saha"] .evChev{flex:0 0 18px;width:18px;height:18px;color:var(--txt3)}
+html[data-theme="saha"] .evOut{margin-bottom:13px;padding:12px 14px;border-radius:12px;background:var(--sur2);
+  font-size:13.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .evOut.good{color:var(--acc);box-shadow:inset 0 0 0 1px rgba(30,201,126,.28)}
+html[data-theme="saha"] .evOut.bad{color:var(--bad);box-shadow:inset 0 0 0 1px rgba(240,85,93,.28)}
+html[data-theme="saha"] .evOut.mid{box-shadow:inset 0 0 0 1px rgba(233,188,90,.28)}
+html[data-theme="saha"] .evEffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:4px}
+html[data-theme="saha"] .evEff{display:grid;grid-template-columns:22px 1fr;column-gap:9px;row-gap:1px;
+  align-items:center;min-height:54px;padding:10px 12px;border-radius:12px;
+  background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .evEffIc{grid-column:1;grid-row:1/3;display:flex;align-items:center}
+html[data-theme="saha"] .evEffIc svg{width:22px;height:22px}
+html[data-theme="saha"] .evEffV{grid-column:2;grid-row:1;font-size:16px;font-weight:800;line-height:1.1}
+html[data-theme="saha"] .evEffK{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:flex-start;
+  min-width:0;font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.06em;
+  line-height:1.2;text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .evPerm{font-style:normal;font-size:9px;opacity:.85}
+html[data-theme="saha"] .evEff.g{background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.24)}
+html[data-theme="saha"] .evEff.g .evEffIc,html[data-theme="saha"] .evEff.g .evEffV{color:var(--acc)}
+html[data-theme="saha"] .evEff.b{background:var(--bad-soft);box-shadow:inset 0 0 0 1px rgba(240,85,93,.24)}
+html[data-theme="saha"] .evEff.b .evEffIc,html[data-theme="saha"] .evEff.b .evEffV{color:var(--bad)}
+html[data-theme="saha"] .btn.evGo{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+html[data-theme="saha"] .btn.evGo svg{width:19px;height:19px;flex:0 0 19px}
+html[data-theme="saha"] .wrCard:focus-visible,html[data-theme="saha"] .evOpt:focus-visible,html[data-theme="saha"] .btn.evGo:focus-visible{
+  outline:2px solid var(--acc);outline-offset:2px}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
