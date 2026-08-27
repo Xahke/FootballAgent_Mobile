@@ -2169,3 +2169,164 @@ body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 .cmNewRow,.cmNewMain{background:rgba(19,27,46,.35);box-shadow:none;
   border:1px dashed rgba(30,201,126,.32)}
 .cmNewT{font-family:var(--cond);font-weight:900;font-size:22px;letter-spacing:.01em}
+
+/* ============ HAFTALIK RAPOR VE OLAY EKRANLARI (saha) ============
+   Yalnız saha temasında çiziliyor; diğer üç tema .row/.dctx/.dchoice/.dquote/
+   .tag akışını kullanmaya devam ediyor ve o kuralların hiçbirine burada
+   dokunulmuyor — bütün seçiciler ev*/wr* önekli ve bu blokta tanımlı.
+
+   Üç ekranın ortak imzası tek bir öğe: üstteki rozet halkası. Kategori vurgusu
+   ve sonuç valansı orada okunuyor, geri kalan her şey sessiz kalıyor. Rozetin
+   kendi renklerine hiç dokunulmuyor — halka rozetin dışında, ayrı bir katman. */
+
+/* --- ortak başlık --- */
+.evTop{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:9px;padding:2px 0 0;margin-bottom:13px}
+.evBadge{position:relative;width:72px;height:72px;flex:0 0 72px;display:flex;
+  align-items:center;justify-content:center;border-radius:50%}
+.evBadge img{width:72px;height:72px;display:block;border-radius:50%}
+.evBadge::after{content:'';position:absolute;inset:-5px;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 1.5px var(--evc,var(--line2)),0 0 18px -4px var(--evc,transparent)}
+.evBadge.noimg{background:var(--sur2)}
+.evBadge.good::after{box-shadow:0 0 0 2px var(--acc),0 0 22px -3px var(--acc)}
+.evBadge.bad::after{box-shadow:0 0 0 2px var(--bad),0 0 22px -3px var(--bad)}
+.evBadge.mid::after{box-shadow:0 0 0 2px var(--gold),0 0 22px -3px var(--gold)}
+.evCat{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;
+  line-height:1;text-transform:uppercase;color:var(--evc,var(--txt2))}
+h2.evTtl{font-size:19px;font-weight:800;letter-spacing:-.015em;line-height:1.3;
+  text-align:center;margin:0 0 4px}
+h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
+  letter-spacing:.05em;text-transform:uppercase;margin:0}
+/* Kilit rozeti ve sonuç etiketi aynı pilin iki hâli — biri kararın
+   zorunluluğunu, diğeri kararın karşılığını söylüyor. */
+.evLock,.evVerdict{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:20px;font-family:var(--cond);font-weight:800;font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;line-height:1.2}
+.evLock{background:var(--sur3);color:var(--txt2)}
+.evLock svg{width:14px;height:14px;flex:0 0 14px}
+.evVerdict.good{background:var(--acc-soft);color:var(--acc)}
+.evVerdict.bad{background:var(--bad-soft);color:var(--bad)}
+.evVerdict.mid{background:var(--gold-soft);color:var(--gold)}
+
+/* --- haftalık rapor: dört özet hücresi --- */
+.wrSum{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+.wrCell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;min-height:60px;padding:9px 3px;background:var(--sur2);border-radius:12px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+.wrCell b{font-size:19px;font-weight:800;line-height:1;color:var(--txt)}
+.wrCell em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:10px;
+  letter-spacing:.06em;line-height:1.15;text-align:center;text-transform:uppercase;color:var(--txt3)}
+
+/* --- haftalık rapor: oyuncu kartları ---
+   Sheet'in kendi max-height/overflow'u kaydırmayı zaten veriyor; burada
+   yükseklik sabitlenmiyor ki beşten fazla oyuncuda liste doğal aksın. */
+.wrList{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.wrCard{display:flex;align-items:center;gap:11px;width:100%;min-height:64px;
+  padding:10px 12px 10px 15px;background:var(--sur);border:none;border-radius:14px;
+  position:relative;overflow:hidden;text-align:left;cursor:pointer;color:inherit;font:inherit;
+  -webkit-appearance:none;appearance:none;box-shadow:var(--sh);
+  transition:background var(--tap),transform var(--tap)}
+.wrCard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3.5px;background:var(--sur4)}
+.wrCard:active{transform:scale(.985);background:var(--sur2)}
+/* Maçın adamı kartın tamamını altına boyuyor: haftanın tek vurgusu bu. */
+.wrCard.mm{background:linear-gradient(90deg,rgba(233,188,90,.10),var(--sur) 62%)}
+.wrCard.mm::before{background:var(--gold)}
+.wrCard.out{opacity:.62}
+.wrCrest{flex:0 0 auto;display:flex}
+.wrMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.wrName{display:flex;align-items:center;gap:7px;min-width:0;font-size:14px;font-weight:700;color:var(--txt)}
+.wrNameT{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrName>i{flex:0 0 auto}
+.wrMotm{font-family:var(--cond);font-style:normal;font-weight:800;font-size:9.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--gold);background:var(--gold-soft);
+  padding:2.5px 7px;border-radius:7px;white-space:nowrap}
+.wrVs{font-size:11.5px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrRes{font-variant-numeric:tabular-nums;font-weight:800}
+.wrRes.w{color:var(--acc)}
+.wrRes.l{color:var(--bad)}
+.wrRes.d{color:var(--warn)}
+.wrStats{display:flex;gap:15px;margin-top:1px}
+.wrStat{display:flex;align-items:baseline;gap:4px;font-style:normal}
+.wrStat b{font-size:13px;font-weight:800;color:var(--txt2)}
+.wrStat em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9.5px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+/* Gol ve asist sıfır değilken öne çıkıyor, sıfırken sessiz kalıyor —
+   kartta göz önce bu iki sayıyı arıyor. */
+.wrStat.on b{font-size:15px}
+.wrStat.on em{color:var(--txt2)}
+.wrStat.on.gl b{color:var(--acc)}
+.wrStat.on.as b{color:var(--blue)}
+/* Oynamayan sakin bir durum satırı alıyor: eksi işaretleriyle dolu bir kolon
+   yerine tek bir cümle, kartın kendisi de soluk. */
+.wrDnp{align-self:flex-start;margin-top:2px;font-family:var(--cond);font-weight:700;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);
+  background:var(--sur3);padding:3px 9px;border-radius:8px}
+.wrRt{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:38px}
+.wrRt b{font-size:17px;font-weight:800;line-height:1}
+.wrRt em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+.wrRt.g b{color:var(--acc)}
+.wrRt.y b{color:var(--warn)}
+.wrRt.o b{color:var(--bad)}
+
+/* --- olay: kimlik satırı --- */
+.evWho{display:flex;align-items:center;gap:11px;margin-bottom:12px;padding:11px 12px;
+  background:var(--sur2);border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.evWho.slim{padding:9px 12px}
+.evWhoCrest{flex:0 0 auto;display:flex}
+.evWhoMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.evWhoName{font-size:14.5px;font-weight:700;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evWhoSub{font-size:11.5px;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evStats{flex:0 0 auto;display:flex;gap:12px}
+.evStat{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:29px;font-style:normal}
+.evStat b{font-size:14px;font-weight:800;line-height:1;color:var(--txt)}
+.evStat em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:9px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
+
+/* --- olay: bağlam, soru ve karar kartları --- */
+.evCtx{margin-bottom:16px;font-size:13.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+.evAsk{margin-bottom:9px;font-family:var(--cond);font-weight:800;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--txt3)}
+.evOpts{display:flex;flex-direction:column;gap:9px}
+.evOpt{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;
+  padding:14px 12px 14px 16px;background:var(--sur2);border:none;border-radius:13px;
+  position:relative;overflow:hidden;text-align:left;cursor:pointer;color:var(--txt);
+  font:inherit;font-size:14px;line-height:1.4;-webkit-appearance:none;appearance:none;
+  box-shadow:var(--sh);transition:background var(--tap),transform var(--tap)}
+.evOpt::before{content:'';position:absolute;left:0;top:11px;bottom:11px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--sur4);transition:background var(--tap)}
+.evOpt:active{transform:scale(.985);background:var(--sur3)}
+.evOpt:active::before{background:var(--acc)}
+.evOptT{flex:1;min-width:0}
+.evChev{flex:0 0 18px;width:18px;height:18px;color:var(--txt3)}
+
+/* --- olay sonucu --- */
+.evOut{margin-bottom:13px;padding:12px 14px;border-radius:12px;background:var(--sur2);
+  font-size:13.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+.evOut.good{color:var(--acc);box-shadow:inset 0 0 0 1px rgba(30,201,126,.28)}
+.evOut.bad{color:var(--bad);box-shadow:inset 0 0 0 1px rgba(240,85,93,.28)}
+.evOut.mid{box-shadow:inset 0 0 0 1px rgba(233,188,90,.28)}
+.evEffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:4px}
+.evEff{display:grid;grid-template-columns:22px 1fr;column-gap:9px;row-gap:1px;
+  align-items:center;min-height:54px;padding:10px 12px;border-radius:12px;
+  background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+.evEffIc{grid-column:1;grid-row:1/3;display:flex;align-items:center}
+.evEffIc svg{width:22px;height:22px}
+.evEffV{grid-column:2;grid-row:1;font-size:16px;font-weight:800;line-height:1.1}
+.evEffK{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:flex-start;
+  min-width:0;font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.06em;
+  line-height:1.2;text-transform:uppercase;color:var(--txt3)}
+.evPerm{font-style:normal;font-size:9px;opacity:.85}
+.evEff.g{background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.24)}
+.evEff.g .evEffIc,.evEff.g .evEffV{color:var(--acc)}
+.evEff.b{background:var(--bad-soft);box-shadow:inset 0 0 0 1px rgba(240,85,93,.24)}
+.evEff.b .evEffIc,.evEff.b .evEffV{color:var(--bad)}
+
+/* İkonlu kapanış düğmeleri — .btn'in kendisine dokunmadan, yalnız bu ek sınıf. */
+.btn.evGo{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+.btn.evGo svg{width:19px;height:19px;flex:0 0 19px}
+
+/* Klavye odağı görünür kalsın — kariyer menüsündeki desenin aynısı. */
+.wrCard:focus-visible,.evOpt:focus-visible,.btn.evGo:focus-visible{
+  outline:2px solid var(--acc);outline-offset:2px}

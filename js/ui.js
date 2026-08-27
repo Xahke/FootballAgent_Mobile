@@ -2489,11 +2489,199 @@ function render(){
   if(c.v==='atlas'){mapMount();if(fresh)mapHome();}
 }
 /* ===== olaylar ===== */
+/* ================= SAHA: HAFTALIK RAPOR VE OLAYLAR =================
+   Kapılar diğer saha ekranlarıyla aynı desende (useSahaInbox/useSahaMarket/
+   useSahaSkills): yalnız showWeekReport, showEvent ve evChoose dallanıyor,
+   geri kalan üç tema eski görünümleri olduğu gibi kullanmaya devam ediyor.
+   Modal sırası, kilit, S.evCur kalıcılığı ve applyEff yolu hiç değişmiyor —
+   değişen tek şey aynı verinin nasıl çizildiği. */
+function useSahaWeekReport(){return themeOf()==='saha';}
+function useSahaEvent(){return themeOf()==='saha';}
+
+/* Olay kategorisinin ekrandaki karşılığı: rozet, iki dildeki ad ve vurgu rengi.
+   Kategorinin kendisi olayın kaydında (js/events.js, cat alanı) — burada ikinci
+   bir olay-id listesi yok, yalnız kategori kimliğinin görsel karşılığı var.
+   Adlar STR yerine satır içi {tr,en}: kategori kendi kendine yeten bir kayıt
+   olsun (aynı desen IB_CAT, RIV_ARCH ve SK_BRANCH'te de kullanılıyor).
+   Renkler rozetin kendi baskın tonundan seçildi; rozetin renklerine hiç
+   dokunulmuyor, vurgu yalnız yazıda ve halede taşınıyor. */
+const EV_CAT={
+  media  :{ic:'assets/ui/event-media.webp',  n:{tr:'Medya',en:'Media'},    c:'var(--warn)'},
+  player :{ic:'assets/ui/event-player.webp', n:{tr:'Oyuncu',en:'Player'},  c:'var(--acc)'},
+  club   :{ic:'assets/ui/event-club.webp',   n:{tr:'Kulüp',en:'Club'},     c:'var(--blue)'},
+  agency :{ic:'assets/ui/event-agency.webp', n:{tr:'Ajans',en:'Agency'},   c:'var(--viol)'},
+  finance:{ic:'assets/ui/event-finance.webp',n:{tr:'Finans',en:'Finance'}, c:'var(--gold)'},
+  crisis :{ic:'assets/ui/event-crisis.webp', n:{tr:'Kriz',en:'Crisis'},    c:'var(--bad)'}
+};
+const EV_REPORT_IC='assets/ui/event-weekly-report.webp';
+function evCatOf(ev){return EV_CAT[evCat(ev)];}
+
+/* Bu üç ekranın çizgileri. ICONS'ta kilit, onay, kapalı göz ve chevron yok;
+   IB_ACT_ICON ise yorumuyla birlikte Kutu'nun kendi seti — oradan okumak o
+   sözü yanlışa çevirirdi. Çizim dili ICONS/SK_ICON/IB_ACT_ICON ile birebir
+   aynı: 24x24 kutu, fill yok, currentColor, 1.8 kalınlık, yuvarlak uç. */
+const EV_ICON={
+  lock :'<rect x="4.7" y="10.4" width="14.6" height="9.3" rx="2.2"/><path d="M8.3 10.4V7.9a3.7 3.7 0 0 1 7.4 0v2.5"/>',
+  ok   :'<path d="M5 12.5l4.6 4.6L19 7.2"/>',
+  hide :'<path d="M3.6 10.3c2.2 3.1 5 4.6 8.4 4.6s6.2-1.5 8.4-4.6"/><path d="M4.9 13.3l-1.7 2.5"/><path d="M9.4 15.4l-.8 2.7"/><path d="M14.6 15.4l.8 2.7"/><path d="M19.1 13.3l1.7 2.5"/>',
+  chev :'<path d="M9.6 5.8l6.4 6.2-6.4 6.2"/>'
+};
+/* Etki kartlarının ikonları — applyEff'in ürettiği anahtarlarla aynı kümede.
+   Yeni bir etki anahtarı eklenirse buraya da bir çizim gerekir; eksikse
+   evEffSvg() boş döner ve kart yalnız sayı ve etiketle çizilir. */
+const EV_EFF_ICON={
+  cash   :'<ellipse cx="12" cy="7.2" rx="6.6" ry="2.6"/><path d="M5.4 7.2v9.6c0 1.44 2.95 2.6 6.6 2.6s6.6-1.16 6.6-2.6V7.2"/><path d="M5.4 12c0 1.44 2.95 2.6 6.6 2.6s6.6-1.16 6.6-2.6"/>',
+  rep    :'<path d="M12 3.7l2.58 5.23 5.77.84-4.17 4.07.98 5.75L12 16.86l-5.16 2.73.98-5.75-4.17-4.07 5.77-.84z"/>',
+  morale :'<path d="M12 19.5l-6.9-6.5a4.15 4.15 0 0 1 6.9-4.6 4.15 4.15 0 0 1 6.9 4.6z"/>',
+  trust  :'<path d="M12 3.5l7 2.8v5.1c0 4.15-2.87 7.32-7 9.1-4.13-1.78-7-4.95-7-9.1V6.3z"/><path d="M8.9 11.9l2.3 2.3 4-4.4"/>',
+  form   :'<path d="M3.7 15.3l4.8-4.8 3.4 3.4 6.1-6.5"/><path d="M14.4 7.4h3.6V11"/>',
+  ag_comm:'<circle cx="8" cy="8" r="2.2"/><circle cx="16" cy="16" r="2.2"/><path d="M17.6 6.4L6.4 17.6"/>',
+  ag_cap :'<circle cx="9.4" cy="8.4" r="3.2"/><path d="M3.9 19.4a5.5 5.5 0 0 1 11 0"/><path d="M18.5 8.7v4.6"/><path d="M20.8 11h-4.6"/>',
+  ag_cost:'<path d="M4.5 7.7h13.3a2 2 0 0 1 2 2v7.3a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2z"/><path d="M4.5 7.7V6.5a1.6 1.6 0 0 1 1.6-1.6h9.3"/><circle cx="16.3" cy="13.3" r="1.3"/>'
+};
+function evSvg(d,cls){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'+
+         ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"'+
+         (cls?' class="'+cls+'"':'')+'>'+d+'</svg>';
+}
+function evEffSvg(k){return EV_EFF_ICON[k]?evSvg(EV_EFF_ICON[k]):'';}
+/* Rozet yüklenemezse CSS'in çizdiği boş halkaya düşülüyor — ibIconFail ile
+   aynı desen, ekran rozetsiz de okunur kalıyor. */
+function evIconFail(img){
+  const p=img.parentNode;
+  if(p&&p.classList)p.classList.add('noimg');
+  img.remove();
+}
+function evBadgeHtml(src,cls,accent){
+  return '<span class="evBadge'+(cls?' '+cls:'')+'"'+(accent?' style="--evc:'+accent+'"':'')+'>'+
+    '<img src="'+src+'" alt="" aria-hidden="true" width="72" height="72" onerror="evIconFail(this)"></span>';
+}
+
+/* ---------- haftalık müşteri raporu ----------
+   Özet dört hücrenin tamamı S.wkRep'ten türetiliyor; hiçbir maç yeniden
+   hesaplanmıyor ve rapora yeni veri eklenmiyor. Ortalama puan yalnız
+   oynayanlar üzerinden alınıyor — oynamayanı sıfır saymak haftayı olduğundan
+   kötü gösterirdi. Kartlar <button>: dokunma sesi (SFX_SEL) ve klavye odağı
+   kendiliğinden geliyor, içerik de tümüyle satır içi öğelerden kuruluyor. */
+function wkSahaCell(v,lbl){
+  return '<span class="wrCell"><b class="num">'+v+'</b><em>'+lbl+'</em></span>';
+}
+function wkSahaCard(r){
+  const tm=S.teams[r.tid],opp=S.teams[r.opp];
+  const resCh=r.res==='W'?(L==='en'?'W':'G'):r.res==='L'?(L==='en'?'L':'M'):(L==='en'?'D':'B');
+  const resCls=r.res==='W'?'w':r.res==='L'?'l':'d';
+  const stat=(v,lbl,cls)=>'<i class="wrStat'+(cls?' '+cls:'')+'"><b class="num">'+v+'</b><em>'+lbl+'</em></i>';
+  const body=r.dnp
+    ? '<span class="wrDnp">'+t('wkDnp')+'</span>'
+    : '<span class="wrStats">'+stat(r.min+"'",t('minShort'))
+      +stat(r.g||0,t('goals'),r.g?'on gl':'')
+      +stat(r.a||0,t('assists'),r.a?'on as':'')+'</span>';
+  const rt=r.dnp?''
+    :'<span class="wrRt '+(r.rt>=7.5?'g':r.rt>=6.5?'y':'o')+'"><b class="num">'+r.rt.toFixed(1)+'</b><em>'+t('ratingShort')+'</em></span>';
+  return '<button class="wrCard'+(r.mm?' mm':'')+(r.dnp?' out':'')+'" onclick="closeModal();pushV(\'player\','+r.pid+')">'
+    +'<span class="wrCrest">'+tmBadge(tm,38)+'</span>'
+    +'<span class="wrMain">'
+    +'<span class="wrName"><span class="wrNameT">'+esc(r.n)+'</span>'+(r.mm?'<i class="wrMotm">'+t('motm')+'</i>':'')+'</span>'
+    +'<span class="wrVs">'+(opp?esc(opp.n):'—')+' <b class="wrRes '+resCls+'">'+r.sc+' '+resCh+'</b></span>'
+    +body+'</span>'+rt+'</button>';
+}
+function wkSahaReport(wk){
+  const rows=(S.wkRep||[]).slice().sort((a,b)=>(b.rt||0)-(a.rt||0));
+  const on=rows.filter(r=>!r.dnp);
+  const sum=k=>on.reduce((s,r)=>s+(r[k]||0),0);
+  const avg=on.length?(sum('rt')/on.length).toFixed(1):'–';
+  openModal(
+    '<div class="evTop">'
+    +evBadgeHtml(EV_REPORT_IC,'','var(--acc)')
+    +'<h2 class="evTtl wrTtl">'+t('wkRepHead').replace('{w}',wk)+'</h2>'
+    +'<div class="evCat" style="--evc:var(--acc)">'+t('wkRepSub')+'</div>'
+    +'</div>'
+    +'<div class="wrSum">'
+    +wkSahaCell(on.length,t('wkPlayed'))
+    +wkSahaCell(sum('g'),t('goals'))
+    +wkSahaCell(sum('a'),t('assists'))
+    +wkSahaCell(avg,t('avgRt'))
+    +'</div>'
+    +'<div class="wrList">'+rows.map(wkSahaCard).join('')+'</div>'
+    +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('gotIt')+'</span></button>'
+    +'<button class="btn s evGo" style="margin-top:8px" onclick="S.wkRepOn=false;save();closeModal();toast(t(\'wkRepOff\'))">'
+    +evSvg(EV_ICON.hide)+'<span>'+t('dontShow')+'</span></button>');
+}
+
+/* ---------- olay: karar ve sonuç ----------
+   Kimlik satırı üç durumu ayırıyor: geçerli oyuncu varsa oyuncu satırı, oyuncu
+   yoksa ama kulüp bağlamı varsa kompakt kulüp satırı, ikisi de yoksa satır hiç
+   çizilmiyor — menajerin kendi olaylarında boş bir kimlik kutusu yalan olurdu.
+   Sonuç ekranında aynı satır applyEff sonrası değerleri gösteriyor: c.p canlı
+   oyuncu nesnesi olduğu için ayrıca bir kopya tutmaya gerek yok. */
+function evWhoHtml(c){
+  if(c.p){
+    const st=(v,lbl)=>'<i class="evStat"><b class="num">'+v+'</b><em>'+lbl+'</em></i>';
+    return '<div class="evWho">'
+      +'<span class="evWhoCrest">'+tmBadge(c.tm,40)+'</span>'
+      +'<span class="evWhoMain">'
+      +'<span class="evWhoName">'+esc(c.p.n)+'</span>'
+      +'<span class="evWhoSub">'+(c.tm?esc(c.tm.n):'—')+'</span></span>'
+      +'<span class="evStats">'+st(c.p.r,t('rating'))
+      +st(Math.round(c.p.morale),t('morale'))
+      +st(Math.round(trustOf(c.p)),t('trustL'))+'</span></div>';
+  }
+  if(c.tm)return '<div class="evWho slim">'
+    +'<span class="evWhoCrest">'+tmBadge(c.tm,34)+'</span>'
+    +'<span class="evWhoMain"><span class="evWhoName">'+esc(c.tm.n)+'</span></span></div>';
+  return '';
+}
+function evSahaAsk(ev,c){
+  const k=evCatOf(ev);
+  openModal(
+    '<div class="evTop">'
+    +evBadgeHtml(k.ic,'',k.c)
+    +'<div class="evCat" style="--evc:'+k.c+'">'+k.n[L]+'</div>'
+    +'<div class="evLock">'+evSvg(EV_ICON.lock)+'<span>'+t('evNeed')+'</span></div>'
+    +'</div>'
+    +'<h2 class="evTtl">'+ev.ttl(c)[L]+'</h2>'
+    +evWhoHtml(c)
+    +'<div class="evCtx">'+ev.txt(c)[L]+'</div>'
+    +'<div class="evAsk">'+t('evAnswer')+'</div>'
+    +'<div class="evOpts">'+ev.opts.map((o,i)=>
+      '<button class="evOpt" onclick="evChoose('+i+')"><span class="evOptT">'+o.t[L]+'</span>'
+      +evSvg(EV_ICON.chev,'evChev')+'</button>').join('')+'</div>',true);
+}
+function evSahaResult(ev,c,r,changes,lbl){
+  const k=evCatOf(ev);
+  const neg=changes.some(x=>x.v<0),pos=changes.some(x=>x.v>0);
+  const val=neg?(pos?'mid':'bad'):'good';
+  const verdict=val==='good'?t('evOutGood'):val==='bad'?t('evOutBad'):t('evOutMid');
+  const effs=changes.map(x=>{
+    /* Kalıcı ajans değişiklikleri oran olarak yazılır; giderde artış kötü,
+       azalış iyi — eski davranışın birebir aynısı. */
+    const isPct=x.k==='ag_comm'||x.k==='ag_cost';
+    const good=x.k==='ag_cost'?x.v<0:x.v>0;
+    const v=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?'%'+Math.round(Math.abs(x.v)*100):Math.abs(x.v);
+    const perm=x.k.indexOf('ag_')===0?'<i class="evPerm">'+t('permanent')+'</i>':'';
+    return '<div class="evEff '+(good?'g':'b')+'">'
+      +'<span class="evEffIc">'+evEffSvg(x.k)+'</span>'
+      +'<span class="evEffV num">'+(x.v>0?'+':'−')+v+'</span>'
+      +'<span class="evEffK">'+(lbl[x.k]||x.k)+perm+'</span></div>';
+  }).join('');
+  openModal(
+    '<div class="evTop">'
+    +evBadgeHtml(k.ic,val,k.c)
+    +'<div class="evCat" style="--evc:'+k.c+'">'+k.n[L]+'</div>'
+    +'<div class="evVerdict '+val+'">'+verdict+'</div>'
+    +'</div>'
+    +'<h2 class="evTtl">'+ev.ttl(c)[L]+'</h2>'
+    +'<div class="evOut '+val+'">'+(r.msg?r.msg[L]:'')+'</div>'
+    +evWhoHtml(c)
+    +(effs?'<div class="evAsk">'+t('evImpact')+'</div><div class="evEffs">'+effs+'</div>':'')
+    +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('evCont')+'</span></button>');
+}
 function showEvent(ref){
   const ev=evById(ref.id);
   if(!ev)return;
   const c=evCtx(ref.pid);
   S.evCur=ref;save();   // sayfa yenilense de karar bekliyor olarak kalsın
+  if(useSahaEvent()){evSahaAsk(ev,c);return;}
   const head=c.p
     ? `<div class="row">${tmBadge(c.tm,42)}
         <div style="flex:1;min-width:0"><h2>${ev.ttl(c)[L]}</h2>
@@ -2516,6 +2704,7 @@ function evChoose(i){
   S.evCur=null;
   const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form'),
              ag_comm:t('commission'),ag_cap:t('capacity'),ag_cost:t('weeklyCost')};
+  if(useSahaEvent()){evSahaResult(ev,c,r,changes,lbl);save();render();return;}
   const chips=changes.map(x=>{
     /* Kalıcı ajans değişiklikleri oran olarak yazılır; giderde artış kötü, azalış iyi. */
     const isPct=x.k==='ag_comm'||x.k==='ag_cost';
@@ -2595,6 +2784,7 @@ function poachChoose(i){
 function showWeekReport(wk){
   const rows=(S.wkRep||[]).slice().sort((a,b)=>(b.rt||0)-(a.rt||0));
   if(!rows.length)return;
+  if(useSahaWeekReport()){wkSahaReport(wk);return;}
   const resCh=res=>L==='en'?res:(res==='W'?'G':res==='L'?'M':'B');
   const resCol=res=>res==='W'?'var(--acc)':res==='L'?'var(--bad)':'var(--warn)';
   /* Sayılar oyuncunun hizasında sabit kolonlarda dursun — satırlar arası göz

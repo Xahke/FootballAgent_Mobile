@@ -2,6 +2,7 @@
 /* js/events.js — olaylar: menajerliğin sahada olmayan tarafı.
    Yeni olay eklemek için EVENTS dizisine bir kayıt yazmak yeterli:
      id   : benzersiz kısa ad
+     cat  : kategori — media | player | club | agency | finance | crisis
      w    : ağırlık (büyük olan daha sık çıkar)
      need : 'client' ise bir müşteri gerekir; yoksa menajerle ilgili olaydır
      when : (c)=>bool — ek uygunluk koşulu
@@ -9,7 +10,14 @@
      txt  : (c)=>{tr,en} gövde
      opts : [{ t:{tr,en}, eff:(c)=>({cash,rep,morale,trust,form,msg}) }]
    Sonuçlar tek bir uygulayıcıdan geçer (applyEff), böylece her olay aynı
-   kaldıraçları kullanır ve denge tek yerden ayarlanır. */
+   kaldıraçları kullanır ve denge tek yerden ayarlanır.
+
+   Kategori olayın kendi kaydında duruyor — ikinci bir olay-id listesi yok, aynı
+   gerekçeyle IB_CAT'in keys dizileri gibi tek kaynak. Kategori yalnız sunum:
+   hangi rozetin ve hangi vurgu renginin çizileceğini seçer, olasılığa,
+   uygunluğa ya da sonuca hiç dokunmaz. Yeni olayın kategorisi yoksa
+   evCat() 'agency'ye düşer, ama EV_CATS o eksiği yakalar. */
+const EV_CATS=['media','player','club','agency','finance','crisis'];
 
 const EV_CHANCE=0.40;   // uygun bir hafta içinde olay çıkma olasılığı
 const EV_GAP=1;         // iki olay arasında en az bu kadar hafta
@@ -37,7 +45,7 @@ const EVENTS=[
 /* Ayartma artık rakip ajanslar üzerinden kendi kanalında da işliyor (bkz. rivals.js).
    Bu olay o kanalın hafif hali: kaybetme riski yok, yalnızca ilişkiyi yokluyor.
    İkisi aynı anda taşmasın diye ağırlığı düşük tutuluyor. */
-{id:'rivalAgent',w:6,need:'client',
+{id:'rivalAgent',cat:'agency',w:6,need:'client',
  ttl:()=>({tr:'Rakip menajer devrede',en:'A rival agent is circling'}),
  txt:c=>{const a=evRivalName(c);
    return {tr:`Kulislerde bir isim dolaşıyor: ${c.p.n} ile ${a} görüşmüş. Oyuncu sana bir şey söylemedi ama haber kulağına geldi.`,
@@ -58,7 +66,7 @@ const EVENTS=[
    eff:c=>({cash:-Math.max(20,Math.round(c.p.wage*8)),trust:14,morale:4,
             msg:{tr:'Cebinden çıktı ama oyuncu bunu unutmayacak.',en:'It cost you, but he won\'t forget it.'}})}]},
 
-{id:'playTime',w:9,need:'client',when:c=>c.p.min<600&&!isFree(c.p),
+{id:'playTime',cat:'player',w:9,need:'client',when:c=>c.p.min<600&&!isFree(c.p),
  ttl:()=>({tr:'Forma şansı meselesi',en:'A question of minutes'}),
  txt:c=>({tr:`${c.p.n} arıyor. "${c.tm.n}'de oynamıyorum. Ya bir şey yap ya da bana doğruyu söyle."`,
           en:`${c.p.n} calls. "I'm not playing at ${c.tm.n}. Either fix it or tell me the truth."`}),
@@ -77,7 +85,7 @@ const EVENTS=[
      :{trust:-12,morale:-8,msg:{tr:'Yanlış gün, yanlış cümle. Telefonu kapattı.',
                                 en:'Wrong day, wrong words. He hung up.'}}}]},
 
-{id:'mediaStorm',w:8,need:'client',
+{id:'mediaStorm',cat:'media',w:8,need:'client',
  ttl:()=>({tr:'Basında fırtına',en:'A media storm'}),
  txt:c=>({tr:`${c.p.n} maç sonu mikrofona talihsiz bir cümle kurdu. Sabah bütün spor sayfalarında.`,
           en:`${c.p.n} said something careless to a microphone after the match. It's on every back page.`}),
@@ -95,7 +103,7 @@ const EVENTS=[
      :{rep:-3,trust:-9,morale:-7,msg:{tr:'Daha da büyüdü. Kulüp ceza kesti, oyuncu sana kızgın.',
                                       en:'It escalated. The club fined him, and he blames you.'}}}]},
 
-{id:'sponsor',w:8,need:'client',when:c=>c.p.r>=62,
+{id:'sponsor',cat:'finance',w:8,need:'client',when:c=>c.p.r>=62,
  ttl:()=>({tr:'Sponsorluk teklifi',en:'A sponsorship offer'}),
  txt:c=>({tr:`Bir spor markası ${c.p.n} için krampon anlaşması istiyor. Rakam fena değil ama pazarlık payı var.`,
           en:`A sportswear brand wants a boot deal with ${c.p.n}. The number is decent, but there's room to push.`}),
@@ -114,7 +122,7 @@ const EVENTS=[
    eff:()=>({trust:4,msg:{tr:'Uzun vadeli düşündüğünü gördü. Para gitti, itibar kaldı.',
                                 en:'He saw you thinking long-term. The money went; the standing stayed.'}})}]},
 
-{id:'family',w:7,need:'client',
+{id:'family',cat:'player',w:7,need:'client',
  ttl:()=>({tr:'Ailevi mesele',en:'A family matter'}),
  txt:c=>({tr:`${c.p.n} gece geç saatte aradı. Memleketinde işler karışık, kafası sahada değil.`,
           en:`${c.p.n} called late at night. Something's wrong back home, and his head isn't on football.`}),
@@ -129,7 +137,7 @@ const EVENTS=[
    eff:()=>({trust:-11,morale:-9,msg:{tr:'"Anladım." Kısa bir cevap. Aranızda bir şey kırıldı.',
                                       en:'"Understood." A short reply. Something broke.'}})}]},
 
-{id:'cutRequest',w:7,need:'client',when:c=>trustOf(c.p)<70,
+{id:'cutRequest',cat:'finance',w:7,need:'client',when:c=>trustOf(c.p)<70,
  ttl:()=>({tr:'Komisyon pazarlığı',en:'He wants a better cut'}),
  txt:c=>({tr:`${c.p.n} komisyon oranını konuşmak istiyor. "Diğer menajerler daha az alıyormuş."`,
           en:`${c.p.n} wants to talk about your commission. "I hear other agents take less."`}),
@@ -147,7 +155,7 @@ const EVENTS=[
    eff:c=>({cash:-Math.max(10,Math.round(c.p.wage*4)),trust:6,
             msg:{tr:'İkiniz de biraz verdiniz. Mesele kapandı.',en:'You both gave a little. It\'s settled.'}})}]},
 
-{id:'knock',w:7,need:'client',when:c=>!isFree(c.p),
+{id:'knock',cat:'player',w:7,need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Sakatlık şüphesi',en:'Playing through a knock'}),
  txt:c=>({tr:`${c.p.n} ağrılı. ${c.tm.n} önemli maç öncesi oynamasını istiyor, kulüp doktoru "idare eder" diyor.`,
           en:`${c.p.n} is carrying a knock. ${c.tm.n} want him for a big match and the club doctor says he'll manage.`}),
@@ -166,7 +174,7 @@ const EVENTS=[
                                              en:'It cleared things up and the right call was made. Your professionalism registered.'}})}]},
 
 /* ----- küçük olaylar: sık çıkar, kariyeri tek başına değiştirmez ----- */
-{id:'shirtNumber',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
+{id:'shirtNumber',cat:'player',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Forma numarası',en:'The shirt number'}),
  txt:c=>({tr:`${c.p.n} istediği numarayı istiyor ama forma başkasının sırtında. O oyuncu "boşaltırım, ama bedeli var" diyor.`,
           en:`${c.p.n} wants his number, but it's on someone else's back. That player says he'll give it up — for a price.`}),
@@ -180,7 +188,7 @@ const EVENTS=[
   {t:{tr:'Bu sezon idare etsin',en:'He can live with it'},
    eff:()=>({morale:-4,msg:{tr:'"Tamam." Küçük bir şey ama aklında kaldı.',en:'"Fine." A small thing, but it stuck with him.'}})}]},
 
-{id:'socialLike',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
+{id:'socialLike',cat:'media',w:10,sz:'s',need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Sosyal medyada bir beğeni',en:'A like on the wrong post'}),
  txt:c=>({tr:`${c.p.n} rakip kulübün paylaşımını beğenmiş. Ekran görüntüsü çoktan dolaşımda.`,
           en:`${c.p.n} liked a rival club's post. The screenshot is already going around.`}),
@@ -193,7 +201,7 @@ const EVENTS=[
   {t:{tr:'Görmezden gel',en:'Ignore it'},
    eff:()=>({morale:-3,msg:{tr:'Birkaç gün üstüne gittiler. Hoş değildi.',en:'They went at him for a few days. Not pleasant.'}})}]},
 
-{id:'barber',w:9,sz:'s',need:'client',when:c=>!isFree(c.p),
+{id:'barber',cat:'player',w:9,sz:'s',need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Maç sabahı berber',en:'A haircut on matchday'}),
  txt:c=>({tr:`${c.p.n} maç sabahı saç kestirmek için şehir dışına çıkmış ve antrenmana geç kalmış. ${c.tm.n} hiç memnun değil.`,
           en:`${c.p.n} drove out of town for a haircut on the morning of the match and turned up late. ${c.tm.n} are not amused.`}),
@@ -207,7 +215,7 @@ const EVENTS=[
    eff:()=>RF()<0.7?{morale:5,trust:3,msg:{tr:'Gülüp geçtiniz. Soyunma odası da öyle.',en:'You both laughed. So did the dressing room.'}}
                    :{rep:-2,morale:-2,msg:{tr:'Espriyi kulüp komik bulmadı. Ciddiyetsiz göründün.',en:'The club didn\'t find it funny. You looked unserious.'}}}]},
 
-{id:'gameRating',w:9,sz:'s',need:'client',when:c=>c.p.r>=60,
+{id:'gameRating',cat:'media',w:9,sz:'s',need:'client',when:c=>c.p.r>=60,
  ttl:()=>({tr:'Reytingi beğenmedi',en:'He doesn\'t like his rating'}),
  txt:c=>({tr:`${c.p.n} bir futbol oyununda çıkan puanını beğenmemiş. Telefonda sesi gerçekten kırgın.`,
           en:`${c.p.n} has seen his rating in a football video game and he's genuinely hurt by it.`}),
@@ -221,7 +229,7 @@ const EVENTS=[
    eff:()=>RF()<0.6?{msg:{tr:'Birkaç gün sonra kendisi de güldü.',en:'A few days later he was laughing about it himself.'}}
                    :{morale:-4,trust:-3,msg:{tr:'Küçük bir şeydi ama ciddiye alınmadığını hissetti.',en:'A small thing, but he felt brushed aside.'}}}]},
 
-{id:'homesick',w:9,sz:'s',need:'client',
+{id:'homesick',cat:'player',w:9,sz:'s',need:'client',
  when:c=>!isFree(c.p)&&LEAGUES[c.tm.lg]&&LEAGUES[c.tm.lg].nat!==c.p.nat,
  ttl:()=>({tr:'Yabancı bir şehirde',en:'A long way from home'}),
  txt:c=>({tr:`${c.p.n} yeni ülkeye alışamıyor. Dili yok, soyunma odasında kimseyle konuşmuyor.`,
@@ -236,7 +244,7 @@ const EVENTS=[
   {t:{tr:'Kendi alışsın',en:'He\'ll adapt'},
    eff:()=>({morale:-8,form:-4,msg:{tr:'Alışamadı. Antrenmandan sonra ilk çıkan hep o.',en:'He didn\'t adapt. He\'s always first out after training.'}})}]},
 
-{id:'preseasonWeight',w:8,sz:'s',need:'client',when:c=>!isFree(c.p),
+{id:'preseasonWeight',cat:'player',w:8,sz:'s',need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Ara dönüşü',en:'Back from the break'}),
  txt:c=>({tr:`${c.p.n} aradan kilolu döndü. Ölçümler kulübü memnun etmedi.`,
           en:`${c.p.n} came back from the break heavy. The measurements did not please the club.`}),
@@ -249,7 +257,7 @@ const EVENTS=[
   {t:{tr:'Üstüne sert git',en:'Come down hard on him'},
    eff:()=>({trust:-5,form:12,morale:-5,msg:{tr:'Hoşuna gitmedi ama sahaya bambaşka döndü.',en:'He hated it, and came back a different player.'}})}]},
 
-{id:'oldClubGoal',w:8,sz:'s',need:'client',when:c=>!isFree(c.p)&&(c.p.hist||[]).length>0,
+{id:'oldClubGoal',cat:'player',w:8,sz:'s',need:'client',when:c=>!isFree(c.p)&&(c.p.hist||[]).length>0,
  ttl:()=>({tr:'Eski takımına gol',en:'A goal against his old club'}),
  txt:c=>({tr:`${c.p.n} eski kulübüne gol attı ve ne yapacağını bilemedi. Sonrasında sana soruyor.`,
           en:`${c.p.n} scored against his old club and froze. Afterwards he asks you what he should have done.`}),
@@ -266,7 +274,7 @@ const EVENTS=[
                    :{msg:{tr:'Ne yaptığını kendisi de bilmiyor. Kimse de umursamadı.',en:'He isn\'t sure what he did. Nobody minded either way.'}}}]},
 
 /* ----- büyük olaylar ----- */
-{id:'familyAgent',w:7,need:'client',when:c=>trustOf(c.p)<80,
+{id:'familyAgent',cat:'agency',w:7,need:'client',when:c=>trustOf(c.p)<80,
  ttl:()=>({tr:'Ailede bir menajer adayı',en:'An agent in the family'}),
  txt:c=>({tr:`${c.p.n} için bir akrabası "bu işi ben de yaparım" diyormuş. Oyuncunun kulağına fısıldayıp duruyor.`,
           en:`A relative of ${c.p.n} reckons he could do your job. He keeps whispering it in the player's ear.`}),
@@ -282,7 +290,7 @@ const EVENTS=[
   {t:{tr:'Sert çık',en:'Shut it down hard'},
    eff:()=>({trust:-16,morale:-6,msg:{tr:'Sesini yükselttin. Sözlerin geri alınmıyor.',en:'You raised your voice. Those words don\'t come back.'}})}]},
 
-{id:'badInvestment',w:7,need:'client',when:c=>c.p.wage>=15,
+{id:'badInvestment',cat:'finance',w:7,need:'client',when:c=>c.p.wage>=15,
  ttl:()=>({tr:'Garantili getiri',en:'A guaranteed return'}),
  txt:c=>({tr:`${c.p.n} bir "danışmana" güvenip birikiminin çoğunu bir yatırıma koymuş. Para yok.`,
           en:`${c.p.n} trusted an "adviser" and put most of his savings into an investment. The money is gone.`}),
@@ -301,7 +309,7 @@ const EVENTS=[
    eff:()=>({morale:-14,trust:-9,msg:{tr:'Haklıydın ve bunu söyledin. İhtiyacı olan şey bu değildi.',
                                       en:'You were right and you said so. That wasn\'t what he needed.'}})}]},
 
-{id:'deadlineDay',w:7,need:'client',when:c=>!isFree(c.p)&&windowOpen(),
+{id:'deadlineDay',cat:'club',w:7,need:'client',when:c=>!isFree(c.p)&&windowOpen(),
  ttl:()=>({tr:'Son gün, son saat',en:'Deadline day'}),
  txt:c=>({tr:`Bir kulüp ${c.p.n} için son dakikada masaya oturdu. Evrakların yetişmesine kırk dakika var ve imzalar başka şehirde.`,
           en:`A club came in for ${c.p.n} at the last minute. There are forty minutes to file the paperwork and the signatures are in another city.`}),
@@ -318,7 +326,7 @@ const EVENTS=[
   {t:{tr:'Bu iş yaza kalsın',en:'It can wait until summer'},
    eff:()=>({morale:-5,trust:-3,msg:{tr:'Belki doğru karardı. Oyuncu öyle düşünmüyor.',en:'It may have been the right call. He doesn\'t think so.'}})}]},
 
-{id:'newCoach',w:7,need:'client',when:c=>!isFree(c.p),
+{id:'newCoach',cat:'club',w:7,need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Yeni teknik direktör',en:'A new manager'}),
  txt:c=>({tr:`${c.tm.n} hocasını değiştirdi. Yeni isim ${c.p.n} için "planlarımda yok" demiş.`,
           en:`${c.tm.n} have changed manager. The new one has said ${c.p.n} isn't in his plans.`}),
@@ -331,7 +339,7 @@ const EVENTS=[
   {t:{tr:'Bekle, gör',en:'Wait and see'},
    eff:()=>({form:-7,morale:-8,msg:{tr:'Üç ay tribünde. Kimse beklemedi, sadece unuttular.',en:'Three months in the stands. Nobody waited — they just forgot.'}})}]},
 
-{id:'redCard',w:6,need:'client',when:c=>!isFree(c.p),
+{id:'redCard',cat:'crisis',w:6,need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Disiplin kurulu',en:'A disciplinary hearing'}),
  txt:c=>({tr:`${c.p.n} ağır bir kırmızı kart gördü. Kurul cezayı bu hafta görüşüyor.`,
           en:`${c.p.n} was sent off for a bad one. The panel hears the case this week.`}),
@@ -345,7 +353,7 @@ const EVENTS=[
                    :{rep:-4,morale:-10,form:-8,msg:{tr:'Kurul kızdı, ceza uzadı. Herkes senin yüzünden olduğunu biliyor.',
                                                     en:'The panel took offence and extended it. Everyone knows why.'}}}]},
 
-{id:'unpaidBonus',w:6,need:'client',when:c=>!isFree(c.p),
+{id:'unpaidBonus',cat:'club',w:6,need:'client',when:c=>!isFree(c.p),
  ttl:()=>({tr:'Ödenmeyen imza parası',en:'The bonus that never came'}),
  txt:c=>({tr:`${c.tm.n} taahhüt ettiği imza bedelini aylardır geciktiriyor. ${c.p.n} sana soruyor.`,
           en:`${c.tm.n} have been sitting on the signing fee for months. ${c.p.n} is asking you about it.`}),
@@ -361,7 +369,7 @@ const EVENTS=[
   {t:{tr:'Sabır iste',en:'Ask him to be patient'},
    eff:()=>({trust:-9,morale:-4,msg:{tr:'"Sen kimin tarafındasın?" Cevabın yoktu.',en:'"Whose side are you on?" You didn\'t have an answer.'}})}]},
 
-{id:'nationalTeam',w:6,need:'client',when:c=>c.p.age<=24,
+{id:'nationalTeam',cat:'player',w:6,need:'client',when:c=>c.p.age<=24,
  ttl:()=>({tr:'İki bayrak',en:'Two flags'}),
  txt:c=>({tr:`${c.p.n} iki ülkeye de oynayabiliyor ve ikisi de arıyor. Karar onun ama fikrini soruyor.`,
           en:`${c.p.n} is eligible for two countries and both have called. It's his decision, but he's asking you.`}),
@@ -378,7 +386,7 @@ const EVENTS=[
    eff:()=>({morale:-5,trust:-4,msg:{tr:'Bekledi ve iki taraf da soğudu. Kararsızlık da bir karardır.',
                                      en:'He waited, and both went cold. Indecision is a decision.'}})}]},
 
-{id:'documentary',w:6,need:'client',when:c=>c.p.r>=70,
+{id:'documentary',cat:'media',w:6,need:'client',when:c=>c.p.r>=70,
  ttl:()=>({tr:'Belgesel teklifi',en:'A documentary crew'}),
  txt:c=>({tr:`Bir yapım şirketi ${c.p.n} için bir sezonluk belgesel çekmek istiyor. Kamera her yerde olacak.`,
           en:`A production company wants to follow ${c.p.n} for a season. The camera would be everywhere.`}),
@@ -393,7 +401,7 @@ const EVENTS=[
   {t:{tr:'Reddet',en:'Decline'},
    eff:()=>({trust:4,msg:{tr:'"Sen benim işimi düşünüyorsun." Aynen öyle.',en:'"You\'re thinking about my football." Exactly.'}})}]},
 
-{id:'tpoOffer',w:6,need:'client',when:c=>!isFree(c.p)&&c.p.pot-c.p.r>=6,
+{id:'tpoOffer',cat:'finance',w:6,need:'client',when:c=>!isFree(c.p)&&c.p.pot-c.p.r>=6,
  ttl:()=>({tr:'Geleceğine yatırım',en:'An investment in his future'}),
  txt:c=>({tr:`Bir fon ${c.p.n} için şimdi para veriyor. Karşılığında bir sonraki transferinden senin payın onların oluyor.`,
           en:`A fund will pay you now for ${c.p.n}. In return, your cut of his next transfer becomes theirs.`}),
@@ -415,7 +423,7 @@ const EVENTS=[
    eff:()=>({rep:2,msg:{tr:'Bu tür fonlarla çalışmayan bir isim olarak anıldın.',en:'You became known as someone who doesn\'t work with those funds.'}})}]},
 
 /* ================= MENAJERLE İLGİLİ ================= */
-{id:'taxAudit',w:6,
+{id:'taxAudit',cat:'crisis',w:6,
  ttl:()=>({tr:'Vergi incelemesi',en:'Tax inspection'}),
  txt:()=>({tr:'Ajansına inceleme açıldı. Kağıtlar duruyor ama süreç karışık ve zaman alacak.',
            en:'Your agency is under inspection. The paperwork is in order, but the process is messy and slow.'}),
@@ -430,7 +438,7 @@ const EVENTS=[
      :{cash:-260,rep:-3,msg:{tr:'Bir eksik belge, ceza ve dedikodu. Kötü bir dönem.',
                              en:'One missing document, a fine, and gossip. A bad stretch.'}}}]},
 
-{id:'interview',w:6,
+{id:'interview',cat:'media',w:6,
  ttl:()=>({tr:'Röportaj teklifi',en:'An interview request'}),
  txt:()=>({tr:'Tanınmış bir spor dergisi seninle portre röportajı yapmak istiyor.',
            en:'A well-known sports magazine wants to profile you.'}),
@@ -445,7 +453,7 @@ const EVENTS=[
    eff:()=>({msg:{tr:'Gündeme girmedin. Bazen en iyi haber, haber olmamaktır.',
                   en:'You stayed out of the news. Sometimes that is the news.'}})}]},
 
-{id:'shadyDeal',w:6,
+{id:'shadyDeal',cat:'crisis',w:6,
  ttl:()=>({tr:'Masanın altından teklif',en:'An offer under the table'}),
  txt:()=>({tr:'Bir aracı, adını bir transfere karıştırman karşılığında pay öneriyor. Kimsenin duymayacağını söylüyor.',
            en:'An intermediary offers you a cut for putting your name to a transfer. He says nobody will hear.'}),
@@ -457,7 +465,7 @@ const EVENTS=[
   {t:{tr:'Reddet',en:'Refuse'},
    eff:()=>({rep:1,msg:{tr:'Hayır dedin. Bu tür haberler de dolaşıyor.',en:'You said no. Word of that travels too.'}})}]},
 
-{id:'agentExam',w:6,when:()=>S.rep>=12,
+{id:'agentExam',cat:'agency',w:6,when:()=>S.rep>=12,
  ttl:()=>({tr:'Temsilci lisansı sınavı',en:'The agent licence exam'}),
  txt:()=>({tr:'Futbolcu temsilcisi lisansın yenileniyor. Federasyonun sınavına yeniden girmen gerekiyor — geçemezsen kimseyi temsil edemezsin. Tarih yakın.',
            en:'Your football agent licence is up for renewal. You have to sit the federation exam again — fail it and you can\'t represent anyone. The date is close.'}),
@@ -473,7 +481,7 @@ const EVENTS=[
                    :{rep:-5,cash:-40,msg:{tr:'Kaldın. Tekrar ücreti ve birkaç ay boyunca kulislerde espri konusu oldun.',
                                           en:'You failed. A re-sit fee, and a running joke in the corridors for months.'}}}]},
 
-{id:'journalistTrade',w:6,
+{id:'journalistTrade',cat:'media',w:6,
  ttl:()=>({tr:'Muhabirle takas',en:'A trade with a journalist'}),
  txt:()=>({tr:'Tanınmış bir muhabir sana kulis bilgisi öneriyor. Karşılığında senden düzenli haber bekliyor.',
            en:'A well-connected journalist offers you inside information. In return he expects stories from you.'}),
@@ -488,7 +496,7 @@ const EVENTS=[
   {t:{tr:'Reddet',en:'Turn him down'},
    eff:()=>({rep:1,msg:{tr:'Kapıyı kapattın. Bu tür haberler de dolaşıyor.',en:'You closed the door. Word of that travels too.'}})}]},
 
-{id:'fanProtest',w:6,when:()=>S.rep>=12,
+{id:'fanProtest',cat:'crisis',w:6,when:()=>S.rep>=12,
  ttl:()=>({tr:'Tesis önünde pankart',en:'A banner outside the training ground'}),
  txt:()=>({tr:'Yaptığın bir transfer taraftarı kızdırdı. Tesisin önünde adının geçtiği bir pankart asılı.',
            en:'One of your transfers angered the supporters. There\'s a banner outside the training ground with your name on it.'}),
@@ -503,7 +511,7 @@ const EVENTS=[
    eff:()=>({cash:-45,msg:{tr:'Bir süre gölge gibi peşinde biri oldu. Rahat ama pahalı.',
                            en:'Someone shadowed you for a few weeks. Comfortable, and costly.'}})}]},
 
-{id:'agencyBuyout',w:5,when:()=>S.rep>=40,
+{id:'agencyBuyout',cat:'agency',w:5,when:()=>S.rep>=40,
  ttl:()=>({tr:'Satın alma teklifi',en:'A buyout offer'}),
  txt:()=>({tr:'Büyük bir ajans seni bünyesine katmak istiyor. Rakam ciddi — ama masa artık senin masan olmayacak.',
            en:'A major agency wants to absorb you. The number is serious — but the table stops being yours.'}),
@@ -520,7 +528,7 @@ const EVENTS=[
    eff:()=>({rep:3,msg:{tr:'Hayır dedin ve bu duyuldu. Tek başına ayakta durabilen bir isimsin.',
                         en:'You said no, and it was noticed. You\'re a name that stands on its own.'}})}]},
 
-{id:'officeMove',w:8,sz:'s',when:()=>S.rep>=20,
+{id:'officeMove',cat:'agency',w:8,sz:'s',when:()=>S.rep>=20,
  ttl:()=>({tr:'Yeni ofis',en:'A bigger office'}),
  txt:()=>({tr:'İş büyüdü, ekip sığmıyor. Şehrin daha görünür bir yerinde bir yer tutabilirsin.',
            en:'The work has grown and the team doesn\'t fit. You could take a place somewhere more visible.'}),
@@ -535,7 +543,7 @@ const EVENTS=[
   {t:{tr:'Şimdilik burası yeter',en:'This will do for now'},
    eff:()=>({msg:{tr:'Ertelendi. Kutular hâlâ koridorda.',en:'Postponed. The boxes are still in the corridor.'}})}]},
 
-{id:'youngAgent',w:5,
+{id:'youngAgent',cat:'agency',w:5,
  ttl:()=>({tr:'Yanına biri isteniyor',en:'Someone wants to learn from you'}),
  txt:()=>({tr:'Genç bir menajer adayı yanında çalışmak istiyor. Maaş beklemiyor ama zamanını alacak.',
            en:'A young would-be agent wants to work under you. No salary expected, but he\'ll take up your time.'}),
@@ -579,6 +587,10 @@ function rollEvent(){
   return {id:ev.id,pid};
 }
 function evById(id){return EVENTS.find(e=>e.id===id);}
+/* Kategori okumanın tek yolu. Eski bir olay kaydı kategorisiz kalırsa ekran
+   boş rozetle çizilmesin diye 'agency'ye düşüyor — rivalOf()'un isimsiz
+   rakip menajere düşmesiyle aynı desen. */
+function evCat(ev){return ev&&EV_CATS.indexOf(ev.cat)>=0?ev.cat:'agency';}
 /* Tek uygulayıcı: bütün olaylar aynı kaldıraçlardan geçer. */
 function applyEff(r,c){
   const out=[];
