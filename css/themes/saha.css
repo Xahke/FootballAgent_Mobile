@@ -354,11 +354,22 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .ibMsg.act .ibDot{background:var(--gold);box-shadow:0 0 7px rgba(233,188,90,.65)}
 .ibTxt{margin-top:5px;font-size:13px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
 .ibMsg.un .ibTxt{color:var(--txt)}
-/* Düğmeler tek sırada: .btn width:100% taşıyor, flex-shrink onları paylaştırıyor.
-   Sarmalasaydı her biri kendi satırına düşerdi (eski .msg .mrow da sarmıyor). */
-.ibMsg .mrow{display:flex;gap:8px;margin-top:11px}
-.ibMsg .mrow .btn{padding:9px;font-size:12px;min-width:0}
-.ibMsg .mrow .ibProf{flex:0 0 auto;width:auto;padding:9px 12px}
+/* Karar kontrolleri: gövdenin altında sağa hizalı kompakt bir işlem alanı.
+   Üç tam genişlikte yazılı düğme kartı bir forma gibi gösteriyordu; ikonlar
+   aynı işi tek satırda ve daha az yer kaplayarak yapıyor. Genel .btn'e hiç
+   dokunulmuyor — bu sınıflar yalnız saha Kutu'sunda var. */
+.ibActs{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.ibAct{flex:0 0 44px;width:44px;height:44px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--sur3);border:1px solid var(--line);border-radius:12px;
+  color:var(--txt2);cursor:pointer;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.ibAct svg{width:20px;height:20px;display:block}
+.ibAct:active{transform:scale(.94)}
+/* Kabul birincil: dolu emerald, çok koyu onay. Diğer ikisi koyu zeminde renkli çizgi. */
+.ibAct.ok{background:var(--acc);border-color:var(--acc);color:var(--accT)}
+.ibAct.no{color:var(--bad)}
+.ibAct.prof{color:var(--blue)}
 
 /* ===================== MATCHES ===================== */
 .matchrow{display:flex;align-items:center;font-size:12.5px;padding:9.5px 0;border-bottom:1px solid var(--line);gap:8px}

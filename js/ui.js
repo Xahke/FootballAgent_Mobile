@@ -514,6 +514,26 @@ function ibReadAll(){
   S.inbox.forEach(m=>{if(!m.action&&!m.read){m.read=true;n++;}});
   if(n){save();render();}
 }
+/* Karar düğmelerinin işlem ikonları — yalnız saha Kutu'su kullanıyor.
+   ICONS'ta onay ve çarpı yok; ICONS.clients ise iki kişilik "müşteriler"
+   glifi, tek bir oyuncunun profilini anlatmıyor ve 20px'te kalabalık kalıyor.
+   Bu yüzden üçü burada tanımlı. Çizim dili ICONS/SK_ICON ile birebir aynı:
+   24x24 kutu, fill yok, currentColor, 1.8 kalınlık, yuvarlak uç ve köşe. */
+const IB_ACT_ICON={
+  ok  :'<path d="M5 12.5l4.6 4.6L19 7.2"/>',
+  no  :'<path d="M6.6 6.6l10.8 10.8"/><path d="M17.4 6.6L6.6 17.4"/>',
+  prof:'<circle cx="12" cy="8.2" r="3.6"/><path d="M5.2 19.8a6.8 6.8 0 0 1 13.6 0"/>'
+};
+function ibActSvg(k){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'+
+         ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IB_ACT_ICON[k]+'</svg>';
+}
+/* Erişilebilir ad ve yerel ipucu mevcut çevirilerden geliyor: görünür yazı
+   kalktı, anlamı taşıyan tek şey artık bu iki öznitelik. */
+function ibActBtn(k,cls,label,handler){
+  const l=esc(label);
+  return `<button class="ibAct ${cls}" onclick="${handler}" aria-label="${l}" title="${l}">${ibActSvg(k)}</button>`;
+}
 /* Rozet yüklenemezse zarf SVG'si devreye giriyor — hmBadgeFail ile aynı desen. */
 function ibIconFail(img){
   const p=img.parentNode;
@@ -539,10 +559,10 @@ function ibMsgHtml(m){
         ${un?'<i class="ibDot"></i>':''}
       </div>
       <div class="ibTxt">${txt}</div>
-      ${m.action?`<div class="mrow">
-        <button class="btn p" onclick="inboxAction(${i},true)">${t('accept')}</button>
-        <button class="btn s" onclick="inboxAction(${i},false)">${t('decline')}</button>
-        ${m.action.pid?`<button class="btn s ibProf" onclick="pushV('player',${m.action.pid})">${t('viewProfile')}</button>`:''}
+      ${m.action?`<div class="ibActs">
+        ${ibActBtn('ok','ok',t('accept'),`inboxAction(${i},true)`)}
+        ${ibActBtn('no','no',t('decline'),`inboxAction(${i},false)`)}
+        ${m.action.pid?ibActBtn('prof','prof',t('viewProfile'),`pushV('player',${m.action.pid})`):''}
       </div>`:''}
     </div>
   </div>`;
