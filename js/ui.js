@@ -240,7 +240,7 @@ const THEMES=[
   d:{tr:'İlk tasarım: koyu lacivert, emerald vurgu, yumuşak gölgeler.',
      en:'The original: deep navy, emerald accent, soft shadows.'}}
 ];
-const DEFTHEME='dosya';
+const DEFTHEME='saha';
 /* Tema artık cihaz tercihi (PREFS): ana menüde açık bir kariyer yokken de
    uygulanabilmeli. S.theme yalnızca bu değişiklikten önce yapılmış kayıtlar için
    geri düşüş — okuma sırası prefs → kayıt → varsayılan. */
