@@ -305,6 +305,60 @@ function hmBadgeFail(img){
   if(p&&p.classList)p.classList.remove('badge');
   img.remove();
 }
+/* ================= KUTU KATEGORİLERİ =================
+   Kutu mesajlarının TEK eşleme kaynağı. Her kategori kendi rozetini, iki
+   dildeki adını, filtre grubunu ve ürettiği NEWS anahtarlarını taşıyor;
+   anahtar→kategori aramasi bundan türetiliyor (IB_OF), elle ikinci bir liste
+   tutulmuyor. Yeni bir pushNews anahtarı eklendiğinde yapılacak tek iş onu
+   buradaki keys dizilerinden birine yazmak — hiçbir davranış koduna
+   dokunulmuyor.
+
+   Adlar STR yerine satır içi {tr,en}: kategori kendi kendine yeten bir kayıt
+   olsun ve bir anahtar eklemek iki ayrı sözlüğü senkron tutmayı gerektirmesin
+   (aynı desen RIV_ARCH ve SK_BRANCH'te de kullanılıyor).
+
+   ic:null olan kategori mevcut zarf SVG'sini kullanır — 'system' hem tut'u hem
+   de sözlükte yeri olmayan anahtarları toplayan yedek kova. */
+const IB_CAT=[
+  {id:'transfer',grp:'players',ic:'assets/ui/inbox-transfer.webp',
+   n:{tr:'Transfer',en:'Transfer'},
+   keys:['transfer','agreedWait','offerRej','clubOffer']},
+  {id:'contract',grp:'players',ic:'assets/ui/inbox-contract.webp',
+   n:{tr:'Sözleşme',en:'Contract'},
+   keys:['contractAgreed','contractSigned','renewed','released','expire']},
+  {id:'finance',grp:'finance',ic:'assets/ui/inbox-finance.webp',
+   n:{tr:'Finans',en:'Finance'},
+   keys:['instPay','gbPaid','soPaid','inDebt']},
+  {id:'client',grp:'players',ic:'assets/ui/inbox-client.webp',
+   n:{tr:'Müşteri',en:'Client'},
+   keys:['sign','retire','firedYou']},
+  {id:'rival',grp:'players',ic:'assets/ui/inbox-rival.webp',
+   n:{tr:'Rakip Ajans',en:'Rival Agency'},
+   keys:['firedRival','chaseOn','chaseLost','poachWarn','poached','poachHeld']},
+  {id:'growth',grp:'players',ic:'assets/ui/inbox-growth.webp',
+   n:{tr:'Gelişim',en:'Development'},
+   keys:['valUp','valDown','devUp']},
+  {id:'status',grp:'players',ic:'assets/ui/inbox-status.webp',
+   n:{tr:'Oyuncu Durumu',en:'Squad Status'},
+   keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
+  {id:'trophy',grp:'world',ic:'assets/ui/inbox-trophy.webp',
+   n:{tr:'Şampiyonluk',en:'Silverware'},
+   keys:['champ','finalN','cupWin','wcWin']},
+  {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
+   n:{tr:'Lig',en:'League'},
+   keys:['promoted','relegated']},
+  {id:'scout',grp:'world',ic:'assets/ui/inbox-scout.webp',
+   n:{tr:'Keşif Ağı',en:'Scouting'},
+   keys:['scoutDone']},
+  {id:'system',grp:'world',ic:null,
+   n:{tr:'Ajans',en:'Agency'},
+   keys:['tut']}
+];
+/* anahtar → kategori; sözlükten bir kez türetiliyor */
+const IB_OF={};
+IB_CAT.forEach(c=>c.keys.forEach(k=>{IB_OF[k]=c;}));
+const IB_FALLBACK=IB_CAT[IB_CAT.length-1];      // 'system' — bilinmeyen anahtarlar
+function ibCat(key){return IB_OF[key]||IB_FALLBACK;}
 let hmLastAdv=0;
 function hmAdvance(){
   const now=Date.now();
@@ -423,6 +477,99 @@ function msgHtml(m){
       ${m.action.pid?`<button class="btn s" style="flex:0 0 auto;width:auto;padding:9px 14px" onclick="pushV('player',${m.action.pid})">${t('viewProfile')}</button>`:''}
     </div>`:''}
   </div>`;
+}
+/* ================= SAHA KUTUSU =================
+   Kapı diğer saha ekranlarıyla aynı desende (useSahaMarket/useSahaLeague/
+   useSahaSkills): yalnız VIEWS.inbox dallanıyor, geri kalan üç tema
+   msgHtml()'i ve toplu okuma davranışını olduğu gibi kullanmaya devam ediyor. */
+function useSahaInbox(){return themeOf()==='saha';}
+/* Seçili filtre yalnız görünüm durumu — MKQ, SKTAB ve atlas CAM gibi S'ye ve
+   kayda hiç girmiyor, tema ya da sekme değiştirmek okundu bilgisine dokunamaz. */
+let IBF='all';
+const IB_FILTER=[
+  {id:'all',    lbl:()=>t('all')},
+  {id:'action', lbl:()=>t('ibFAct')},
+  {id:'players',lbl:()=>t('ibFPly')},
+  {id:'finance',lbl:()=>t('ibFFin')},
+  {id:'world',  lbl:()=>t('ibFWorld')}
+];
+/* Aksiyon filtresi kategoriye değil mesajın kendisine bakıyor: karar bekleyen
+   mesaj hangi kategoriden gelirse gelsin aynı yerde toplanmalı. */
+function ibMatch(m,f){
+  if(f==='all')return true;
+  if(f==='action')return !!m.action;
+  return ibCat(m.key).grp===f;
+}
+function ibSetF(f){if(IB_FILTER.some(x=>x.id===f)){IBF=f;render();}}
+/* Saha'da kutuyu açmak mesajları okumuş saymıyor. Okundu bilgisi yalnız burada
+   değişiyor: aksiyonsuz bir karta dokunmak ya da "Tümünü oku". Aksiyonlu mesaj
+   Kabul/Reddet verilene kadar okunmamış kalır (bkz. inboxAction). */
+function ibRead(i){
+  const m=S.inbox[i];
+  if(!m||m.action||m.read)return;
+  m.read=true;save();render();
+}
+function ibReadAll(){
+  let n=0;
+  S.inbox.forEach(m=>{if(!m.action&&!m.read){m.read=true;n++;}});
+  if(n){save();render();}
+}
+/* Rozet yüklenemezse zarf SVG'si devreye giriyor — hmBadgeFail ile aynı desen. */
+function ibIconFail(img){
+  const p=img.parentNode;
+  if(p&&p.classList)p.classList.add('noimg');
+  img.remove();
+}
+function ibMsgHtml(m){
+  const i=S.inbox.indexOf(m);
+  const c=ibCat(m.key);
+  const txt=NEWS[L][m.key]?NEWS[L][m.key](m.params):t(m.key);
+  const un=!m.read;
+  /* Kart dokunuşu yalnız aksiyonsuz mesajda: aksiyonlu kartta okundu işareti
+     kararın kendisinden gelmeli, kartı sıyırmaktan değil. */
+  const tap=m.action?'':` onclick="ibRead(${i})"`;
+  return `<div class="ibMsg ${m.type}${un?' un':''}"${tap}>
+    <span class="ibIc${c.ic?'':' noimg'}">${c.ic
+      ?`<img src="${c.ic}" alt="" aria-hidden="true" width="46" height="46" onerror="ibIconFail(this)">`
+      :''}${ICONS.inbox}</span>
+    <div class="ibMain">
+      <div class="ibHead">
+        <span class="ibCat">${c.n[L]}</span>
+        <span class="ibWhen num">${t('season')} ${m.se} · ${t('week')} ${m.w}</span>
+        ${un?'<i class="ibDot"></i>':''}
+      </div>
+      <div class="ibTxt">${txt}</div>
+      ${m.action?`<div class="mrow">
+        <button class="btn p" onclick="inboxAction(${i},true)">${t('accept')}</button>
+        <button class="btn s" onclick="inboxAction(${i},false)">${t('decline')}</button>
+        ${m.action.pid?`<button class="btn s ibProf" onclick="pushV('player',${m.action.pid})">${t('viewProfile')}</button>`:''}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+function ibSahaView(){
+  const unread=S.inbox.filter(m=>!m.read).length;
+  /* "Tümünü oku" yalnız aksiyonsuz mesajları okur; hepsi aksiyonluysa
+     düğmenin yapacağı bir iş yok, o yüzden kapalı görünüyor. */
+  const readable=S.inbox.filter(m=>!m.action&&!m.read).length;
+  const chips=IB_FILTER.map(f=>{
+    const n=S.inbox.filter(m=>ibMatch(m,f.id)).length;
+    const on=IBF===f.id;
+    return `<button class="ibChip${on?' on':''}" onclick="ibSetF('${f.id}')" aria-pressed="${on?'true':'false'}">
+      <span>${f.lbl()}</span><b class="ibChipN num">${n}</b></button>`;
+  }).join('');
+  const list=S.inbox.filter(m=>ibMatch(m,IBF));
+  const body=!S.inbox.length
+    ? `<div class="card">${emptyState('inbox',t('noNews'),t('noNewsSub'))}</div>`
+    : list.length
+      ? list.map(ibMsgHtml).join('')
+      : `<div class="card">${emptyState('inbox',t('ibNoneF'),'')}</div>`;
+  return `<div class="ibBar">
+    <div class="ibCount">${unread?`<b class="num">${unread}</b> ${t('ibUnread')}`:t('ibAllRead')}</div>
+    <button class="ibAll" onclick="ibReadAll()"${readable?'':' disabled'}>${t('ibReadAll')}</button>
+  </div>
+  <div class="ibChips">${chips}</div>
+  ${body}`;
 }
 function weekFixHtml(lg,wk){
   const l2=LEAGUES[lg],len=S.fx[lg].length;
@@ -1584,6 +1731,9 @@ league(){
   </div>${selRow}${body}`;
 },
 inbox(){
+  /* Saha kendi okuma modelini taşıyor: ekranı açmak hiçbir şeyi okundu
+     yapmıyor. Diğer üç tema eski toplu işaretlemeyi aynen sürdürüyor. */
+  if(useSahaInbox())return ibSahaView();
   S.inbox.forEach(m=>{if(!m.action)m.read=true;});
   if(!S.inbox.length)return `<div class="card">${emptyState('inbox',t('noNews'),t('noNewsSub'))}</div>`;
   return S.inbox.map(m=>msgHtml(m)).join('');
