@@ -254,6 +254,63 @@ html[data-theme="saha"] .msg .mrow{display:flex;gap:8px;margin-top:11px}
 html[data-theme="saha"] .msg .mrow .btn{padding:9px;font-size:12px}
 html[data-theme="saha"] .lnk{cursor:pointer;text-decoration:underline;text-decoration-color:rgba(148,168,205,.35);text-underline-offset:2px;font-weight:700}
 html[data-theme="saha"] .lnk:active{color:var(--acc)}
+html[data-theme="saha"] .ibBar{display:flex;align-items:center;gap:10px;margin-bottom:10px;min-height:40px}
+html[data-theme="saha"] .ibCount{flex:1;min-width:0;font-family:var(--cond);font-weight:700;font-size:12.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
+html[data-theme="saha"] .ibCount b{font-size:15px;color:var(--txt);margin-right:2px}
+html[data-theme="saha"] .ibAll{flex:0 0 auto;min-height:40px;padding:8px 14px;background:var(--sur2);
+  border:1px solid var(--line);border-radius:12px;color:var(--acc);cursor:pointer;
+  font-family:var(--cond);font-weight:700;font-size:12.5px;letter-spacing:.07em;
+  text-transform:uppercase;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap)}
+html[data-theme="saha"] .ibAll:active:not(:disabled){transform:scale(.96);background:var(--sur3)}
+html[data-theme="saha"] .ibAll:disabled{color:var(--txt3);cursor:default}
+html[data-theme="saha"] .ibChips{display:flex;gap:7px;margin:0 var(--gutter-neg) 12px;padding:0 var(--gutter);
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html[data-theme="saha"] .ibChips::-webkit-scrollbar{display:none}
+html[data-theme="saha"] .ibChip{flex:0 0 auto;display:flex;align-items:center;gap:6px;min-height:40px;
+  padding:7px 13px;background:var(--sur2);border:1px solid var(--line);border-radius:20px;
+  color:var(--txt2);cursor:pointer;white-space:nowrap;font-family:var(--cond);
+  font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;
+  -webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+html[data-theme="saha"] .ibChip:active{transform:scale(.96)}
+html[data-theme="saha"] .ibChipN{font-size:12px;font-weight:800;color:var(--txt3);transition:color var(--tap)}
+html[data-theme="saha"] .ibChip.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+html[data-theme="saha"] .ibChip.on .ibChipN{color:var(--acc)}
+html[data-theme="saha"] .ibMsg{position:relative;display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px 12px 17px;margin-bottom:9px;background:var(--sur);
+  border:1px solid transparent;border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+html[data-theme="saha"] .ibMsg::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3.5px;background:var(--txt3)}
+html[data-theme="saha"] .ibMsg.info::before{background:var(--blue)}
+html[data-theme="saha"] .ibMsg.good::before{background:var(--acc)}
+html[data-theme="saha"] .ibMsg.warn::before{background:var(--warn)}
+html[data-theme="saha"] .ibMsg.bad::before{background:var(--bad)}
+html[data-theme="saha"] .ibMsg.act::before{background:var(--gold)}
+html[data-theme="saha"] .ibMsg.act{background:linear-gradient(90deg,rgba(233,188,90,.07),var(--sur) 55%);box-shadow:var(--sh-el)}
+html[data-theme="saha"] .ibMsg.un{background:var(--sur2);border-color:var(--line);box-shadow:var(--sh-el)}
+html[data-theme="saha"] .ibMsg.act.un{background:linear-gradient(90deg,rgba(233,188,90,.11),var(--sur2) 55%)}
+html[data-theme="saha"] .ibMsg[onclick]{cursor:pointer}
+html[data-theme="saha"] .ibMsg[onclick]:active{background:var(--sur3)}
+html[data-theme="saha"] .ibIc{flex:0 0 46px;width:46px;height:46px;display:flex;align-items:center;justify-content:center}
+html[data-theme="saha"] .ibIc img{width:46px;height:46px;display:block}
+html[data-theme="saha"] .ibIc svg{display:none;width:24px;height:24px;color:var(--txt3)}
+html[data-theme="saha"] .ibIc.noimg svg{display:block}
+html[data-theme="saha"] .ibMain{flex:1;min-width:0}
+html[data-theme="saha"] .ibHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+html[data-theme="saha"] .ibCat{font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt2)}
+html[data-theme="saha"] .ibMsg.un .ibCat{color:var(--txt)}
+html[data-theme="saha"] .ibWhen{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .ibDot{margin-left:auto;flex:0 0 auto;width:7px;height:7px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 7px rgba(30,201,126,.65)}
+html[data-theme="saha"] .ibMsg.act .ibDot{background:var(--gold);box-shadow:0 0 7px rgba(233,188,90,.65)}
+html[data-theme="saha"] .ibTxt{margin-top:5px;font-size:13px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .ibMsg.un .ibTxt{color:var(--txt)}
+html[data-theme="saha"] .ibMsg .mrow{display:flex;gap:8px;margin-top:11px}
+html[data-theme="saha"] .ibMsg .mrow .btn{padding:9px;font-size:12px;min-width:0}
+html[data-theme="saha"] .ibMsg .mrow .ibProf{flex:0 0 auto;width:auto;padding:9px 12px}
 html[data-theme="saha"] .matchrow{display:flex;align-items:center;font-size:12.5px;padding:9.5px 0;border-bottom:1px solid var(--line);gap:8px}
 html[data-theme="saha"] .matchrow:last-child{border-bottom:none}
 html[data-theme="saha"] .matchrow .tn{flex:1;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
