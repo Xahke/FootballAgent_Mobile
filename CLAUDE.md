@@ -76,7 +76,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (380 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (388 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -483,6 +483,35 @@ A queued function that decides it has nothing to show must call `runNextModal()`
 than returning silently: the queue only advances on `closeModal()`, so a silent return
 strands everything behind it (see `showLevelUp`).
 
+### The inbox has one category dictionary, and Saha reads it differently
+
+`pushNews(key, params, type, action)` is still the only writer of `S.inbox`, and the
+record is unchanged: `{w, se, key, params, type, action, read}`. Text is never stored —
+`NEWS[L][key](params)` renders it at draw time, which is why an old save reads correctly
+after a language switch.
+
+**`IB_CAT` in `js/ui.js` is the single mapping source.** Each of the eleven categories
+carries its badge, its bilingual `{tr,en}` name, its filter group and the list of NEWS
+keys it owns; `IB_OF` is derived from it once, so there is no second list to keep in
+step. Adding a `pushNews` key means adding it to one `keys` array — no behaviour code is
+touched. A key with no category falls to `system`, which is also where `tut` lives and
+the only category drawing the envelope SVG instead of a webp (`ic:null`). `NEWS.goal` and
+`NEWS.perf` are defined but never pushed, so they are deliberately unmapped.
+
+**Saha replaces the view, not the model** — the same gate as `useSahaMarket`/
+`useSahaLeague`/`useSahaSkills`. `VIEWS.inbox` branches on `useSahaInbox()`; the other
+three themes keep `msgHtml()` and the old bulk-read-on-open untouched. What differs on
+Saha is the read model: **opening the inbox marks nothing read.** `ibRead(i)` fires from
+a card tap, `ibReadAll()` from the header button, and both skip messages that still carry
+an `action` — a decision message stays unread until Accept/Decline runs through
+`inboxAction()`. That is why an action card renders with no `onclick` at all rather than
+with a handler that checks and returns.
+
+The selected filter (`IBF`) is view state like `MKQ`, `SKTAB` and atlas `CAM`: it never
+reaches `S`, so filtering or switching themes cannot touch what has been read. The
+`action` filter reads `m.action` directly rather than a category, because a message
+waiting on a decision belongs in one place whatever it is about.
+
 ### Views that own their own DOM
 
 `render()` replaces `#view.innerHTML` wholesale, which destroys any listener attached to
@@ -499,7 +528,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match (380 today). Objects returned from events, themes, branches and
+  counts must match (388 today). Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
   silently overwrote it.
