@@ -308,9 +308,17 @@ html[data-theme="saha"] .ibDot{margin-left:auto;flex:0 0 auto;width:7px;height:7
 html[data-theme="saha"] .ibMsg.act .ibDot{background:var(--gold);box-shadow:0 0 7px rgba(233,188,90,.65)}
 html[data-theme="saha"] .ibTxt{margin-top:5px;font-size:13px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
 html[data-theme="saha"] .ibMsg.un .ibTxt{color:var(--txt)}
-html[data-theme="saha"] .ibMsg .mrow{display:flex;gap:8px;margin-top:11px}
-html[data-theme="saha"] .ibMsg .mrow .btn{padding:9px;font-size:12px;min-width:0}
-html[data-theme="saha"] .ibMsg .mrow .ibProf{flex:0 0 auto;width:auto;padding:9px 12px}
+html[data-theme="saha"] .ibActs{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+html[data-theme="saha"] .ibAct{flex:0 0 44px;width:44px;height:44px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--sur3);border:1px solid var(--line);border-radius:12px;
+  color:var(--txt2);cursor:pointer;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+html[data-theme="saha"] .ibAct svg{width:20px;height:20px;display:block}
+html[data-theme="saha"] .ibAct:active{transform:scale(.94)}
+html[data-theme="saha"] .ibAct.ok{background:var(--acc);border-color:var(--acc);color:var(--accT)}
+html[data-theme="saha"] .ibAct.no{color:var(--bad)}
+html[data-theme="saha"] .ibAct.prof{color:var(--blue)}
 html[data-theme="saha"] .matchrow{display:flex;align-items:center;font-size:12.5px;padding:9.5px 0;border-bottom:1px solid var(--line);gap:8px}
 html[data-theme="saha"] .matchrow:last-child{border-bottom:none}
 html[data-theme="saha"] .matchrow .tn{flex:1;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
