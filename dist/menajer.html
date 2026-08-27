@@ -1526,31 +1526,24 @@ html[data-theme="saha"] .cmRowN{font-family:var(--cond);font-weight:800;font-siz
 html[data-theme="saha"] .cmNewRow,html[data-theme="saha"] .cmNewMain{background:rgba(19,27,46,.35);box-shadow:none;
   border:1px dashed rgba(30,201,126,.32)}
 html[data-theme="saha"] .cmNewT{font-family:var(--cond);font-weight:900;font-size:22px;letter-spacing:.01em}
-html[data-theme="saha"] wr* önekli ve bu blokta tanımlı.
-
-   Üç ekranın ortak imzası tek bir öğe: üstteki rozet halkası. Kategori vurgusu
-   ve sonuç valansı orada okunuyor,html[data-theme="saha"] geri kalan her şey sessiz kalıyor. Rozetin
-   kendi renklerine hiç dokunulmuyor — halka rozetin dışında,html[data-theme="saha"] ayrı bir katman. */
-
- 
-.evTop{display:flex;flex-direction:column;align-items:center;text-align:center;
-  gap:9px;padding:2px 0 0;margin-bottom:13px}
-html[data-theme="saha"] .evBadge{position:relative;width:72px;height:72px;flex:0 0 72px;display:flex;
-  align-items:center;justify-content:center;border-radius:50%}
+html[data-theme="saha"] .evTop{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:0;padding:2px 0 0;margin-bottom:13px}
+html[data-theme="saha"] .evBadge{position:relative;width:92px;height:92px;flex:0 0 92px;display:flex;
+  align-items:center;justify-content:center;border-radius:50%;overflow:hidden}
 html[data-theme="saha"] .evBadge img{width:72px;height:72px;display:block;border-radius:50%}
-html[data-theme="saha"] .evBadge::after{content:'';position:absolute;inset:-5px;border-radius:50%;pointer-events:none;
-  box-shadow:0 0 0 1.5px var(--evc,var(--line2)),0 0 18px -4px var(--evc,transparent)}
+html[data-theme="saha"] .evBadge::after{content:'';position:absolute;inset:6px;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 1.5px var(--evc,var(--line2)),0 0 16px -6px var(--evc,transparent)}
 html[data-theme="saha"] .evBadge.noimg{background:var(--sur2)}
-html[data-theme="saha"] .evBadge.good::after{box-shadow:0 0 0 2px var(--acc),0 0 22px -3px var(--acc)}
-html[data-theme="saha"] .evBadge.bad::after{box-shadow:0 0 0 2px var(--bad),0 0 22px -3px var(--bad)}
-html[data-theme="saha"] .evBadge.mid::after{box-shadow:0 0 0 2px var(--gold),0 0 22px -3px var(--gold)}
-html[data-theme="saha"] .evCat{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;
+html[data-theme="saha"] .evBadge.good::after{box-shadow:0 0 0 2px var(--acc),0 0 20px -6px var(--acc)}
+html[data-theme="saha"] .evBadge.bad::after{box-shadow:0 0 0 2px var(--bad),0 0 20px -6px var(--bad)}
+html[data-theme="saha"] .evBadge.mid::after{box-shadow:0 0 0 2px var(--gold),0 0 20px -6px var(--gold)}
+html[data-theme="saha"] .evCat{margin-top:8px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;
   line-height:1;text-transform:uppercase;color:var(--evc,var(--txt2))}
 html[data-theme="saha"] h2.evTtl{font-size:19px;font-weight:800;letter-spacing:-.015em;line-height:1.3;
   text-align:center;margin:0 0 4px}
 html[data-theme="saha"] h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
-  letter-spacing:.05em;text-transform:uppercase;margin:0}
-html[data-theme="saha"] .evLock,html[data-theme="saha"] .evVerdict{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  letter-spacing:.05em;text-transform:uppercase;margin:8px 0 0}
+html[data-theme="saha"] .evLock,html[data-theme="saha"] .evVerdict{margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
   border-radius:20px;font-family:var(--cond);font-weight:800;font-size:11.5px;
   letter-spacing:.1em;text-transform:uppercase;line-height:1.2}
 html[data-theme="saha"] .evLock{background:var(--sur3);color:var(--txt2)}
@@ -1566,6 +1559,18 @@ html[data-theme="saha"] .wrCell b{font-size:19px;font-weight:800;line-height:1;c
 html[data-theme="saha"] .wrCell em{font-family:var(--cond);font-style:normal;font-weight:700;font-size:10px;
   letter-spacing:.06em;line-height:1.15;text-align:center;text-transform:uppercase;color:var(--txt3)}
 html[data-theme="saha"] .wrList{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+html[data-theme="saha"] .wrFoot{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;gap:8px;
+  margin:0 -16px;padding:10px 16px calc(4px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(19,27,46,0) 0,var(--sur) 30%,var(--sur) 100%)}
+html[data-theme="saha"] .wrFoot .btn{flex:1;min-width:0;margin:0}
+html[data-theme="saha"] .wrMute{flex:0 0 48px;width:48px;height:48px;padding:0;display:flex;
+  align-items:center;justify-content:center;border:none;border-radius:13px;
+  background:none;color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2);
+  cursor:pointer;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap)}
+html[data-theme="saha"] .wrMute svg{width:20px;height:20px;display:block}
+html[data-theme="saha"] .wrMute:active{transform:scale(.94);background:var(--sur3);color:var(--txt)}
+html[data-theme="saha"] .wrMute:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 html[data-theme="saha"] .wrCard{display:flex;align-items:center;gap:11px;width:100%;min-height:64px;
   padding:10px 12px 10px 15px;background:var(--sur);border:none;border-radius:14px;
   position:relative;overflow:hidden;text-align:left;cursor:pointer;color:inherit;font:inherit;
@@ -12425,6 +12430,7 @@ function wkSahaReport(wk){
   const on=rows.filter(r=>!r.dnp);
   const sum=k=>on.reduce((s,r)=>s+(r[k]||0),0);
   const avg=on.length?(sum('rt')/on.length).toFixed(1):'–';
+  const mute=esc(t('dontShow'));   // ikon düğmesinin görünür yazısı yok, adı burada
   openModal(
     '<div class="evTop">'
     +evBadgeHtml(EV_REPORT_IC,'','var(--acc)')
@@ -12438,9 +12444,16 @@ function wkSahaReport(wk){
     +wkSahaCell(avg,t('avgRt'))
     +'</div>'
     +'<div class="wrList">'+rows.map(wkSahaCard).join('')+'</div>'
+    /* İki işlem sabit bir şeritte: liste beş oyuncuda sheet'i aşıyordu ve
+       "Bir daha gösterme" katlamanın altında kalıyordu. Sticky, fixed değil —
+       şerit akışın son öğesi olduğu için sona kaydırıldığında son oyuncu kartı
+       tam üstünde kalıyor, hiçbir zaman örtülmüyor. Kapatma ve
+       S.wkRepOn=false;save() davranışı aynen korunuyor. */
+    +'<div class="wrFoot">'
     +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('gotIt')+'</span></button>'
-    +'<button class="btn s evGo" style="margin-top:8px" onclick="S.wkRepOn=false;save();closeModal();toast(t(\'wkRepOff\'))">'
-    +evSvg(EV_ICON.hide)+'<span>'+t('dontShow')+'</span></button>');
+    +'<button class="wrMute" aria-label="'+mute+'" title="'+mute+'"'
+    +' onclick="S.wkRepOn=false;save();closeModal();toast(t(\'wkRepOff\'))">'+evSvg(EV_ICON.hide)+'</button>'
+    +'</div>');
 }
 
 /* ---------- olay: karar ve sonuç ----------

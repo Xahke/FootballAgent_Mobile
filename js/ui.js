@@ -2590,6 +2590,7 @@ function wkSahaReport(wk){
   const on=rows.filter(r=>!r.dnp);
   const sum=k=>on.reduce((s,r)=>s+(r[k]||0),0);
   const avg=on.length?(sum('rt')/on.length).toFixed(1):'–';
+  const mute=esc(t('dontShow'));   // ikon düğmesinin görünür yazısı yok, adı burada
   openModal(
     '<div class="evTop">'
     +evBadgeHtml(EV_REPORT_IC,'','var(--acc)')
@@ -2603,9 +2604,16 @@ function wkSahaReport(wk){
     +wkSahaCell(avg,t('avgRt'))
     +'</div>'
     +'<div class="wrList">'+rows.map(wkSahaCard).join('')+'</div>'
+    /* İki işlem sabit bir şeritte: liste beş oyuncuda sheet'i aşıyordu ve
+       "Bir daha gösterme" katlamanın altında kalıyordu. Sticky, fixed değil —
+       şerit akışın son öğesi olduğu için sona kaydırıldığında son oyuncu kartı
+       tam üstünde kalıyor, hiçbir zaman örtülmüyor. Kapatma ve
+       S.wkRepOn=false;save() davranışı aynen korunuyor. */
+    +'<div class="wrFoot">'
     +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('gotIt')+'</span></button>'
-    +'<button class="btn s evGo" style="margin-top:8px" onclick="S.wkRepOn=false;save();closeModal();toast(t(\'wkRepOff\'))">'
-    +evSvg(EV_ICON.hide)+'<span>'+t('dontShow')+'</span></button>');
+    +'<button class="wrMute" aria-label="'+mute+'" title="'+mute+'"'
+    +' onclick="S.wkRepOn=false;save();closeModal();toast(t(\'wkRepOff\'))">'+evSvg(EV_ICON.hide)+'</button>'
+    +'</div>');
 }
 
 /* ---------- olay: karar ve sonuç ----------
