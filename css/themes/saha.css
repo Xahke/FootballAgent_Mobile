@@ -2357,3 +2357,267 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 /* Klavye odağı görünür kalsın — kariyer menüsündeki desenin aynısı. */
 .wrCard:focus-visible,.evOpt:focus-visible,.btn.evGo:focus-visible{
   outline:2px solid var(--acc);outline-offset:2px}
+
+/* ===================== OYUNCU PROFİLİ · ÜÇ SEKME =====================
+   Yalnız saha temasında çiziliyor (js/ui.js: useSahaPlayerProfile). Diğer üç
+   tema .hero/.list/.card/.grid4 ile bugünkü profili aynen kullanmaya devam
+   ediyor; buradaki hiçbir sınıf oraya ulaşmıyor.
+
+   Dokunma hedefleri 44px altına inmiyor, ölçüler 360px genişlikte de taşmıyor:
+   bütün sütunlar min-width:0 ve uzun ad taşıyan her hücrede ya kırpma ya
+   sarma var. Kulüp, oyuncu ve ajans adları tek satırda kırpılıyor; ön anlaşma
+   satırı sarıyor. */
+.pfHead{background:linear-gradient(155deg,#182541 0%,#111a2e 55%,#0f1728 100%);
+  border-radius:18px;padding:14px 14px 13px;margin-bottom:11px;position:relative;overflow:hidden;
+  box-shadow:var(--sh-el)}
+.pfBar{position:absolute;left:0;top:0;bottom:0;width:4px;opacity:.9}
+
+.pfId{display:flex;align-items:center;gap:11px;min-width:0}
+.pfIdT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pfName{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfMeta{font-size:11.5px;color:var(--txt2);line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfRt{width:54px;height:54px;flex:0 0 54px;border-radius:15px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:linear-gradient(160deg,var(--sur3),var(--sur2));
+  box-shadow:inset 0 0 0 1px var(--line2),0 4px 12px rgba(0,0,0,.4)}
+.pfRt b{font-size:21px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.pfRt em{font-style:normal;font-size:7.5px;color:var(--txt3);text-transform:uppercase;
+  margin-top:3px;letter-spacing:.09em;font-weight:800}
+.pfRt.g{background:linear-gradient(160deg,rgba(30,201,126,.22),rgba(14,156,96,.10));
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.35)}
+.pfRt.g b{color:var(--acc)}
+.pfRt.y{background:linear-gradient(160deg,rgba(230,162,60,.2),rgba(192,124,16,.08));
+  box-shadow:inset 0 0 0 1px rgba(230,162,60,.32)}
+.pfRt.y b{color:var(--warn)}
+.pfRt.o{background:linear-gradient(160deg,rgba(240,85,93,.2),rgba(199,57,64,.08));
+  box-shadow:inset 0 0 0 1px rgba(240,85,93,.32)}
+.pfRt.o b{color:var(--bad)}
+
+/* Kulüp şeridi: takım ekranına giden gerçek bir düğme. Serbest oyuncuda
+   .off geliyor ve şerit <div> olarak çiziliyor — gidilecek bir takım yok. */
+.pfClub{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;margin-top:11px;
+  padding:7px 10px;border:none;border-radius:12px;background:rgba(148,168,205,.07);
+  color:var(--txt);font-family:inherit;text-align:left;cursor:pointer;
+  -webkit-appearance:none;appearance:none;transition:background var(--tap)}
+.pfClub:active{background:rgba(148,168,205,.13)}
+.pfClub.off{cursor:default}
+.pfClubT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.pfClubT b{font-size:13px;font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfClubT em{font-style:normal;font-size:10.5px;color:var(--txt3);line-height:1.2;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+
+/* Üç sayı: değer, potansiyel, temsil. Ajans adı en uzun olabilen; hücre
+   min-width:0 ve kırpmalı olduğu için şeridi genişletemiyor. */
+.pfKeys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:11px;
+  background:var(--line);border-radius:12px;overflow:hidden}
+.pfKeys .pfCell{background:rgba(11,17,30,.45);padding:9px 8px}
+.pfCell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;min-width:0;text-align:center}
+.pfCell b{font-size:14.5px;font-weight:800;line-height:1.15;letter-spacing:-.01em;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfCell b.g{color:var(--acc)}
+.pfCell b.y{color:var(--warn)}
+.pfCell b.o{color:var(--bad)}
+.pfCell em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:10px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.15;
+  max-width:100%;overflow-wrap:anywhere}
+/* Üçüncü hücrenin değeri sayı değil sözcük: "Temsilcisiz" ya da bir ajans adı.
+   Kırpmak anlamı yarım bırakırdı, o yüzden bu hücre sarıyor — şerit uzunca bir
+   ada bir satır daha veriyor, ki okunabilirlik yükseklikten önce gelir. */
+.pfCellA b{white-space:normal;font-size:12.5px;line-height:1.25;overflow-wrap:anywhere}
+.pfMine{color:var(--acc)}
+.pfFree{color:var(--txt2)}
+.pfUp{font-style:normal;color:var(--acc);font-size:10px;margin-left:2px}
+.pfDn{font-style:normal;color:var(--bad);font-size:10px;margin-left:2px}
+
+.pfPills{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.pfPill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:8px;
+  font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.04em;line-height:1.35;
+  background:var(--sur3);color:var(--txt2);overflow-wrap:anywhere}
+.pfPill.on{background:var(--acc-soft);color:var(--acc);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+.pfPill.w{background:var(--warn-soft);color:var(--warn)}
+.pfPill.b{background:var(--blue-soft);color:var(--blue)}
+.pfPill.r{background:var(--bad-soft);color:var(--bad)}
+
+/* Ön anlaşma kendi satırında; kulüp adı uzunsa sarıyor, kırpılmıyor —
+   hangi kulübe gittiği yarım okunacak bir bilgi değil. */
+.pfPre{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:9px;padding:8px 10px;
+  border-radius:11px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.22)}
+.pfPreL{font-family:var(--cond);font-weight:800;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acc)}
+.pfPreN{flex:1;min-width:0;font-size:12.5px;font-weight:700;overflow-wrap:anywhere}
+.pfPreW{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt2);
+  font-variant-numeric:tabular-nums}
+
+/* ---- sekmeler ---- */
+.pfTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.pfTab{min-height:46px;padding:8px 6px;background:var(--sur2);border:1px solid var(--line);
+  border-radius:13px;color:var(--txt2);cursor:pointer;font-family:var(--cond);font-weight:700;
+  font-size:13px;letter-spacing:.05em;text-transform:uppercase;line-height:1.1;
+  overflow-wrap:anywhere;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap),color var(--tap)}
+.pfTab:active{transform:scale(.97)}
+.pfTab.on{background:var(--sur3);border-color:rgba(30,201,126,.45);color:var(--acc)}
+
+/* ---- bölüm başlığı: rozet + ad ---- */
+.pfSect{display:flex;align-items:center;gap:11px;margin:0 2px 10px}
+.pfSectIc{width:40px;height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;overflow:hidden}
+.pfSectIc img{width:40px;height:40px;display:block}
+.pfSectIc.noimg{background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+.pfSectT{min-width:0;display:flex;flex-direction:column;gap:1px}
+.pfSectT b{font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.08em;
+  text-transform:uppercase;line-height:1.1}
+.pfSectT em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:11px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.pfCard{margin-bottom:11px}
+.pfSub{font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:10px}
+.pfRule{height:1px;background:var(--line);margin:13px 0}
+
+/* İstatistik ızgaraları. Beş sütunda 360px'te hücre başına ~60px kalıyor;
+   değer kırpılıyor, etiket sarıyor. */
+.pfGrid{display:grid;gap:9px 4px}
+.pfGrid .pfCell b{font-size:16px}
+.pfG3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pfG4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pfG5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.pfG5 .pfCell b{font-size:14px}
+.pfG5 .pfCell em{font-size:9.5px;letter-spacing:.05em}
+
+.pfRel{display:flex;flex-direction:column;gap:3px;margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--line)}
+.pfRelL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3)}
+.pfRelT{font-size:12.5px;color:var(--txt2);line-height:1.45}
+
+/* Form şeridi: soldan sağa zaman. Beş kutu her genişlikte yan yana sığıyor. */
+.pfForm{display:flex;flex-direction:column;gap:9px}
+.pfFormL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3)}
+.pfFormR{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.pfFormC{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;min-height:46px;border-radius:11px;font-style:normal;background:var(--sur2);
+  box-shadow:inset 0 0 0 1px var(--line)}
+.pfFormC b{font-family:var(--cond);font-weight:800;font-size:14px;line-height:1}
+.pfFormC em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--txt3);line-height:1}
+.pfFormC.w{background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+.pfFormC.w b{color:var(--acc)}
+.pfFormC.l{background:var(--bad-soft);box-shadow:inset 0 0 0 1px rgba(240,85,93,.3)}
+.pfFormC.l b{color:var(--bad)}
+.pfFormC.d{background:var(--warn-soft);box-shadow:inset 0 0 0 1px rgba(230,162,60,.3)}
+.pfFormC.d b{color:var(--warn)}
+
+/* Tek satırlık sözleşme özeti: üç sütun, ortadaki ayraçlarla. */
+.pfLine{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pfLineC{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pfLineC+.pfLineC{padding-left:10px;border-left:1px solid var(--line)}
+.pfLineC em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:10px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.15}
+.pfLineC b{font-size:13px;font-weight:800;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- maçlar ---- */
+.pfFilt{margin-bottom:11px}
+.pfChips{display:flex;gap:7px}
+.pfChip{flex:0 0 auto;min-height:44px;padding:0 15px;border-radius:12px;background:var(--sur2);
+  border:1px solid var(--line);color:var(--txt2);cursor:pointer;font-family:var(--cond);
+  font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;
+  -webkit-appearance:none;appearance:none;transition:background var(--tap),color var(--tap)}
+.pfChip.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+.pfChip:disabled{opacity:.4;cursor:default}
+/* Pasif filtrenin nedeni ekranda: sezonun tamamı modelde yok. */
+.pfChipWhy{margin:7px 2px 0;font-size:11.5px;color:var(--txt3);line-height:1.4}
+
+.pfMatch{display:flex;align-items:center;gap:11px;width:100%;min-height:58px;padding:10px 0;
+  border:none;border-bottom:1px solid var(--line);background:none;color:var(--txt);
+  font-family:inherit;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none}
+.pfMatch:last-child{border-bottom:none}
+.pfMatch:active{background:rgba(148,168,205,.06)}
+.pfMatchM{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pfMatchT{font-size:13px;font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfMatchS{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;color:var(--txt3)}
+.pfMatchS b{font-weight:800;color:var(--txt2);flex:0 0 auto}
+.pfMatchS em{font-style:normal;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfRes{font-style:normal;flex:0 0 auto;font-family:var(--cond);font-weight:800;font-size:11px;
+  line-height:1;padding:3px 6px;border-radius:6px}
+.pfRes.w{background:var(--acc-soft);color:var(--acc)}
+.pfRes.l{background:var(--bad-soft);color:var(--bad)}
+.pfRes.d{background:var(--warn-soft);color:var(--warn)}
+.pfMotm{color:var(--gold);font-weight:700}
+.pfMatchR{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pfMatchR b{font-size:15px;font-weight:800;line-height:1}
+.pfMatchR em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);line-height:1}
+.pfMatchR.g b{color:var(--acc)}
+.pfMatchR.y b{color:var(--warn)}
+.pfMatchR.o b{color:var(--bad)}
+.pfNone{text-align:center;color:var(--txt3);padding:22px 12px;font-size:12.5px;line-height:1.6}
+
+.pfSeason{display:flex;align-items:baseline;gap:8px;padding:8px 0;
+  border-bottom:1px solid var(--line);font-size:11.5px}
+.pfSeason:last-child{border-bottom:none}
+.pfSeasonS{flex:0 0 auto;font-weight:800;color:var(--txt3)}
+.pfSeasonT{flex:1;min-width:0;font-weight:700;color:var(--txt2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfSeasonV{flex:0 0 auto;color:var(--txt2)}
+.pfSeasonV b.g{color:var(--acc)}
+.pfSeasonV b.y{color:var(--warn)}
+.pfSeasonV b.o{color:var(--bad)}
+
+/* ---- sözleşme ---- */
+.pfKv{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.pfKv:last-child{border-bottom:none}
+.pfKv>span{flex:0 0 auto;color:var(--txt3)}
+.pfKv>b{min-width:0;font-weight:800;text-align:right;overflow-wrap:anywhere}
+.pfHist i{font-style:normal;color:var(--txt3);font-weight:700}
+.pfNote{margin-top:10px;padding:9px 11px;border-radius:11px;background:var(--warn-soft);
+  color:var(--warn);font-size:12px;font-weight:700;line-height:1.4}
+.pfWait{font-size:12.5px;color:var(--txt2);line-height:1.5}
+
+/* Sezon sonu geçişi: iki dinamik arma, aralarında bir ok. Ekranın tek
+   hareketi burada — ok boyunca ilerleyen kesik çizgi. */
+.pfMove{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;gap:8px}
+.pfMoveS{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+.pfMoveN{font-size:12px;font-weight:700;line-height:1.25;max-width:100%;overflow-wrap:anywhere}
+.pfMoveL{font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.15}
+.pfArrow{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  color:var(--acc);align-self:start;margin-top:14px}
+.pfArrow svg{width:56px;height:16px;display:block}
+/* Hareketi kısıtlayan kullanıcıda temanın kendi genel sıfırlaması (yukarıda,
+   "hareket azaltma") bunu da kapatıyor — ayrıca bir kural gerekmiyor. */
+.pfArrowL{stroke-dasharray:7 5;animation:pfMarch 1.2s linear infinite}
+@keyframes pfMarch{to{stroke-dashoffset:-12}}
+
+/* Devralınan .btn bu temada 41px; dokunma hedefi 44'ün altına inmesin.
+   Kural sarmalayıcıya bağlı, .btn'in kendisine değil — diğer ekranlar ve
+   diğer üç tema bugünkü yüksekliğini koruyor. */
+.pfActs .btn{min-height:44px}
+.pfActs .dctx{margin-bottom:10px}
+
+/* Yıkıcı düğmede rozet metnin yerine geçmiyor, yanında duruyor. */
+.btn.pfRelease{display:flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;margin-top:10px}
+.btn.pfRelease img{width:26px;height:26px;flex:0 0 26px;display:block}
+
+/* Klavye odağı görünür kalsın — .wrCard/.evOpt ile aynı desen. */
+.pfTab:focus-visible,.pfChip:focus-visible,.pfClub:focus-visible,
+.pfMatch:focus-visible,.btn.pfRelease:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+@media (max-width:374px){
+  .pfName{font-size:18px}
+  .pfTab{font-size:12px}
+  .pfKeys .pfCell{padding:8px 5px}
+  .pfGrid .pfCell b{font-size:15px}
+  .pfG5 .pfCell b{font-size:13px}
+  .pfArrow svg{width:40px}
+}

@@ -1407,6 +1407,370 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
   }
   return body;
 }
+/* ================= SAHA: OYUNCU PROFİLİ =================
+   Kapı diğer saha ekranlarıyla aynı desende (useSahaMarket/useSahaLeague/
+   useSahaSkills/useSahaInbox): yalnız VIEWS.player dallanıyor, geri kalan üç
+   tema bugünkü profili harfi harfine koruyor.
+
+   Model hiç değişmiyor. Üç sekme aynı oyuncu nesnesinin üç kesiti; yeni alan
+   okunmuyor, yeni istatistik üretilmiyor, kayıt biçimine hiçbir şey eklenmiyor.
+   Aksiyonlar da bugünkü fonksiyonların aynısını çağırıyor — openNeg,
+   openTransfer, pitchPlayer, releaseClient ve pushV('team'|'rival') olduğu
+   gibi duruyor; yeniden yazılan tek şey çizim. */
+function useSahaPlayerProfile(){return themeOf()==='saha';}
+
+/* Bölüm rozetleri. Yollar tam metin olarak duruyor, birleştirilerek
+   üretilmiyor: build.js tek dosya sürümünde "assets/ui/…" dizgilerini data URI
+   ile değiştiriyor ve parça parça kurulan bir yolu göremezdi (bkz. PORTRAITS). */
+const PF_IC={
+  ov :'assets/ui/profile-overview.webp',
+  mt :'assets/ui/profile-matches.webp',
+  ct :'assets/ui/profile-contract.webp',
+  pre:'assets/ui/profile-preagreement.webp',
+  cd :'assets/ui/profile-cooldown.webp',
+  rel:'assets/ui/profile-release.webp'
+};
+/* Rozet yüklenemezse CSS'in çizdiği boş halkaya düşülüyor — ibIconFail ve
+   evIconFail ile aynı desen; ekran rozetsiz de okunur kalıyor. */
+function pfIconFail(img){
+  const p=img.parentNode;
+  if(p&&p.classList)p.classList.add('noimg');
+  img.remove();
+}
+
+/* Seçili sekme yalnız görünüm durumu — MKQ, SKTAB, IBF ve atlas CAM ile aynı
+   gerekçe: S'ye yazsaydık kayıt biçimi büyür ve eski kayıtlar için yeni bir
+   "yokken de çalış" sınavı açılırdı; üstelik hangi sekmede kaldığın kariyerin
+   bir parçası değil. Sekme değiştirmek yalnız bu değişkeni ve çizimi
+   etkiliyor, oyuncu verisine ve kayda dokunmuyor. */
+let PFTAB='ov';
+const PF_TABS=['ov','mt','ct'];
+function pfSetTab(k){if(PF_TABS.indexOf(k)>=0){PFTAB=k;render();}}
+
+/* Sekme her YENİ açılışta Genel'e dönüyor. Ölçüt render()'ın lastSig'i: view
+   fonksiyonu çizimden önce çalıştığı için lastSig hâlâ bir önceki ekranı
+   gösteriyor, yani "bu oyuncuya yeni mi girdik" sorusunun cevabı burada hazır
+   — atlas'ın mapHome() çerçevelemesiyle birebir aynı ölçüt. Aynı oyuncuda
+   kalan yeniden çizimler (sekme, aksiyon, hafta) seçimi koruyor. */
+function pfTabFor(id){
+  if(lastSig!=='player:'+id)PFTAB='ov';
+  return PFTAB;
+}
+
+function pfSectHtml(k,title,sub){
+  return `<div class="pfSect">
+    <span class="pfSectIc"><img src="${PF_IC[k]}" alt="" aria-hidden="true"
+      width="40" height="40" decoding="async" onerror="pfIconFail(this)"></span>
+    <span class="pfSectT"><b>${title}</b>${sub?`<em>${sub}</em>`:''}</span>
+  </div>`;
+}
+function pfCell(v,lbl){
+  return `<span class="pfCell"><b class="num">${v}</b><em>${lbl}</em></span>`;
+}
+/* Temsil durumu tek yerden okunuyor: başlık hücresi, ilişki satırı ve
+   sözleşme sekmesi aynı kaynaktan besleniyor, böylece üçü çelişemez. Adlı bir
+   ajans tıklanabilir; eski kayıtlarda p.ra yok, o zaman rivalOf null döner ve
+   eski isimsiz metin doğru cevaptır. */
+function pfAgentHtml(p){
+  if(p.agent==='you')return `<span class="pfMine">${t('you')}</span>`;
+  if(p.agent==='rival'){
+    const rv=rivalOf(p);
+    return rv?lkR(rv.id,esc(rivalName(rv))):t('rival');
+  }
+  return `<span class="pfFree">${t('pfUnrep')}</span>`;
+}
+/* Sonuç harfi oyunun kendi dilinde: TR'de G/M/B, EN'de W/L/D. Renk üçlüsü
+   sabit — galibiyet yeşil, mağlubiyet kırmızı, beraberlik amber. */
+function pfResCh(res){
+  return L==='en'?(res==='W'?'W':res==='L'?'L':'D')
+                 :(res==='W'?'G':res==='L'?'M':'B');
+}
+function pfResCls(res){return res==='W'?'w':res==='L'?'l':'d';}
+function pfRtCls(rt){return rt>=7.5?'g':rt>=6.5?'y':'o';}
+
+/* ---------- ortak üst bölüm ----------
+   Üç sekmede de aynı: kimlik, kulüp, üç sayı, durum pilleri ve varsa ön
+   anlaşma. Kulüp arması dinamik kalıyor (tmBadge) — Midjourney rozetleri
+   bölüm başlıklarının işi, armanın yerine geçmiyorlar. */
+function pfHeadHtml(p,tm,cx){
+  const free=isFree(p);
+  const tags=[];
+  if(cx.mine)tags.push(`<span class="pfPill on">${t('myClient')}</span>`);
+  if(p.yrs<=1&&!free)tags.push(`<span class="pfPill w">${t('expiring')}</span>`);
+  if(cx.mine&&p.morale<40)
+    tags.push(`<span class="pfPill w">${p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')}</span>`);
+  if(cx.pc)tags.push(`<span class="pfPill w">${t('signPending')}</span>`);
+  if(!cx.pen&&cx.off)
+    tags.push(`<span class="pfPill b">${t('considering')} · ${cx.offs.length}</span>`);
+  if(cx.chaseRv)
+    tags.push(`<span class="pfPill r">${t('chaseTag')} · ${chaseLeft(cx.chase)} ${t('wk')}</span>`);
+  /* Kulüp satırı serbest oyuncuda tıklanmıyor: FREETM'in id'si -1, dokunmak
+     S.teams[-1] demek olurdu. */
+  const clubSub=free?t('faSub'):`${lgName(tm.lg)} · #${teamPos(tm.id)} · ${tm.pts} ${t('PTS')}`;
+  const club=free
+    ? `<div class="pfClub off">${tmBadge(tm,26)}
+        <span class="pfClubT"><b>${esc(tm.n)}</b><em>${clubSub}</em></span></div>`
+    : `<button class="pfClub" onclick="pushV('team',${tm.id})">${tmBadge(tm,26)}
+        <span class="pfClubT"><b>${esc(tm.n)}</b><em>${clubSub}</em></span>
+        <span class="pfGo">›</span></button>`;
+  /* Ön anlaşma kendi satırında: kulüp adı uzun olabiliyor ve pil şeridine
+     sığdırmak taşmaya en açık yerdi. */
+  const pre=cx.pen?`<div class="pfPre">
+    <span class="pfPreL">${t('pendingTag')}</span>
+    ${tmBadge(S.teams[cx.pen.tid],18)}
+    <span class="pfPreN">${esc(S.teams[cx.pen.tid].n)}</span>
+    <span class="pfPreW">${nextWindowLabel()}</span></div>`:'';
+  return `<div class="pfHead">
+    <span class="pfBar" style="background:linear-gradient(180deg,${tm.c1} 50%,${tm.c2} 50%)"></span>
+    <div class="pfId">
+      ${tmBadge(tm,46)}
+      <span class="pfIdT">
+        <span class="pfName">${esc(p.n)}</span>
+        <span class="pfMeta">${p.age} ${L==='tr'?'yaş':'yrs'} · ${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+      </span>
+      <span class="pfRt ${rtClass(p.r)}"><b class="num">${p.r}</b><em>${t('rating')}</em></span>
+    </div>
+    ${club}
+    <div class="pfKeys">
+      ${pfCell(fmtM(valueOf(p)),t('value'))}
+      ${pfCell(p.pot,t('pfPot'))}
+      <span class="pfCell pfCellA"><b>${pfAgentHtml(p)}</b><em>${t('agent')}</em></span>
+    </div>
+    ${tags.length?`<div class="pfPills">${tags.join('')}</div>`:''}
+    ${pre}
+  </div>`;
+}
+
+function pfTabsHtml(tab){
+  const lbl={ov:t('pfOv'),mt:t('pfMt'),ct:t('contract')};
+  return `<div class="pfTabs" role="tablist">${PF_TABS.map(k=>
+    `<button class="pfTab${k===tab?' on':''}" role="tab" aria-selected="${k===tab?'true':'false'}"
+      onclick="pfSetTab('${k}')">${lbl[k]}</button>`).join('')}</div>`;
+}
+
+/* ---------- sekme 1: genel ---------- */
+function pfOvHtml(p,tm,cx){
+  const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
+  const vm=valueMult(p);
+  const trend=vm>=1.08?'<i class="pfUp">▲</i>':vm<=0.93?'<i class="pfDn">▼</i>':'';
+  /* İlişki satırı temsil durumunun karşılığı: müşteriysen güven metni, rakip
+     ajanstaysa kimin elinde olduğu, boştaysa temsilcisiz olduğu. Üçü de mevcut
+     anahtarlardan geliyor; yeni bir değerlendirme uydurulmuyor. */
+  let rel;
+  if(cx.mine)rel=t(trustLabel(trustOf(p)));
+  else if(p.agent==='rival'){
+    const rv=rivalOf(p);
+    rel=rv?t('pfRepBy').replace('{a}',esc(rivalName(rv))):t('hasAgent');
+  } else rel=t('pfUnrep');
+  const l5=(p.l5||[]);
+  /* Form şeridi kronolojik: soldan sağa zaman akıyor, çünkü bu şeridin tek işi
+     eğilimi göstermek. Maçlar sekmesindeki liste ise en yenisi üstte — orada
+     soru "en son ne oldu". */
+  const strip=l5.length?`<div class="pfForm">
+    <span class="pfFormL">${t('last5')}</span>
+    <span class="pfFormR">${l5.map(m=>
+      `<i class="pfFormC ${pfResCls(m.res)}"><b>${pfResCh(m.res)}</b><em class="num">${m.rt.toFixed(1)}</em></i>`).join('')}</span>
+  </div>`:'';
+  return `${pfSectHtml('ov',t('pfOv'),t('season')+' '+S.season)}
+  <div class="card pfCard">
+    <div class="pfGrid pfG3">
+      ${pfCell(p.app||0,t('apps'))}
+      ${pfCell((p.min||0)+"'",t('mins'))}
+      ${pfCell(p.g,t('goals'))}
+      ${pfCell(p.a,t('assists'))}
+      <span class="pfCell"><b class="num ${rtAvg?pfRtCls(rtAvg):''}">${rtAvg?rtAvg.toFixed(1):'—'}</b><em>${t('avgRt')}</em></span>
+      <span class="pfCell"><b class="num">${fmtM(valueOf(p))}${trend}</b><em>${t('value')}</em></span>
+    </div>
+    <div class="pfRule"></div>
+    ${bar(t('form'),p.form)}
+    ${bar(t('morale'),p.morale)}
+    ${cx.mine?bar(t('trustL'),trustOf(p)):''}
+    <div class="pfRel"><span class="pfRelL">${t('pfRel')}</span><span class="pfRelT">${rel}</span></div>
+  </div>
+  ${strip?`<div class="card pfCard">${strip}</div>`:''}
+  <div class="card pfCard">
+    <div class="pfLine">
+      <span class="pfLineC"><em>${t('wage')}</em><b class="num">${isFree(p)?'—':fmtK(p.wage)+'/'+t('wk')}</b></span>
+      <span class="pfLineC"><em>${t('contract')}</em><b class="num">${isFree(p)?'—':p.yrs+' '+t('yrs')}</b></span>
+      <span class="pfLineC"><em>${t('agent')}</em><b>${pfAgentHtml(p)}</b></span>
+    </div>
+  </div>
+  <div class="card pfCard">
+    <div class="pfSub">${t('personal')}</div>
+    <div class="pfGrid pfG4">
+      ${pfCell(NATS[p.nat].c,t('nation'))}
+      ${pfCell(p.age,t('age'))}
+      ${pfCell(p.h?p.h+' cm':'—',t('height'))}
+      ${pfCell(p.ft==='L'?t('left'):t('right'),t('foot'))}
+    </div>
+  </div>`;
+}
+
+/* ---------- sekme 2: maçlar ----------
+   Oyun oyuncu başına yalnız son beş maçı saklıyor (sim.js p.l5'i beşte
+   kırpıyor); sezonun tamamı satır satır hiçbir yerde yok. "Sezon" filtresi bu
+   yüzden PASİF ve nedeni ekranda yazıyor — uydurulmuş satırlarla dolu bir liste
+   boş bir listeden daha kötü olurdu. p.seasons gerçek veri ama maç değil sezon
+   toplamı; o yüzden filtre değil, ayrı bir "Kariyer" bölümü. */
+function pfMtHtml(p,tm,cx){
+  const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
+  const l5=(p.l5||[]).slice().reverse();
+  const rows=l5.length?l5.map(m5=>{
+    const o=S.teams[m5.o];
+    const facts=[m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
+      m5.mm?`<b class="pfMotm">${t('motm')}</b>`:''].filter(Boolean).join(' · ');
+    return `<button class="pfMatch" onclick="pushV('team',${o.id})">
+      ${tmBadge(o,28)}
+      <span class="pfMatchM">
+        <span class="pfMatchT">${esc(o.n)}</span>
+        <span class="pfMatchS"><b class="num">${m5.sc}</b>
+          <i class="pfRes ${pfResCls(m5.res)}">${pfResCh(m5.res)}</i>
+          <em>${facts||'—'}</em></span>
+      </span>
+      <span class="pfMatchR ${pfRtCls(m5.rt)}"><b class="num">${m5.rt.toFixed(1)}</b><em>${t('ratingShort')}</em></span>
+    </button>`;
+  }).join(''):`<div class="pfNone">${t('pfNoMt')}</div>`;
+  const seasons=(p.seasons||[]).slice().reverse();
+  return `${pfSectHtml('mt',t('pfMt'),t('season')+' '+S.season)}
+  <div class="card pfCard">
+    <div class="pfGrid pfG5">
+      ${pfCell(p.app||0,t('apps'))}
+      ${pfCell((p.min||0)+"'",t('mins'))}
+      ${pfCell(p.g,t('goals'))}
+      ${pfCell(p.a,t('assists'))}
+      <span class="pfCell"><b class="num ${rtAvg?pfRtCls(rtAvg):''}">${rtAvg?rtAvg.toFixed(1):'—'}</b><em>${t('avgRt')}</em></span>
+    </div>
+  </div>
+  <div class="pfFilt">
+    <div class="pfChips">
+      <button class="pfChip on" aria-pressed="true">${t('pfL5')}</button>
+      <button class="pfChip" disabled aria-disabled="true">${t('season')}</button>
+    </div>
+    <div class="pfChipWhy">${t('pfSeOff')}</div>
+  </div>
+  <div class="card pfCard tight">${rows}</div>
+  ${seasons.length?`<div class="card pfCard">
+    <div class="pfSub">${t('career')}</div>
+    ${seasons.map(s=>`<div class="pfSeason">
+      <span class="pfSeasonS num">S${s.se}</span>
+      <span class="pfSeasonT">${esc(s.tm)}</span>
+      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} G · ${s.a} A${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}</span>
+    </div>`).join('')}
+  </div>`:''}`;
+}
+
+/* ---------- sekme 3: sözleşme ----------
+   Yalnız modelde gerçekten olan alanlar: maaş, kalan yıl, menajer, ön anlaşma
+   ve yenileme bekleme süresi. Komisyon oranı, serbest kalma bedeli ya da
+   sözleşmenin kesin bitiş tarihi oyunda YOK — kutuyu doldurmak için
+   uydurulmuyorlar. */
+function pfCtHtml(p,tm,cx){
+  const free=isFree(p);
+  const blk=cx.mine?renewBlock(p):null;
+  const cd=blk==='cooldown'?renewCd(p):0;
+  /* Sezon sonu geçişi: iki dinamik arma ve aralarında bir ok. Ön anlaşma
+     oyunun tek "ileri tarihli" durumu, ekranda da öyle görünmesi gerekiyor. */
+  const move=cx.pen?`${pfSectHtml('pre',t('pendingTag'),nextWindowLabel())}
+  <div class="card pfCard">
+    <div class="pfMove">
+      <span class="pfMoveS">
+        ${tmBadge(tm,44)}
+        <span class="pfMoveN">${esc(tm.n)}</span>
+        <span class="pfMoveL">${t('pfNow')}</span>
+      </span>
+      <span class="pfArrow" aria-hidden="true">
+        <svg viewBox="0 0 72 18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path class="pfArrowL" d="M4 9H54"/>
+          <path d="M49 3.5 54.5 9 49 14.5"/>
+        </svg>
+      </span>
+      <span class="pfMoveS">
+        ${tmBadge(S.teams[cx.pen.tid],44)}
+        <span class="pfMoveN">${esc(S.teams[cx.pen.tid].n)}</span>
+        <span class="pfMoveL">${nextWindowLabel()}</span>
+      </span>
+    </div>
+  </div>`:'';
+  /* Bekleme süresi metni gerçek cooldown değerinden geliyor: renewCd() kaç
+     hafta kaldığını söylüyor, ekranda başka bir sayı yazmıyor. */
+  const wait=cd?`${pfSectHtml('cd',t('pfWait'),cd+' '+t('wk'))}
+  <div class="card pfCard">
+    <div class="pfWait">${t('pfWaitTx').replace('{n}',cd)}</div>
+  </div>`:'';
+  const hist=(p.hist||[]).slice().reverse();
+  return `${pfSectHtml('ct',t('contract'),free?t('faSub'):esc(tm.n))}
+  <div class="card pfCard">
+    <div class="pfKv"><span>${t('wage')}</span><b class="num">${free?'—':fmtK(p.wage)+'/'+t('wk')}</b></div>
+    <div class="pfKv"><span>${t('contract')}</span><b class="num">${free?'—':p.yrs+' '+t('yrs')}</b></div>
+    <div class="pfKv"><span>${t('agent')}</span><b>${pfAgentHtml(p)}</b></div>
+    ${cx.pc?`<div class="pfNote">${t('signPending')}</div>`:''}
+    ${blk==='noreason'?`<div class="pfNote">${t('renewLocked')}</div>`:''}
+  </div>
+  ${move}
+  ${wait}
+  ${hist.length?`<div class="card pfCard">
+    <div class="pfSub">${t('transferH')}</div>
+    ${hist.map(h=>`<div class="pfKv"><span class="num">S${h.se}</span>
+      <b class="pfHist">${esc(h.a)} → ${esc(h.b)} <i class="num">${fmtM(h.f)}</i></b></div>`).join('')}
+  </div>`:''}`;
+}
+
+/* ---------- aksiyonlar ----------
+   Bugünkü davranışın birebir aynısı: aynı koşullar, aynı sıra, aynı çağrılar.
+   Değişen tek şey görünüm — ve devre dışı her düğmenin nedeni düğmenin kendi
+   yazısında duruyor. */
+function pfActsHtml(p,tm,cx){
+  if(cx.mine){
+    const blk=renewBlock(p);
+    const neg=cx.pc
+      ? `<button class="btn p" disabled>${t('signPending')}…</button>`
+      : blk==='cooldown'
+        ? `<button class="btn p" disabled>${t('renewWait')} · ${renewCd(p)} ${t('wk')}</button>`
+        : blk==='noreason'
+          ? `<button class="btn p" disabled>${t('renewLocked')}</button>`
+          : `<button class="btn p" ${cx.pen?'disabled':''} onclick="openNeg(${p.id})">${t('negotiate')}</button>`;
+    const tr=cx.pen
+      ? `<button class="btn b" disabled>${t('pendingTag')} · ${nextWindowLabel()}</button>`
+      : cx.off
+        ? `<button class="btn b" disabled>${t('considering')} (${cx.offs.length})…</button>`
+        : `<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`;
+    /* Rozet metnin yerine geçmiyor, yanında duruyor: yıkıcı bir düğmede
+       yazının kaybolması kabul edilemez. */
+    return `<div class="grid2">${neg}${tr}</div>
+    <button class="btn d pfRelease" onclick="releaseClient(${p.id})">
+      <img src="${PF_IC.rel}" alt="" aria-hidden="true" width="26" height="26"
+        decoding="async" onerror="this.remove()">
+      <span>${t('release')}</span></button>`;
+  }
+  if(p.agent!==null)return `<div class="pfNone">${t('hasAgent')}</div>`;
+  /* Yarış varsa düğmenin üstünde yazsın: yüzdedeki düşüşün sebebi görünür
+     olmalı, yoksa oyuncu şansının neden azaldığını anlamaz. */
+  const warn=cx.chaseRv?`<div class="dctx" style="margin-bottom:10px">${ICONS.alert}<span>${
+    t('chaseWith').replace('{a}',esc(rivalName(cx.chaseRv)))} · ${chaseLeft(cx.chase)} ${t('wk')}</span></div>`:'';
+  if(!knownLg(tm.lg))return warn+`<button class="btn s" disabled>${t('scoutLock')}</button>`;
+  if(profileOf(p)>repCap())
+    return warn+`<button class="btn s" disabled>${t('repLock')} · ${t('rep')} ${repNeedFor(profileOf(p))}+</button>`;
+  if(pitchCd(p)>0)
+    return warn+`<button class="btn s" disabled>${t('rejectedCd')} · ${pitchCd(p)} ${t('wk')}</button>`;
+  return warn+`<button class="btn p" onclick="pitchPlayer(${p.id})">${t('pitch')} · ${fmtK(pitchCost(p))} · ${pctOf(pitchChance(p))}</button>`;
+}
+
+function pfSahaView(id){
+  const p=byId(id),tm=teamOf(p),tab=pfTabFor(id);
+  const offs=(S.offers||[]).filter(x=>x.pid===p.id);
+  const chase=chaseFor(p.id);
+  const cx={
+    mine:p.agent==='you',
+    offs:offs, off:offs[0],
+    pen:pendingFor(p.id), pc:pendCFor(p.id),
+    chase:chase, chaseRv:chase?rivalById(chase.ri):null
+  };
+  const body=tab==='mt'?pfMtHtml(p,tm,cx):tab==='ct'?pfCtHtml(p,tm,cx):pfOvHtml(p,tm,cx);
+  return pfHeadHtml(p,tm,cx)+pfTabsHtml(tab)+body
+    +`<div class="pfActs">${pfActsHtml(p,tm,cx)}</div>`;
+}
+
 const VIEWS={
 /* Kariyer menüsü. Kurgusu ve özetin neden tek kaynak olduğu yukarıda,
    "KARİYER MENÜSÜ" bloğunda yazıyor. */
@@ -1938,6 +2302,7 @@ settings(){
   <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}`;
 },
 player(id){
+  if(useSahaPlayerProfile())return pfSahaView(id);
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
   const tags=[];
   if(mine)tags.push(`<span class="tag g">${t('myClient')}</span>`);

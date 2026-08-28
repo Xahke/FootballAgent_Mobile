@@ -178,6 +178,13 @@ notableCl:'Dikkat Çeken Müşteriler',noNotable:'Bildiğin liglerde dikkat çek
 relLbl:'Aranız',relHot:'Husumetli',relTense:'Gergin',relCalm:'Nötr',
 wonFrom:'Senden aldığı',lostTo:'Sana kaptırdığı',
 chaseTag:'yarışta',chaseWith:'{a} da görüşüyor',poachT:'Müşterine göz koydular',
+/* saha oyuncu profili — üç sekme; geri kalan metinler mevcut anahtarlardan */
+pfOv:'Genel',pfMt:'Maçlar',pfPot:'Potansiyel',pfRel:'İlişki',pfUnrep:'Temsilcisiz',
+pfL5:'Son 5',pfSeOff:'Oyun yalnızca son beş maçı saklıyor.',
+pfNoMt:'Bu oyuncunun kayıtlı maçı yok.',
+pfNow:'Şu an',pfRepBy:'{a} temsil ediyor.',
+pfWait:'Bekleme süresi',
+pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -346,6 +353,13 @@ notableCl:'Notable Clients',noNotable:'No notable clients in the leagues you kno
 relLbl:'Standing',relHot:'Hostile',relTense:'Tense',relCalm:'Neutral',
 wonFrom:'Taken from you',lostTo:'Lost to you',
 chaseTag:'contested',chaseWith:'{a} is talking to him too',poachT:'They are after your client',
+/* saha player profile — three tabs; the rest reuses existing keys */
+pfOv:'Overview',pfMt:'Matches',pfPot:'Potential',pfRel:'Relationship',pfUnrep:'Unrepresented',
+pfL5:'Last 5',pfSeOff:'The game only keeps the last five matches.',
+pfNoMt:'No matches recorded for this player.',
+pfNow:'Now',pfRepBy:'Represented by {a}.',
+pfWait:'Cooldown',
+pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 let L='tr';
