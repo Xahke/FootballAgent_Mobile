@@ -4392,7 +4392,9 @@ noClients:'Henüz müşterin yok. Piyasa sekmesinden temsilcisi olmayan oyuncula
 unhappy:'Mutsuz Müşteriler',age:'Yaş',rating:'Güç',form:'Form',
 morale:'Moral',wage:'Maaş',contract:'Sözleşme',value:'Piyasa Değeri',goals:'Gol',assists:'Asist',team:'Takım',yrs:'yıl',wk:'hf',
 negotiate:'Sözleşme Görüşmesi',offerClubs:'Kulüplere Öner',pitch:'Temsilcilik Teklif Et',
-release:'Müşteriyi Bırak',standings:'Puan Durumu',fixtures:'Fikstür',scorers:'Gol Krallığı',assistsT:'Asist Krallığı',
+release:'Müşteriyi Bırak',
+releaseQ:'{n} ile yollarınız ayrılacak. Bu geri alınamaz ve itibarına zarar verir. Emin misin?',
+standings:'Puan Durumu',fixtures:'Fikstür',scorers:'Gol Krallığı',assistsT:'Asist Krallığı',
 P:'O',W:'G',D:'B',L:'M',GD:'AV',PTS:'P',player:'Oyuncu',noNews:'Gelen kutun boş.',
 demandWage:'Maaş talebin',contractLen:'Sözleşme süresi',clubMood:'Kabul şansı',send:'Teklifi Sun',walkAway:'Masadan Kalk',
 accept:'Kabul Et',decline:'Reddet',counter:'Karşı teklif',round:'Tur',
@@ -4576,7 +4578,9 @@ noClients:'No clients yet. Approach unrepresented players in the Market tab.',
 unhappy:'Unhappy Clients',age:'Age',rating:'Rating',form:'Form',
 morale:'Morale',wage:'Wage',contract:'Contract',value:'Market Value',goals:'Goals',assists:'Assists',team:'Team',yrs:'yrs',wk:'wk',
 negotiate:'Contract Talks',offerClubs:'Offer to Clubs',pitch:'Pitch Representation',
-release:'Release Client',standings:'Standings',fixtures:'Fixtures',scorers:'Top Scorers',assistsT:'Top Assists',
+release:'Release Client',
+releaseQ:'You will part ways with {n}. This cannot be undone and it costs you reputation. Are you sure?',
+standings:'Standings',fixtures:'Fixtures',scorers:'Top Scorers',assistsT:'Top Assists',
 P:'P',W:'W',D:'D',L:'L',GD:'GD',PTS:'PTS',player:'Player',noNews:'Your inbox is empty.',
 demandWage:'Your wage demand',contractLen:'Contract length',clubMood:'Chance of acceptance',send:'Submit Offer',walkAway:'Walk Away',
 accept:'Accept',decline:'Decline',counter:'Counter offer',round:'Round',
@@ -4772,7 +4776,9 @@ unhappyMsg:p=>`${lkP(p.pid,p.n)} mevcut maaşından memnun değil. Yeni sözleş
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} kulübünde mutsuz, transfer istiyor.`,
 expire:p=>`${lkP(p.pid,p.n)} sözleşmesinin bitmesine ${p.y} sezon kaldı. Harekete geç.`,
 firedYou:p=>`${lkP(p.pid,p.n)} seni kovdu — taleplerini uzun süre görmezden geldin.`,
-champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} şampiyon oldu. Gol kralı: ${lkP(p.sid,p.s)} (${p.g} gol)`,
+/* Gol kralı cümlesi ancak gerçekten gol atmış biri varsa yazılır; hiç gol
+   atılmamış bir ligde şampiyon yine duyurulur (bkz. endSeason). */
+champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} şampiyon oldu.`+(p.s?` Gol kralı: ${lkP(p.sid,p.s)} (${p.g} gol)`:''),
 finalN:p=>`${lkL(p.li,lgName(p.li))} Finali: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Şampiyon: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: Kupayı ${lkT(p.tid,p.c)} kazandı!`,
 wcWin:p=>`${lkC(3,t("wcLbl"))}'nı ${p.n} kazandı!`,
@@ -4810,7 +4816,7 @@ unhappyMsg:p=>`${lkP(p.pid,p.n)} is unhappy with his wage. He expects new contra
 wantsOutMsg:p=>`${lkP(p.pid,p.n)} is unhappy at his club and wants a transfer.`,
 expire:p=>`${lkP(p.pid,p.n)}'s contract expires in ${p.y} season(s). Act now.`,
 firedYou:p=>`${lkP(p.pid,p.n)} fired you — you ignored his demands for too long.`,
-champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} are champions. Top scorer: ${lkP(p.sid,p.s)} (${p.g} goals)`,
+champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} are champions.`+(p.s?` Top scorer: ${lkP(p.sid,p.s)} (${p.g} goals)`:''),
 finalN:p=>`${lkL(p.li,lgName(p.li))} Final: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Champions: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} lift the trophy!`,
 wcWin:p=>`${p.n} win the ${lkC(3,t("wcLbl"))}!`,
@@ -7801,7 +7807,7 @@ function openScout(){
     const pend=scoutPending(i);
     return `<div class="pitem" style="cursor:default">
       <div class="pinfo"><div class="pname">${lgName(i)}</div>
-      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLowerCase()}</div></div>
+      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLocaleLowerCase(L)}</div></div>
       ${pend?`<span class="tag w">${t('scoutPendingT')} · ${Math.max(1,pend.done-(S.tw||0))} ${t('wk')}</span>`
         :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuild')} · ${fmtK(scoutCost(i))}</button>`}
     </div>`;
@@ -8143,7 +8149,11 @@ function endSeason(){
   S.lgHist=S.lgHist||LEAGUES.map(()=>[]);
   const trow=tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga];
   const champs=LEAGUES.map((lg,i)=>{
-    const ts=S.players.filter(p=>teamOf(p).lg===i).sort((a,b)=>b.g-a.g)[0];
+    /* Gol kralı yalnız gerçekten gol atmış oyuncudan seçilir. Eski hâlde filtre
+       yoktu: hiç gol atılmamış bir ligde sıralama sıfırlar arasında yapılıyor ve
+       rastgele bir oyuncu "0 gol ile gol kralı" diye haber oluyordu. Kimse yoksa
+       null döner ve haber/tarihçe o parçayı hiç yazmaz. */
+    const ts=S.players.filter(p=>p.g>0&&teamOf(p).lg===i).sort((a,b)=>b.g-a.g)[0]||null;
     const lgPs=S.players.filter(p=>teamOf(p).lg===i);
     const scAs={
       sc:lgPs.filter(p=>p.g>0).sort((a,b)=>b.g-a.g).slice(0,15).map(p=>[p.n,p.team,p.g]),
@@ -8167,8 +8177,14 @@ function endSeason(){
       champTm=table[0];
       archEntry=Object.assign({se:S.season,tab:table.map(trow)},scAs);
     }
-    if(myLgs.has(i)||i===S.curLg)pushNews('champ',{li:i,c:champTm.n,tid:champTm.id,s:ts.n,sid:ts.id,g:ts.g},'good');
-    (S.lgHist[i]=S.lgHist[i]||[]).push({se:S.season,tid:champTm.id,ts:ts.n,g:ts.g});
+    /* ts yoksa s/sid/g hiç yazılmıyor: NEWS.champ bu alanların varlığına bakıp
+       gol kralı cümlesini tümüyle düşürüyor, şampiyon bilgisi yerinde kalıyor. */
+    if(myLgs.has(i)||i===S.curLg)pushNews('champ',ts
+      ?{li:i,c:champTm.n,tid:champTm.id,s:ts.n,sid:ts.id,g:ts.g}
+      :{li:i,c:champTm.n,tid:champTm.id},'good');
+    (S.lgHist[i]=S.lgHist[i]||[]).push(ts
+      ?{se:S.season,tid:champTm.id,ts:ts.n,g:ts.g}
+      :{se:S.season,tid:champTm.id});
     if(S.lgHist[i].length>30)S.lgHist[i].shift();
     S.arch=S.arch||LEAGUES.map(()=>[]);
     (S.arch[i]=S.arch[i]||[]).push(archEntry);
@@ -10013,6 +10029,12 @@ function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
   p.agent='you';p.ignored=0;delete p.ra;
+  /* Portföy sayıları türetilip haftaya göre önbelleğe alınıyor (rivals.js —
+     rivalCounts). Rakipten aldığın oyuncu p.ra'sını burada kaybediyor, yani
+     önbellek bayatlıyor: Rakipler listesi eski sayıyı, rakip detay ekranı
+     (rivalClients, önbelleksiz) gerçek sayıyı gösteriyordu. losePlayerTo ve
+     simRivals ile aynı satır. */
+  RIVCNT=null;
   /* Yeni ilişkinin ilk haftalarında rakipler yaklaşmaz (bkz. RIV.poachGrace) */
   p.sa=(S.tw||0);
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
@@ -10036,6 +10058,36 @@ function releaseClient(pid){
   if(S.poach&&S.poach.pid===pid)S.poach=null;
   repEvent(-0.8);
   save();render();
+}
+/* Oyunun geri döndürülemez tek aksiyonu ve tek dokunuşluk: onaydan geçiyor.
+   Desen askDeleteSlot/askToMenu ile aynı — yeni bir modal sistemi kurulmuyor ve
+   releaseClient()'ın davranışına dokunulmuyor, arayüz yalnız buradan çağırıyor.
+   İptalde hiçbir şey çalışmaz: ne state, ne kayıt, ne itibar.
+   Ad değiştirme fonksiyonuyla basılıyor: bir adın içindeki <script src="js/i18n.js"></script>
+<script src="js/store.js"></script>
+<script src="js/saves.js"></script>
+<script src="js/data.js"></script>
+<script src="js/worldgeo.js"></script>
+<script src="js/atlas.js"></script>
+<script src="js/rivals.js"></script>
+<script src="js/badges.js"></script>
+<script src="js/core.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/market.js"></script>
+<script src="js/events.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body> gibi diziler
+   replace kalıbı sayılmasın (confirm düz metin gösterdiği için HTML kaçışı
+   gerekmiyor). */
+function askReleaseClient(pid){
+  const p=byId(pid);
+  if(!p)return;
+  if(!confirm(t('releaseQ').replace('{n}',()=>String(p.n))))return;
+  releaseClient(pid);
 }
 function inboxAction(i,yes){
   const m=S.inbox[i];if(!m||!m.action)return;
@@ -10157,8 +10209,10 @@ function cmIni(c){
   const p=(c.name||'').split(/\s+/).filter(Boolean);
   if(!p.length)return '—';
   /* Ana ekrandaki baş harflerle aynı hesap (VIEWS.dash), aynı kariyer iki
-     ekranda iki farklı işaret taşımasın. */
-  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase();
+     ekranda iki farklı işaret taşımasın.
+     Büyütme dile duyarlı: Türkçede 'i' -> 'İ', İngilizcede 'i' -> 'I'. Düz
+     toUpperCase() "İsmail"i "ISMAIL" yapıyordu. */
+  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toLocaleUpperCase(L);
 }
 /* "2 dk önce" gibi bir satır ancak ts varsa çizilir. Cihaz saati geri alınmışsa
    gelecekten bir kayıt görünür; "-3 dk önce" yazmak yerine tarihe düşüyoruz. */
@@ -11443,7 +11497,8 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
           <span class="posn" style="width:30px">S${x.se}</span>
           ${tmBadge(tm,30)}
           <div class="pinfo"><div class="pname">${tm.n}</div>
-          <div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div></div>
+          ${/* Gol atılmamış bir sezonun kaydında x.ts yok — satırı hiç yazma. */''}
+          ${x.ts?`<div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div>`:''}</div>
           <span class="faint">›</span></div>`;
       }).join('')}
       </div>`;
@@ -11475,8 +11530,9 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
    Model hiç değişmiyor. Üç sekme aynı oyuncu nesnesinin üç kesiti; yeni alan
    okunmuyor, yeni istatistik üretilmiyor, kayıt biçimine hiçbir şey eklenmiyor.
    Aksiyonlar da bugünkü fonksiyonların aynısını çağırıyor — openNeg,
-   openTransfer, pitchPlayer, releaseClient ve pushV('team'|'rival') olduğu
-   gibi duruyor; yeniden yazılan tek şey çizim. */
+   openTransfer, pitchPlayer, askReleaseClient (releaseClient'ın onay sarmalayıcısı,
+   dört temada da aynı) ve pushV('team'|'rival') olduğu gibi duruyor; yeniden
+   yazılan tek şey çizim. */
 function useSahaPlayerProfile(){return themeOf()==='saha';}
 
 /* Bölüm rozetleri. Yollar tam metin olarak duruyor, birleştirilerek
@@ -11798,7 +11854,7 @@ function pfActsHtml(p,tm,cx){
     /* Rozet metnin yerine geçmiyor, yanında duruyor: yıkıcı bir düğmede
        yazının kaybolması kabul edilemez. */
     return `<div class="grid2">${neg}${tr}</div>
-    <button class="btn d pfRelease" onclick="releaseClient(${p.id})">
+    <button class="btn d pfRelease" onclick="askReleaseClient(${p.id})">
       <img src="${PF_IC.rel}" alt="" aria-hidden="true" width="26" height="26"
         decoding="async" onerror="this.remove()">
       <span>${t('release')}</span></button>`;
@@ -11905,7 +11961,8 @@ dash(){
   /* Yüzde işareti Türkçede önde, İngilizcede arkada durur. */
   const knownPct=Math.round((S.known||[]).length/LEAGUES.length*100);
   const pctStr=L==='tr'?'%'+knownPct:knownPct+'%';
-  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toUpperCase():'—';
+  /* Büyütme dile duyarlı — cmIni() ile aynı gerekçe ve aynı sonuç. */
+  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toLocaleUpperCase(L):'—';
 
   /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
      dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
@@ -12189,8 +12246,15 @@ team(id){
   const avg=Math.round(teamStr(id));
   const groups=[['KL','gk'],['DF','df'],['OS','mf'],['FV','fw']];
   const played=[];
-  for(let w=0;w<S.week-1&&w<totalWeeks();w++){
-    S.fx[tm.lg][w].forEach(m=>{if((m.h===id||m.a===id)&&m.hg!==null)played.push(m);});
+  /* Üst sınır ligin KENDİ fikstür uzunluğu. totalWeeks() en uzun ligin hafta
+     sayısı (38); 26/30/34 haftalık ligler sezonun son haftalarında o indeksi
+     taşımıyor ve eski hâl orada S.fx[lg][w] üzerinde patlayıp ekranı boş
+     bırakıyordu. weekFixHtml ve lgFixHtml bu sınırı zaten gözetiyordu.
+     Diziler savunmacı okunuyor: bozuk ya da eksik bir fikstür de çökertmesin. */
+  const lgFx=(S.fx||[])[tm.lg]||[];
+  const upto=Math.min(Math.max(0,(S.week||1)-1),lgFx.length);
+  for(let w=0;w<upto;w++){
+    (lgFx[w]||[]).forEach(m=>{if((m.h===id||m.a===id)&&m.hg!==null)played.push(m);});
   }
   const last5=played.slice(-5);
   const formHtml=last5.map(m=>{
@@ -12441,7 +12505,9 @@ player(id){
     <div class="sect">${t('personal')}</div>
     <div class="kv"><span class="k">${t('nation')}</span><span class="v">${NATS[p.nat].c}</span></div>
     <div class="kv"><span class="k">${t('age')}</span><span class="v">${p.age}</span></div>
-    <div class="kv"><span class="k">${t('height')}</span><span class="v">${p.h||'—'} cm</span></div>
+    ${/* Boy yoksa birim de yazılmaz: "— cm" diye bir ölçü yok. Saha profili
+         (pfOvHtml) zaten böyle davranıyor. */''}
+    <div class="kv"><span class="k">${t('height')}</span><span class="v">${p.h?p.h+' cm':'—'}</span></div>
     <div class="kv"><span class="k">${t('foot')}</span><span class="v">${p.ft==='L'?t('left'):t('right')}</span></div>
   </div>
   <div class="card">
@@ -12474,7 +12540,7 @@ player(id){
        :off?`<button class="btn b" disabled>${t('considering')} (${offs.length})…</button>`
        :`<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`}
     </div>
-    <button class="btn d" style="margin-top:10px" onclick="releaseClient(${p.id})">${t('release')}</button>`
+    <button class="btn d" style="margin-top:10px" onclick="askReleaseClient(${p.id})">${t('release')}</button>`
   :p.agent===null?((()=>{
     /* Yarış varsa düğmenin üstünde yazsın: yüzdedeki düşüşün sebebi görünür olmalı,
        yoksa oyuncu şansının neden azaldığını anlamaz. */
@@ -12519,7 +12585,9 @@ function skLevelRing(size){
 function skLevelCard(){
   const lp=levelProgress(), pts=skillPoints();
   const nxt=lp.need
-    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLowerCase()}`
+    /* Küçültme dile duyarlı: Türkçede düz toLowerCase() "İtibar"ı birleşen
+       noktayla "i̇tibar" yapıyordu. Saha karşılığı (skSahaView) zaten böyle. */
+    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(L)}`
     : t('skMaxLv');
   return `<div class="card sklvc">
     ${skLevelRing(74)}
@@ -13110,8 +13178,17 @@ function evSahaResult(ev,c,r,changes,lbl){
     +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('evCont')+'</span></button>');
 }
 function showEvent(ref){
-  const ev=evById(ref.id);
-  if(!ev)return;
+  const ev=ref?evById(ref.id):null;
+  /* Olay tanınmıyor (kaldırılmış ya da yeniden adlandırılmış bir id taşıyan
+     kayıt). Sessizce dönmek olmaz: kuyruk yalnız closeModal ile ilerlediği için
+     arkada bekleyen her modal askıda kalırdı (bkz. showLevelUp). Karar da
+     düşürülüyor, yoksa ana ekranın gündem satırı hiç açılmayan bir olayı
+     sonsuza kadar gösterirdi. */
+  if(!ev){
+    if(S&&S.evCur){S.evCur=null;save();}
+    runNextModal();
+    return;
+  }
   const c=evCtx(ref.pid);
   S.evCur=ref;save();   // sayfa yenilense de karar bekliyor olarak kalsın
   if(useSahaEvent()){evSahaAsk(ev,c);return;}
@@ -13130,8 +13207,15 @@ function evChoose(i){
   const ref=S.evCur;
   if(!ref)return;
   const ev=evById(ref.id),c=evCtx(ref.pid);
-  const opt=ev.opts[i];
-  if(!opt)return;
+  const opt=(ev&&ev.opts)?ev.opts[i]:null;
+  /* Olay ya da seçenek tanınmıyor. Burada sessizce dönmek en kötüsü: soru modalı
+     kilitli açılıyor (dışarı dokunmak kapatmıyor), yani ekran çıkışsız kalır ve
+     kuyruk hiç ilerlemez. Kararı düşürüp normal kapanış yolundan çıkıyoruz —
+     closeModal() hem kilidi bırakıyor hem sıradakini çağırıyor. */
+  if(!opt){
+    S.evCur=null;save();closeModal();render();
+    return;
+  }
   const r=opt.eff(c)||{};
   const changes=applyEff(r,c);
   S.evCur=null;
@@ -13263,7 +13347,8 @@ function showSeasonModal(champs){
      ${champs.map(c=>`<div class="pitem" style="cursor:default">
        ${tmBadge(c.tm,32)}
        <div class="pinfo"><div class="pname">${c.tm.n}</div>
-       <div class="psub">${lgName(c.lgi)} · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})</div></div>
+       ${/* Gol kralı yoksa yalnız lig adı kalır — uydurma bir "0 gol" yazmıyoruz. */''}
+       <div class="psub">${lgName(c.lgi)}${c.ts?` · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})`:''}</div></div>
      </div>`).join('')}
      </div>
      <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
