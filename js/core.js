@@ -294,7 +294,14 @@ function repEvent(delta,raw){
   const gain=delta>0?delta*(1+skillBonus('repg')):delta;
   const d=delta>0&&!raw?gain*repFactor():gain;
   const before=agentLevel();
-  S.rep=stat(S.rep+d,0);
+  /* stat() BİLEREK kullanılmıyor. stat() 0-100 arası durum değerleri içindir —
+     moral, güven, form; onlarda 100 tavanı doğrudur. İtibar durum değeri değil,
+     kariyer boyu süren ilerleme çizgisidir: seviye eğrisi repForLevel(30)=614'e
+     kadar tanımlı ve REP_SOFT (125) tavanın üstünde duruyor. İtibarı stat()'tan
+     geçirmek onu 100'de kesiyor, böylece 12. seviyeden sonrası ve repFactor()'ün
+     0.15 tabanı hiç çalışmıyordu. Alt sınır ve tek ondalık hassasiyeti stat() ile
+     aynı kalıyor, yalnız üst sınır yok. */
+  S.rep=Math.round(Math.max(0,S.rep+d)*10)/10;
   /* Ulaşılan en yüksek itibar ayrıca tutuluyor: yetenek puanları buradan sayılır,
      yoksa itibar düştüğünde harcanmış puanlar borca dönüşürdü. */
   if(S.rep>(S.repMax||0))S.repMax=S.rep;
@@ -322,7 +329,11 @@ function moraleEvent(p,delta){
   return p.morale;
 }
 /* Form ve moral kesirli katkılarla besleniyor; tek ondalıkta tutuluyor ki kayıt
-   dosyasında 50.66495834095 gibi değerler birikmesin. Ekranda tam sayı gösterilir. */
+   dosyasında 50.66495834095 gibi değerler birikmesin. Ekranda tam sayı gösterilir.
+
+   Yalnız 0-100 arası DURUM değerleri için: moral, güven, form. Bunlarda 100 bir
+   üst sınırdır. İtibar bir durum değeri değil kariyer ilerlemesidir ve buradan
+   geçmez — bkz. repEvent(). */
 function stat(v,lo){return Math.round(clamp(v,lo===undefined?0:lo,100)*10)/10;}
 function pushNews(key,params,type,action){
   S.inbox.unshift({w:S.week,se:S.season,key,params,type:type||'info',action,read:false});
