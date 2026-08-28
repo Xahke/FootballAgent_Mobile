@@ -99,10 +99,15 @@ balance lever depends on the funnel being the only writer:
 
 | Instead of | Use | Why |
 |---|---|---|
-| `S.rep += x` | `repEvent(x)` | applies `repFactor()` soft cap and `skillBonus('repg')`, tracks `S.repMax`, counts level-ups into `S.lvUp` |
+| `S.rep += x` | `repEvent(x)` | applies `repFactor()` soft cap and `skillBonus('repg')`, tracks `S.repMax`, counts level-ups into `S.lvUp`. Floors at 0 and rounds to 1 decimal, but has **no upper bound** |
 | `p.trust += x` | `trustEvent(p, x)` | applies `skillBonus('trust')` |
 | `p.morale += x` | `moraleEvent(p, x)` | applies `skillBonus('mor')` to your clients' losses, clamps and rounds to 1 decimal |
-| any 0–100 stat | `stat(v, min)` | prevents 14-digit float drift showing in the UI |
+| any 0–100 status value | `stat(v, min)` | clamps into 0–100 and prevents 14-digit float drift showing in the UI |
+
+`stat()` is for **status values only** — morale, trust, form — where 100 is a real
+ceiling. Reputation is not one of them: it is the career progression line, and
+`repEvent()` deliberately does its own flooring and rounding instead. Routing
+reputation through `stat()` is what used to cap it at 100.
 
 Event outcomes go through `applyEff(r, c)` in `events.js` — the one place that turns a
 result object into state changes (cash, rep, morale, trust, form, player flags, `S.ag`).
@@ -362,9 +367,17 @@ Tuning happens at these, not scattered magic numbers:
 
   Losses are deliberately **not** throttled — `repEvent()` applies `repFactor()` to gains
   only — so past the floor a career settles wherever throttled income meets full-price
-  damage. Measured over 25 seasons of a bot that plays only for reputation, that
-  equilibrium sits near **rep 100**. **This constant, not the skill point budget, is what
-  decides how much of the tree a career can ever reach** — see `LV` below.
+  damage. Because the 0.15 floor binds at rep ≈106, that balance turns on one ratio:
+  season losses over season gains. Below 0.15 a career keeps climbing, slowly and
+  linearly; above it, reputation cannot pass ≈106 at all. **This constant, not the skill
+  point budget, is what decides how much of the tree a career can ever reach** — see `LV`
+  below.
+
+  Reputation used to be clamped at 100, because `repEvent()` wrote `S.rep` through
+  `stat()`. Everything in this bullet was authored for the uncapped line — `REP_SOFT` is
+  125 and the floor binds at 106 — so **none of the region above 100 ever ran.** The clamp
+  is gone; where the equilibrium actually lands has not been re-measured over a real
+  multi-season career, so don't quote a number for it until someone does.
 - `scoutCost()` (core.js) — what the world costs to open up; see the map section above
 - `SQTARGET` / `FAMAX` / `POSMIN` / `POSMAX` (market.js) — squad sizes and the free-agent ceiling that keeps the background market in equilibrium
 - `PERF` (sim.js) — how ability, form and morale produce a match rating; morale drives *consistency* (the spread), not the mean
@@ -387,13 +400,20 @@ Tuning happens at these, not scattered magic numbers:
   finishing all four branches, which is what that comment claims. What actually stops it
   is `REP_SOFT`.
 
-  Measured: a headless bot playing purely for reputation — fills every client slot, moves
-  every client to a stronger club every window, takes the highest-reputation option in
-  every event, buys every affordable network — ends **25 seasons at rep 100, level 11,
-  12 of 32 points**, having earned 348 nominal reputation (~14/season) and flattened out
-  from about season 19. Level 27 needs 2,875 nominal; even granting that the rate roughly
-  doubles as client slots grow, that is a hundred-plus seasons. Nobody finishes the tree,
-  and nobody comes close to three branches either.
+  Measured **before the clamp was removed**: a headless bot playing purely for reputation
+  — fills every client slot, moves every client to a stronger club every window, takes the
+  highest-reputation option in every event, buys every affordable network — ended
+  **25 seasons at rep 100, level 11, 12 of 32 points**, having earned 348 nominal
+  reputation (~14/season) and flattened out from about season 19. That run measured the
+  clamp, not an equilibrium: rep 100 *was* the ceiling and the flattening was the bot
+  arriving at it. Feeding the same 348 nominal gains through today's `repEvent()` lands at
+  **rep 130, level 13, 15 of 32 points** — a formula measurement, not a re-run of the bot.
+
+  The size of the gap is unchanged. Level 27 needs about 2,680 nominal from rep 100 at the
+  0.15 floor; even granting that the rate roughly doubles as client slots grow, that is a
+  hundred-plus seasons. Nobody finishes the tree, and nobody comes close to three branches
+  either — removing the clamp moved the reachable band by a couple of levels, not by a
+  couple of branches.
 
   So the comment's conclusion holds and its reasoning doesn't. Raising `LV.a`/`LV.b`
   changes *when* branches open; only `REP_SOFT` changes whether the tree can be finished.
