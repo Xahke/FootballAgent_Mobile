@@ -1652,6 +1652,209 @@ html[data-theme="saha"] .btn.evGo{display:flex;align-items:center;justify-conten
 html[data-theme="saha"] .btn.evGo svg{width:19px;height:19px;flex:0 0 19px}
 html[data-theme="saha"] .wrCard:focus-visible,html[data-theme="saha"] .evOpt:focus-visible,html[data-theme="saha"] .btn.evGo:focus-visible{
   outline:2px solid var(--acc);outline-offset:2px}
+html[data-theme="saha"] .pfHead{background:linear-gradient(155deg,#182541 0%,#111a2e 55%,#0f1728 100%);
+  border-radius:18px;padding:14px 14px 13px;margin-bottom:11px;position:relative;overflow:hidden;
+  box-shadow:var(--sh-el)}
+html[data-theme="saha"] .pfBar{position:absolute;left:0;top:0;bottom:0;width:4px;opacity:.9}
+html[data-theme="saha"] .pfId{display:flex;align-items:center;gap:11px;min-width:0}
+html[data-theme="saha"] .pfIdT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-theme="saha"] .pfName{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfMeta{font-size:11.5px;color:var(--txt2);line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfRt{width:54px;height:54px;flex:0 0 54px;border-radius:15px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:linear-gradient(160deg,var(--sur3),var(--sur2));
+  box-shadow:inset 0 0 0 1px var(--line2),0 4px 12px rgba(0,0,0,.4)}
+html[data-theme="saha"] .pfRt b{font-size:21px;font-weight:800;line-height:1;letter-spacing:-.02em}
+html[data-theme="saha"] .pfRt em{font-style:normal;font-size:7.5px;color:var(--txt3);text-transform:uppercase;
+  margin-top:3px;letter-spacing:.09em;font-weight:800}
+html[data-theme="saha"] .pfRt.g{background:linear-gradient(160deg,rgba(30,201,126,.22),rgba(14,156,96,.10));
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.35)}
+html[data-theme="saha"] .pfRt.g b{color:var(--acc)}
+html[data-theme="saha"] .pfRt.y{background:linear-gradient(160deg,rgba(230,162,60,.2),rgba(192,124,16,.08));
+  box-shadow:inset 0 0 0 1px rgba(230,162,60,.32)}
+html[data-theme="saha"] .pfRt.y b{color:var(--warn)}
+html[data-theme="saha"] .pfRt.o{background:linear-gradient(160deg,rgba(240,85,93,.2),rgba(199,57,64,.08));
+  box-shadow:inset 0 0 0 1px rgba(240,85,93,.32)}
+html[data-theme="saha"] .pfRt.o b{color:var(--bad)}
+html[data-theme="saha"] .pfClub{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;margin-top:11px;
+  padding:7px 10px;border:none;border-radius:12px;background:rgba(148,168,205,.07);
+  color:var(--txt);font-family:inherit;text-align:left;cursor:pointer;
+  -webkit-appearance:none;appearance:none;transition:background var(--tap)}
+html[data-theme="saha"] .pfClub:active{background:rgba(148,168,205,.13)}
+html[data-theme="saha"] .pfClub.off{cursor:default}
+html[data-theme="saha"] .pfClubT{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+html[data-theme="saha"] .pfClubT b{font-size:13px;font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfClubT em{font-style:normal;font-size:10.5px;color:var(--txt3);line-height:1.2;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfGo{flex:0 0 auto;color:var(--txt3);font-size:17px;line-height:1}
+html[data-theme="saha"] .pfKeys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:11px;
+  background:var(--line);border-radius:12px;overflow:hidden}
+html[data-theme="saha"] .pfKeys .pfCell{background:rgba(11,17,30,.45);padding:9px 8px}
+html[data-theme="saha"] .pfCell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;min-width:0;text-align:center}
+html[data-theme="saha"] .pfCell b{font-size:14.5px;font-weight:800;line-height:1.15;letter-spacing:-.01em;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfCell b.g{color:var(--acc)}
+html[data-theme="saha"] .pfCell b.y{color:var(--warn)}
+html[data-theme="saha"] .pfCell b.o{color:var(--bad)}
+html[data-theme="saha"] .pfCell em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:10px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.15;
+  max-width:100%;overflow-wrap:anywhere}
+html[data-theme="saha"] .pfCellA b{white-space:normal;font-size:12.5px;line-height:1.25;overflow-wrap:anywhere}
+html[data-theme="saha"] .pfMine{color:var(--acc)}
+html[data-theme="saha"] .pfFree{color:var(--txt2)}
+html[data-theme="saha"] .pfUp{font-style:normal;color:var(--acc);font-size:10px;margin-left:2px}
+html[data-theme="saha"] .pfDn{font-style:normal;color:var(--bad);font-size:10px;margin-left:2px}
+html[data-theme="saha"] .pfPills{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+html[data-theme="saha"] .pfPill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:8px;
+  font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.04em;line-height:1.35;
+  background:var(--sur3);color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .pfPill.on{background:var(--acc-soft);color:var(--acc);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+html[data-theme="saha"] .pfPill.w{background:var(--warn-soft);color:var(--warn)}
+html[data-theme="saha"] .pfPill.b{background:var(--blue-soft);color:var(--blue)}
+html[data-theme="saha"] .pfPill.r{background:var(--bad-soft);color:var(--bad)}
+html[data-theme="saha"] .pfPre{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:9px;padding:8px 10px;
+  border-radius:11px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.22)}
+html[data-theme="saha"] .pfPreL{font-family:var(--cond);font-weight:800;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acc)}
+html[data-theme="saha"] .pfPreN{flex:1;min-width:0;font-size:12.5px;font-weight:700;overflow-wrap:anywhere}
+html[data-theme="saha"] .pfPreW{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt2);
+  font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .pfTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
+html[data-theme="saha"] .pfTab{min-height:46px;padding:8px 6px;background:var(--sur2);border:1px solid var(--line);
+  border-radius:13px;color:var(--txt2);cursor:pointer;font-family:var(--cond);font-weight:700;
+  font-size:13px;letter-spacing:.05em;text-transform:uppercase;line-height:1.1;
+  overflow-wrap:anywhere;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),border-color var(--tap),color var(--tap)}
+html[data-theme="saha"] .pfTab:active{transform:scale(.97)}
+html[data-theme="saha"] .pfTab.on{background:var(--sur3);border-color:rgba(30,201,126,.45);color:var(--acc)}
+html[data-theme="saha"] .pfSect{display:flex;align-items:center;gap:11px;margin:0 2px 10px}
+html[data-theme="saha"] .pfSectIc{width:40px;height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;overflow:hidden}
+html[data-theme="saha"] .pfSectIc img{width:40px;height:40px;display:block}
+html[data-theme="saha"] .pfSectIc.noimg{background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .pfSectT{min-width:0;display:flex;flex-direction:column;gap:1px}
+html[data-theme="saha"] .pfSectT b{font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.08em;
+  text-transform:uppercase;line-height:1.1}
+html[data-theme="saha"] .pfSectT em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:11px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfCard{margin-bottom:11px}
+html[data-theme="saha"] .pfSub{font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:10px}
+html[data-theme="saha"] .pfRule{height:1px;background:var(--line);margin:13px 0}
+html[data-theme="saha"] .pfGrid{display:grid;gap:9px 4px}
+html[data-theme="saha"] .pfGrid .pfCell b{font-size:16px}
+html[data-theme="saha"] .pfG3{grid-template-columns:repeat(3,minmax(0,1fr))}
+html[data-theme="saha"] .pfG4{grid-template-columns:repeat(4,minmax(0,1fr))}
+html[data-theme="saha"] .pfG5{grid-template-columns:repeat(5,minmax(0,1fr))}
+html[data-theme="saha"] .pfG5 .pfCell b{font-size:14px}
+html[data-theme="saha"] .pfG5 .pfCell em{font-size:9.5px;letter-spacing:.05em}
+html[data-theme="saha"] .pfRel{display:flex;flex-direction:column;gap:3px;margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--line)}
+html[data-theme="saha"] .pfRelL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .pfRelT{font-size:12.5px;color:var(--txt2);line-height:1.45}
+html[data-theme="saha"] .pfForm{display:flex;flex-direction:column;gap:9px}
+html[data-theme="saha"] .pfFormL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3)}
+html[data-theme="saha"] .pfFormR{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+html[data-theme="saha"] .pfFormC{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;min-height:46px;border-radius:11px;font-style:normal;background:var(--sur2);
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .pfFormC b{font-family:var(--cond);font-weight:800;font-size:14px;line-height:1}
+html[data-theme="saha"] .pfFormC em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--txt3);line-height:1}
+html[data-theme="saha"] .pfFormC.w{background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.3)}
+html[data-theme="saha"] .pfFormC.w b{color:var(--acc)}
+html[data-theme="saha"] .pfFormC.l{background:var(--bad-soft);box-shadow:inset 0 0 0 1px rgba(240,85,93,.3)}
+html[data-theme="saha"] .pfFormC.l b{color:var(--bad)}
+html[data-theme="saha"] .pfFormC.d{background:var(--warn-soft);box-shadow:inset 0 0 0 1px rgba(230,162,60,.3)}
+html[data-theme="saha"] .pfFormC.d b{color:var(--warn)}
+html[data-theme="saha"] .pfLine{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+html[data-theme="saha"] .pfLineC{display:flex;flex-direction:column;gap:3px;min-width:0}
+html[data-theme="saha"] .pfLineC+.pfLineC{padding-left:10px;border-left:1px solid var(--line)}
+html[data-theme="saha"] .pfLineC em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:10px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.15}
+html[data-theme="saha"] .pfLineC b{font-size:13px;font-weight:800;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfFilt{margin-bottom:11px}
+html[data-theme="saha"] .pfChips{display:flex;gap:7px}
+html[data-theme="saha"] .pfChip{flex:0 0 auto;min-height:44px;padding:0 15px;border-radius:12px;background:var(--sur2);
+  border:1px solid var(--line);color:var(--txt2);cursor:pointer;font-family:var(--cond);
+  font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;
+  -webkit-appearance:none;appearance:none;transition:background var(--tap),color var(--tap)}
+html[data-theme="saha"] .pfChip.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+html[data-theme="saha"] .pfChip:disabled{opacity:.4;cursor:default}
+html[data-theme="saha"] .pfChipWhy{margin:7px 2px 0;font-size:11.5px;color:var(--txt3);line-height:1.4}
+html[data-theme="saha"] .pfMatch{display:flex;align-items:center;gap:11px;width:100%;min-height:58px;padding:10px 0;
+  border:none;border-bottom:1px solid var(--line);background:none;color:var(--txt);
+  font-family:inherit;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none}
+html[data-theme="saha"] .pfMatch:last-child{border-bottom:none}
+html[data-theme="saha"] .pfMatch:active{background:rgba(148,168,205,.06)}
+html[data-theme="saha"] .pfMatchM{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+html[data-theme="saha"] .pfMatchT{font-size:13px;font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfMatchS{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;color:var(--txt3)}
+html[data-theme="saha"] .pfMatchS b{font-weight:800;color:var(--txt2);flex:0 0 auto}
+html[data-theme="saha"] .pfMatchS em{font-style:normal;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfRes{font-style:normal;flex:0 0 auto;font-family:var(--cond);font-weight:800;font-size:11px;
+  line-height:1;padding:3px 6px;border-radius:6px}
+html[data-theme="saha"] .pfRes.w{background:var(--acc-soft);color:var(--acc)}
+html[data-theme="saha"] .pfRes.l{background:var(--bad-soft);color:var(--bad)}
+html[data-theme="saha"] .pfRes.d{background:var(--warn-soft);color:var(--warn)}
+html[data-theme="saha"] .pfMotm{color:var(--gold);font-weight:700}
+html[data-theme="saha"] .pfMatchR{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+html[data-theme="saha"] .pfMatchR b{font-size:15px;font-weight:800;line-height:1}
+html[data-theme="saha"] .pfMatchR em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);line-height:1}
+html[data-theme="saha"] .pfMatchR.g b{color:var(--acc)}
+html[data-theme="saha"] .pfMatchR.y b{color:var(--warn)}
+html[data-theme="saha"] .pfMatchR.o b{color:var(--bad)}
+html[data-theme="saha"] .pfNone{text-align:center;color:var(--txt3);padding:22px 12px;font-size:12.5px;line-height:1.6}
+html[data-theme="saha"] .pfSeason{display:flex;align-items:baseline;gap:8px;padding:8px 0;
+  border-bottom:1px solid var(--line);font-size:11.5px}
+html[data-theme="saha"] .pfSeason:last-child{border-bottom:none}
+html[data-theme="saha"] .pfSeasonS{flex:0 0 auto;font-weight:800;color:var(--txt3)}
+html[data-theme="saha"] .pfSeasonT{flex:1;min-width:0;font-weight:700;color:var(--txt2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] .pfSeasonV{flex:0 0 auto;color:var(--txt2)}
+html[data-theme="saha"] .pfSeasonV b.g{color:var(--acc)}
+html[data-theme="saha"] .pfSeasonV b.y{color:var(--warn)}
+html[data-theme="saha"] .pfSeasonV b.o{color:var(--bad)}
+html[data-theme="saha"] .pfKv{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+html[data-theme="saha"] .pfKv:last-child{border-bottom:none}
+html[data-theme="saha"] .pfKv>span{flex:0 0 auto;color:var(--txt3)}
+html[data-theme="saha"] .pfKv>b{min-width:0;font-weight:800;text-align:right;overflow-wrap:anywhere}
+html[data-theme="saha"] .pfHist i{font-style:normal;color:var(--txt3);font-weight:700}
+html[data-theme="saha"] .pfNote{margin-top:10px;padding:9px 11px;border-radius:11px;background:var(--warn-soft);
+  color:var(--warn);font-size:12px;font-weight:700;line-height:1.4}
+html[data-theme="saha"] .pfWait{font-size:12.5px;color:var(--txt2);line-height:1.5}
+html[data-theme="saha"] .pfMove{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;gap:8px}
+html[data-theme="saha"] .pfMoveS{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+html[data-theme="saha"] .pfMoveN{font-size:12px;font-weight:700;line-height:1.25;max-width:100%;overflow-wrap:anywhere}
+html[data-theme="saha"] .pfMoveL{font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.15}
+html[data-theme="saha"] .pfArrow{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  color:var(--acc);align-self:start;margin-top:14px}
+html[data-theme="saha"] .pfArrow svg{width:56px;height:16px;display:block}
+html[data-theme="saha"] .pfArrowL{stroke-dasharray:7 5;animation:pfMarch__saha 1.2s linear infinite}
+@keyframes pfMarch__saha{to{stroke-dashoffset:-12}}
+html[data-theme="saha"] .pfActs .btn{min-height:44px}
+html[data-theme="saha"] .pfActs .dctx{margin-bottom:10px}
+html[data-theme="saha"] .btn.pfRelease{display:flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;margin-top:10px}
+html[data-theme="saha"] .btn.pfRelease img{width:26px;height:26px;flex:0 0 26px;display:block}
+html[data-theme="saha"] .pfTab:focus-visible,html[data-theme="saha"] .pfChip:focus-visible,html[data-theme="saha"] .pfClub:focus-visible,html[data-theme="saha"] .pfMatch:focus-visible,html[data-theme="saha"] .btn.pfRelease:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (max-width:374px){html[data-theme="saha"] .pfName{font-size:18px}
+html[data-theme="saha"] .pfTab{font-size:12px}
+html[data-theme="saha"] .pfKeys .pfCell{padding:8px 5px}
+html[data-theme="saha"] .pfGrid .pfCell b{font-size:15px}
+html[data-theme="saha"] .pfG5 .pfCell b{font-size:13px}
+html[data-theme="saha"] .pfArrow svg{width:40px}}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
