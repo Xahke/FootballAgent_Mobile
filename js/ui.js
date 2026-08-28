@@ -1833,10 +1833,23 @@ dash(){
   S.inbox.filter(m=>m.action).slice(0,2).forEach(()=>ag.push({rail:'blue',ic:'inbox',txt:t('notifs'),go:`navTo('inbox')`}));
   const agTop=ag.slice(0,2);
 
-  /* ===== Haftanın yükseleni =====
+  /* ===== Değerlenen müşteri =====
      Uydurma veri yok: p.vm form kaynaklı değer çarpanı (core.js, VAL). 1'in
      üstündeyse oyuncunun piyasa değeri temel değerinin üzerine çıkmış demektir.
-     Hiçbir müşteride hareket yoksa kart hiç çizilmiyor. */
+     Hiçbir müşteride hareket yoksa kart hiç çizilmiyor.
+
+     Bu kart HAFTALIK bir fark göstermiyor ve göstermeye çalışmamalı: aşağıdaki
+     gain, taban değerin üzerine binmiş BİRİKMİŞ primdir —
+     marketValue(p.r) · (p.vm − 1) · (1 + skillBonus('val')). p.vm yalnızca
+     VAL.every (12) maçta bir yazılıyor (core.js — updateValue) ve sezon geçişinde
+     VAL.revert ile sönüyor (sim.js — endSeason), yani haftadan haftaya çoğu zaman
+     hiç değişmiyor. Ölçüldü: 38 haftalık bir sezonda müşteri değerleri yalnız 3
+     haftada hareket ediyor. Başlık bir dönem "Haftanın Yükseleni" diyordu; veri
+     hiçbir zaman haftalık olmadığı için başlık değişti, hesap değil.
+
+     gain M € cinsindendir (valueOf → marketValue), bu yüzden fmtM ile basılıyor.
+     fmtK bin euro bekler; bu kart bir dönem onu kullandığı için 9 milyon euroluk
+     bir prim ekranda "9K €" görünüyordu. */
   const risers=S.clients.map(byId).filter(p=>p&&valueMult(p)>1.02)
     .map(p=>({p,gain:valueOf(p)-valueOf({r:p.r,agent:p.agent})}))
     .filter(x=>x.gain>=0.1).sort((a,b)=>b.gain-a.gain);
@@ -1927,7 +1940,7 @@ dash(){
     <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
     <span class="hmRiseT">
       <span class="hmRiseL">${t('hmRiser')}</span>
-      <span class="hmRiseV">+${riser.gain>=1?fmtK(riser.gain):(+riser.gain.toFixed(1))+'K €'} <i>▲</i></span>
+      <span class="hmRiseV">+${fmtM(riser.gain)} <i>▲</i></span>
       <span class="hmRiseN">${esc(riser.p.n)}</span>
     </span>
     <span class="hmAgC">›</span></button>`
