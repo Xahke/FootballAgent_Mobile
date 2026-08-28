@@ -2367,21 +2367,34 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
    bütün sütunlar min-width:0 ve uzun ad taşıyan her hücrede ya kırpma ya
    sarma var. Kulüp, oyuncu ve ajans adları tek satırda kırpılıyor; ön anlaşma
    satırı sarıyor. */
+/* Saha oyuncu profilinde üst çubuk yalnız araçları taşıyor. Oyuncunun adı bir
+   satır altta, kimlik kartında ve tam hâliyle yazıyor; sezon/hafta da zaten her
+   ekranda aynı. 390px'te ikisi birden sığmıyordu — ad "Bru…" diye kırpılıyor,
+   sezon/hafta üç satıra düşüyordu. Kırpılmış bir tekrarı korumaktansa tekrarı
+   kaldırmak doğrusu. Başlık kabının kendisi duruyor: geri düğmesiyle sağdaki
+   araçlar arasındaki esnek boşluk o, ve çubuk 72px'ten 54px'e iniyor.
+   Kural yalnız bu rotada (body[data-view]) ve yalnız bu temada geçerli. */
+body[data-view="player"] .htitle .t1,
+body[data-view="player"] .htitle .t2{display:none}
+
+/* Kart yüksekliği bir bütçe: 390x844'te sekme içeriğinin ekranın ilk yarısında
+   başlaması gerekiyor. Aşağıdaki ölçüler o bütçeden geliyor — hiçbir bilgi
+   çıkarılmadan iç boşluklar ve satır araları kısıldı. */
 .pfHead{background:linear-gradient(155deg,#182541 0%,#111a2e 55%,#0f1728 100%);
-  border-radius:18px;padding:14px 14px 13px;margin-bottom:11px;position:relative;overflow:hidden;
+  border-radius:18px;padding:12px 12px;margin-bottom:10px;position:relative;overflow:hidden;
   box-shadow:var(--sh-el)}
 .pfBar{position:absolute;left:0;top:0;bottom:0;width:4px;opacity:.9}
 
-.pfId{display:flex;align-items:center;gap:11px;min-width:0}
+.pfId{display:flex;align-items:center;gap:10px;min-width:0}
 .pfIdT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .pfName{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.15;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pfMeta{font-size:11.5px;color:var(--txt2);line-height:1.25;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pfRt{width:54px;height:54px;flex:0 0 54px;border-radius:15px;display:flex;flex-direction:column;
+.pfRt{width:50px;height:50px;flex:0 0 50px;border-radius:14px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;background:linear-gradient(160deg,var(--sur3),var(--sur2));
   box-shadow:inset 0 0 0 1px var(--line2),0 4px 12px rgba(0,0,0,.4)}
-.pfRt b{font-size:21px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.pfRt b{font-size:20px;font-weight:800;line-height:1;letter-spacing:-.02em}
 .pfRt em{font-style:normal;font-size:7.5px;color:var(--txt3);text-transform:uppercase;
   margin-top:3px;letter-spacing:.09em;font-weight:800}
 .pfRt.g{background:linear-gradient(160deg,rgba(30,201,126,.22),rgba(14,156,96,.10));
@@ -2396,8 +2409,8 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 
 /* Kulüp şeridi: takım ekranına giden gerçek bir düğme. Serbest oyuncuda
    .off geliyor ve şerit <div> olarak çiziliyor — gidilecek bir takım yok. */
-.pfClub{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;margin-top:11px;
-  padding:7px 10px;border:none;border-radius:12px;background:rgba(148,168,205,.07);
+.pfClub{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;margin-top:8px;
+  padding:6px 10px;border:none;border-radius:12px;background:rgba(148,168,205,.07);
   color:var(--txt);font-family:inherit;text-align:left;cursor:pointer;
   -webkit-appearance:none;appearance:none;transition:background var(--tap)}
 .pfClub:active{background:rgba(148,168,205,.13)}
@@ -2411,9 +2424,9 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 
 /* Üç sayı: değer, potansiyel, temsil. Ajans adı en uzun olabilen; hücre
    min-width:0 ve kırpmalı olduğu için şeridi genişletemiyor. */
-.pfKeys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:11px;
+.pfKeys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:8px;
   background:var(--line);border-radius:12px;overflow:hidden}
-.pfKeys .pfCell{background:rgba(11,17,30,.45);padding:9px 8px}
+.pfKeys .pfCell{background:rgba(11,17,30,.45);padding:8px 8px}
 .pfCell{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;min-width:0;text-align:center}
 .pfCell b{font-size:14.5px;font-weight:800;line-height:1.15;letter-spacing:-.01em;
@@ -2433,7 +2446,7 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 .pfUp{font-style:normal;color:var(--acc);font-size:10px;margin-left:2px}
 .pfDn{font-style:normal;color:var(--bad);font-size:10px;margin-left:2px}
 
-.pfPills{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.pfPills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pfPill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:8px;
   font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.04em;line-height:1.35;
   background:var(--sur3);color:var(--txt2);overflow-wrap:anywhere}
@@ -2444,17 +2457,22 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 
 /* Ön anlaşma kendi satırında; kulüp adı uzunsa sarıyor, kırpılmıyor —
    hangi kulübe gittiği yarım okunacak bir bilgi değil. */
-.pfPre{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:9px;padding:8px 10px;
+.pfPre{display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 10px;
   border-radius:11px;background:var(--acc-soft);box-shadow:inset 0 0 0 1px rgba(30,201,126,.22)}
-.pfPreL{font-family:var(--cond);font-weight:800;font-size:10.5px;letter-spacing:.1em;
+.pfPreL{flex:0 0 auto;font-family:var(--cond);font-weight:800;font-size:10.5px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--acc)}
-.pfPreN{flex:1;min-width:0;font-size:12.5px;font-weight:700;overflow-wrap:anywhere}
-.pfPreW{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt2);
+/* Burada ad sarmıyor, kırpılıyor: bu şerit bir özet ve tek satır kalması
+   gerekiyor — sarsaydı uzun bir kulüp adı hafta bilgisini alt satıra iter,
+   ikisi yan yana okunmazdı. Hedef kulübün tam adı bir dokunuş ötede,
+   Sözleşme sekmesindeki geçiş şeridinde yazıyor. */
+.pfPreN{flex:1;min-width:0;font-size:12.5px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfPreW{flex:0 0 auto;font-family:var(--cond);font-weight:700;font-size:11px;color:var(--txt2);
   font-variant-numeric:tabular-nums}
 
 /* ---- sekmeler ---- */
-.pfTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
-.pfTab{min-height:46px;padding:8px 6px;background:var(--sur2);border:1px solid var(--line);
+.pfTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:11px}
+.pfTab{min-height:48px;padding:8px 6px;background:var(--sur2);border:1px solid var(--line);
   border-radius:13px;color:var(--txt2);cursor:pointer;font-family:var(--cond);font-weight:700;
   font-size:13px;letter-spacing:.05em;text-transform:uppercase;line-height:1.1;
   overflow-wrap:anywhere;-webkit-appearance:none;appearance:none;
@@ -2601,6 +2619,11 @@ h2.wrTtl{font-family:var(--cond);font-size:23px;font-weight:900;
 /* Devralınan .btn bu temada 41px; dokunma hedefi 44'ün altına inmesin.
    Kural sarmalayıcıya bağlı, .btn'in kendisine değil — diğer ekranlar ve
    diğer üç tema bugünkü yüksekliğini koruyor. */
+/* Gövde zaten alt gezinme yüksekliği kadar dolgu taşıyor (body padding-bottom);
+   buradaki ek dolgu onun ikinci bir kopyası değil, son düğmeyle çubuk arasındaki
+   nefes payı ve cihazın safe-area'sının karşılığı. Böylece yıkıcı düğme her
+   sekmede sonuna kadar kaydırılabiliyor ve hiçbir zaman çubuğun altında kalmıyor. */
+.pfActs{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 .pfActs .btn{min-height:44px}
 .pfActs .dctx{margin-bottom:10px}
 
