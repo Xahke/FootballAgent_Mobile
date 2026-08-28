@@ -437,7 +437,7 @@ function openScout(){
     const pend=scoutPending(i);
     return `<div class="pitem" style="cursor:default">
       <div class="pinfo"><div class="pname">${lgName(i)}</div>
-      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLowerCase()}</div></div>
+      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLocaleLowerCase(L)}</div></div>
       ${pend?`<span class="tag w">${t('scoutPendingT')} · ${Math.max(1,pend.done-(S.tw||0))} ${t('wk')}</span>`
         :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuild')} · ${fmtK(scoutCost(i))}</button>`}
     </div>`;

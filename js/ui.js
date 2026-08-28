@@ -97,8 +97,10 @@ function cmIni(c){
   const p=(c.name||'').split(/\s+/).filter(Boolean);
   if(!p.length)return '—';
   /* Ana ekrandaki baş harflerle aynı hesap (VIEWS.dash), aynı kariyer iki
-     ekranda iki farklı işaret taşımasın. */
-  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase();
+     ekranda iki farklı işaret taşımasın.
+     Büyütme dile duyarlı: Türkçede 'i' -> 'İ', İngilizcede 'i' -> 'I'. Düz
+     toUpperCase() "İsmail"i "ISMAIL" yapıyordu. */
+  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toLocaleUpperCase(L);
 }
 /* "2 dk önce" gibi bir satır ancak ts varsa çizilir. Cihaz saati geri alınmışsa
    gelecekten bir kayıt görünür; "-3 dk önce" yazmak yerine tarihe düşüyoruz. */
@@ -1383,7 +1385,8 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
           <span class="posn" style="width:30px">S${x.se}</span>
           ${tmBadge(tm,30)}
           <div class="pinfo"><div class="pname">${tm.n}</div>
-          <div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div></div>
+          ${/* Gol atılmamış bir sezonun kaydında x.ts yok — satırı hiç yazma. */''}
+          ${x.ts?`<div class="psub">${t('topScorer')}: ${x.ts} (${x.g})</div>`:''}</div>
           <span class="faint">›</span></div>`;
       }).join('')}
       </div>`;
@@ -1415,8 +1418,9 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
    Model hiç değişmiyor. Üç sekme aynı oyuncu nesnesinin üç kesiti; yeni alan
    okunmuyor, yeni istatistik üretilmiyor, kayıt biçimine hiçbir şey eklenmiyor.
    Aksiyonlar da bugünkü fonksiyonların aynısını çağırıyor — openNeg,
-   openTransfer, pitchPlayer, releaseClient ve pushV('team'|'rival') olduğu
-   gibi duruyor; yeniden yazılan tek şey çizim. */
+   openTransfer, pitchPlayer, askReleaseClient (releaseClient'ın onay sarmalayıcısı,
+   dört temada da aynı) ve pushV('team'|'rival') olduğu gibi duruyor; yeniden
+   yazılan tek şey çizim. */
 function useSahaPlayerProfile(){return themeOf()==='saha';}
 
 /* Bölüm rozetleri. Yollar tam metin olarak duruyor, birleştirilerek
@@ -1738,7 +1742,7 @@ function pfActsHtml(p,tm,cx){
     /* Rozet metnin yerine geçmiyor, yanında duruyor: yıkıcı bir düğmede
        yazının kaybolması kabul edilemez. */
     return `<div class="grid2">${neg}${tr}</div>
-    <button class="btn d pfRelease" onclick="releaseClient(${p.id})">
+    <button class="btn d pfRelease" onclick="askReleaseClient(${p.id})">
       <img src="${PF_IC.rel}" alt="" aria-hidden="true" width="26" height="26"
         decoding="async" onerror="this.remove()">
       <span>${t('release')}</span></button>`;
@@ -1845,7 +1849,8 @@ dash(){
   /* Yüzde işareti Türkçede önde, İngilizcede arkada durur. */
   const knownPct=Math.round((S.known||[]).length/LEAGUES.length*100);
   const pctStr=L==='tr'?'%'+knownPct:knownPct+'%';
-  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toUpperCase():'—';
+  /* Büyütme dile duyarlı — cmIni() ile aynı gerekçe ve aynı sonuç. */
+  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toLocaleUpperCase(L):'—';
 
   /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
      dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
@@ -2129,8 +2134,15 @@ team(id){
   const avg=Math.round(teamStr(id));
   const groups=[['KL','gk'],['DF','df'],['OS','mf'],['FV','fw']];
   const played=[];
-  for(let w=0;w<S.week-1&&w<totalWeeks();w++){
-    S.fx[tm.lg][w].forEach(m=>{if((m.h===id||m.a===id)&&m.hg!==null)played.push(m);});
+  /* Üst sınır ligin KENDİ fikstür uzunluğu. totalWeeks() en uzun ligin hafta
+     sayısı (38); 26/30/34 haftalık ligler sezonun son haftalarında o indeksi
+     taşımıyor ve eski hâl orada S.fx[lg][w] üzerinde patlayıp ekranı boş
+     bırakıyordu. weekFixHtml ve lgFixHtml bu sınırı zaten gözetiyordu.
+     Diziler savunmacı okunuyor: bozuk ya da eksik bir fikstür de çökertmesin. */
+  const lgFx=(S.fx||[])[tm.lg]||[];
+  const upto=Math.min(Math.max(0,(S.week||1)-1),lgFx.length);
+  for(let w=0;w<upto;w++){
+    (lgFx[w]||[]).forEach(m=>{if((m.h===id||m.a===id)&&m.hg!==null)played.push(m);});
   }
   const last5=played.slice(-5);
   const formHtml=last5.map(m=>{
@@ -2381,7 +2393,9 @@ player(id){
     <div class="sect">${t('personal')}</div>
     <div class="kv"><span class="k">${t('nation')}</span><span class="v">${NATS[p.nat].c}</span></div>
     <div class="kv"><span class="k">${t('age')}</span><span class="v">${p.age}</span></div>
-    <div class="kv"><span class="k">${t('height')}</span><span class="v">${p.h||'—'} cm</span></div>
+    ${/* Boy yoksa birim de yazılmaz: "— cm" diye bir ölçü yok. Saha profili
+         (pfOvHtml) zaten böyle davranıyor. */''}
+    <div class="kv"><span class="k">${t('height')}</span><span class="v">${p.h?p.h+' cm':'—'}</span></div>
     <div class="kv"><span class="k">${t('foot')}</span><span class="v">${p.ft==='L'?t('left'):t('right')}</span></div>
   </div>
   <div class="card">
@@ -2414,7 +2428,7 @@ player(id){
        :off?`<button class="btn b" disabled>${t('considering')} (${offs.length})…</button>`
        :`<button class="btn b" onclick="openTransfer(${p.id})">${t('offerClubs')}</button>`}
     </div>
-    <button class="btn d" style="margin-top:10px" onclick="releaseClient(${p.id})">${t('release')}</button>`
+    <button class="btn d" style="margin-top:10px" onclick="askReleaseClient(${p.id})">${t('release')}</button>`
   :p.agent===null?((()=>{
     /* Yarış varsa düğmenin üstünde yazsın: yüzdedeki düşüşün sebebi görünür olmalı,
        yoksa oyuncu şansının neden azaldığını anlamaz. */
@@ -2459,7 +2473,9 @@ function skLevelRing(size){
 function skLevelCard(){
   const lp=levelProgress(), pts=skillPoints();
   const nxt=lp.need
-    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLowerCase()}`
+    /* Küçültme dile duyarlı: Türkçede düz toLowerCase() "İtibar"ı birleşen
+       noktayla "i̇tibar" yapıyordu. Saha karşılığı (skSahaView) zaten böyle. */
+    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(L)}`
     : t('skMaxLv');
   return `<div class="card sklvc">
     ${skLevelRing(74)}
@@ -3050,8 +3066,17 @@ function evSahaResult(ev,c,r,changes,lbl){
     +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('evCont')+'</span></button>');
 }
 function showEvent(ref){
-  const ev=evById(ref.id);
-  if(!ev)return;
+  const ev=ref?evById(ref.id):null;
+  /* Olay tanınmıyor (kaldırılmış ya da yeniden adlandırılmış bir id taşıyan
+     kayıt). Sessizce dönmek olmaz: kuyruk yalnız closeModal ile ilerlediği için
+     arkada bekleyen her modal askıda kalırdı (bkz. showLevelUp). Karar da
+     düşürülüyor, yoksa ana ekranın gündem satırı hiç açılmayan bir olayı
+     sonsuza kadar gösterirdi. */
+  if(!ev){
+    if(S&&S.evCur){S.evCur=null;save();}
+    runNextModal();
+    return;
+  }
   const c=evCtx(ref.pid);
   S.evCur=ref;save();   // sayfa yenilense de karar bekliyor olarak kalsın
   if(useSahaEvent()){evSahaAsk(ev,c);return;}
@@ -3070,8 +3095,15 @@ function evChoose(i){
   const ref=S.evCur;
   if(!ref)return;
   const ev=evById(ref.id),c=evCtx(ref.pid);
-  const opt=ev.opts[i];
-  if(!opt)return;
+  const opt=(ev&&ev.opts)?ev.opts[i]:null;
+  /* Olay ya da seçenek tanınmıyor. Burada sessizce dönmek en kötüsü: soru modalı
+     kilitli açılıyor (dışarı dokunmak kapatmıyor), yani ekran çıkışsız kalır ve
+     kuyruk hiç ilerlemez. Kararı düşürüp normal kapanış yolundan çıkıyoruz —
+     closeModal() hem kilidi bırakıyor hem sıradakini çağırıyor. */
+  if(!opt){
+    S.evCur=null;save();closeModal();render();
+    return;
+  }
   const r=opt.eff(c)||{};
   const changes=applyEff(r,c);
   S.evCur=null;
@@ -3203,7 +3235,8 @@ function showSeasonModal(champs){
      ${champs.map(c=>`<div class="pitem" style="cursor:default">
        ${tmBadge(c.tm,32)}
        <div class="pinfo"><div class="pname">${c.tm.n}</div>
-       <div class="psub">${lgName(c.lgi)} · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})</div></div>
+       ${/* Gol kralı yoksa yalnız lig adı kalır — uydurma bir "0 gol" yazmıyoruz. */''}
+       <div class="psub">${lgName(c.lgi)}${c.ts?` · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})`:''}</div></div>
      </div>`).join('')}
      </div>
      <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>

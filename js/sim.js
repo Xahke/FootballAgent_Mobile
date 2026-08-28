@@ -322,7 +322,11 @@ function endSeason(){
   S.lgHist=S.lgHist||LEAGUES.map(()=>[]);
   const trow=tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga];
   const champs=LEAGUES.map((lg,i)=>{
-    const ts=S.players.filter(p=>teamOf(p).lg===i).sort((a,b)=>b.g-a.g)[0];
+    /* Gol kralı yalnız gerçekten gol atmış oyuncudan seçilir. Eski hâlde filtre
+       yoktu: hiç gol atılmamış bir ligde sıralama sıfırlar arasında yapılıyor ve
+       rastgele bir oyuncu "0 gol ile gol kralı" diye haber oluyordu. Kimse yoksa
+       null döner ve haber/tarihçe o parçayı hiç yazmaz. */
+    const ts=S.players.filter(p=>p.g>0&&teamOf(p).lg===i).sort((a,b)=>b.g-a.g)[0]||null;
     const lgPs=S.players.filter(p=>teamOf(p).lg===i);
     const scAs={
       sc:lgPs.filter(p=>p.g>0).sort((a,b)=>b.g-a.g).slice(0,15).map(p=>[p.n,p.team,p.g]),
@@ -346,8 +350,14 @@ function endSeason(){
       champTm=table[0];
       archEntry=Object.assign({se:S.season,tab:table.map(trow)},scAs);
     }
-    if(myLgs.has(i)||i===S.curLg)pushNews('champ',{li:i,c:champTm.n,tid:champTm.id,s:ts.n,sid:ts.id,g:ts.g},'good');
-    (S.lgHist[i]=S.lgHist[i]||[]).push({se:S.season,tid:champTm.id,ts:ts.n,g:ts.g});
+    /* ts yoksa s/sid/g hiç yazılmıyor: NEWS.champ bu alanların varlığına bakıp
+       gol kralı cümlesini tümüyle düşürüyor, şampiyon bilgisi yerinde kalıyor. */
+    if(myLgs.has(i)||i===S.curLg)pushNews('champ',ts
+      ?{li:i,c:champTm.n,tid:champTm.id,s:ts.n,sid:ts.id,g:ts.g}
+      :{li:i,c:champTm.n,tid:champTm.id},'good');
+    (S.lgHist[i]=S.lgHist[i]||[]).push(ts
+      ?{se:S.season,tid:champTm.id,ts:ts.n,g:ts.g}
+      :{se:S.season,tid:champTm.id});
     if(S.lgHist[i].length>30)S.lgHist[i].shift();
     S.arch=S.arch||LEAGUES.map(()=>[]);
     (S.arch[i]=S.arch[i]||[]).push(archEntry);

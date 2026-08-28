@@ -398,6 +398,12 @@ function pitchCd(p){return Math.max(0,(p.cd||0)-(S.tw||0));}
 function pitchPlayer(pid){openMeeting(pid);} // pitching now happens through a real conversation
 function signClient(p){
   p.agent='you';p.ignored=0;delete p.ra;
+  /* Portföy sayıları türetilip haftaya göre önbelleğe alınıyor (rivals.js —
+     rivalCounts). Rakipten aldığın oyuncu p.ra'sını burada kaybediyor, yani
+     önbellek bayatlıyor: Rakipler listesi eski sayıyı, rakip detay ekranı
+     (rivalClients, önbelleksiz) gerçek sayıyı gösteriyordu. losePlayerTo ve
+     simRivals ile aynı satır. */
+  RIVCNT=null;
   /* Yeni ilişkinin ilk haftalarında rakipler yaklaşmaz (bkz. RIV.poachGrace) */
   p.sa=(S.tw||0);
   if(p.trust===undefined)p.trust=R(48,62);   // yeni ilişki, temkinli bir başlangıç
@@ -421,6 +427,19 @@ function releaseClient(pid){
   if(S.poach&&S.poach.pid===pid)S.poach=null;
   repEvent(-0.8);
   save();render();
+}
+/* Oyunun geri döndürülemez tek aksiyonu ve tek dokunuşluk: onaydan geçiyor.
+   Desen askDeleteSlot/askToMenu ile aynı — yeni bir modal sistemi kurulmuyor ve
+   releaseClient()'ın davranışına dokunulmuyor, arayüz yalnız buradan çağırıyor.
+   İptalde hiçbir şey çalışmaz: ne state, ne kayıt, ne itibar.
+   Ad değiştirme fonksiyonuyla basılıyor: bir adın içindeki $& gibi diziler
+   replace kalıbı sayılmasın (confirm düz metin gösterdiği için HTML kaçışı
+   gerekmiyor). */
+function askReleaseClient(pid){
+  const p=byId(pid);
+  if(!p)return;
+  if(!confirm(t('releaseQ').replace('{n}',()=>String(p.n))))return;
+  releaseClient(pid);
 }
 function inboxAction(i,yes){
   const m=S.inbox[i];if(!m||!m.action)return;
