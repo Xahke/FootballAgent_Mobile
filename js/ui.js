@@ -1504,6 +1504,9 @@ function pfHeadHtml(p,tm,cx){
   if(cx.mine&&p.morale<40)
     tags.push(`<span class="pfPill w">${p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')}</span>`);
   if(cx.pc)tags.push(`<span class="pfPill w">${t('signPending')}</span>`);
+  /* Bir sonraki transferin komisyonu satıldıysa (bkz. tpoOffer) bu kalıcı bir
+     durum ve teklif ekranına gelmeden görünmesi gerekiyor. */
+  if(p.tpo)tags.push(`<span class="pfPill w">${t('tpoSold')}</span>`);
   if(!cx.pen&&cx.off)
     tags.push(`<span class="pfPill b">${t('considering')} · ${cx.offs.length}</span>`);
   if(cx.chaseRv)
@@ -1708,6 +1711,7 @@ function pfCtHtml(p,tm,cx){
     <div class="pfKv"><span>${t('wage')}</span><b class="num">${free?'—':fmtK(p.wage)+'/'+t('wk')}</b></div>
     <div class="pfKv"><span>${t('contract')}</span><b class="num">${free?'—':p.yrs+' '+t('yrs')}</b></div>
     <div class="pfKv"><span>${t('agent')}</span><b>${pfAgentHtml(p)}</b></div>
+    ${p.tpo?`<div class="pfKv"><span>${t('commission')}</span><b>${t('tpoSold')}</b></div>`:''}
     ${cx.pc?`<div class="pfNote">${t('signPending')}</div>`:''}
     ${blk==='noreason'?`<div class="pfNote">${t('renewLocked')}</div>`:''}
   </div>
@@ -2460,6 +2464,9 @@ player(id){
              o zaman eski isimsiz metin doğru cevaptır. */
           return rv?lkR(rv.id,esc(rivalName(rv))):t('rival');})()
         :'—'}</span></div>
+    ${/* Komisyonu satılmış bir sonraki transfer kalıcı bir durum — Saha profilinde
+         pil olarak duruyor, burada sözleşme satırı olarak. */''}
+    ${p.tpo?`<div class="kv"><span class="k">${t('commission')}</span><span class="v">${t('tpoSold')}</span></div>`:''}
   </div>
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
