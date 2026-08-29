@@ -904,6 +904,17 @@ html[data-theme="saha"] .clSumV.gold{color:var(--gold)}
 html[data-theme="saha"] .clSumV small{font-size:13px;font-weight:700;color:var(--txt3)}
 html[data-theme="saha"] .clSumL{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.07em;
   text-transform:uppercase;color:var(--txt3);line-height:1.2}
+html[data-theme="saha"] .clSum.two{flex-direction:column;padding:11px 4px}
+html[data-theme="saha"] .clSumR{display:flex;align-items:stretch;width:100%}
+html[data-theme="saha"] .clSumR>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="saha"] .clSumF{width:100%;border-top:1px solid var(--line2);margin-top:10px;padding-top:9px}
+html[data-theme="saha"] .clSumFL{display:block;text-align:center;font-family:var(--cond);font-weight:700;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);
+  margin-bottom:7px}
+html[data-theme="saha"] .clSumR .clSumV.gold{color:var(--gold)}
+html[data-theme="saha"] .clSumR .clSumV.warn{color:var(--warn)}
+html[data-theme="saha"] .clSumR .clSumV.good{color:var(--acc)}
+html[data-theme="saha"] .clSumR .clSumV.bad{color:var(--bad)}
 html[data-theme="saha"] .clFil{display:flex;gap:8px;margin-bottom:10px}
 html[data-theme="saha"] .clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
   justify-content:center;gap:7px;padding:6px 8px;background:var(--sur2);color:var(--txt2);
@@ -2514,6 +2525,16 @@ html[data-theme="gazete"] .clSumV{font-family:var(--serif);font-size:19px;font-w
 html[data-theme="gazete"] .clSumV small{font-size:13px;font-weight:400;color:var(--txt3)}
 html[data-theme="gazete"] .clSumL{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);
   line-height:1.2}
+html[data-theme="gazete"] .clSum.two{flex-direction:column;padding:11px 0}
+html[data-theme="gazete"] .clSumR{display:flex;align-items:stretch;width:100%}
+html[data-theme="gazete"] .clSumR>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+html[data-theme="gazete"] .clSumF{width:100%;border-top:1px solid var(--line);margin-top:10px;padding-top:9px}
+html[data-theme="gazete"] .clSumFL{display:block;text-align:center;font-family:var(--serif);font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:7px}
+html[data-theme="gazete"] .clSumR .clSumV.gold{color:var(--gold)}
+html[data-theme="gazete"] .clSumR .clSumV.warn{color:var(--warn)}
+html[data-theme="gazete"] .clSumR .clSumV.good{color:var(--acc)}
+html[data-theme="gazete"] .clSumR .clSumV.bad{color:var(--bad)}
 html[data-theme="gazete"] .clFil{display:flex;gap:8px;margin-bottom:12px}
 html[data-theme="gazete"] .clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
   justify-content:center;gap:7px;padding:6px 8px;background:none;color:var(--txt2);
@@ -3352,6 +3373,16 @@ html[data-theme="terminal"] .clSumV{font-family:var(--mono);font-size:16px;font-
   letter-spacing:-.03em}
 html[data-theme="terminal"] .clSumV small{font-size:12px;font-weight:400;color:var(--txt3)}
 html[data-theme="terminal"] .clSumL{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);line-height:1.2}
+html[data-theme="terminal"] .clSum.two{flex-direction:column;padding:10px 0}
+html[data-theme="terminal"] .clSumR{display:flex;align-items:stretch;width:100%}
+html[data-theme="terminal"] .clSumR>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+html[data-theme="terminal"] .clSumF{width:100%;border-top:1px solid var(--line);margin-top:10px;padding-top:9px}
+html[data-theme="terminal"] .clSumFL{display:block;text-align:center;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:7px}
+html[data-theme="terminal"] .clSumR .clSumV.gold{color:var(--gold)}
+html[data-theme="terminal"] .clSumR .clSumV.warn{color:var(--warn)}
+html[data-theme="terminal"] .clSumR .clSumV.good{color:var(--acc)}
+html[data-theme="terminal"] .clSumR .clSumV.bad{color:var(--bad)}
 html[data-theme="terminal"] .clFil{display:flex;gap:8px;margin-bottom:11px}
 html[data-theme="terminal"] .clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
   justify-content:center;gap:7px;padding:6px 8px;background:var(--n1);color:var(--txt2);
@@ -4178,6 +4209,16 @@ html[data-theme="dosya"] .clSumV{font-size:17px;font-weight:600;line-height:1.15
 html[data-theme="dosya"] .clSumV small{font-size:13px;font-weight:500;color:var(--txt3)}
 html[data-theme="dosya"] .clSumL{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);
   line-height:1.2}
+html[data-theme="dosya"] .clSum.two{flex-direction:column;padding:12px 4px}
+html[data-theme="dosya"] .clSumR{display:flex;align-items:stretch;width:100%}
+html[data-theme="dosya"] .clSumR>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+html[data-theme="dosya"] .clSumF{width:100%;border-top:1px solid var(--line);margin-top:11px;padding-top:10px}
+html[data-theme="dosya"] .clSumFL{display:block;text-align:center;font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:8px}
+html[data-theme="dosya"] .clSumR .clSumV.gold{color:var(--gold)}
+html[data-theme="dosya"] .clSumR .clSumV.warn{color:var(--warn)}
+html[data-theme="dosya"] .clSumR .clSumV.good{color:var(--acc)}
+html[data-theme="dosya"] .clSumR .clSumV.bad{color:var(--bad)}
 html[data-theme="dosya"] .clFil{display:flex;gap:8px;margin-bottom:12px}
 html[data-theme="dosya"] .clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;
   justify-content:center;gap:7px;padding:6px 8px;background:var(--n0);color:var(--txt2);
