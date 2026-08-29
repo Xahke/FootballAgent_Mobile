@@ -146,17 +146,19 @@ function fixCostFor(p,fee){
   return Math.max(4,Math.round(base));
 }
 /* Bonservisten alacağın pay — tek hesap yeri. doTransfer() tahsil ederken,
-   teklif ekranı gönderimden önce tahmin ederken buradan okuyor; ikisi
-   ileride ayrılamasın diye formül burada duruyor.
+   teklif ekranı bonservisli transferi gönderimden önce yazarken buradan okuyor;
+   ikisi ileride ayrılamasın diye formül burada duruyor.
    wasFree çağıran taraftan geliyor: doTransfer() oyuncunun kulübünü
    değiştirdikten sonra isFree(p) artık doğruyu söylemez.
-   ct yalnız teklif ekranı için: bonservissiz transferde komisyon oyuncunun
-   HENÜZ imzalamadığı sözleşmeden geliyor, o yüzden ekran tahmini bir maaş/süre
-   geçiriyor. doTransfer() ct geçirmez — gerçek yeni sözleşmeyi okur. */
-function transferCutFor(p,fee,wasFree,ct){
+   Bonservissiz kolda tutar oyuncunun HENÜZ imzalamadığı sözleşmeden gelir —
+   maaşı da süresi de kabul anında, alıcı kulübe ve R(2,4)'e göre belirlenir.
+   Bu yüzden teklif ekranı orada tek bir sayı yazmıyor (bkz. trFin): tahmin
+   edilemeyen bir şeyi tahmin etmiş gibi göstermek, düzeltilen yanlış vaadin
+   kendisiydi. */
+function transferCutFor(p,fee,wasFree){
   if(p.tpo)return 0;
-  const rate=transferRate(),w=ct?ct.wage:p.wage,y=ct?ct.yrs:p.yrs;
-  return wasFree?Math.max(1,Math.round(w*52*y*rate))
+  const rate=transferRate();
+  return wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate))
                 :Math.max(1,Math.round(fee*1000*rate));
 }
 /* Operasyonun peşin bedeli: kulüp başına ücret × kademe × seçili kulüp sayısı.
@@ -244,13 +246,14 @@ function trFin(){
   const fixCost=transferFixCost(p,fee,fix,trSel.size);
   const comm=document.getElementById('trComm');
   if(comm){
-    /* Bonservissiz yolda komisyon henüz imzalanmamış sözleşmeden gelir; ekran
-       piyasa maaşı ve ortalama süre (R(2,4)) üzerinden tahmin ediyor. */
-    const cut=free?transferCutFor(p,0,true,{wage:marketWage(p.r),yrs:3})
-                  :transferCutFor(p,fee,false);
+    /* Üç durum: komisyon satılmışsa sıfır; bonservisli transferde bonservisten
+       hesaplanan gerçek tutar; bonservissiz transferde ise rakam yok — o para
+       kabul anında çekilen maaş ve süreden doğuyor, şimdi bilinmiyor. */
     comm.textContent=p.tpo
       ?t('commission')+': %0 · '+t('tpoSold')
-      :t('commission')+': %'+transferPct()+' · '+t('commEst')+' ~'+fmtK(cut);
+      :free
+        ?t('commission')+': %'+transferPct()+' · '+t('commAfterContract')
+        :t('commission')+': %'+transferPct()+' · '+t('commEst')+' ~'+fmtK(transferCutFor(p,fee,false));
   }
   const fc=document.getElementById('trFixC');
   if(fc)fc.textContent=t('fixCostL')+': '+fmtK(fixCost)
