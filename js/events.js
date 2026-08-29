@@ -591,21 +591,38 @@ function evById(id){return EVENTS.find(e=>e.id===id);}
    boş rozetle çizilmesin diye 'agency'ye düşüyor — rivalOf()'un isimsiz
    rakip menajere düşmesiyle aynı desen. */
 function evCat(ev){return ev&&EV_CATS.indexOf(ev.cat)>=0?ev.cat:'agency';}
+/* Sonuç ekranına yazılan fark: istenen değil, uygulanan.
+   İtibar kazancı repFactor() ile sönümleniyor, moral/güven/form stat() ile
+   sıkışıyor ve beceri bonusları araya giriyor — ham isteği çipe basmak ekranı
+   yalancı yapıyordu ("+3 itibar" yazıp 1.6 uygulamak gibi). Bu yüzden fark
+   mutasyonun kendisinden ölçülüyor; huniler ve sıraları hiç değişmiyor.
+   Sıfıra yuvarlanan etki listeye girmiyor: olmayan bir değişikliğin çipi de
+   olmaz, ayrıca -0 ve tavana dayanmış bir kazancın sonucu iyi göstermesi böyle
+   engelleniyor. Sonlu olmayan fark (bozuk eski kayıt) da yazılmıyor. */
+function effPush(out,k,before,after,dp){
+  const m=dp===3?1000:10,d=Math.round((after-before)*m)/m;
+  if(!isFinite(d)||d===0)return;
+  out.push({k,v:d});
+}
 /* Tek uygulayıcı: bütün olaylar aynı kaldıraçlardan geçer. */
 function applyEff(r,c){
   const out=[];
-  if(r.cash){S.cash=Math.round((S.cash+r.cash)*10)/10;out.push({k:'cash',v:r.cash});}
-  if(r.rep){repEvent(r.rep);out.push({k:'rep',v:r.rep});}
+  if(r.cash){const b=S.cash;S.cash=Math.round((S.cash+r.cash)*10)/10;effPush(out,'cash',b,S.cash);}
+  if(r.rep){const b=S.rep;repEvent(r.rep);effPush(out,'rep',b,S.rep);}
   if(c.p){
-    if(r.morale){moraleEvent(c.p,r.morale);out.push({k:'morale',v:r.morale});}
-    if(r.trust){trustEvent(c.p,r.trust);out.push({k:'trust',v:r.trust});}
-    if(r.form){c.p.form=stat(c.p.form+r.form,5);out.push({k:'form',v:r.form});}
+    /* Başlangıç değeri hunilerin kendi okuduğu yerden alınıyor — güven trustOf()
+       (tanımsızsa 55), moral ve form doğrudan alandan; ölçmek için state'e
+       önceden hiçbir şey yazılmıyor. */
+    if(r.morale){const b=c.p.morale;moraleEvent(c.p,r.morale);effPush(out,'morale',b,c.p.morale);}
+    if(r.trust){const b=trustOf(c.p);trustEvent(c.p,r.trust);effPush(out,'trust',b,c.p.trust);}
+    if(r.form){const b=c.p.form;c.p.form=stat(c.p.form+r.form,5);effPush(out,'form',b,c.p.form);}
     /* oyuncuya iliştirilen kalıcı bayrak (şimdilik: geleceği bir fona satıldı) */
     if(r.flag)c.p[r.flag]=1;
   }
   /* Ajansın kalıcı değiştiricileri: komisyon oranı, müşteri kapasitesi, gider katsayısı.
      Kalıcı oldukları için ekranda ayrıca gösterilir (bkz. evChoose). */
   if(r.ag){S.ag=S.ag||{};
-    Object.keys(r.ag).forEach(k=>{S.ag[k]=+((S.ag[k]||0)+r.ag[k]).toFixed(3);out.push({k:'ag_'+k,v:r.ag[k]});});}
+    Object.keys(r.ag).forEach(k=>{const b=S.ag[k]||0;
+      S.ag[k]=+(b+r.ag[k]).toFixed(3);effPush(out,'ag_'+k,b,S.ag[k],3);});}
   return out;
 }
