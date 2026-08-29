@@ -851,6 +851,21 @@ body[data-view="dash"] .hmRise{min-height:calc(76px + clamp(0px, calc(24.96vh - 
   letter-spacing:-.03em}
 .clSumV small{font-size:12px;font-weight:400;color:var(--txt3)}
 .clSumL{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);line-height:1.2}
+/* --- iki satırlı özet: üstte kadro, altta haftalık tahmin.
+   .clSum tek sıralı hâliyle Piyasa ekranında da kullanılıyor, o yüzden yön
+   değişikliği .two ile sınırlı; ayırıcılar artık satırın içinde olduğu için
+   .clSumR>i kendi kuralını taşıyor. Renk sınıfları .clSumR altına kapatıldı:
+   Piyasa özetinin acc/bad hücreleri bu temada bugünkü hâlinde kalsın. */
+.clSum.two{flex-direction:column;padding:10px 0}
+.clSumR{display:flex;align-items:stretch;width:100%}
+.clSumR>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+.clSumF{width:100%;border-top:1px solid var(--line);margin-top:10px;padding-top:9px}
+.clSumFL{display:block;text-align:center;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:7px}
+.clSumR .clSumV.gold{color:var(--gold)}
+.clSumR .clSumV.warn{color:var(--warn)}
+.clSumR .clSumV.good{color:var(--acc)}
+.clSumR .clSumV.bad{color:var(--bad)}
 
 .clFil{display:flex;gap:8px;margin-bottom:11px}
 .clChip{flex:1 1 0;min-width:0;min-height:44px;display:flex;align-items:center;

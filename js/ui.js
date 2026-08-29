@@ -1959,6 +1959,47 @@ clients(){
   /* Portföy değeri müşterilerin gerçek valueOf() toplamı; haftalık gelir de
      yalnızca onların maaşından gelen komisyon. İkisi de sabit yazılmıyor. */
   const worth=ps.reduce((s,p)=>s+valueOf(p),0);
+  /* Üç finans rakamı render başında BİR KEZ okunuyor ve hep birlikte çiziliyor.
+     Ayrı ayrı çağrılsalardı aynı ekranda birbirini tutmayan bir üçlü çıkabilirdi;
+     burada gelir − gider = net her zaman aynı anlık görüntüden geliyor.
+
+     Bunlar GELECEK haftanın düzenli bilançosu, geçen haftanın gerçekleşen nakit
+     hareketi değil: nextWeek() aynı iki fonksiyonu kullanıyor (sim.js — S.cash
+     satırı), ama transfer komisyonu, imza bedeli, keşif ağı ve olay nakdi bu
+     hesabın dışında kalan tek seferlik kalemler. Satırın başındaki "Haftalık
+     Tahmin" başlığı tam da bunu söylemek için var.
+
+     fmtK her hücreyi kendi başına tam K'ye yuvarlıyor, yani 1K altındaki
+     değerlerde basılan üç rakam birbirine tam oturmayabilir (0.1/2.5/−2.4 →
+     "0K"/"3K"/"−2K"). Kaynak değerler doğru; yuvarlama fmtK'nın bugünkü
+     davranışı ve bu paketin konusu değil. */
+  const wIn=weeklyIncome(), wCost=weeklyCost(), wNet=weeklyNet();
+  const netCls=wNet>0?'good':wNet<0?'bad':'';
+  /* Kart iki satır: kadro üstte, para altta. Tek sırada beş metrik 360px'te
+     hücre başına 70px'in altına düşüyordu. .clSum.two yalnız yönü çeviriyor —
+     Piyasa ekranının tek sıralı .clSum'ı olduğu gibi kalıyor. */
+  const sum=`<div class="clSum two">
+    <div class="clSumR">
+      <div class="clSumI"><span class="clSumV"><b class="num">${ps.length}</b><small class="num">/${cap}</small></span>
+        <span class="clSumL">${t('clientCount')}</span></div>
+      <i></i>
+      <div class="clSumI"><span class="clSumV gold num">${fmtM(worth)}</span>
+        <span class="clSumL">${t('clValue')}</span></div>
+    </div>
+    <div class="clSumF">
+      <span class="clSumFL">${t('weeklyForecast')}</span>
+      <div class="clSumR">
+        <div class="clSumI"><span class="clSumV gold num">${fmtK(wIn)}</span>
+          <span class="clSumL">${t('weeklyIncome')}</span></div>
+        <i></i>
+        <div class="clSumI"><span class="clSumV warn num">${fmtK(wCost)}</span>
+          <span class="clSumL">${t('weeklyCostL')}</span></div>
+        <i></i>
+        <div class="clSumI"><span class="clSumV ${netCls?netCls+' ':''}num">${fmtK(wNet)}</span>
+          <span class="clSumL">${t('weeklyNet')}</span></div>
+      </div>
+    </div>
+  </div>`;
   const head=`<div class="clTop">
     <div class="clTitle">${t('clTitle')}</div>
     <div class="clSub">${t('clSub')}</div>
@@ -1966,8 +2007,14 @@ clients(){
   if(!ps.length)
     /* Boş durum kompakt: ana ekrandaki ilk-adım düzeltmesiyle aynı gerekçe —
        devasa bir kart aynı cümleyi iki kez söylüyor ve 360x800'i taşırıyor.
-       Tek cümle, tek dokunulabilir yönlendirme. */
+       Tek cümle, tek dokunulabilir yönlendirme.
+
+       Özet buraya da giriyor: gideri asıl görmesi gereken menajer hiç müşterisi
+       olmayandır — geliri sıfırken ofis ve keşif ağları işlemeye devam ediyor.
+       Eskiden bu ekran erken döndüğü için o hafta kaybedilen para hiçbir yerde
+       yazmıyordu. Boş durumun kendisi ve yönlendirmesi aynen duruyor. */
     return `${head}
+    ${sum}
     <div class="clEmpty">
       <span class="clEmptyIc">${ICONS.clients}</span>
       <span class="clEmptyT">${t('noClientsSub')}</span>
@@ -1981,16 +2028,7 @@ clients(){
     <span class="clChipIc">${ICONS[k==='attn'?'alert':'clients']}</span>
     <span class="clChipT">${lbl}</span><b class="num">${n}</b></button>`;
   return `${head}
-  <div class="clSum">
-    <div class="clSumI"><span class="clSumV"><b class="num">${ps.length}</b><small class="num">/${cap}</small></span>
-      <span class="clSumL">${t('clientCount')}</span></div>
-    <i></i>
-    <div class="clSumI"><span class="clSumV gold num">${fmtM(worth)}</span>
-      <span class="clSumL">${t('clValue')}</span></div>
-    <i></i>
-    <div class="clSumI"><span class="clSumV gold num">${fmtK(weeklyIncome())}</span>
-      <span class="clSumL">${t('weeklyIncome')}</span></div>
-  </div>
+  ${sum}
   <div class="clFil">${chip('all',t('all'),ps.length)}${chip('attn',t('clAttn'),attn.length)}</div>
   ${shown.length
     ?`<div class="clList">${shown.map(clCard).join('')}</div>`
