@@ -4562,6 +4562,9 @@ faDealHint:'Bonservis ödenmeyeceği için kulüpler daha istekli. Komisyonun ko
 freeAgentsF:'Kulüpsüz oyuncular',costLbl:'Gider',netLbl:'Net',
 fixerL:'Aracı Ücreti',fixLow:'Ölçülü — kabul şansı +%8',fixHigh:'Yüklü — kabul şansı +%18',
 fixerHint:'Seçtiğin her kulüp için peşin ödenir; anlaşma büyüdükçe pahalanır.',
+commEst:'Tahmini toplam komisyonun',tpoSold:'Transfer komisyonu satıldı',
+tpoWhy:'Bu oyuncunun bir sonraki transfer komisyonunu bir fona sattın. Bu transferden peşin veya taksitli komisyon alamazsın; satış payı klozu ve gol bonusu yine geçerlidir.',
+fixCostL:'Peşin operasyon maliyeti',fixPerClub:'kulüp başına',noCashBtn:'Kasa yetersiz',
 skills:'Yetenek',skAvail:'Kullanılabilir',skSpent:'Harcanan',skTotal:'Toplam',skPt:'puan',skPts:'puan',
 skOwned:'Açık',skPp:'puan',skLevel:'Seviye',skLvShort:'SV',skNext:'Sonraki seviye',skMaxLv:'En yüksek seviye',
 skHint:'Her seviye bir yetenek puanı, her {n}. seviye bir puan daha getirir. Puanlar geri alınamaz.',
@@ -4741,6 +4744,9 @@ faDealHint:'With no fee to pay, clubs are keener. Your commission comes from the
 freeAgentsF:'Free agents',costLbl:'Costs',netLbl:'Net',
 fixerL:'Intermediary Fee',fixLow:'Modest — +8% acceptance',fixHigh:'Heavy — +18% acceptance',
 fixerHint:'Paid up front for every club you select; scales with the size of the deal.',
+commEst:'Your estimated total commission',tpoSold:'Transfer commission sold',
+tpoWhy:'You sold your commission from this player\'s next transfer to a fund. You will receive no immediate or installment commission; sell-on clauses and goal bonuses still apply.',
+fixCostL:'Up-front operation cost',fixPerClub:'per club',noCashBtn:'Not enough cash',
 skills:'Skills',skAvail:'Available',skSpent:'Spent',skTotal:'Earned',skPt:'pt',skPts:'pts',
 skOwned:'Unlocked',skPp:'pts',skLevel:'Level',skLvShort:'LV',skNext:'Next level',skMaxLv:'Max level',
 skHint:'Every level earns a skill point, and every {n}th level earns one more. Points can\'t be refunded.',
@@ -9828,6 +9834,10 @@ function negSubmit(){
 }
 /* ================= TRANSFER ================= */
 let trSel=new Set();
+/* Açık teklif ekranının oyuncusu. trSel gibi yalnız görünüm durumu — kayda hiç
+   girmiyor, modal kapanınca anlamı kalmıyor. trFin() finansal satırları
+   yamalarken oyuncuyu buradan buluyor. */
+let trPid=null;
 /* Ek madde kademeleri. Kabul etkisi seçilen büyüklükle orantılı hesaplanır
    (bkz. clauseAcc), böylece "az iste, kolay kabul edilsin" dengesi kurulur. */
 const PAYPLANS=[2,3,4,6,8,12];
@@ -9847,6 +9857,25 @@ function fixCostFor(p,fee){
   const base=fee>0?fee*1000*0.05:p.wage*22*0.05;
   return Math.max(4,Math.round(base));
 }
+/* Bonservisten alacağın pay — tek hesap yeri. doTransfer() tahsil ederken,
+   teklif ekranı gönderimden önce tahmin ederken buradan okuyor; ikisi
+   ileride ayrılamasın diye formül burada duruyor.
+   wasFree çağıran taraftan geliyor: doTransfer() oyuncunun kulübünü
+   değiştirdikten sonra isFree(p) artık doğruyu söylemez.
+   ct yalnız teklif ekranı için: bonservissiz transferde komisyon oyuncunun
+   HENÜZ imzalamadığı sözleşmeden geliyor, o yüzden ekran tahmini bir maaş/süre
+   geçiriyor. doTransfer() ct geçirmez — gerçek yeni sözleşmeyi okur. */
+function transferCutFor(p,fee,wasFree,ct){
+  if(p.tpo)return 0;
+  const rate=transferRate(),w=ct?ct.wage:p.wage,y=ct?ct.yrs:p.yrs;
+  return wasFree?Math.max(1,Math.round(w*52*y*rate))
+                :Math.max(1,Math.round(fee*1000*rate));
+}
+/* Operasyonun peşin bedeli: kulüp başına ücret × kademe × seçili kulüp sayısı.
+   submitOffers() kasadan bunu düşüyor, ekran da bunu yazıyor. */
+function transferFixCost(p,fee,fix,clubCount){
+  return fix?Math.round(fixCostFor(p,fee)*fix*clubCount):0;
+}
 function openTransfer(pid){
   const p=byId(pid);
   if(offerFor(pid)||pendingFor(pid)){toast(t('offerPending'));return;}
@@ -9861,17 +9890,17 @@ function openTransfer(pid){
   }).sort(()=>RF()-0.5).slice(0,6);
   if(!buyers.length){openModal(`<h2>${t('offerClubs')}</h2><div class="empty">${t('noInterest')}</div>`);return;}
   const v=valueOf(p);
-  trSel=new Set();
+  trSel=new Set();trPid=pid;
   openModal(`
    <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${free?t('faSub'):t('value')+': '+fmtM(v)}</div>
    <div class="sub" style="margin-top:6px">${t('pickClubs')}</div>
    ${free?`<div class="negbox"><b>${t('freeFee')}</b>
      <div class="sub" style="margin-top:6px">${t('faDealHint')}</div>
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()}</div></div>`
+     <div class="sub" style="margin-top:10px" id="trComm"></div>${p.tpo?`<div class="sub" style="margin-top:6px">${t('tpoWhy')}</div>`:''}</div>`
    :`<div class="negbox"><b>${t('askFee')}: <span style="color:var(--acc)" id="feeV">${fmtM(v)}</span></b>
      <input type="range" min="${Math.round(v*7)}" max="${Math.round(v*18)}" value="${Math.round(v*10)}" id="feeR"
-       oninput="document.getElementById('feeV').textContent=fmtM(this.value/10)">
-     <div class="sub" style="margin-top:10px">${t('commission')}: %${transferPct()} · ${t('repScales')}</div>
+       oninput="document.getElementById('feeV').textContent=fmtM(this.value/10);trFin()">
+     <div class="sub" style="margin-top:10px" id="trComm"></div>${p.tpo?`<div class="sub" style="margin-top:6px">${t('tpoWhy')}</div>`:''}
    </div>
    <div class="sect">${t('clauses')}</div>`}
    <div class="fgrid" style="margin-bottom:4px;${free?'display:none':''}">
@@ -9894,11 +9923,12 @@ function openTransfer(pid){
    ${free?'':`<div class="sub" style="margin-bottom:10px">${t('clauseHint')}</div>`}
    <div class="sect">${t('fixerL')}</div>
    <label class="fitem" style="margin-bottom:6px">
-     <select class="fsel" id="trFix">
+     <select class="fsel" id="trFix" onchange="trFin()">
        <option value="0">${t('none')}</option>
        <option value="1">${t('fixLow')}</option>
        <option value="2">${t('fixHigh')}</option>
      </select></label>
+   <div class="sub" id="trFixC" style="margin-bottom:2px"></div>
    <div class="sub" style="margin-bottom:10px">${t('fixerHint')}</div>
    <div class="sect">${t('interested')}</div>
    <div class="list">
@@ -9908,13 +9938,49 @@ function openTransfer(pid){
      <span class="trk" id="trk${b.id}"></span></div>`).join('')}
    </div>
    <button class="btn p" id="trBtn" disabled onclick="submitOffers(${pid})">${t('sendOffers')}</button>`);
+  trFin();   // rakamlar ilk açılışta da doğru olsun
+}
+/* Teklif ekranının canlı finans satırları. Buradan render() ya da openTransfer()
+   ÇAĞRILMAZ: openTransfer() alıcı listesini RF() ile yeniden çekiyor ve trSel'i
+   sıfırlıyor, yani yeniden çizim ekranı oyuncunun altından değiştirirdi. Onun
+   yerine yalnız ilgili düğümler yamalanıyor — trToggle'ın onay işaretini
+   yamalamasıyla aynı desen; kaydırma, odak ve seçim olduğu yerde kalıyor.
+   Rakamlar submitOffers() ile aynı iki yardımcıdan geliyor. */
+function trFin(){
+  const p=trPid===null?null:byId(trPid);
+  if(!p)return;
+  const free=isFree(p);
+  const feeEl=document.getElementById('feeR');
+  const fee=free||!feeEl?0:+feeEl.value/10;
+  const fix=+((document.getElementById('trFix')||{}).value||0);
+  const fixCost=transferFixCost(p,fee,fix,trSel.size);
+  const comm=document.getElementById('trComm');
+  if(comm){
+    /* Bonservissiz yolda komisyon henüz imzalanmamış sözleşmeden gelir; ekran
+       piyasa maaşı ve ortalama süre (R(2,4)) üzerinden tahmin ediyor. */
+    const cut=free?transferCutFor(p,0,true,{wage:marketWage(p.r),yrs:3})
+                  :transferCutFor(p,fee,false);
+    comm.textContent=p.tpo
+      ?t('commission')+': %0 · '+t('tpoSold')
+      :t('commission')+': %'+transferPct()+' · '+t('commEst')+' ~'+fmtK(cut);
+  }
+  const fc=document.getElementById('trFixC');
+  if(fc)fc.textContent=t('fixCostL')+': '+fmtK(fixCost)
+    +(fixCost?' · '+fmtK(fixCostFor(p,fee))+' '+t('fixPerClub')+' × '+trSel.size:'');
+  const btn=document.getElementById('trBtn');
+  if(btn){
+    /* Devre dışı düğmenin nedeni kendi yazısında — pfActsHtml ile aynı kural. */
+    const short=fixCost>0&&fixCost>S.cash;
+    btn.disabled=trSel.size===0||short;
+    btn.textContent=short?t('noCashBtn')+' · '+fmtK(fixCost)
+                         :t('sendOffers')+(trSel.size?' ('+trSel.size+')':'');
+  }
 }
 function trToggle(tid){
   if(trSel.has(tid))trSel.delete(tid);else trSel.add(tid);
   const el=document.getElementById('trk'+tid);
   if(el){el.className='trk'+(trSel.has(tid)?' on':'');el.textContent=trSel.has(tid)?'✓':'';}
-  const btn=document.getElementById('trBtn');
-  if(btn){btn.disabled=trSel.size===0;btn.textContent=t('sendOffers')+(trSel.size?' ('+trSel.size+')':'');}
+  trFin();
 }
 function submitOffers(pid){
   if(!trSel.size)return;
@@ -9926,13 +9992,15 @@ function submitOffers(pid){
   const gb=free?0:+((document.getElementById('trGb')||{}).value||0);
   const so=free?0:+((document.getElementById('trSo')||{}).value||0);
   const fix=+((document.getElementById('trFix')||{}).value||0);
-  /* aracı ücreti kulüp başına peşin ödenir — anlaşma büyüdükçe pahalanır */
-  const fixCost=fix?Math.round(fixCostFor(p,fee)*fix*trSel.size):0;
-  if(fixCost>S.cash){toast(t('noCash'));return;}
+  /* aracı ücreti kulüp başına peşin ödenir — ekrandaki satırla aynı yardımcı */
+  const fixCost=transferFixCost(p,fee,fix,trSel.size);
+  /* fixCost sıfırken kasaya hiç bakılmaz: bedava bir işlemi borçlu olduğun için
+     reddetmek yanlıştı (0 > negatif kasa doğru çıkıyordu). */
+  if(fixCost&&fixCost>S.cash){toast(t('noCash'));return;}
   S.cash-=fixCost;
   S.offers=S.offers||[];
   trSel.forEach(tid=>S.offers.push({pid,tid,fee,pay,gb,so,fix,at:(S.tw||0)+R(1,3)}));
-  trSel=new Set();
+  trSel=new Set();trPid=null;
   toast(t('offerSent'));
   closeModal();save();render();
 }
@@ -9954,10 +10022,10 @@ function doTransfer(p,b,fee,quiet,terms){
   p.team=b.id;p.wage=Math.max(1,Math.round(Math.max(p.wage*1.15,marketWage(p.r)*(0.85+b.bud*0.25))));
   p.yrs=R(2,4);p.morale=clamp(Math.max(p.morale+30,70),0,100);p.ignored=0;p.hm=(S.tw||0)+8;p.form=clamp(p.form+5,0,100);
   delete p.freeFor;
-  /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir. */
-  const rate=transferRate();
-  /* Geleceğini bir fona sattıysan (bkz. tpoOffer olayı) bu satıştan sana pay yok. */
-  const cut=p.tpo?0:(wasFree?Math.max(1,Math.round(p.wage*52*p.yrs*rate)):Math.max(1,Math.round(fee*1000*rate)));
+  /* Bonservis yoksa komisyon bonservisten değil, kopardığın sözleşmeden gelir;
+     geleceğini bir fona sattıysan (bkz. tpoOffer) bu satıştan sana pay yok.
+     Hesap transferCutFor()'da: teklif ekranı da aynı yerden okuyor. */
+  const cut=transferCutFor(p,fee,wasFree);
   if(p.tpo)delete p.tpo;
   const repGain=0.8+Math.max(0,(b.str-oldTm.str)/8);
   /* ödeme planı: komisyon taksitle gelir */
@@ -11691,6 +11759,9 @@ function pfHeadHtml(p,tm,cx){
   if(cx.mine&&p.morale<40)
     tags.push(`<span class="pfPill w">${p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')}</span>`);
   if(cx.pc)tags.push(`<span class="pfPill w">${t('signPending')}</span>`);
+  /* Bir sonraki transferin komisyonu satıldıysa (bkz. tpoOffer) bu kalıcı bir
+     durum ve teklif ekranına gelmeden görünmesi gerekiyor. */
+  if(p.tpo)tags.push(`<span class="pfPill w">${t('tpoSold')}</span>`);
   if(!cx.pen&&cx.off)
     tags.push(`<span class="pfPill b">${t('considering')} · ${cx.offs.length}</span>`);
   if(cx.chaseRv)
@@ -11895,6 +11966,7 @@ function pfCtHtml(p,tm,cx){
     <div class="pfKv"><span>${t('wage')}</span><b class="num">${free?'—':fmtK(p.wage)+'/'+t('wk')}</b></div>
     <div class="pfKv"><span>${t('contract')}</span><b class="num">${free?'—':p.yrs+' '+t('yrs')}</b></div>
     <div class="pfKv"><span>${t('agent')}</span><b>${pfAgentHtml(p)}</b></div>
+    ${p.tpo?`<div class="pfKv"><span>${t('commission')}</span><b>${t('tpoSold')}</b></div>`:''}
     ${cx.pc?`<div class="pfNote">${t('signPending')}</div>`:''}
     ${blk==='noreason'?`<div class="pfNote">${t('renewLocked')}</div>`:''}
   </div>
@@ -12647,6 +12719,9 @@ player(id){
              o zaman eski isimsiz metin doğru cevaptır. */
           return rv?lkR(rv.id,esc(rivalName(rv))):t('rival');})()
         :'—'}</span></div>
+    ${/* Komisyonu satılmış bir sonraki transfer kalıcı bir durum — Saha profilinde
+         pil olarak duruyor, burada sözleşme satırı olarak. */''}
+    ${p.tpo?`<div class="kv"><span class="k">${t('commission')}</span><span class="v">${t('tpoSold')}</span></div>`:''}
   </div>
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
