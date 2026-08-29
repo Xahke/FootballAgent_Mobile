@@ -3,7 +3,7 @@
 /* ================= I18N ================= */
 const STR={
 tr:{week:'Hafta',season:'Sezon',cash:'Kasa',rep:'İtibar',dash:'Panel',clients:'Müşteriler',market:'Piyasa',league:'Lig',inbox:'Kutu',
-next:'Devam',agency:'Ajans Özeti',weeklyIncome:'Haftalık Gelir',clientCount:'Müşteri',
+next:'Devam',agency:'Ajans Özeti',weeklyIncome:'Haftalık Gelir',clientCount:'Müşteri',
 /* Müşteriler ekranındaki finans satırı. weeklyCost olay ekranında ajans gider
    katsayısının etiketi ve orada küçük harfle akıyor; özetin başlık üslubu farklı,
    bu yüzden ayrı bir anahtar. weeklyForecast satırın TAHMİN olduğunu söylüyor:
@@ -194,7 +194,7 @@ pfWait:'Bekleme süresi',
 pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
-next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
+next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
 weeklyCostL:'Weekly Costs',weeklyNet:'Weekly Net',weeklyForecast:'Weekly Forecast',
 noClients:'No clients yet. Approach unrepresented players in the Market tab.',
 unhappy:'Unhappy Clients',age:'Age',rating:'Rating',form:'Form',
