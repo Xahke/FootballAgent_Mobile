@@ -46,13 +46,19 @@ jobs:
       # cap sync'in depodaki native projede kalıcı bir fark bırakmadığını kanıtla.
       # Bıraksaydı, her CI koşusu commit'lenmemiş bir değişiklikle derliyor
       # olurdu ve depodaki proje ile derlenen proje sessizce ayrışırdı.
+      # İki ayrı soru, iki ayrı komut. "git diff" içerik farkını sorar ve satır
+      # sonu filtrelerini uygular; "ls-files --others" yalnız takip edilmeyen ve
+      # ignore edilmeyen dosyaları listeler. Burada "git status --porcelain"
+      # kullanılmıyor: o ikisini birbirine karıştırır ve Windows'ta checkout
+      # CRLF, cap sync LF yazdığı için içerik aynıyken bile dosyayı değişmiş
+      # gösterir — CI'ı yanlış yerden kırardı.
       - name: Native projede fark yok
         run: |
           git diff --exit-code -- android || {
             echo "::error::cap sync android/ altında takipli dosyaları değiştirdi"; exit 1; }
-          UNTRACKED=$(git status --porcelain -uall -- android)
-          if [ -n "$UNTRACKED" ]; then
-            echo "::error::cap sync takip edilmeyen dosya bıraktı:"; echo "$UNTRACKED"; exit 1
+          STRAY=$(git ls-files --others --exclude-standard -- android)
+          if [ -n "$STRAY" ]; then
+            echo "::error::cap sync takip edilmeyen dosya bıraktı:"; echo "$STRAY"; exit 1
           fi
           echo "android/ temiz"
 

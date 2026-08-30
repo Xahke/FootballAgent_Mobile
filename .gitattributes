@@ -10,3 +10,10 @@ android/gradlew.bat  text eol=crlf
 
 # Sarmalayıcı jar'ı ikili; normalizasyon bozar.
 *.jar binary
+
+# Bu ikisini "cap sync" her koşuda LF ile yeniden yazıyor. Windows'ta checkout
+# CRLF verseydi, senkronizasyondan sonra içerik aynı olduğu hâlde git bunları
+# değişmiş gösterirdi — "cap sync android/ altında hiçbir şey değiştirmez"
+# kuralını yalnız Linux'ta doğru kılardı.
+android/capacitor.settings.gradle   text eol=lf
+android/app/capacitor.build.gradle  text eol=lf
