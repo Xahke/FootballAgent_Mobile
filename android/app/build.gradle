@@ -1,5 +1,39 @@
 apply plugin: 'com.android.application'
 
+/* ===================== RELEASE İMZALAMA =====================
+   Gerçek değerler android/keystore.properties içinde. O dosya .gitignore'da ve
+   asla depoya, loga ya da CI'a girmez; depoda yalnız keystore.properties.example
+   duruyor. Anahtarın kendisi de depo dışında.
+
+   Bu bir *upload key*: Play App Signing kullanılıyor, yani kullanıcıya giden
+   paketi Google kendi anahtarıyla imzalıyor. Buradaki anahtar yalnız "yükleyen
+   gerçekten biz miyiz" sorusunu cevaplıyor.
+
+   Dosya yoksa hiçbir şey bozulmaz — debug derlemesi ve CI aynen çalışır, yalnız
+   release imzası kurulmaz. Sessizce imzasız bir paket üretmemek içinse aşağıda
+   ayrı bir kapı var (bkz. taskGraph.whenReady). */
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+/* Eksik olanın ADI toplanıyor, değeri değil — hata mesajı bu listeyi yazacak. */
+def requiredSigningKeys = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+def missingSigningKeys = requiredSigningKeys.findAll { k ->
+    def v = keystoreProps.getProperty(k)
+    v == null || v.trim().isEmpty()
+}
+
+/* storeFile ve keyAlias trim'leniyor: sonlarındaki boşluk her zaman bir hatadır.
+   Parolalar trim'lenmiyor — bir kimlik bilgisini sessizce değiştirmek, yanlış
+   parola hatası vermekten daha kötü bir davranış olurdu. */
+def signingStoreFile = missingSigningKeys.contains('storeFile') ? null
+    : file(keystoreProps.getProperty('storeFile').trim())
+def releaseSigningReady = keystorePropsFile.exists() &&
+    missingSigningKeys.isEmpty() &&
+    signingStoreFile != null && signingStoreFile.isFile()
+
 android {
     namespace = "com.xahke.profootballagent"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +41,10 @@ android {
         applicationId "com.xahke.profootballagent"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        /* Her Play yüklemesinde versionCode artmak zorunda; aynı numarayla
+           ikinci bir paket yüklenemez. versionName insan içindir. */
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,11 +52,63 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    /* Yapılandırma yalnız dört değer de varsa ve keystore dosyası gerçekten
+       yerindeyse kuruluyor. Eksikken kurmak, Gradle'ın yapılandırma aşamasında
+       anlamsız bir hatayla düşmesi demek olurdu — asıl hatayı aşağıdaki kapı
+       veriyor, orada ne eksik olduğu yazıyor. */
+    signingConfigs {
+        if (releaseSigningReady) {
+            release {
+                storeFile signingStoreFile
+                storePassword keystoreProps.getProperty('storePassword')
+                keyAlias keystoreProps.getProperty('keyAlias').trim()
+                keyPassword keystoreProps.getProperty('keyPassword')
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseSigningReady) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+/* Release görevi istendi ama imza kurulamadıysa burada duruyoruz.
+   Sessizce imzasız bir AAB üretmek en pahalı hata olurdu: paket elinde
+   duruyormuş gibi görünür, sorun ancak Play Console'a yüklerken ortaya çıkar.
+
+   Kapı taskGraph'ta, yapılandırma aşamasında değil — debug derlemesi ve CI
+   keystore.properties olmadan çalışmaya devam etmek zorunda.
+
+   Mesajlar yalnız EKSİK ALANIN ADINI söylüyor. Ne parola, ne yol, ne alias
+   yazılıyor: Gradle çıktısı loga, CI kayıtlarına ve ekran görüntülerine
+   giriyor, oraya bir kimlik bilgisi düşmemeli. */
+gradle.taskGraph.whenReady { graph ->
+    def wantsRelease = graph.allTasks.any { t ->
+        t.project == project && t.name ==~ /(assemble|bundle|package)Release/
+    }
+    if (!wantsRelease) return
+
+    if (!keystorePropsFile.exists()) {
+        throw new GradleException(
+            "Release imzası yapılandırılmamış: android/keystore.properties yok.\n" +
+            "  android/keystore.properties.example dosyasını kopyalayıp doldur.\n" +
+            "  Kopya .gitignore'da; parolalar depoya girmez.")
+    }
+    if (!missingSigningKeys.isEmpty()) {
+        throw new GradleException(
+            "android/keystore.properties eksik: " + missingSigningKeys.join(', ') + "\n" +
+            "  (Yalnız alan adları yazıldı, hiçbir değer gösterilmiyor.)")
+    }
+    if (!signingStoreFile.isFile()) {
+        throw new GradleException(
+            "storeFile'ın gösterdiği keystore dosyası bulunamadı.\n" +
+            "  Yolu android/keystore.properties içinde düzelt.\n" +
+            "  Yol da bir ipucu olduğu için yazdırılmıyor; .properties dosyası\n" +
+            "  Java biçiminde, ayıraç olarak ters bölü değil / kullan.")
     }
 }
 

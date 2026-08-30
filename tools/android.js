@@ -13,8 +13,11 @@ const kind = (process.argv[2] || 'apk').toLowerCase();
 const TASKS = {
   apk: { task: 'assembleDebug', out: 'app/build/outputs/apk/debug/app-debug.apk',
          note: 'Telefona doğrudan kurulur. Ayarlar → "Bilinmeyen kaynaklara izin ver" açık olmalı.' },
+  /* İmza artık gradle tarafında: android/keystore.properties varsa paket imzalı
+     çıkar, yoksa derleme açık bir hatayla durur. "İmzasız da olsa bir dosya
+     üretilir" durumu bilerek ortadan kaldırıldı — bkz. android/app/build.gradle. */
   aab: { task: 'bundleRelease', out: 'app/build/outputs/bundle/release/app-release.aab',
-         note: 'Play Console\'a yüklenecek dosya. İmzalanmamışsa Android Studio → Generate Signed App Bundle kullan.' }
+         note: 'Play Console\'a yüklenecek dosya. Upload key ile imzalı; dağıtım imzasını Play App Signing atar.' }
 };
 const cfg = TASKS[kind];
 if (!cfg) { console.error('kullanım: node tools/android.js apk|aab'); process.exit(1); }
