@@ -38,3 +38,11 @@ GoogleService-Info.plist
 # Ortam değişkenleri
 .env
 .env.*
+
+# IDE kullanıcı dosyaları. Capacitor şablonunun android/.gitignore'ı yalnız
+# seçili birkaçını (workspace.xml, gradle.xml, modules.xml…) sayıyor; Android
+# Studio projeyi ilk açtığında misc.xml, compiler.xml, runConfigurations.xml ve
+# birkaç dosya daha bırakıyor ve bunlar açıkta kalıyordu. Hiçbiri projenin
+# tanımı değil — makinenin ve kullanıcının tercihleri. Kural burada, kökte,
+# çünkü hem ./.idea hem android/.idea aynı sebeple dışarıda kalmalı.
+.idea/
