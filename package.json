@@ -11,9 +11,8 @@
     "dist": "node tools/build-themes.js && node build.js && node tools/check-dist.js",
     "www": "node tools/build-themes.js && node tools/build-www.js",
     "serve": "npx --yes serve . -l 5173",
-    "android:add": "npm run www && npx cap add android",
     "android:sync": "npm run www && npx cap sync android",
-    "android:open": "npm run www && npx cap sync android && npx cap open android",
+    "android:open": "npm run android:sync && npx cap open android",
     "android:apk": "npm run android:sync && node tools/android.js apk",
     "android:aab": "npm run android:sync && node tools/android.js aab"
   },

@@ -19,8 +19,12 @@ const TASKS = {
 const cfg = TASKS[kind];
 if (!cfg) { console.error('kullanım: node tools/android.js apk|aab'); process.exit(1); }
 
+/* android/ artık depoda; eksikse bu bir kurulum adımının atlanması değil,
+   bozuk bir checkout'tur. Eskiden burada "npm run android:add" öneriliyordu —
+   o script kaldırıldı, çünkü projeyi yeniden üretmek native tarafa yazılmış
+   her şeyi silmek anlamına gelir. */
 if (!fs.existsSync(AND)) {
-  console.error('android/ klasörü yok. Önce: npm run android:add');
+  console.error('android/ klasörü yok. Depoda olması gerekiyor — checkout eksik görünüyor.');
   process.exit(1);
 }
 

@@ -35,6 +35,27 @@ varlıklar uygulamanın içine gömülüyor, sunucuya ve alan adına gerek kalm�
 (TWA/Bubblewrap alternatifi daha küçük paket üretir ama HTTPS'te yayınlanmış bir
 site ve `assetlinks.json` doğrulaması ister — bu oyun için gereksiz bağımlılık.)
 
+### Native proje depoda
+`android/` klasörü **kaynak denetiminde**. Yani onu üretmek diye bir adım yok;
+klonladığında zaten elinde. Akış tek yönlü:
+
+```
+npm run www  →  npx cap sync android  →  Gradle
+```
+
+`cap sync` yalnız iki şeye dokunur: `www/` içeriğini
+`android/app/src/main/assets/public` altına kopyalar ve üretilen dosyaları
+(`capacitor.config.json`, `capacitor.plugins.json`, `res/xml/config.xml`,
+`capacitor-cordova-android-plugins/`) tazeler. Bunların hepsi `android/.gitignore`
+içinde — depoya girmezler, her senkronizasyonda yeniden üretilirler. Gradle
+yapılandırmasına, manifeste, kaynaklara **dokunmaz**; oralar artık senin dosyaların.
+
+> **`npx cap add android` çalıştırma.** Projeyi şablondan yeniden üretir ve
+> native tarafa yazılmış her şeyi (ileride: imza yapılandırması, `versionCode`,
+> manifest meta-data'sı, ikonlar) siler. Bu yüzden `android:add` scripti de
+> kaldırıldı. Klasör bir şekilde bozulursa çözüm yeniden üretmek değil,
+> `git checkout -- android` ile geri almaktır.
+
 ### Seçenek A — GitHub Actions (bilgisayarına hiçbir şey kurmadan)
 Android Studio kurmak istemiyorsan APK'yı GitHub derlesin:
 
@@ -50,8 +71,7 @@ Her `main` push'unda da otomatik çalışır. Tanım: `.github/workflows/android
 Gereken: [Android Studio](https://developer.android.com/studio) (Android SDK ve
 Java'yı da o kurar).
 ```
-npm install
-npm run android:add        # bir kez, android/ klasörünü oluşturur
+npm ci                     # kilit dosyasından birebir kurulum
 ```
 
 #### APK — telefonda test için
@@ -136,6 +156,7 @@ node tools/build-themes.js && node build.js   # → dist/menajer.html
 | tools/build-www.js | Capacitor'ın paketleyeceği www/ klasörünü hazırlar |
 | tools/android.js | APK/AAB üretir, dosyanın yerini yazar |
 | .github/workflows/android.yml | APK'yı GitHub'da derler, indirilebilir çıktı bırakır |
+| android/ | Native Android projesi — kaynak denetiminde. `cap sync` tazeler, `cap add` yeniden üretir (kullanma) |
 | capacitor.config.json | Android paketleme ayarları (appId, uygulama adı) |
 | manifest.json, sw.js, icons/ | PWA: kurulabilirlik ve çevrimdışı çalışma |
 | js/main.js | Kayıt/yükleme, başlatma |

@@ -28,9 +28,22 @@ npm run android:sync # refresh www/ into the Android project after code changes
 node tools/build-geo.js   # → js/worldgeo.js (map geometry; dev-only, downloads once)
 ```
 
-`npm run android:add` creates `android/` once. GitHub Actions
-(`.github/workflows/android.yml`) builds a debug APK on every push to `main` and on
-manual dispatch — use it instead of installing Android Studio.
+**`android/` is checked into the repo** — it is a source artifact, not build output,
+and it is where every future native change has to live (signing config, `versionCode`,
+manifest meta-data, icons, ProGuard). The flow is one-way:
+`npm run www` → `npx cap sync android` → Gradle. `cap sync` only refreshes the web
+assets and the four generated paths listed in `android/.gitignore`; it never touches
+the Gradle files, the manifest or `res/`.
+
+**Never run `npx cap add android`.** It regenerates the project from the Capacitor
+template and silently deletes everything written on the native side. There is no
+`android:add` script any more, for that reason. A damaged folder is repaired with
+`git checkout -- android`, not by regenerating it.
+
+GitHub Actions (`.github/workflows/android.yml`) builds a debug APK on every push to
+`main` and on manual dispatch — use it instead of installing Android Studio. It runs
+`cap sync` on the committed project and fails if the sync leaves any diff under
+`android/`, so the project in the repo and the project that gets built cannot drift.
 
 There is **no test runner, linter or formatter** in the repo. See *Verifying changes*
 below for how work actually gets checked.
