@@ -34,19 +34,33 @@ jobs:
       - name: Web varlıklarını hazırla
         run: npm run www
 
-      # android/ depoda tutulmuyor; her derlemede Capacitor'ın güncel
-      # şablonundan sıfırdan üretiliyor. Yükseltmenin bütün native tarafı
-      # (AGP, Gradle wrapper, AndroidX, SDK sürümleri) buradan geliyor —
-      # elle yamanan bir native dosya yok.
-      - name: Android projesini oluştur
-        run: npx cap add android
-
+      # android/ artık depoda. Eskiden burada "cap add android" vardı ve proje
+      # her koşuda şablondan yeniden üretiliyordu; native tarafa yazılan hiçbir
+      # şey (imza, versionCode, manifest meta-data'sı, ikonlar) bir sonraki
+      # derlemeye kadar yaşayamıyordu. Artık yalnız senkronizasyon var: cap sync
+      # web varlıklarını ve üretilen dosyaları tazeler, gradle yapılandırmasına
+      # dokunmaz.
       - name: Senkronize et
         run: npx cap sync android
 
-      # Şablonun gerçekten beklenen SDK sürümlerini getirdiğini derlemeden
-      # önce doğrula: sessizce API 34'e düşmüş bir şablonla derlemek,
-      # Play'in 31 Ağustos 2026 sonrası reddettiği paketi üretmek olurdu.
+      # cap sync'in depodaki native projede kalıcı bir fark bırakmadığını kanıtla.
+      # Bıraksaydı, her CI koşusu commit'lenmemiş bir değişiklikle derliyor
+      # olurdu ve depodaki proje ile derlenen proje sessizce ayrışırdı.
+      - name: Native projede fark yok
+        run: |
+          git diff --exit-code -- android || {
+            echo "::error::cap sync android/ altında takipli dosyaları değiştirdi"; exit 1; }
+          UNTRACKED=$(git status --porcelain -uall -- android)
+          if [ -n "$UNTRACKED" ]; then
+            echo "::error::cap sync takip edilmeyen dosya bıraktı:"; echo "$UNTRACKED"; exit 1
+          fi
+          echo "android/ temiz"
+
+      # variables.gradle artık depoda, yani bu adım şablonu değil kendi
+      # dosyamızı denetliyor: elle düşürülmüş ya da yükseltme sırasında geri
+      # gelmiş bir sürüm, Play'in 31 Ağustos 2026 sonrası reddettiği paketi
+      # üretirdi. Kontrol derlemeden önce, çünkü asıl maliyet derlemek değil
+      # yanlış paketi yüklemek.
       - name: SDK sürümlerini doğrula
         run: |
           cat android/variables.gradle
@@ -109,6 +123,21 @@ jobs:
           grep -q 'android:targetSdkVersion="36"' "$M"
           grep -q 'android:minSdkVersion="24"' "$M"
 
+      # Bugün paket saf Java/Kotlin: lib/ altında tek bir .so yok. Bu, 64-bit ve
+      # 16 KB bellek sayfası şartlarının yapısal olarak karşılanmasının sebebi —
+      # Play'in kuralı native kodu olmayan uygulamaları zaten uyumlu sayıyor.
+      # Bir bağımlılık native kütüphane getirdiği gün bu adım düşer ve o gün
+      # ELF hizalamasının (align 2**14) ölçülmesi gerekir.
+      - name: dogrula-6-native-so-yok
+        run: |
+          unzip -l android/app/build/outputs/apk/debug/app-debug.apk > apk-list.txt
+          wc -l apk-list.txt
+          if grep -qE '\.so$| lib/' apk-list.txt; then
+            echo "::error::APK içinde beklenmeyen native kütüphane var"
+            grep -E '\.so$| lib/' apk-list.txt; exit 1
+          fi
+          echo "native kütüphane yok"
+
       - name: dogrulama-ciktilarini-yukle
         if: always()
         uses: actions/upload-artifact@v4
@@ -117,6 +146,7 @@ jobs:
           path: |
             badging.txt
             sdk-versions.txt
+            apk-list.txt
             android/variables.gradle
           if-no-files-found: warn
 
