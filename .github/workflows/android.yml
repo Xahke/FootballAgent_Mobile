@@ -5,7 +5,11 @@ name: Android build
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'upgrade/**']
+    # upgrade/** buraya Capacitor 8 yükseltmesi için eklenmişti: native tarafı
+    # değiştiren bir dal, main'e girmeden önce derlendiğini görmek zorunda.
+    # chore/** aynı gerekçeyle var — android/ projesinin kendisini taşıyan dal
+    # da o gruba giriyor.
+    branches: [main, 'upgrade/**', 'chore/**']
 
 jobs:
   apk:
