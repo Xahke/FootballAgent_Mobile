@@ -406,8 +406,13 @@ function knownLg(i){return i<0||(S.known||[]).includes(i);}
 function lgAvgStr(i){const ts=S.teams.filter(tm=>tm.lg===i);return ts.reduce((s,tm)=>s+tm.str,0)/ts.length;}
 function scoutCost(i){return Math.round((30+Math.max(0,lgAvgStr(i)-40)*12)*(1-clamp(skillBonus('scout'),0,0.6)));} // K
 function scoutPending(i){return (S.scout||[]).find(x=>x.lg===i);}
+/* Ajans adı boş bırakılırsa soyaddan türetiliyor. Tek ifade olarak burada
+   duruyor çünkü kurulum ekranı da bunu çağırıp kullanıcıya boş bıraktığında
+   ne yazılacağını önceden gösteriyor — iki yerde iki kopya olsaydı biri
+   düzeltilip diğeri unutulduğunda sessizce ayrışırlardı. */
+function agencyNameFor(ln,ag){return ag||(ln+(L==='tr'?' Menajerlik':' Management'));}
 function createAgent(fn,ln,nat,ag){
-  S.agent={fn,ln,nat,agency:ag||(ln+(L==='tr'?' Menajerlik':' Management'))};
+  S.agent={fn,ln,nat,agency:agencyNameFor(ln,ag)};
   const home=NAT2CTRY[nat]||'WAF';
   S.known=LEAGUES.map((l,i)=>l.ctry===home?i:-1).filter(i=>i>=0);
   /* keep leagues of any existing clients reachable (old saves) */

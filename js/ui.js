@@ -2819,7 +2819,149 @@ function fillNatSel(con){
     .sort((a,b)=>NATNAME[a][L].localeCompare(NATNAME[b][L],L));
   sel.innerHTML=list.map(n=>`<option value="${n}">${NATNAME[n][L]}</option>`).join('');
 }
+/* ================= SAHA: MENAJER OLUŞTURMA =================
+   Kapı diğer saha ekranlarıyla aynı desende (useSahaMarket/useSahaInbox/
+   useSahaTransfer): yalnız setupHtml() dallanıyor, diğer üç tema bugünkü formu
+   birebir kullanmaya devam ediyor.
+
+   Mekanik hiç değişmiyor. Ekran yine aynı beş alanı yazıyor — inp_fn, inp_ln,
+   sel_con, sel_nat, inp_ag — aynı id'ler ve aynı maxlength'lerle, çünkü
+   startCareer() onları id ile okuyor ve gövdesine dokunulmadı. Doğrulama da
+   orada kalıyor: düğme hiçbir zaman disabled değil, boşken basıldığında yine
+   fillName toast'ı çıkıyor. Değişen tek şey aynı verinin nasıl göründüğü.
+
+   İmza öğe: lisans kartı. Boşken kesik çizgili ve sönük, "Adını yaz" diyor; ad
+   ve soyad girildiği anda kart kendini düzenliyor — altın halka, siluet, ajans
+   satırı. Kariyerlerim ekranındaki .cmMain kartının aynı dili, çünkü kullanıcı
+   oraya bu kimlikle dönecek.
+
+   İkinci gerçek bilgi uyrukta. Oyunda uyruğun tek mekanik sonucu var:
+   createAgent() S.known'ı NAT2CTRY[nat] üzerinden dolduruyor, yani ilk günden
+   hangi ligleri tanıdığını uyruk belirliyor. Eski ekran bunu bir paragrafın
+   içinde saklıyordu; burada seçim değiştikçe gerçek lig adları yazılıyor. Yeni
+   bir mekanik değil, var olan satırın görünür hâli. */
+function useSahaSetup(){return themeOf()==='saha';}
+/* Uyruğun ilk günden açtığı ligler. createAgent()'ın S.known hesabıyla aynı
+   ifade — oradan kopyalanmadı, aynı iki veriyi okuyor ve S'ye ihtiyacı yok. */
+function setupKnownLgs(nat){
+  const home=NAT2CTRY[nat]||'WAF';
+  return LEAGUES.map((l,i)=>l.ctry===home?i:-1).filter(i=>i>=0);
+}
+function setupSahaHtml(){
+  const con=NCONTS.map(([c,nm])=>`<button type="button" class="mcConB${c===setupCon?' on':''}"
+    data-con="${c}" aria-pressed="${c===setupCon?'true':'false'}"
+    onclick="setupConPick('${c}')">${esc(nm[L])}</button>`).join('');
+  return `
+  <div class="mcWrap">
+    <div class="mcEye">${t('mcLic')}</div>
+    <div class="mcCard" id="mcCard">
+      <div class="mcCardTop">
+        <span class="mcAv" aria-hidden="true"><i id="mcIni">—</i><img class="mcAvImg"
+          src="assets/ui/agent-silhouette.webp" alt="" onerror="this.remove()"></span>
+        <div class="mcCardHi">
+          <div class="mcCardName ph" id="mcName">${t('mcNoName')}</div>
+          <div class="mcCardAg" id="mcAg"></div>
+        </div>
+      </div>
+      <div class="mcCardFoot">
+        <span class="mcNat" id="mcNat"></span><i></i>
+        <span class="mcLgN" id="mcLgN"></span>
+      </div>
+    </div>
+
+    <div class="mcEye mcEye2">${t('mcIdent')}</div>
+    <div class="mcPair">
+      <div class="mcF">
+        <label class="mcFL" for="inp_fn">${t('fname')}</label>
+        <input class="mcIn" id="inp_fn" maxlength="18" autocomplete="given-name"
+          autocapitalize="words" enterkeyhint="next" oninput="setupSync()">
+      </div>
+      <div class="mcF">
+        <label class="mcFL" for="inp_ln">${t('lname')}</label>
+        <input class="mcIn" id="inp_ln" maxlength="18" autocomplete="family-name"
+          autocapitalize="words" enterkeyhint="next" oninput="setupSync()">
+      </div>
+    </div>
+    <div class="mcF">
+      <label class="mcFL" for="inp_ag">${t('agencyN')}</label>
+      <input class="mcIn" id="inp_ag" maxlength="24" autocapitalize="words"
+        enterkeyhint="done" placeholder="—" oninput="setupSync()">
+    </div>
+
+    <div class="mcEye mcEye2">${t('mcHome')}</div>
+    <div class="mcCon" id="mcCon" role="group" aria-label="${esc(t('contL'))}">${con}</div>
+    <div class="mcF">
+      <label class="mcFL" for="sel_nat">${t('natL')}</label>
+      <select class="mcSel" id="sel_nat" onchange="setupSync()"></select>
+    </div>
+    <div class="mcKnown">
+      <div class="mcKnownL">${t('mcKnown')}</div>
+      <div class="mcKnownR" id="mcLgs"></div>
+    </div>
+    <p class="mcHint">${t('setupHint')}</p>
+
+    <div class="mcFoot">
+      <div class="mcMiss" id="mcMiss">${ICONS.alert}<span>${t('fillName')}</span></div>
+      <button class="mcGo" id="mcGo" aria-describedby="mcMiss"
+        onclick="startCareer()">${t('startBtn')}</button>
+      <button class="mcLang" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>
+    </div>
+  </div>`;
+}
+/* Kıta kayda girmiyor: yalnız uyruk listesini daraltıyor (setupCon, MKQ/SKTAB/
+   CAM gibi görünüm durumu). Bu yüzden çipler render() çağırmıyor — tam çizim
+   kullanıcının yazdığı adı silerdi; fillNatSel'in kendi yorumu da bunu söylüyor. */
+function setupConPick(c){
+  fillNatSel(c);
+  const row=document.getElementById('mcCon');
+  if(row)Array.prototype.forEach.call(row.children,b=>{
+    const on=b.getAttribute('data-con')===c;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+  setupSync();
+}
+/* Tek canlı güncelleme hunisi. trFin() ile aynı kural: render() ya da
+   setupHtml() çağırmıyor, ikisi de yazılanı silerdi — düğümleri yerinde
+   yamalıyor. Diğer üç tema bu ekranı çizmiyor, kapı en başta kapanıyor. */
+function setupSync(){
+  if(!useSahaSetup())return;
+  const g=id=>document.getElementById(id);
+  const fnEl=g('inp_fn'),lnEl=g('inp_ln'),agEl=g('inp_ag'),natEl=g('sel_nat');
+  if(!fnEl||!lnEl)return;
+  const fn=(fnEl.value||'').trim(),ln=(lnEl.value||'').trim();
+  const ag=agEl?(agEl.value||'').trim():'';
+  const nat=natEl?natEl.value:'';
+  /* startCareer()'ın koşulunun aynısı: ad ve soyad. Doğrulama orada duruyor,
+     burada yalnız aynı koşul görünür hâle geliyor. */
+  const ready=!!(fn&&ln);
+
+  const card=g('mcCard');if(card)card.classList.toggle('on',ready);
+  const nm=g('mcName');
+  if(nm){nm.textContent=ready?fn+' '+ln:t('mcNoName');nm.classList.toggle('ph',!ready);}
+  const ini=g('mcIni');
+  /* cmIni ile aynı hesap ve aynı dile duyarlı büyütme. */
+  if(ini)ini.textContent=ready?((fn[0]||'')+(ln[0]||'')).toLocaleUpperCase(L):'—';
+  const agn=g('mcAg');
+  if(agn)agn.textContent=ln?agencyNameFor(ln,ag):'';
+  /* Boş bırakılırsa ne yazılacağı yer tutucuda duruyor: kullanıcı tahmin etmesin. */
+  if(agEl)agEl.placeholder=ln?agencyNameFor(ln,''):'—';
+
+  const lgs=nat?setupKnownLgs(nat):[];
+  const natN=(nat&&NATNAME[nat])?NATNAME[nat][L]:'';
+  const nt=g('mcNat');if(nt)nt.textContent=natN;
+  const lc=g('mcLgN');if(lc)lc.textContent=lgs.length+' '+t('knownLbl');
+  const box=g('mcLgs');
+  if(box)box.innerHTML=lgs.map(i=>`<span class="mcLg">${esc(lgName(i))}</span>`).join('');
+
+  /* Düğme disabled DEĞİL: boşken de basılabiliyor ve startCareer() eksiği
+     söyleyen toast'ı gösteriyor. Görsel durum ve aria-describedby ile bağlı
+     satır, o toast'ı beklemeden aynı şeyi söylüyor. */
+  const go=g('mcGo');if(go)go.classList.toggle('ready',ready);
+  const miss=g('mcMiss');if(miss)miss.hidden=ready;
+}
 function setupHtml(){
+  if(useSahaSetup())return setupSahaHtml();
   return `
   <div class="hero" style="margin-top:10px">
     <div class="stripe" style="background:linear-gradient(180deg,var(--acc) 50%,#0a6b4f 50%)"></div>
@@ -2879,7 +3021,8 @@ function render(){
     document.getElementById('nav').innerHTML='';
     const vw0=document.getElementById('view');
     vw0.innerHTML=(VIEWS[c.v]||VIEWS.menu)(c.id);
-    if(c.v==='setup')fillNatSel();   // ülke listesi seçili kıtaya göre doldurulur
+    // ülke listesi seçili kıtaya göre doldurulur; lisans kartı ilk çizimde de senkron
+  if(c.v==='setup'){fillNatSel();setupSync();}
     if(vw0.classList){vw0.classList.remove('vin');void (vw0.offsetWidth||0);vw0.classList.add('vin');}
     const sig0='shell:'+c.v;
     if(sig0!==lastSig){lastSig=sig0;if(window.scrollTo)window.scrollTo(0,0);}

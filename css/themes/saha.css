@@ -2874,3 +2874,168 @@ h2.tfTtl{flex:1;min-width:0;font-family:var(--cond);font-size:22px;font-weight:9
 /* Klavye odağı görünür kalsın — olay ve kariyer ekranlarındaki desenin aynısı. */
 .tfX:focus-visible,.tfwGroup:focus-visible,.tfwB:focus-visible,.tfChip:focus-visible,
 .tfClub:focus-visible,.tfFoot .btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ===================== MENAJER OLUŞTURMA (yalnız saha) =====================
+   Diğer üç tema .hero / .card / .fitem / .finp / .fsel akışını kullanmaya devam
+   ediyor; o kuralların hiçbirine burada dokunulmuyor — bütün seçiciler mc önekli
+   ve yalnız bu blokta tanımlı.
+
+   Ekranın tezi: bu bir form değil, verilen bir lisans. Üstteki kart boşken
+   kesik çizgili ve mühürsüz; ad ile soyad girildiği an çerçeve kapanıyor,
+   siluet beliriyor ve ajans satırı yazılıyor. Tek gösterişli hareket bu — geri
+   kalan her şey sessiz kalıyor.
+
+   Altın burada "menajerin kendisi" demek: ana ekrandaki .hmAv ve Kariyerlerim
+   ekranındaki .cmAv aynı halkayı taşıyor. Yeşil eylem rengi, bu ekranda yalnız
+   iki yerde: tanınan ligler ve kariyeri başlatan düğme. Kırmızı yalnız eksik
+   alanda. Yeni bir renk eklenmiyor.
+
+   Menüde olduğu gibi alt gezinme yok; gövdenin çubuk için ayırdığı boşluk da
+   olmamalı, yoksa yapışkan alt çubuğun altında ölü alan kalıyor. */
+body[data-view="setup"]{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+body[data-view="setup"] main{padding-bottom:0}
+
+.mcWrap{padding-top:2px}
+
+/* --- bölüm başlıkları: .hmSect ile aynı ölçü, aynı daraltılmış yüz --- */
+.mcEye{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--txt3);margin:0 2px 8px;line-height:1.2}
+.mcEye2{margin-top:20px}
+
+/* --- imza öğe: lisans kartı ---
+   Boş hâli sahte bir önizleme değil: hiçbir alan yazılmadığında kart da yazısız
+   ve mühürsüz. "Adını yaz" bir yer tutucu metin değil, kartın o anki gerçek
+   içeriği — kullanıcının atması gereken adım. */
+.mcCard{position:relative;border-radius:20px;padding:15px 15px 0;
+  background:rgba(19,27,46,.42);border:1px dashed rgba(233,188,90,.26);
+  transition:background-color var(--tap),border-color var(--tap),box-shadow var(--tap)}
+.mcCard.on{border-style:solid;border-color:rgba(233,188,90,.34);
+  background:linear-gradient(152deg,#16223d 0%,#111a2e 62%,#0e1626 100%);
+  box-shadow:0 10px 26px -18px #000}
+.mcCardTop{display:flex;align-items:center;gap:13px}
+
+/* Baş harfler altta, siluet üstte — .cmAv / .hmAv ile birebir aynı davranış.
+   Görsel yüklenemezse onerror onu kaldırıyor ve harfler ortaya çıkıyor. */
+.mcAv{position:relative;flex-shrink:0;width:58px;height:58px;border-radius:16px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,#22304f,#151f36);
+  box-shadow:inset 0 0 0 1px rgba(233,188,90,.42)}
+.mcAv i{font-style:normal;font-family:var(--cond);font-weight:800;font-size:21px;
+  letter-spacing:-.02em;color:var(--gold)}
+.mcAvImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:50% 42%;opacity:0;filter:brightness(1.08) saturate(1.04);
+  transition:opacity .22s ease}
+.mcCard.on .mcAvImg{opacity:1}
+.mcCard.on .mcAv{box-shadow:inset 0 0 0 1px rgba(233,188,90,.62)}
+
+.mcCardHi{flex:1;min-width:0}
+/* Ad taşıyan metin tek satır + ellipsis: iki alan 18'er karakter alıyor ve
+   kırpma kartın yüksekliğini oynatmamalı (menü kartının kuralının aynısı). */
+.mcCardName{font-family:var(--cond);font-weight:900;font-size:25px;letter-spacing:-.03em;
+  line-height:1.25;text-transform:uppercase;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mcCardName.ph{color:var(--txt3);font-weight:700}
+.mcCardAg{font-size:12.5px;color:var(--txt2);margin-top:3px;min-height:16px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Kartın alt bandı uyruğun mekanik sonucunu taşıyor: kaç lig. Sayı yeşil çünkü
+   oyunun geri kalanında "tanınan lig" yeşil (keşif haritasındaki full durumu). */
+.mcCardFoot{display:flex;align-items:center;gap:9px;margin-top:13px;
+  padding:10px 0 12px;border-top:1px solid var(--line)}
+.mcCardFoot>i{width:1px;height:11px;background:var(--line2);flex:0 0 1px}
+.mcNat{font-size:12px;color:var(--txt2);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mcLgN{flex:0 0 auto;font-family:var(--cond);font-weight:700;font-size:12px;
+  letter-spacing:.03em;color:var(--acc)}
+
+/* --- alanlar --- */
+.mcPair{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mcF{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.mcPair .mcF{margin-bottom:10px}
+.mcFL{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);padding-left:2px;line-height:1.2}
+/* 16px: altına inen her değer iOS'ta odakta sayfayı yakınlaştırıyor. */
+.mcIn,.mcSel{width:100%;min-height:48px;background:var(--sur2);border:none;border-radius:13px;
+  padding:12px 13px;font-family:inherit;font-size:16px;font-weight:700;color:var(--txt);
+  box-shadow:inset 0 0 0 1px var(--line);
+  -webkit-appearance:none;appearance:none;transition:box-shadow var(--tap)}
+.mcIn::placeholder{color:var(--txt3);font-weight:600}
+.mcSel{padding-right:32px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a7b3c9' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center}
+.mcIn:focus,.mcSel:focus{outline:none;box-shadow:inset 0 0 0 1.5px var(--acc)}
+
+/* --- kıta şeridi ---
+   Kıta kayda girmiyor, yalnız uyruk listesini daraltıyor. Bu yüzden seçim
+   kutusu değil çip: aynı ağırlıkta iki açılır liste, biri gerçek sonucu olan
+   diğeri sadece filtre olan iki alanı eşit gösterirdi.
+   Kenara taşan yatay şerit .ibChips'in aynısı — son çip kesilmiş değil
+   "devam ediyor" görünsün diye ekran kenarına kadar kayıyor. */
+.mcCon{display:flex;gap:7px;margin:0 var(--gutter-neg) 12px;padding:0 var(--gutter);
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mcCon::-webkit-scrollbar{display:none}
+.mcConB{flex:0 0 auto;min-height:44px;padding:8px 15px;background:var(--sur2);
+  border:1px solid var(--line);border-radius:22px;color:var(--txt2);cursor:pointer;
+  white-space:nowrap;font-family:var(--cond);font-weight:700;font-size:13.5px;
+  letter-spacing:.05em;text-transform:uppercase;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap),border-color var(--tap)}
+.mcConB:active{transform:scale(.96)}
+.mcConB.on{background:var(--acc-soft);border-color:rgba(30,201,126,.4);color:var(--acc)}
+
+/* --- uyruğun gerçek sonucu --- */
+.mcKnown{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  padding:11px 12px;margin-bottom:10px;box-shadow:var(--sh)}
+.mcKnownL{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.2;margin-bottom:8px}
+.mcKnownR{display:flex;flex-wrap:wrap;gap:7px}
+.mcLg{display:inline-flex;align-items:center;padding:5px 11px;border-radius:11px;
+  background:var(--acc-soft);color:var(--acc);font-family:var(--cond);font-weight:700;
+  font-size:13px;letter-spacing:.02em;line-height:1.25;overflow-wrap:anywhere}
+.mcHint{font-size:11.5px;line-height:1.5;color:var(--txt3);margin:0 2px 4px}
+
+/* --- yapışkan alt eylem ---
+   .tfFoot ile aynı desen: kaydırma boyunca görünür kalıyor ve tam genişliğe
+   taşması için yan marjlar main dolgusu kadar negatif. Kariyeri başlatmak bu
+   ekranın tek işi; listenin sonuna inmek gerekmemeli. */
+/* Yumuşama payı piksel cinsinden veriliyor: yüzde verilince çubuk uzadıkça
+   saydam bölge de uzuyor ve altından kayan metin eksik alan satırının içinden
+   görünüyordu. 14px'lik kısa bir geçişten sonra zemin tamamen kapanıyor. */
+.mcFoot{position:sticky;bottom:0;z-index:3;margin:14px var(--gutter-neg) 0;
+  padding:16px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(11,17,30,0) 0,var(--bg) 14px,var(--bg) 100%)}
+/* Eksik alan satırı hem gözle hem aria-describedby ile düğmeye bağlı; toast'ı
+   beklemeden aynı şeyi söylüyor. Tamamlandığında hidden oluyor. */
+.mcMiss{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding:9px 12px;
+  border-radius:12px;background:var(--bad-soft);color:var(--bad);
+  font-size:12.5px;line-height:1.35}
+.mcMiss[hidden]{display:none}
+.mcMiss svg{width:17px;height:17px;flex:0 0 17px}
+/* Düğme hiçbir zaman disabled değil — boşken de basılıyor ve startCareer()
+   eksiği söylüyor. Sönük hâli "henüz hazır değil" diyor, "dokunulamaz" değil. */
+.mcGo{width:100%;min-height:54px;border:none;border-radius:15px;cursor:pointer;
+  font-family:var(--cond);font-weight:900;font-size:19px;letter-spacing:.03em;
+  text-transform:uppercase;background:var(--sur3);color:var(--txt3);
+  transition:background var(--tap),color var(--tap)}
+.mcGo.ready{background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5;box-shadow:0 10px 24px -18px #000}
+.mcGo:active{transform:scale(.985)}
+.mcLang{width:100%;min-height:44px;margin-top:9px;border:none;border-radius:13px;
+  background:none;color:var(--txt3);cursor:pointer;font-family:inherit;
+  font-size:13px;font-weight:700}
+.mcLang:active{transform:scale(.97)}
+
+/* Klavye odağı görünür kalsın — teklif ve kariyer ekranlarındaki desenin aynısı. */
+.mcConB:focus-visible,.mcGo:focus-visible,.mcLang:focus-visible,
+.mcIn:focus-visible,.mcSel:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* --- 360px: kart tipografisi ve çipler biraz daralıyor, hiçbir şey kırpılmıyor --- */
+@media (max-width:365px){
+  .mcCard{padding:13px 13px 0}
+  .mcCardName{font-size:23px}
+  .mcAv{width:54px;height:54px}
+  .mcPair{gap:8px}
+  .mcIn,.mcSel{padding:12px 11px}
+  .mcSel{padding-right:30px}
+  .mcConB{padding:8px 13px;font-size:13px}
+  .mcGo{font-size:18px}
+}
