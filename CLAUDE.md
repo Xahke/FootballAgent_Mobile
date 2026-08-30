@@ -694,6 +694,22 @@ The web app is deliberately *not* renamed: `manifest.json` and `index.html` stil
 word the game is written in. `Pro Football Agent` is the Android launcher label and the
 store name, nothing else. Don't "fix" the difference with a global replace.
 
-Signing keys (`*.jks`, `key.properties`) are gitignored; losing the keystore means the
-app can never be updated again. Ads are planned for the store release and are not
-implemented yet, so don't claim the app is ad-free.
+**Release signing is local only.** `android/keystore.properties` holds the four values
+(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) and is gitignored along with
+`*.jks`/`*.keystore`; only `android/keystore.properties.example` is committed. CI does
+not sign — GitHub Actions builds a debug APK and nothing else.
+
+The key is an **upload key**, not the distribution key: Play App Signing re-signs the
+bundle with Google's key, so losing this one is recoverable through a Play upload-key
+reset rather than fatal. Back it up anyway; the reset takes days.
+
+`android/app/build.gradle` reads that file at configuration time and, if any of the four
+values or the keystore file itself is missing, **fails the release task** instead of
+producing an unsigned bundle — a silent unsigned AAB looks like success and only breaks
+at the Play Console. The failure names the missing *field* and never prints a value:
+Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep working
+with no keystore at all, so don't "fix" that path by making the config mandatory.
+
+`versionCode` must increase on every Play upload; the same number cannot be uploaded
+twice. Ads are planned for the store release and are not implemented yet, so don't claim
+the app is ad-free.

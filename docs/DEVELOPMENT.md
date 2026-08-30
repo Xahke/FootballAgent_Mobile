@@ -96,17 +96,71 @@ npm run android:aab
 ```
 → `android/app/build/outputs/bundle/release/app-release.aab`
 
-Bu dosyanın **imzalanması** gerekir. En kolayı Android Studio:
-**Build → Generate Signed App Bundle** → yeni bir keystore oluştur.
-
-> İmza anahtarını (`.jks`) ve parolasını kaybetme. Kaybedersen aynı uygulamayı
-> bir daha güncelleyemezsin — yeni bir uygulama olarak yayınlamak zorunda kalırsın.
+Paket **imzalı çıkar** — nasıl olduğu bir alttaki bölümde.
 
 #### Kod değiştikçe
 ```
 npm run android:sync       # www'yi tazeler ve Android projesine kopyalar
 ```
 `android:apk` ve `android:aab` bunu zaten kendi içinde çalıştırıyor.
+
+### Release signing
+
+**Play App Signing kullanılıyor.** Yani kullanıcının telefonuna giden paketi
+Google kendi anahtarıyla imzalar. Bizdeki `.jks` bir **upload key**'dir; tek
+işi Play'e yükleyenin biz olduğumuzu kanıtlamak. İkisini karıştırma: dağıtım
+imzası Google'da, bu değil.
+
+#### Kurulum (makine başına bir kez)
+
+```
+cp android/keystore.properties.example android/keystore.properties
+```
+ve dört alanı doldur:
+
+| Alan | Ne |
+|---|---|
+| `storeFile` | `.jks` dosyasının **mutlak** yolu |
+| `storePassword` | keystore parolası |
+| `keyAlias` | anahtar takma adı |
+| `keyPassword` | anahtar parolası |
+
+İki tuzak:
+
+- **Yol ayıracı `/` olmalı.** Bu bir Java `.properties` dosyası ve ters bölü
+  kaçış karakteri sayılıyor — `C:\Users\...` sessizce yanlış okunur.
+- **Satır sonunda boşluk bırakma.** Parolaların sonundaki boşluk kırpılmıyor;
+  kırpsaydık bir kimlik bilgisini sessizce değiştirmiş olurduk.
+
+#### Neyin nerede durduğu
+
+- `.jks` dosyası **deponun dışında**, ayrı bir klasörde durur.
+- `android/keystore.properties` **yereldir ve `.gitignore`'dadır** — parolalar
+  depoya, loga ya da CI'a girmez. Depoda yalnız `.example` var.
+- CI'da release imzalama **kurulu değil**; GitHub Actions yalnız debug APK
+  üretiyor. Bu bilinçli: imzalı paket şimdilik yalnız bu makinede çıkıyor.
+- **Parolaları kimseyle paylaşma**, hiçbir sohbete/issue'ya/ekran görüntüsüne
+  yapıştırma.
+
+#### Eksikse ne olur
+
+`npm run android:aab` sessizce imzasız paket üretmez — açık bir hatayla durur
+ve **yalnız eksik alanın adını** söyler, değerini değil. Aynısı `storeFile`'ın
+gösterdiği dosya yoksa da geçerli. Keystore hiç kurulmamışsa debug derlemesi ve
+CI etkilenmez; kırılan yalnız release yoludur.
+
+#### Kaybetme
+
+Upload key'i **yedekle** (şifreli bir yedek + parolalar için parola yöneticisi).
+Play App Signing sayesinde kaybı ölümcül değil — Play'den upload key sıfırlaması
+istenebilir — ama bu günler süren bir destek süreci. Yedek bunu hiç yaşamamanın
+yolu.
+
+#### versionCode
+
+**Her Play yüklemesinde `versionCode` artmak zorunda.** Aynı numarayla ikinci bir
+paket yüklenemez. `android/app/build.gradle` içinde; bugün `versionCode 1`,
+`versionName "1.0.0"`.
 
 ### Uygulama kimliği
 `capacitor.config.json` kimliğin **tek kaynağı**:
