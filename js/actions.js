@@ -181,6 +181,11 @@ function openTransfer(pid){
   if(!buyers.length){openModal(`<h2>${t('offerClubs')}</h2><div class="empty">${t('noInterest')}</div>`);return;}
   const v=valueOf(p);
   trSel=new Set();trPid=pid;
+  /* Saha kendi teklif ekranını çiziyor (bkz. js/ui.js: trSahaOpen). Orası da
+     aynı beş alanı aynı id'lerle üretiyor (#feeR, #trPay, #trGb, #trSo, #trFix),
+     bu yüzden aşağıdaki trFin() ve submitOffers() iki yolda da aynı düğümleri
+     okuyor — diğer üç tema bu satırın altındaki işaretlemeyi aynen kullanıyor. */
+  if(useSahaTransfer()){trSahaOpen(p,buyers,v,free);trFin();return;}
   openModal(`
    <h2>${t('offerClubs')}</h2><div class="sub">${p.n} · ${free?t('faSub'):t('value')+': '+fmtM(v)}</div>
    <div class="sub" style="margin-top:6px">${t('pickClubs')}</div>
@@ -258,19 +263,25 @@ function trFin(){
   const fc=document.getElementById('trFixC');
   if(fc)fc.textContent=t('fixCostL')+': '+fmtK(fixCost)
     +(fixCost?' · '+fmtK(fixCostFor(p,fee))+' '+t('fixPerClub')+' × '+trSel.size:'');
+  /* Devre dışı düğmenin nedeni kendi yazısında — pfActsHtml ile aynı kural.
+     Kasa maliyete EŞİTKEN gönderim açık kalıyor, maliyet sıfırken de kasaya hiç
+     bakılmıyor — submitOffers() ile aynı iki kural. */
+  const short=fixCost>0&&fixCost>S.cash;
   const btn=document.getElementById('trBtn');
   if(btn){
-    /* Devre dışı düğmenin nedeni kendi yazısında — pfActsHtml ile aynı kural. */
-    const short=fixCost>0&&fixCost>S.cash;
     btn.disabled=trSel.size===0||short;
     btn.textContent=short?t('noCashBtn')+' · '+fmtK(fixCost)
                          :t('sendOffers')+(trSel.size?' ('+trSel.size+')':'');
   }
+  /* Saha temasının özet şeridi aynı fee/fixCost/short değerlerini yazıyor;
+     orada ikinci bir hesap yok (bkz. js/ui.js: trSahaFin). */
+  if(useSahaTransfer())trSahaFin(p,free,fee,fix,fixCost,short);
 }
 function trToggle(tid){
   if(trSel.has(tid))trSel.delete(tid);else trSel.add(tid);
   const el=document.getElementById('trk'+tid);
   if(el){el.className='trk'+(trSel.has(tid)?' on':'');el.textContent=trSel.has(tid)?'✓':'';}
+  if(useSahaTransfer())trSahaToggle(tid);
   trFin();
 }
 function submitOffers(pid){

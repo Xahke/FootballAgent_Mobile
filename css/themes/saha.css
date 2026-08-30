@@ -2660,3 +2660,217 @@ body[data-view="player"] .htitle .t2{display:none}
   .pfG5 .pfCell b{font-size:13px}
   .pfArrow svg{width:40px}
 }
+/* ===================== TEKLİF EKRANI (yalnız saha) =====================
+   Yalnız saha temasında çiziliyor (js/ui.js: useSahaTransfer). Diğer üç tema
+   .negbox / input[type=range] / .fgrid / .fsel / .pitem / .trk akışıyla bugünkü
+   teklif modalını aynen kullanmaya devam ediyor; buradaki bütün seçiciler tf /
+   tfw önekli ve bu blokta tanımlı, o kuralların hiçbirine dokunulmuyor.
+
+   Ekranın imzası tek bir öğe: ücret çarkı. Bonservis yatay bir çubuk değil,
+   ortasında okunan dikey bir sayaç — pazarlığın tek büyük sayısı orada duruyor.
+   Geri kalan her şey sessiz: seçim şeritleri, kulüp satırları ve alttaki özet
+   temanın kendi kart diliyle çiziliyor.
+
+   Ölçüler 360px genişlikte de taşmıyor: her sütun min-width:0, uzun ad taşıyan
+   her hücrede ya kırpma ya sarma var, dokunma hedefleri 44px'in altına inmiyor. */
+
+/* --- sheet başlığı --- */
+.tfTop{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+h2.tfTtl{flex:1;min-width:0;font-family:var(--cond);font-size:22px;font-weight:900;
+  letter-spacing:.05em;text-transform:uppercase;line-height:1.1;overflow-wrap:anywhere}
+/* Metinsiz ikon düğmesi — anlamı aria-label ve title taşıyor (.wrMute ile aynı
+   desen). Arka plana dokunmak da kapatıyor ama o klavyeye açık değil. */
+.tfX{flex:0 0 44px;width:44px;height:44px;padding:0;display:flex;align-items:center;
+  justify-content:center;border:none;border-radius:13px;background:none;color:var(--txt2);
+  box-shadow:inset 0 0 0 1px var(--line2);cursor:pointer;-webkit-appearance:none;appearance:none;
+  transition:background var(--tap),color var(--tap)}
+.tfX svg{width:19px;height:19px;display:block}
+.tfX:active{transform:scale(.94);background:var(--sur3);color:var(--txt)}
+
+/* --- kimlik kartı --- */
+.tfHead{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:16px;
+  background:linear-gradient(155deg,#182541 0%,#111a2e 55%,#0f1728 100%);box-shadow:var(--sh-el)}
+.tfAv{position:relative;flex:0 0 54px;width:54px;height:54px;display:flex}
+.tfAvImg{position:absolute;left:0;top:0;width:54px;height:54px;border-radius:14px;
+  object-fit:cover;display:block}
+/* Portre yüklenemezse onerror kendini siliyor; bitişik kardeş seçicisi köşe
+   rozetini de gizliyor ve geriye takım rozeti kalıyor (clAvatar ile aynı yol). */
+.tfAvTm{display:none}
+.tfAvImg+.tfAvTm{position:absolute;right:-3px;bottom:-3px;display:flex;padding:2px;
+  border-radius:7px;background:var(--sur);box-shadow:0 2px 6px rgba(3,7,15,.6)}
+.tfHT{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.tfName{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tfMeta{font-size:11.5px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tfRt{flex:0 0 46px;width:46px;height:46px;border-radius:13px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:linear-gradient(160deg,var(--sur3),var(--sur2));
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.tfRt b{font-size:19px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.tfRt em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:8px;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.tfRt.g b{color:var(--acc)}
+.tfRt.y b{color:var(--warn)}
+.tfRt.o b{color:var(--bad)}
+.tfPills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:9px 0 15px}
+.tfPill{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;min-height:46px;padding:7px 6px;border-radius:12px;background:var(--sur2);
+  box-shadow:inset 0 0 0 1px var(--line);text-align:center}
+.tfPill em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.1;
+  max-width:100%;overflow-wrap:anywhere}
+.tfPill b{font-size:13.5px;font-weight:800;line-height:1.15;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tfPill.g b{color:var(--acc)}
+.tfPill.w b{color:var(--warn)}
+
+/* --- bölüm başlıkları ve açıklamalar --- */
+.tfSectGap{margin-top:17px}
+.tfSect{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.tfSect .sect{flex:1;min-width:0;margin-bottom:0}
+.tfCount{flex:0 0 auto;font-family:var(--cond);font-weight:700;font-size:11px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt2);white-space:nowrap}
+.tfSub{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--txt2);margin:12px 0 7px}
+.tfHint{display:block;margin-top:8px;font-size:11.5px;line-height:1.5;color:var(--txt3);
+  overflow-wrap:anywhere}
+.tfCard{padding:13px;border-radius:var(--r-s);background:var(--bg2);
+  box-shadow:inset 0 0 0 1px var(--line)}
+.tfFree{display:flex;flex-direction:column;gap:0}
+.tfFreeT{font-family:var(--cond);font-weight:800;font-size:17px;letter-spacing:.05em;
+  text-transform:uppercase;line-height:1.1;color:var(--acc)}
+/* Komisyonu bir fona satılmış oyuncunun uyarısı — altın, çünkü söylediği şey
+   bir kayıp değil, geçmişte alınmış bir para. */
+.tfNote{display:flex;gap:9px;margin-top:10px;padding:11px 12px;border-radius:12px;
+  background:var(--gold-soft);box-shadow:inset 0 0 0 1px rgba(233,188,90,.28);
+  font-size:12px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+.tfNote svg{flex:0 0 18px;width:18px;height:18px;margin-top:1px;color:var(--gold)}
+
+/* --- ücret çarkı ---
+   --tfwh ile js/ui.js'teki TFW_H aynı sayı olmak zorunda; ikisi birlikte
+   değişir. Görünen beş basamağın ortadaki seçili değer. */
+.tfwRow{--tfwh:36px;display:flex;align-items:center;gap:10px}
+/* touch-action:none: bu kutuda dikey sürükleme çarkın işi, sheet'in kaydırması
+   değeri kıpırdatamaz. Sheet'in geri kalanı normal kayıyor, çark 116px'lik dar
+   bir sütun — kaydırmak için dokunulacak yer bol. Eşik altındaki dokunuş da
+   değeri değiştirmiyor (bkz. trwMove). */
+.tfwGroup{position:relative;flex:1;min-width:0;display:flex;align-items:center;
+  justify-content:center;gap:7px;height:calc(var(--tfwh)*5);border-radius:14px;
+  touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.tfwGroup.drag{cursor:grabbing}
+/* Okuma bandı: seçili değer burada. Sol kenardaki ince çubuk temanın kendi
+   işareti (.sect ve .evOpt de aynı çizgiyi kullanıyor). */
+.tfwBand{position:absolute;left:0;right:0;top:50%;height:calc(var(--tfwh) + 10px);
+  transform:translateY(-50%);border-radius:12px;background:var(--sur3);
+  box-shadow:inset 0 0 0 1px rgba(30,201,126,.34);pointer-events:none}
+.tfwBand::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--acc)}
+.tfwView{position:relative;z-index:1;flex:0 0 116px;width:116px;height:100%;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 27%,#000 73%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 27%,#000 73%,transparent 100%)}
+.tfwTrack{display:block;will-change:transform}
+.tfwI{display:flex;align-items:center;justify-content:center;height:var(--tfwh);
+  font-family:var(--cond);font-style:normal;font-weight:700;font-size:18px;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--txt3)}
+.tfwI.on{font-size:27px;font-weight:800;letter-spacing:-.01em;color:var(--txt)}
+/* Birim bandın yanında sabit duruyor: her basamağın altına "M €" yazmak
+   yüz kere aynı şeyi tekrarlamak olurdu. */
+.tfwUnit{position:relative;z-index:1;flex:0 0 auto;font-family:var(--cond);font-weight:700;
+  font-size:15px;letter-spacing:.05em;color:var(--txt2)}
+.tfwBtns{flex:0 0 46px;display:flex;flex-direction:column;gap:7px}
+.tfwB{width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;
+  border:none;border-radius:13px;background:var(--sur3);color:var(--txt);cursor:pointer;
+  -webkit-appearance:none;appearance:none;transition:background var(--tap)}
+.tfwB svg{width:20px;height:20px;display:block}
+.tfwB:active{transform:scale(.94);background:var(--sur4)}
+.tfwHint{text-align:center;margin-top:7px}
+.tfFeeTop{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.tfFeeL{flex:1;min-width:0;font-family:var(--cond);font-weight:700;font-size:12px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Piyasa değerinin kaç katını istediğin — pazarlığın tek türetilmiş sayısı,
+   bonservis ile değerin bölümünden başka bir şey değil. */
+.tfMult{flex:0 0 auto;padding:3px 9px;border-radius:8px;background:var(--sur3);color:var(--txt2);
+  font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.04em}
+
+/* --- seçim şeritleri --- */
+.tfChips{display:flex;flex-wrap:wrap;gap:7px}
+.tfOps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.tfChip{position:relative;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;min-width:44px;min-height:44px;padding:6px 12px;border:none;border-radius:12px;
+  background:var(--sur2);color:var(--txt2);font-family:inherit;cursor:pointer;
+  -webkit-appearance:none;appearance:none;box-shadow:inset 0 0 0 1px var(--line);
+  transition:background var(--tap),color var(--tap)}
+.tfChipT{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.04em;
+  line-height:1.1;white-space:nowrap}
+.tfChipS{font-family:var(--cond);font-weight:700;font-size:9.5px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1.1;color:var(--txt3);white-space:nowrap}
+.tfChip:active{transform:scale(.96)}
+/* Seçili durum yalnız renkle anlatılmıyor: köşedeki nokta da geliyor. */
+.tfChip.on{background:var(--acc-soft);color:var(--acc);box-shadow:inset 0 0 0 1.5px rgba(30,201,126,.5)}
+.tfChip.on .tfChipS{color:var(--acc)}
+.tfChip.on::after{content:'';position:absolute;top:5px;right:5px;width:6px;height:6px;
+  border-radius:50%;background:var(--acc)}
+.tfOps .tfChip{min-height:58px;padding:8px 6px;gap:4px}
+.tfOps .tfChipT{font-size:13.5px;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.tfOps .tfChipS{font-size:13.5px;font-weight:800;letter-spacing:.01em;text-transform:none;
+  color:var(--txt2)}
+.tfOps .tfChip.on .tfChipS{color:var(--acc)}
+
+/* --- alıcı kulüpler --- */
+.tfClubHint{margin-top:0;margin-bottom:9px}
+/* Operasyon dökümü boşken hiç yer kaplamasın. */
+.tfFixC:empty{display:none}
+.tfClubs{display:flex;flex-direction:column;gap:8px}
+.tfClub{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:9px 12px;
+  border:none;border-radius:14px;background:var(--sur);text-align:left;cursor:pointer;
+  color:inherit;font:inherit;-webkit-appearance:none;appearance:none;box-shadow:var(--sh);
+  transition:background var(--tap)}
+.tfClub:active{transform:scale(.985)}
+.tfClubMark{flex:0 0 24px;width:24px;height:24px;display:flex;align-items:center;
+  justify-content:center;border-radius:8px;background:var(--sur3);color:transparent;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.tfClubMark svg{width:15px;height:15px;display:block}
+.tfClubCrest{flex:0 0 auto;display:flex}
+.tfClubT{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tfClubN{font-size:14px;font-weight:700;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tfClubS{font-size:11px;color:var(--txt3);line-height:1.2;font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Seçili kulüp: kutu doluyor ve içindeki onay işareti görünür oluyor —
+   aria-pressed hem ekran okuyucunun hem bu kuralın tek kaynağı. */
+.tfClub[aria-pressed="true"]{background:linear-gradient(90deg,rgba(30,201,126,.10),var(--sur) 62%);
+  box-shadow:var(--sh),inset 0 0 0 1.5px rgba(30,201,126,.42)}
+.tfClub[aria-pressed="true"] .tfClubMark{background:var(--acc);color:var(--accT);box-shadow:none}
+
+/* --- teklif özeti ---
+   Kaydırma boyunca görünür kalıyor: teklifin her kalemi paraya dokunuyor ve
+   sonucunu görmek için listenin sonuna inmek gerekmemeli. Tam genişliğe taşması
+   için yan marjlar sheet dolgusu kadar negatif (.wrFoot ile aynı desen). */
+.tfFoot{position:sticky;bottom:0;z-index:3;margin:15px -16px 0;
+  padding:11px 16px calc(6px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(19,27,46,0) 0,var(--sur) 22%,var(--sur) 100%)}
+.tfSum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;
+  background:var(--line);border-radius:12px;overflow:hidden}
+.tfSumC{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;min-height:46px;padding:7px 6px;background:var(--bg2);text-align:center}
+.tfSumC em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:9.5px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);line-height:1.1;
+  max-width:100%;overflow-wrap:anywhere}
+.tfSumC b{font-size:14px;font-weight:800;line-height:1.15;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Kasa maliyeti karşılamıyor. Renk tek başına yeterli değil, etiketin önüne
+   bir uyarı işareti de geliyor; nedeni ayrıca düğmenin yazısında duruyor. */
+.tfSumC.short b{color:var(--bad)}
+.tfSumC.short em::before{content:'!';display:inline-block;width:11px;height:11px;margin-right:4px;
+  border-radius:50%;background:var(--bad);color:#fff;font-size:8px;font-weight:800;line-height:11px;
+  text-align:center;vertical-align:1px}
+.tfSumN{margin:7px 2px 9px;font-size:11px;line-height:1.4;color:var(--txt3);text-align:center;
+  overflow-wrap:anywhere}
+.tfFoot .btn{margin:0;min-height:48px}
+/* Gönderilemeyen teklif birincil eylem gibi görünmemeli: düğme sönüyor ve
+   nedenini kendi yazısında taşıyor (kulüp seçilmedi / kasa yetersiz). */
+.tfFoot .btn.p:disabled{background:var(--sur3);color:var(--txt3);box-shadow:none;opacity:1}
+
+/* Klavye odağı görünür kalsın — olay ve kariyer ekranlarındaki desenin aynısı. */
+.tfX:focus-visible,.tfwGroup:focus-visible,.tfwB:focus-visible,.tfChip:focus-visible,
+.tfClub:focus-visible,.tfFoot .btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}

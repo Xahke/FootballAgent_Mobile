@@ -3309,3 +3309,405 @@ function setLangTo(lc){
   if(S){S.lang=lc;save();}
   render();
 }
+/* ================= SAHA: TEKLİF EKRANI =================
+   Kapı diğer saha ekranlarıyla aynı desende (useSahaMarket/useSahaLeague/
+   useSahaSkills/useSahaInbox/useSahaPlayerProfile): yalnız openTransfer()
+   dallanıyor, geri kalan üç tema bugünkü teklif modalını harfi harfine
+   kullanmaya devam ediyor ve buradaki hiçbir sınıf oraya ulaşmıyor.
+
+   Mekanik hiç değişmiyor. Ekranın okuduğu ve yazdığı alanlar eskisiyle aynı beş
+   düğüm: #feeR (bonservis, onda bir milyon cinsinden), #trPay, #trGb, #trSo,
+   #trFix. Saha'da bunlar <input type=range>/<select> yerine gizli
+   <input type=hidden>; değerleri aynı birimde ve aynı id'lerde duruyor, bu
+   yüzden submitOffers() ile trFin()'in gövdesi bir satır bile değişmedi. Çark
+   yalnız bir giriş yöntemi: #feeR.value'yu yazıyor, sonra trFin()'i çağırıyor. */
+function useSahaTransfer(){return themeOf()==='saha';}
+
+/* Çizim dili ICONS/SK_ICON/IB_ACT_ICON/EV_ICON ile birebir aynı:
+   24x24 kutu, fill yok, currentColor, 1.8 kalınlık, yuvarlak uç. */
+const TF_ICON={
+  close:'<path d="M6.6 6.6l10.8 10.8"/><path d="M17.4 6.6L6.6 17.4"/>',
+  plus :'<path d="M12 5.8v12.4"/><path d="M5.8 12h12.4"/>',
+  minus:'<path d="M5.8 12h12.4"/>',
+  check:'<path d="M5.2 12.4l4.4 4.4 9.2-9.6"/>',
+  warn :'<path d="M12 4.6l8.4 14.6H3.6z"/><path d="M12 10.1v4"/><path d="M12 16.6v.2"/>'
+};
+function tfSvg(d,cls){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'+
+         ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"'+
+         (cls?' class="'+cls+'"':'')+'>'+d+'</svg>';
+}
+/* Azaltılmış hareket tercihi: derlenmiş stil zaten bütün CSS geçişlerini
+   kapatıyor, ama çarkın yerine oturma animasyonu JS'te — onu da kapatıyoruz. */
+function tfReduce(){
+  return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+/* ---------- ücret çarkı ----------
+   Basamak yüksekliği CSS'teki --tfwh ile aynı olmak zorunda; ikisi birlikte
+   değişir. Görünen beş basamağın ortadaki seçili değer.
+
+   Liste sanal: bonservis aralığı oyuncunun değerine bağlı (0.7×–1.8×, adım
+   0.1M) ve yıldız bir oyuncuda binlerce adım ediyor. Her adım için düğüm
+   üretmek yerine seçili değerin çevresinde TFW_WIN kadar basamak çiziliyor,
+   pencere kenara yaklaşınca yeniden kuruluyor. Konum her zaman GLOBAL indekste
+   (TFW.pos) tutuluyor; pencere yalnız bir çizim ayrıntısı. */
+const TFW_H=36, TFW_VIS=5, TFW_WIN=60, TFW_EDGE=22;
+let TFW=null;
+let TFW_HOLD=0, TFW_TMO=0;
+
+function trwNum(k){return (k/10).toFixed(1).replace(/\.0$/,'');}
+function trwItems(w0,wn,cur){
+  let h='';
+  for(let i=0;i<wn;i++)h+='<i class="tfwI'+(w0+i===cur?' on':'')+'">'+trwNum(TFW.min+w0+i)+'</i>';
+  return h;
+}
+/* Pencereyi seçili değerin çevresine kurar. Yalnız gerektiğinde yeniden
+   yazıyor: sürüklemenin her karesinde innerHTML üretmek boşuna iş olurdu. */
+function trwWin(pos){
+  const n=TFW.n, wn=Math.min(n,TFW_WIN*2+1);
+  if(TFW.w0!==null){
+    const lo=TFW.w0, hi=TFW.w0+TFW.wn-1;
+    if((pos-lo>TFW_EDGE||lo===0)&&(hi-pos>TFW_EDGE||hi===n-1))return;
+  }
+  const w0=clamp(Math.round(pos)-TFW_WIN,0,Math.max(0,n-wn));
+  TFW.w0=w0;TFW.wn=wn;
+  TFW.track.innerHTML=trwItems(w0,wn,TFW.i);
+}
+function trwStopGlide(){if(TFW&&TFW.raf){cancelAnimationFrame(TFW.raf);TFW.raf=0;}}
+function trwNow(){return (window.performance&&performance.now)?performance.now():Date.now();}
+
+/* Seçili basamak değişti: gizli girdi, erişilebilirlik değerleri, kat pili
+   ve finans satırları. trFin() buradan çağrılıyor — render() ya da
+   openTransfer() DEĞİL; onlar alıcı listesini yeniden çeker ve trSel'i
+   sıfırlardı (bkz. js/actions.js, trFin başındaki not). */
+function trwSync(){
+  const k=TFW.min+TFW.i, fee=k/10;
+  TFW.inp.value=k;
+  TFW.el.setAttribute('aria-valuenow',k);
+  TFW.el.setAttribute('aria-valuetext',fmtM(fee));
+  if(TFW.mult)TFW.mult.textContent='×'+(TFW.v>0?(fee/TFW.v).toFixed(1):'1');
+  trFin();
+}
+function trwApply(i){
+  if(TFW.i===i)return;
+  const prev=TFW.track.children[TFW.i-TFW.w0];
+  if(prev&&prev.classList)prev.classList.remove('on');
+  TFW.i=i;
+  const cur=TFW.track.children[i-TFW.w0];
+  if(cur&&cur.classList)cur.classList.add('on');
+  trwSync();
+}
+/* pos kesirli olabilir (sürükleme ve yerine oturma sırasında). rubber=true iken
+   sınırların dışına lastikli bir direnç veriliyor; DEĞER yine de asla min/max
+   dışına çıkmıyor — taşan yalnız görüntü. */
+function trwSetPos(pos,rubber){
+  const n=TFW.n;
+  let p=pos;
+  if(p<0)p=rubber?p*0.28:0;
+  else if(p>n-1)p=rubber?(n-1)+(p-(n-1))*0.28:n-1;
+  TFW.pos=p;
+  trwWin(p);
+  TFW.track.style.transform='translateY('+(((TFW_VIS-1)/2-(p-TFW.w0))*TFW_H)+'px)';
+  trwApply(clamp(Math.round(p),0,n-1));
+}
+function trwSettle(i,animate){
+  if(!TFW)return;
+  trwStopGlide();
+  const target=clamp(Math.round(i),0,TFW.n-1);
+  if(!animate||tfReduce()){trwSetPos(target,false);return;}
+  const from=TFW.pos, t0=trwNow(), dur=Math.min(420,150+Math.abs(target-from)*13);
+  const step=function(){
+    let k=(trwNow()-t0)/dur;
+    if(k>1)k=1;
+    trwSetPos(from+(target-from)*(1-Math.pow(1-k,3)),false);
+    TFW.raf=k<1?requestAnimationFrame(step):0;
+  };
+  TFW.raf=requestAnimationFrame(step);
+}
+function trwStep(d){if(TFW)trwSettle(TFW.i+d,false);}
+/* ± düğmeleri: basılı tutunca tekrarlıyor. Yüz adımı aşan bir aralıkta uçlara
+   yalnız sürükleyerek gitmek çok uzun sürüyor; klavyedeki Home/End'in
+   dokunmatik karşılığı bu. event.detail===0 klavyeyle üretilmiş tıklama
+   demek — pointerdown zaten adımladığı için orada ikinci kez saymıyoruz. */
+function trwHold(d){
+  trwStep(d);
+  clearTimeout(TFW_TMO);clearInterval(TFW_HOLD);
+  TFW_TMO=setTimeout(function(){TFW_HOLD=setInterval(function(){trwStep(d);},70);},380);
+}
+function trwRelease(){clearTimeout(TFW_TMO);clearInterval(TFW_HOLD);TFW_HOLD=0;}
+function trwDown(e){
+  if(!TFW)return;
+  trwStopGlide();
+  TFW.drag={id:e.pointerId,y0:e.clientY,pos0:TFW.pos,moved:false};
+  TFW.lastY=e.clientY;TFW.lastT=e.timeStamp||trwNow();TFW.vel=0;
+  try{TFW.el.setPointerCapture(e.pointerId);}catch(_){}
+  TFW.el.classList.add('drag');
+}
+function trwMove(e){
+  const d=TFW&&TFW.drag;
+  if(!d||e.pointerId!==d.id)return;
+  const dy=e.clientY-d.y0;
+  /* Eşik altındaki kıpırdama değeri değiştirmiyor: parmağını koyup kaldırmak
+     çarkı oynatmamalı. */
+  if(!d.moved&&Math.abs(dy)<4)return;
+  d.moved=true;
+  const now=e.timeStamp||trwNow(), dt=Math.max(1,now-TFW.lastT);
+  TFW.vel=(e.clientY-TFW.lastY)/dt;
+  TFW.lastY=e.clientY;TFW.lastT=now;
+  trwSetPos(d.pos0-dy/TFW_H,true);
+}
+function trwUp(e){
+  const d=TFW&&TFW.drag;
+  if(!d||e.pointerId!==d.id)return;
+  TFW.drag=null;
+  TFW.el.classList.remove('drag');
+  try{TFW.el.releasePointerCapture(e.pointerId);}catch(_){}
+  if(!d.moved){trwSettle(TFW.i,false);return;}
+  const fling=tfReduce()?0:clamp(-TFW.vel*150/TFW_H,-24,24);
+  trwSettle(TFW.pos+fling,true);
+}
+/* Fare tekerleği: bir çentik bir adım. Sayfa kaymasın diye preventDefault —
+   dinleyici bu yüzden passive değil (bkz. trwMount). Touchpad'in küçük
+   artışları birikiyor; tek olayda en çok üç adım. */
+function trwWheel(e){
+  if(!TFW)return;
+  e.preventDefault();
+  TFW.acc=(TFW.acc||0)+e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?TFW_H*TFW_VIS:1);
+  const s=TFW.acc/TFW_H;
+  const n=s<0?Math.ceil(s):Math.floor(s);
+  if(!n)return;
+  TFW.acc-=n*TFW_H;
+  trwSettle(TFW.i+clamp(n,-3,3),false);
+}
+function trwKey(e){
+  if(!TFW)return;
+  const k=e.key;
+  let d=0,abs=null;
+  if(k==='ArrowUp'||k==='ArrowRight')d=1;
+  else if(k==='ArrowDown'||k==='ArrowLeft')d=-1;
+  else if(k==='PageUp')d=10;
+  else if(k==='PageDown')d=-10;
+  else if(k==='Home')abs=0;
+  else if(k==='End')abs=TFW.n-1;
+  else return;
+  e.preventDefault();
+  trwSettle(abs===null?TFW.i+d:abs,false);
+}
+/* Çarkın işaretlemesi. Gizli #feeR eski <input type=range> ile aynı sözleşmeyi
+   taşıyor: onda bir milyon cinsinden tam sayı, min/max/adım değişmedi. */
+function trwHtml(min,max,val,lab){
+  return '<div class="tfwRow">'
+    +'<div class="tfwGroup" id="tfwGroup" role="spinbutton" tabindex="0"'
+    +' aria-label="'+esc(lab)+'"'
+    +' aria-valuemin="'+min+'" aria-valuemax="'+max+'" aria-valuenow="'+val+'"'
+    +' aria-valuetext="'+esc(fmtM(val/10))+'"'
+    +' onpointerdown="trwDown(event)" onpointermove="trwMove(event)"'
+    +' onpointerup="trwUp(event)" onpointercancel="trwUp(event)" onkeydown="trwKey(event)">'
+    +'<span class="tfwBand" aria-hidden="true"></span>'
+    +'<span class="tfwView" aria-hidden="true"><span class="tfwTrack" id="tfwTrack"></span></span>'
+    +'<span class="tfwUnit" aria-hidden="true">M €</span>'
+    +'</div>'
+    +'<span class="tfwBtns">'
+    +'<button type="button" class="tfwB" aria-label="'+esc(t('trFeeUp'))+'" title="'+esc(t('trFeeUp'))+'"'
+    +' onpointerdown="trwHold(1)" onpointerup="trwRelease()" onpointerleave="trwRelease()"'
+    +' onpointercancel="trwRelease()" onclick="if(!event.detail)trwStep(1)">'+tfSvg(TF_ICON.plus)+'</button>'
+    +'<button type="button" class="tfwB" aria-label="'+esc(t('trFeeDown'))+'" title="'+esc(t('trFeeDown'))+'"'
+    +' onpointerdown="trwHold(-1)" onpointerup="trwRelease()" onpointerleave="trwRelease()"'
+    +' onpointercancel="trwRelease()" onclick="if(!event.detail)trwStep(-1)">'+tfSvg(TF_ICON.minus)+'</button>'
+    +'</span></div>'
+    +'<input type="hidden" id="feeR" value="'+val+'">';
+}
+/* openModal() #sheet.innerHTML'i tümüyle değiştiriyor, yani her açılışta
+   düğümler yeni. Harita ekranındaki mapMount() ile aynı gerekçe: dinleyiciler
+   ve modül durumu çizimden sonra, burada kuruluyor. */
+function trwMount(min,max,val,v){
+  const el=document.getElementById('tfwGroup');
+  const track=document.getElementById('tfwTrack');
+  const inp=document.getElementById('feeR');
+  if(!el||!track||!inp){TFW=null;return;}
+  TFW={min:min,max:max,n:max-min+1,v:v,el:el,track:track,inp:inp,
+       mult:document.getElementById('tfMult'),
+       i:clamp(val-min,0,max-min),pos:0,w0:null,wn:0,drag:null,raf:0,vel:0,acc:0,lastY:0,lastT:0};
+  TFW.pos=TFW.i;
+  trwWin(TFW.pos);
+  TFW.track.style.transform='translateY('+(((TFW_VIS-1)/2-(TFW.pos-TFW.w0))*TFW_H)+'px)';
+  el.addEventListener('wheel',trwWheel,{passive:false});
+  trwSync();
+}
+
+/* ---------- seçim şeritleri ----------
+   Ödeme planı, ek maddeler ve operasyon: eskiden <select>, şimdi seçeneklerin
+   hepsi bir arada duran düğmeler. Telefonda açılır liste her seferinde bir
+   dokunuş daha istiyor ve karşılaştırmayı gizliyordu; burada üç kademenin
+   kabul etkisi (+%8 / +%18) aynı anda okunuyor. Değer yine gizli girdide ve
+   aynı id'de, submitOffers() değişmedi. */
+function trSahaPick(id,val,btn){
+  const inp=document.getElementById(id);
+  if(!inp)return;
+  inp.value=val;
+  const par=btn.parentNode,ch=par?par.children:[];
+  for(let i=0;i<ch.length;i++){
+    const on=ch[i]===btn;
+    if(ch[i].classList)ch[i].classList.toggle('on',on);
+    if(ch[i].setAttribute)ch[i].setAttribute('aria-pressed',on?'true':'false');
+  }
+  trFin();
+}
+function tfChips(id,val,opts,label,cls){
+  return '<input type="hidden" id="'+id+'" value="'+val+'">'
+    +'<div class="'+(cls||'tfChips')+'" role="group" aria-label="'+esc(label)+'">'
+    +opts.map(function(o){
+      const on=o.v===val;
+      return '<button type="button" class="tfChip'+(on?' on':'')+'" aria-pressed="'+(on?'true':'false')+'"'
+        +' onclick="trSahaPick(\''+id+'\','+o.v+',this)">'
+        +'<span class="tfChipT">'+o.l+'</span>'
+        +(o.s?'<span class="tfChipS">'+o.s+'</span>':'')+'</button>';
+    }).join('')+'</div>';
+}
+/* Kulüp satırının seçili olup olmadığı aria-pressed'te: hem ekran okuyucunun
+   hem CSS'in tek kaynağı bu, böylece durum yalnız renkle anlatılmıyor —
+   işaret kutusu da doluyor. Seçim kümesini yine trToggle() tutuyor. */
+function trSahaToggle(tid){
+  const b=document.getElementById('tfClub'+tid);
+  if(b)b.setAttribute('aria-pressed',trSel.has(tid)?'true':'false');
+}
+function trSahaClub(p,b){
+  return '<button type="button" class="tfClub" id="tfClub'+b.id+'" aria-pressed="false"'
+    +' onclick="trToggle('+b.id+')">'
+    +'<span class="tfClubMark" aria-hidden="true">'+tfSvg(TF_ICON.check)+'</span>'
+    +'<span class="tfClubCrest">'+tmBadge(b,34)+'</span>'
+    +'<span class="tfClubT"><span class="tfClubN">'+esc(b.n)+'</span>'
+    +'<span class="tfClubS">'+esc(lgName(b.lg))+' · #'+teamPos(b.id)+' · '+t('wage')
+    +' ~'+fmtK(Math.round(marketWage(p.r)*(0.9+b.bud*0.3)))+'/'+t('wk')+'</span></span></button>';
+}
+/* Müşteri kartındaki clAvatar() ile aynı fikir ve aynı yedek: portre
+   yüklenemezse onerror kendini siliyor, altında zaten duran kulüp rozeti
+   kalıyor; bitişik kardeş seçicisi köşe rozetini de gizliyor. */
+function tfAvatar(p,tm){
+  return '<span class="tfAv">'+tmBadge(tm,54)
+    +'<img class="tfAvImg" src="'+portraitOf(p.id)+'" alt="" aria-hidden="true" width="54" height="54"'
+    +' decoding="async" onerror="this.remove()"><span class="tfAvTm">'+tmBadge(tm,18)+'</span></span>';
+}
+function trSahaOpen(p,buyers,v,free){
+  const tm=teamOf(p);
+  /* Eski yatay slider'ın sözleşmesi: min 0.7×, max 1.8×, açılış 1.0× —
+     hepsi onda bir milyon cinsinden tam sayı. */
+  const min=Math.round(v*7);
+  const max=Math.max(min,Math.round(v*18));
+  const def=clamp(Math.round(v*10),min,max);
+  const head='<div class="tfTop"><h2 class="tfTtl">'+t('offerClubs')+'</h2>'
+    +'<button type="button" class="tfX" aria-label="'+esc(t('trClose'))+'" title="'+esc(t('trClose'))+'"'
+    +' onclick="closeModal()">'+tfSvg(TF_ICON.close)+'</button></div>'
+    +'<div class="tfHead">'+tfAvatar(p,tm)
+    /* Kulüpsüz oyuncuda takım adı FREETM.n, yani bir tire — mevkiden sonra
+       yarım kalmış bir satır olurdu. Onun yerine durumun kendisi yazıyor. */
+    +'<span class="tfHT"><span class="tfName">'+esc(p.n)+'</span>'
+    +'<span class="tfMeta">'+POSFULL[L][p.pos]+' · '+(free?t('faShort'):esc(tm.n))+'</span></span>'
+    +'<span class="tfRt '+rtClass(p.r)+'"><b class="num">'+p.r+'</b><em>'+t('rating')+'</em></span>'
+    +'</div>'
+    +'<div class="tfPills">'
+    +'<span class="tfPill"><em>'+t('age')+'</em><b class="num">'+p.age+'</b></span>'
+    +(free?'<span class="tfPill w"><em>'+t('contract')+'</em><b>'+t('faShort')+'</b></span>'
+          :'<span class="tfPill"><em>'+t('contract')+'</em><b class="num">'+p.yrs+' '+t('yrs')+'</b></span>')
+    +'<span class="tfPill'+(free?'':' g')+'"><em>'+t('value')+'</em><b class="num">'+fmtM(v)+'</b></span>'
+    +'</div>';
+
+  /* Bonservissiz oyuncuda çark yok: kulüpler arasında ödenecek bir bedel de
+     yok. Kartın söylediği tek şey bu ve komisyonun nereden geleceği. */
+  const feeCard=free
+    ? '<div class="sect">'+t('askFee')+'</div>'
+      +'<div class="tfCard tfFree"><b class="tfFreeT">'+t('freeFee')+'</b>'
+      +'<span class="tfHint">'+t('faDealHint')+'</span></div>'
+    : '<div class="sect">'+t('askFee')+'</div>'
+      +'<div class="tfCard tfFee">'
+      /* Sol etiket çarkın uçlarını yazıyor: ray nerede olduğunu gösteriyor,
+         bu da ne kadar isteyebileceğini. Piyasa değeri zaten üstteki kimlik
+         şeridinde — aynı sayıyı iki kez yazmıyoruz. */
+      +'<div class="tfFeeTop"><span class="tfFeeL num">'+trwNum(min)+' – '+trwNum(max)+' M €</span>'
+      +'<span class="tfMult num" id="tfMult">×1</span></div>'
+      +trwHtml(min,max,def,t('askFee'))
+      +'<div class="tfHint tfwHint">'+t('trFeeHint')+'</div></div>';
+
+  const tpo=p.tpo?'<div class="tfNote">'+tfSvg(TF_ICON.warn)+'<span>'+t('tpoWhy')+'</span></div>':'';
+
+  const clauses=free?'':
+     '<div class="sect tfSectGap">'+t('payPlan')+'</div>'
+    /* Kademe rakamı başlık, birim altında: yan yana yedi kez "taksit" yazmak
+       göze aynı sözcüğü okutur, oysa ayırt eden sayının kendisi. */
+    +tfChips('trPay',1,[{v:1,l:t('payCash')}].concat(PAYPLANS.map(function(n){
+        return {v:n,l:String(n),s:t('instal')};})),t('payPlan'))
+    +'<div class="sect tfSectGap">'+t('clauses')+'</div>'
+    +'<div class="tfSub">'+t('goalBonusL')+'</div>'
+    +tfChips('trGb',0,[{v:0,l:t('none')}].concat(GBTIERS.map(function(n){
+        return {v:n,l:String(n),s:t('gbGoals')};})),t('goalBonusL'))
+    +'<div class="tfSub">'+t('nextSaleL')+'</div>'
+    +tfChips('trSo',0,[{v:0,l:t('none')}].concat(SOTIERS.map(function(n){
+        return {v:n,l:'%'+n,s:n>=30?t('soHard'):''};})),t('nextSaleL'))
+    +'<div class="tfHint">'+t('clauseHint')+'</div>';
+
+  const fixer='<div class="sect tfSectGap">'+t('fixerL')+'</div>'
+    +tfChips('trFix',0,[{v:0,l:t('none'),s:'—'},
+                        {v:1,l:t('trFixMod'),s:'+%8'},
+                        {v:2,l:t('trFixBig'),s:'+%18'}],
+             t('fixerL')+' · '+t('trAcc'),'tfOps')
+    +'<div class="tfHint tfFixC" id="tfFixC"></div>'
+    +'<div class="tfHint">'+t('fixerHint')+'</div>';
+
+  const clubs='<div class="tfSect tfSectGap"><span class="sect">'+t('interested')+'</span>'
+    +'<span class="tfCount num" id="tfCount"></span></div>'
+    +'<div class="tfHint tfClubHint">'+t('pickClubs')+'</div>'
+    +'<div class="tfClubs">'+buyers.map(function(b){return trSahaClub(p,b);}).join('')+'</div>';
+
+  /* Özet şeridi kaydırma boyunca görünür kalıyor: teklifin her kalemi paraya
+     dokunuyor ve sonucunu görmek için listenin sonuna inmek gerekmemeli.
+     Aynı desen haftalık raporun .wrFoot şeridinde de var. */
+  const foot='<div class="tfFoot"><div class="tfSum">'
+    +'<span class="tfSumC"><em>'+t('commission')+'</em><b class="num" id="tfComm">—</b></span>'
+    +'<span class="tfSumC"><em>'+t('fixerL')+'</em><b class="num" id="tfOp">—</b></span>'
+    +'<span class="tfSumC" id="tfCashC"><em>'+t('cash')+'</em><b class="num" id="tfCash">—</b></span>'
+    +'</div><div class="tfSumN" id="tfCommN"></div>'
+    +'<button class="btn p" id="trBtn" disabled onclick="submitOffers('+p.id+')">'+t('sendOffers')+'</button></div>';
+
+  openModal(head+feeCard+tpo+clauses+fixer+clubs+foot);
+  const sh=document.getElementById('sheet');
+  if(sh)sh.scrollTop=0;   // her açılış listenin başından başlar
+  TFW=null;
+  if(!free)trwMount(min,max,def,v);
+}
+/* trFin()'in saha kolu. Rakamlar oradaki iki yardımcıdan geliyor
+   (transferCutFor / transferFixCost); burada ikinci bir hesap YOK, yalnız aynı
+   sayıların özet şeridine yazılması.
+
+   Komisyon üç durumu da olduğu gibi taşıyor: satılmışsa %0 ve "satıldı";
+   bonservissizde rakam değil oran, çünkü tutar kabul anındaki maaş ve süreden
+   doğuyor; bonservisli transferde transferCutFor()'un verdiği gerçek tutar. */
+function trSahaFin(p,free,fee,fix,fixCost,short){
+  const comm=document.getElementById('tfComm');
+  if(comm)comm.textContent=p.tpo?'%0':free?'%'+transferPct():'~'+fmtK(transferCutFor(p,fee,false));
+  const note=document.getElementById('tfCommN');
+  if(note)note.textContent=p.tpo?t('tpoSold')
+    :free?t('commAfterContract')
+    :'%'+transferPct()+' · '+t('commEst');
+  /* Operasyon dökümü: kademe seçilmemişken satır hiç yazılmıyor — "0K €"
+     boş bir bilgi. Kademe seçiliyse toplam da, kulüp başı da yazıyor; hiç kulüp
+     seçilmemişken bile birim fiyat görünür kalıyor. Formül trFin'in kendi
+     satırıyla birebir aynı (transferFixCost / fixCostFor). */
+  const fc=document.getElementById('tfFixC');
+  if(fc)fc.textContent=fix
+    ? t('fixCostL')+': '+fmtK(fixCost)+' · '+fmtK(fixCostFor(p,fee))+' '+t('fixPerClub')+' × '+trSel.size
+    : '';
+  const op=document.getElementById('tfOp');
+  if(op)op.textContent=fixCost?'−'+fmtK(fixCost):'—';
+  const cash=document.getElementById('tfCash');
+  if(cash)cash.textContent=fmtK(S.cash);
+  /* Yetersiz kasa yalnız renkle anlatılmıyor: hücre uyarı işaretini de takıyor,
+     düğmenin yazısı da nedeni söylüyor (bkz. trFin). */
+  const cc=document.getElementById('tfCashC');
+  if(cc)cc.className='tfSumC'+(short?' short':'');
+  const cnt=document.getElementById('tfCount');
+  if(cnt){
+    const n=document.querySelectorAll('.tfClub').length;
+    cnt.textContent=trSel.size+' / '+n+' '+t('trSelected');
+  }
+}
