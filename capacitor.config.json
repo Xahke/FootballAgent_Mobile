@@ -1,6 +1,6 @@
 {
-  "appId": "com.berkin.menajer",
-  "appName": "Menajer",
+  "appId": "com.xahke.profootballagent",
+  "appName": "Pro Football Agent",
   "webDir": "www",
   "android": {
     "backgroundColor": "#f7f8f9"

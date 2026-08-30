@@ -1,4 +1,4 @@
-package com.berkin.menajer;
+package com.xahke.profootballagent;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Menajer</string>
-    <string name="title_activity_main">Menajer</string>
-    <string name="package_name">com.berkin.menajer</string>
-    <string name="custom_url_scheme">com.berkin.menajer</string>
+    <string name="app_name">Pro Football Agent</string>
+    <string name="title_activity_main">Pro Football Agent</string>
+    <string name="package_name">com.xahke.profootballagent</string>
+    <string name="custom_url_scheme">com.xahke.profootballagent</string>
 </resources>

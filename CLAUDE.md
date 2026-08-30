@@ -682,7 +682,18 @@ or in parallel processes rather than one long one.
 
 ## Release notes
 
-`capacitor.config.json` `appId` is `com.berkin.menajer` — **permanent once published**
-to the Play Store. Signing keys (`*.jks`, `key.properties`) are gitignored; losing the
-keystore means the app can never be updated again. Ads are planned for the store
-release and are not implemented yet, so don't claim the app is ad-free.
+`capacitor.config.json` is the **single source of the app's identity**: `appId` is
+`com.xahke.profootballagent` and `appName` is `Pro Football Agent`. The Gradle
+`applicationId`/`namespace`, the `MainActivity` package and `strings.xml` all repeat
+those two values, and CI reads them back out of the built APK and compares against the
+config — so a change made in one place and forgotten in another fails the build rather
+than shipping. The id is **permanent once published** to the Play Store.
+
+The web app is deliberately *not* renamed: `manifest.json` and `index.html` still say
+**Menajer**, and every in-game Turkish string still says *menajer*, because that is the
+word the game is written in. `Pro Football Agent` is the Android launcher label and the
+store name, nothing else. Don't "fix" the difference with a global replace.
+
+Signing keys (`*.jks`, `key.properties`) are gitignored; losing the keystore means the
+app can never be updated again. Ads are planned for the store release and are not
+implemented yet, so don't claim the app is ad-free.

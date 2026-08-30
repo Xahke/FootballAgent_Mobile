@@ -108,8 +108,25 @@ npm run android:sync       # www'yi tazeler ve Android projesine kopyalar
 ```
 `android:apk` ve `android:aab` bunu zaten kendi içinde çalıştırıyor.
 
-`capacitor.config.json` içindeki `appId` (`com.berkin.menajer`) mağazadaki kalıcı
-kimliktir; yayınlandıktan sonra değiştirilemez.
+### Uygulama kimliği
+`capacitor.config.json` kimliğin **tek kaynağı**:
+
+| | Değer |
+|---|---|
+| `appId` (package / namespace) | `com.xahke.profootballagent` |
+| `appName` (launcher etiketi, mağaza adı) | `Pro Football Agent` |
+
+Gradle'daki `applicationId` ve `namespace`, `MainActivity`'nin package bildirimi ve
+`strings.xml` bu iki değeri tekrar ediyor. CI ikisini derlenmiş APK'dan geri okuyup
+config ile karşılaştırıyor (`dogrula-5-paket-ve-etiket`), yani biri değiştirilip
+diğeri unutulursa derleme düşer — sessizce yanlış paket çıkmaz.
+
+`appId` **yayınlandıktan sonra değiştirilemez**; Play'deki kalıcı kimlik odur.
+
+> **Oyunun adı hâlâ "Menajer".** `manifest.json`, `index.html` ve oyun içindeki
+> bütün Türkçe metinler değişmedi ve değişmeyecek — oyun o kelimeyle yazıldı.
+> `Pro Football Agent` yalnızca Android launcher etiketi ve mağaza adı. Bu farkı
+> toplu değiştirmeyle "düzeltmeye" çalışma.
 
 ### Bilmen gerekenler
 - **Geliştirici hesabı** tek seferlik 25 USD.

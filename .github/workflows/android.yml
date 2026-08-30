@@ -120,10 +120,26 @@ jobs:
       - name: dogrula-4-minSdk-24
         run: grep -qi "sdkVersion:'24'" badging.txt
 
+      # Beklenen değer buraya sabit yazılmıyor, capacitor.config.json'dan
+      # okunuyor. Sabit yazılsaydı kimliği değiştiren kişinin iki ayrı yeri
+      # hatırlaması gerekirdi ve unutulan taraf sessizce yanlış olurdu; böyle,
+      # kontrol "paket kimliği doğru mu" değil "üretilen paket yapılandırmanın
+      # söylediği şey mi" diye soruyor — asıl cevabı istediğimiz soru bu.
+      # applicationId gradle'da, appId config'de: ikisi ayrışırsa burada düşer.
+      - name: dogrula-5-paket-ve-etiket
+        run: |
+          APPID=$(node -p "require('./capacitor.config.json').appId")
+          APPNAME=$(node -p "require('./capacitor.config.json').appName")
+          echo "beklenen paket='$APPID' etiket='$APPNAME'"
+          grep -q "package: name='$APPID'" badging.txt || {
+            echo "::error::APK paket kimliği capacitor.config.json ile uyuşmuyor"; exit 1; }
+          grep -q "application-label:'$APPNAME'" badging.txt || {
+            echo "::error::APK uygulama etiketi capacitor.config.json ile uyuşmuyor"; exit 1; }
+
       # Bağımsız ikinci kaynak: AGP'nin ürettiği birleştirilmiş manifest düz
       # XML. aapt2 tarafı ne olursa olsun bu her zaman çalışıyor ve sonucu
       # artifact olarak dışarı taşıyor.
-      - name: dogrula-5-merged-manifest
+      - name: dogrula-6-merged-manifest
         if: always()
         run: |
           M=$(find android/app/build/intermediates -name AndroidManifest.xml -path '*merged*' 2>/dev/null | head -1)
@@ -132,13 +148,16 @@ jobs:
           grep -o 'android:[a-zA-Z]*SdkVersion="[0-9]*"' "$M" | tee sdk-versions.txt
           grep -q 'android:targetSdkVersion="36"' "$M"
           grep -q 'android:minSdkVersion="24"' "$M"
+          APPID=$(node -p "require('./capacitor.config.json').appId")
+          grep -q "package=\"$APPID\"" "$M" || {
+            echo "::error::birleştirilmiş manifest paket kimliği uyuşmuyor"; exit 1; }
 
       # Bugün paket saf Java/Kotlin: lib/ altında tek bir .so yok. Bu, 64-bit ve
       # 16 KB bellek sayfası şartlarının yapısal olarak karşılanmasının sebebi —
       # Play'in kuralı native kodu olmayan uygulamaları zaten uyumlu sayıyor.
       # Bir bağımlılık native kütüphane getirdiği gün bu adım düşer ve o gün
       # ELF hizalamasının (align 2**14) ölçülmesi gerekir.
-      - name: dogrula-6-native-so-yok
+      - name: dogrula-7-native-so-yok
         run: |
           unzip -l android/app/build/outputs/apk/debug/app-debug.apk > apk-list.txt
           wc -l apk-list.txt
