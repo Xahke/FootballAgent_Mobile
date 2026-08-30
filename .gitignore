@@ -1,6 +1,18 @@
 node_modules/
 www/
-android/
+
+# android/ artık depoda. Eskiden ignore ediliyordu ve CI her koşuda "cap add
+# android" ile şablondan yeniden üretiyordu; bu, debug APK için çalışıyordu ama
+# native tarafa yazılan hiçbir şeyin yaşamasına izin vermiyordu — imza
+# yapılandırması, versionCode, manifest meta-data'sı, ikonlar, ProGuard kuralları
+# bir sonraki derlemede sessizce siliniyordu. Capacitor'ın kendi belgesi de
+# native klasörü kaynak artefaktı sayıyor. Artık akış "cap add" değil "cap sync".
+#
+# Neyin girip neyin girmediği android/.gitignore'da: derleme çıktıları
+# (.gradle/, build/, *.apk, *.aab), local.properties ve cap sync'in her koşuda
+# yeniden ürettiği dosyalar (assets/public, capacitor.config.json,
+# capacitor.plugins.json, res/xml/config.xml, capacitor-cordova-android-plugins)
+# dışarıda kalır.
 
 # package-lock.json artık depoda. CI "npm install" ile her koşuda farklı yama
 # sürümleri çekebiliyordu; mağazaya çıkan bir uygulamada derlemenin tekrar

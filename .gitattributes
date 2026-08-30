@@ -1,2 +1,12 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# android/ artık depoda ve Gradle sarmalayıcısı satır sonuna duyarlı: gradlew bir
+# sh betiği, CRLF ile checkout edilirse Linux'ta "bad interpreter" verir; .bat ise
+# cmd.exe için CRLF olmalı. "text=auto" bunu platforma göre tahmin ediyordu —
+# burada tahmine bırakılmıyor.
+android/gradlew      text eol=lf
+android/gradlew.bat  text eol=crlf
+
+# Sarmalayıcı jar'ı ikili; normalizasyon bozar.
+*.jar binary
