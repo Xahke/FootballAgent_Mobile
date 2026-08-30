@@ -76,7 +76,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (422 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (431 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -532,6 +532,47 @@ reaches `S`, so filtering or switching themes cannot touch what has been read. T
 `action` filter reads `m.action` directly rather than a category, because a message
 waiting on a decision belongs in one place whatever it is about.
 
+### The transfer offer screen keeps its five fields, and Saha changes only the input
+
+`openTransfer()` branches on `useSahaTransfer()` — the same gate pattern as
+`useSahaMarket`/`useSahaLeague`/`useSahaSkills`/`useSahaInbox`/`useSahaPlayerProfile`.
+The other three themes keep the old modal (range slider, `<select>`s, `.pitem` rows)
+byte for byte.
+
+**The offer is still five DOM fields with the same ids and the same units:** `#feeR`
+(the fee, in tenths of a million), `#trPay`, `#trGb`, `#trSo`, `#trFix`. On Saha they
+are `<input type="hidden">` instead of a range input and four selects, so
+`submitOffers()` reads exactly what it always read and its body did not change. That is
+what makes the redesign provably mechanics-neutral: the money is computed in
+`transferCutFor()` and `transferFixCost()`, both untouched, and the screen only writes
+those five values.
+
+`trFin()` is still the one live-update funnel, and it still must never call `render()`
+or `openTransfer()` — the buyer list is drawn with `RF()` and reopening would reshuffle
+it and drop `trSel`. It patches nodes: the shared `#trBtn` for both paths, and on Saha
+`trSahaFin()` for the summary strip. `trToggle()` gained one line, `trSahaToggle()`,
+which mirrors the selection onto `aria-pressed` — the single source for both the screen
+reader and the CSS that fills the checkbox.
+
+**The fee wheel is a picker, not a new mechanic.** `min`/`max`/step are the old slider's:
+`round(v·7)` to `round(v·18)` in whole tenths, opening at `round(v·10)`. `TFW` holds the
+wheel's own state (position, window, drag) and never reaches the save, like `CAM` and
+`MKQ`. Three things about it are load-bearing:
+
+- **The list is virtual.** A 400M player spans ~7,000 steps, so only ±60 rows around the
+  selection exist; the window is rebuilt when the position nears its edge. Position is
+  always the *global* index (`TFW.pos`) — the window is a drawing detail.
+- **`touch-action: none` on `.tfwGroup`** is what separates the wheel from the sheet's own
+  scrolling. A vertical drag that starts on the wheel is the wheel's; everywhere else the
+  sheet scrolls normally, and a drag under the 4px threshold changes nothing.
+- **`TFW_H` (js/ui.js) and `--tfwh` (css/themes/saha.css) are the same number.** They move
+  together or the band stops lining up with the selected row.
+
+Keyboard is `role="spinbutton"` with arrows/PageUp/PageDown/Home/End, `aria-valuetext`
+carrying the human form (`12.4M €`) because `aria-valuenow` is in tenths. The ± buttons
+repeat while held — with a hundred-plus steps, reaching an end by dragging alone is not a
+real option. Reduced motion drops the settle animation and the fling projection.
+
 ### Views that own their own DOM
 
 `render()` replaces `#view.innerHTML` wholesale, which destroys any listener attached to
@@ -548,7 +589,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 422 today, but count them rather than trusting this line; it has
+  counts must match — 431 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
