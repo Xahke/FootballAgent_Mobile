@@ -29,6 +29,18 @@ function inlineJsAssets(js){
     const d=dataUri(rel);return d?q+d+q:m;
   });
 }
+/* HTML çözümleyicisi <script> gövdesini ilk ham </script dizisinde bitirir;
+   dizinin bir string, şablon değişmezi ya da yorum içinde olması onu
+   ilgilendirmiyor. <\/script ise JS için birebir aynı şey — \/ kimlik kaçışı,
+   düzenli ifadede de aynı karakter — ama HTML için artık kapanış değil.
+   Bugün kaynaklarda ham </script yok, yani dönüşüm çıktıyı değiştirmiyor;
+   yarın biri yazarsa sessizce yarım kalan bir paket yerine doğru gömme oluyor.
+   <!-- ve --> kasten elden geçirilmiyor: js/atlas.js bunları gerçek markup
+   olarak üretiyor, körlemesine kaçırmak anlamlarını bozardı. Gerçekten sorun
+   çıkarırlarsa tools/check-dist.js build'i düşürüyor. */
+function escapeScriptEnd(js){
+  return js.replace(/<\/(script)/gi,(m,tag)=>'<\\/'+tag);
+}
 
 const css=inlineCssAssets(fs.readFileSync('css/style.css','utf8'));
 const order=['js/i18n.js','js/store.js','js/saves.js','js/data.js','js/worldgeo.js','js/atlas.js','js/rivals.js','js/badges.js','js/core.js','js/sim.js','js/market.js','js/events.js','js/skills.js','js/sfx.js','js/actions.js','js/ui.js','js/main.js'];
@@ -36,11 +48,22 @@ const order=['js/i18n.js','js/store.js','js/saves.js','js/data.js','js/worldgeo.
    hiç eşleşmiyordu, yani çıktı çalışma kopyasının satır sonlarına göre
    değişiyordu — tek dosya sürümü tekrar üretilebilir olmuyordu. */
 const js=inlineJsAssets(order.map(p=>fs.readFileSync(p,'utf8').replace(/'use strict';\r?\n/,'')).join('\n'));
+const jsInline=escapeScriptEnd(js);
+if(/<\/script/i.test(jsInline))throw new Error('gömülecek JS içinde ham </script kaldı');
+/* Gömülen metin replace()'e replacement STRING olarak verilirse içindeki $&,
+   $`, $', $$ ve $1 gibi diziler ikame kalıbı sayılır. Kaynakta duran tek bir
+   $& (js/actions.js, askReleaseClient yorumu) eşleşmenin tamamını — yani
+   index.html'in script bloğunu — paketin ortasına geri yazıyordu; oradaki açık
+   yorum kapanmadan kalınca tek dosya sürümü hiç çalışmıyordu. Callback biçiminde
+   böyle bir yorum yok, içerik literal giriyor. Manifest/ikon satırlarını silen
+   replace gömülü içerik taşımadığı için olduğu gibi kalıyor. */
+const styleBlock='<style>\n'+css+'</style>';
+const scriptBlock='<script>\n'+"'use strict';\n"+jsInline+'\n</'+'script>\n</body>';
 const skel=fs.readFileSync('index.html','utf8')
   /* tek dosya sürümünde yanında duracak bir manifest ya da ikon yok */
   .replace(/^[ \t]*<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\r?\n/gm,'')
-  .replace(/<link rel="stylesheet"[^>]*>/,'<style>\n'+css+'</style>')
-  .replace(/<script src=[^]*?<\/body>/,'<script>\n'+"'use strict';\n"+js+'\n</'+'script>\n</body>');
+  .replace(/<link rel="stylesheet"[^>]*>/,()=>styleBlock)
+  .replace(/<script src=[^]*?<\/body>/,()=>scriptBlock);
 fs.mkdirSync('dist',{recursive:true});
 fs.writeFileSync('dist/menajer.html',skel);
 console.log('dist/menajer.html',Math.round(skel.length/1024)+'KB');

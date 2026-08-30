@@ -17,7 +17,7 @@ anything committed here is visible to the world.
 
 ```bash
 npm run themes       # css/themes/*.css → css/style.css   (REQUIRED after any CSS edit)
-npm run dist         # themes + build.js → dist/menajer.html (single-file build)
+npm run dist         # themes + build.js + check-dist.js → dist/menajer.html (fails on a broken bundle)
 npm run www          # themes + build-www.js → www/         (what Capacitor packages)
 npm run serve        # local server on :5173
 
