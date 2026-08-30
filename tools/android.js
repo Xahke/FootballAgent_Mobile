@@ -33,7 +33,13 @@ const wrapper = path.join(AND, win ? 'gradlew.bat' : 'gradlew');
 if (!fs.existsSync(wrapper)) { console.error('gradle sarmalayıcısı bulunamadı:', wrapper); process.exit(1); }
 
 console.log('gradle görevi:', cfg.task, '(ilk çalıştırma birkaç dakika sürebilir)');
-const r = spawnSync(win ? wrapper : './gradlew', [cfg.task], { cwd: AND, stdio: 'inherit', shell: win });
+/* Windows yolu tırnak içinde. shell:true, komutu cmd.exe'ye tek bir dize
+   olarak veriyor ve tırnaklamayı çağırana bırakıyor; depo "C:\Users\Ad
+   Soyad\..." gibi boşluklu bir yerdeyse cmd dizeyi ilk boşluktan bölüp
+   "'C:\Users\Ad' is not recognized" diyordu — yani bu betik boşluklu hiçbir
+   yolda çalışmıyordu. Çalıştırılan yol, varlığı yukarıda sınanan yolun
+   aynısı; ikisi ayrı ifade olsaydı biri düzeltilip diğeri unutulabilirdi. */
+const r = spawnSync(win ? `"${wrapper}"` : './gradlew', [cfg.task], { cwd: AND, stdio: 'inherit', shell: win });
 if (r.status !== 0) process.exit(r.status || 1);
 
 const out = path.join(AND, cfg.out);
