@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- Açılış ekranının tek rengi. Android 12+ sistem splash'i bunu
+         windowSplashScreenBackground olarak alır, Android 11 ve öncesi aynı
+         renk drawable-*/splash.png rasterlarının tuvalidir; ikisi ayrı yoldan
+         çizildiği için renk tek bir kaynaktan okunmak zorunda. -->
+    <color name="splash_background">#0B111E</color>
+</resources>

@@ -1,4 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Adaptive ikonun arka plan katmanı. Ön plan 72dp viewport'u tamamen
+         doldurduğu için bu renk yalnızca 18dp'lik bleed kenarında, yani
+         launcher parallax yaparken görünür — o an kenarda beyaz bir şerit
+         çıkmasın diye splash ile aynı gece lacivertine ayarlı. -->
+    <color name="ic_launcher_background">#0B111E</color>
 </resources>

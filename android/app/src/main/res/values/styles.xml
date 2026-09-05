@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
 
     <!-- Base application theme. -->
@@ -15,8 +15,30 @@
         <item name="android:background">@null</item>
     </style>
 
+    <!-- Açılış teması.
 
-    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+         Parent artık Theme.SplashScreen yerine Theme.SplashScreen.IconBackground:
+         ikon arka planlı yapıda sistem, asset'i 240dp tuvalde bekler ve 160dp'lik
+         daireye maskeler — drawable-*/ic_splash_icon.png tam bu ölçüde üretildi.
+         Düz Theme.SplashScreen 288dp/192dp isterdi ve ikon büyük görünürdü.
+
+         Aşağıdaki dört öznitelik core-splashscreen'in kendi attr'ları; kütüphane
+         bunları API 31+ üzerinde android:windowSplashScreen* platform
+         özniteliklerine eşliyor, altında ise pencere arka planını
+         windowSplashScreenBackground renginden boyuyor. Bu yüzden renk her iki
+         yolda da @color/splash_background.
+
+         postSplashScreenTheme, açılıştan sonra geçilecek temayı ilan ediyor.
+         Geçişi fiilen Capacitor'ın BridgeActivity'si yapıyor (onCreate içinde
+         setTheme(AppTheme_NoActionBar)); burada yazılı olması, iki tarafın aynı
+         temayı gösterdiğini denetlenebilir kılıyor.
+
+         android:background satırı Capacitor şablonundan olduğu gibi duruyor. -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
     </style>
 </resources>
