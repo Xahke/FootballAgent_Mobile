@@ -713,3 +713,35 @@ with no keystore at all, so don't "fix" that path by making the config mandatory
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
 twice. Ads are planned for the store release and are not implemented yet, so don't claim
 the app is ad-free.
+
+### Every icon and the splash come from one source file
+
+`store-assets/source/pro-football-agent-icon-master.png` (2048x2048) is the master.
+Every launcher density, the Android 12+ splash icon, the legacy splash rasters and the
+Play Store icon are square-to-square rescales of it — no crop, no stretch, no frame, no
+text. Changing the artwork means replacing that one file and regenerating; editing a
+density by hand puts the tree out of step with its own source.
+
+**The Play Store icon is uploaded separately from the launcher icon.** Play Console does
+not read it out of the AAB. `store-assets/google-play/icon-512.png` is that upload:
+512x512, 32-bit PNG (alpha present but the composition fully opaque), sRGB, at most
+1024 KB, full square with **no** rounded corners — Play rounds it in its own UI and a
+baked-in radius shows up on top of that.
+
+The adaptive foreground fills **100% of the 72dp viewport**, so square, circle and
+squircle masks all show artwork edge to edge and `@color/ic_launcher_background`
+(`#0B111E`) is only visible during launcher parallax. Shrink the foreground and you open
+a gap under the mask.
+
+The splash is `#0B111E` everywhere, read from `values/splash_background.xml` because it
+is painted along two different paths. `AppTheme.NoActionBarLaunch` derives from
+`Theme.SplashScreen.IconBackground`, which is what makes the Android 12+ system splash
+expect a **240dp** asset masked to a **160dp** circle — `drawable-*/ic_splash_icon.png`
+is generated at exactly that. Switching the parent back to plain `Theme.SplashScreen`
+changes the contract to 288dp/192dp and the asset would have to be regenerated with it.
+Pre-12 keeps the Capacitor `drawable-{port,land}-*/splash.png` rasters at their original
+dimensions, with the same disc at 160dp so both eras carry the same visual weight.
+
+**Monochrome / themed icons are deliberately not offered** — the user decided against
+them. There is no `<monochrome>` layer and no `mipmap-anydpi-v33`; Android 13+ uses the
+normal colour adaptive icon. Don't add one back as a "fix".

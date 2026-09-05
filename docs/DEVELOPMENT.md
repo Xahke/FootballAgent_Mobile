@@ -182,6 +182,65 @@ diğeri unutulursa derleme düşer — sessizce yanlış paket çıkmaz.
 > `Pro Football Agent` yalnızca Android launcher etiketi ve mağaza adı. Bu farkı
 > toplu değiştirmeyle "düzeltmeye" çalışma.
 
+### İkonlar ve açılış ekranı
+Bütün mağaza ve native görselleri **tek bir kaynaktan** türetiliyor:
+
+    store-assets/source/pro-football-agent-icon-master.png   2048×2048 PNG
+
+Kaynak depoda duruyor çünkü yeniden üretilebilirlik başka türlü sağlanamıyor: her
+yoğunluk ondan ölçekleniyor ve kare→kare ölçekleme dışında hiçbir işlem yok — kırpma,
+gerdirme, çerçeve, gölge ya da yazı eklenmiyor.
+
+**Play Store ikonu launcher ikonundan ayrı yüklenir.** Play Console onu APK/AAB'den
+okumaz; mağaza girişine elle yüklenen ayrı bir dosyadır:
+
+    store-assets/google-play/icon-512.png
+
+Şartları: 512×512, 32-bit PNG (alfa kanalı var ama kompozisyon tamamen opak),
+sRGB, en fazla 1.024 KB, tam kare. Köşeleri yuvarlatılmaz, çerçeve ya da rozet
+eklenmez — yuvarlatmayı Play kendi arayüzünde yapar, gömülü olanı üstüne bindirir.
+
+Android launcher kaynakları `android/app/src/main/res/` altında:
+
+| Kaynak | Ne | Ölçüler |
+|---|---|---|
+| `mipmap-*/ic_launcher.png` | API 25 ve altı, tam kare | 48/72/96/144/192 |
+| `mipmap-*/ic_launcher_round.png` | API 25 ve altı, daire maskeli | 48/72/96/144/192 |
+| `mipmap-*/ic_launcher_foreground.png` | adaptive ön plan, 108dp tuval | 108/162/216/324/432 |
+| `mipmap-anydpi-v26/ic_launcher{,_round}.xml` | adaptive tanımı | — |
+| `values/ic_launcher_background.xml` | adaptive arka plan rengi | `#0B111E` |
+
+Adaptive ön planda sanat **72dp viewport'un tamamını** dolduruyor; dışındaki 18dp
+bleed şeffaf. Bunun sonucu şu: square, circle ve squircle maskelerinin üçünde de
+ekranda yalnızca sanat kalır, arka plan rengi sadece launcher parallax yaparken
+kenarda görünür. Ön planı küçültmek isteyen biri, maskenin altında boşluk
+oluşacağını bilerek yapmalı.
+
+**Açılış ekranı rengi her yerde `#0B111E`** (gece lacivert). Renk tek kaynaktan
+okunuyor — `values/splash_background.xml` — çünkü iki ayrı yoldan çiziliyor:
+
+- **Android 12+**: sistem splash'i. `AppTheme.NoActionBarLaunch` teması
+  `Theme.SplashScreen.IconBackground`'dan türüyor ve dört öznitelik veriyor:
+  `windowSplashScreenBackground`, `windowSplashScreenAnimatedIcon`
+  (`drawable-*/ic_splash_icon.png`), `windowSplashScreenIconBackgroundColor`,
+  `postSplashScreenTheme`. İkon arka planlı yapıda sistem asset'i **240dp**
+  tuvalde bekler ve **160dp**'lik daireye maskeler; asset tam bu ölçüde üretildi.
+  Düz `Theme.SplashScreen` 288dp/192dp isteseydi ikon daha büyük görünürdü —
+  parent'ı değiştiren, asset ölçüsünü de değiştirmek zorunda.
+- **Android 11 ve öncesi**: `drawable-{port,land}-*/splash.png` rasterları,
+  Capacitor şablonundan gelen özgün boyutlarıyla. Tuval düz `#0B111E`, merkezde
+  aynı daire maskeli kompozisyon, yazı yok. Disk çapı her yoğunlukta 160dp —
+  yani Android 12 sistem ikonuyla aynı görsel ağırlıkta.
+
+Açılıştan sonraki temayı `postSplashScreenTheme` ilan ediyor; geçişi fiilen
+Capacitor'ın `BridgeActivity`'si yapıyor (`onCreate` içinde
+`setTheme(AppTheme_NoActionBar)`). İkisi aynı temayı göstermek zorunda.
+
+**Monochrome / themed icon bilinçli olarak sunulmuyor.** Kullanıcı kararıyla
+`<monochrome>` katmanı eklenmedi; Android 13+ cihazlar normal renkli adaptive
+ikonu kullanıyor. Depoda ne `mipmap-anydpi-v33` klasörü ne de `<monochrome>`
+etiketi var — biri eklenirse pakete tek renkli bir ikon girer.
+
 ### Bilmen gerekenler
 - **Geliştirici hesabı** tek seferlik 25 USD.
 - **Yeni kişisel hesaplarda kapalı test zorunlu:** en az **12 testçi**, **14 gün**
