@@ -50,6 +50,40 @@ function setPref(k,v){PREFS[k]=v;savePrefs();}
 /* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı */
 if(PREFS.lang)L=PREFS.lang;
 
+/* ================= KARİYER KİMLİĞİ =================
+   Bir kariyeri bugüne kadar yalnız yuva numarası tanımlıyordu. Ama yuva
+   numarası kariyerin kendisi değil, durduğu raf: silinip aynı yuvada kurulan
+   yeni bir kariyer eskisiyle aynı 's1' anahtarını taşıyor. Kariyere bağlanacak
+   herhangi bir şeyin yanlış kariyere düşmemesi için kimliğin yuvadan bağımsız
+   olması gerekiyor.
+
+   Kimlik addan, saatten ya da yuva numarasından TÜRETİLMİYOR — üçü de aynı
+   kimliği iki kez üretebilir. 16 bayt rastgelelik yetiyor ve ortamda ne varsa
+   ondan alınıyor: WebView'da crypto.getRandomValues her zaman var, olmadığı
+   yerde Math.random'a düşüyor. Yeni bir bağımlılık yok.
+
+   crypto.randomUUID kasten kullanılmıyor: güvenli bağlam istiyor, oysa tek
+   dosya sürümü file:// üzerinden de açılıyor. getRandomValues'ın böyle bir
+   koşulu yok. */
+function newCid(){
+  const b=new Uint8Array(16);
+  const c=(typeof crypto!=='undefined'&&crypto&&typeof crypto.getRandomValues==='function')?crypto:null;
+  if(c)c.getRandomValues(b);
+  else for(let i=0;i<16;i++)b[i]=Math.floor(Math.random()*256);
+  let s='';
+  for(let i=0;i<16;i++)s+=(b[i]+256).toString(16).slice(1);
+  return s;
+}
+/* Kimliği olmayan eski kayda kimlik verir. Dönüş "yeni kimlik atandı mı" —
+   çağıran taraf yalnızca o zaman kaydetmek zorunda kalsın diye. Geçerli kimliği
+   olan kayda dokunmuyor: kimlik bir kez yazıldıktan sonra kariyerin ömrü
+   boyunca aynı kalır, yükleme de kaydetme de onu değiştirmez. */
+function ensureCid(st){
+  if(!st||(typeof st.cid==='string'&&st.cid))return false;
+  st.cid=newCid();
+  return true;
+}
+
 /* ================= YUVA ÖZETLERİ =================
    Bellekte tutuluyor; diske arkadan yazılıyor. Okuyanların hepsi senkron kalır. */
 let META={};
@@ -60,7 +94,13 @@ function anySlot(){for(let n=1;n<=SLOTS;n++)if(META['s'+n])return true;return fa
 function metaDirty(){queueRec('meta',()=>META);}
 /* Özet menüde gösterilen her şeyi taşır; tam kaydı açmaya gerek kalmaz.
    totalWeeks() global S'yi okuduğu için burada fikstürden yeniden hesaplanıyor —
-   bu fonksiyon her zaman kendisine verilen duruma bakmalı. */
+   bu fonksiyon her zaman kendisine verilen duruma bakmalı.
+
+   cid burada TÜRETİLMİŞ bir dizin: hangi yuvada hangi kariyerin durduğunu tam
+   kaydı açmadan bilmek için. Kimliğin asıl kaynağı kariyer kaydıdır; özet
+   eskimiş ya da eksik olabilir ve bu asla kariyere yeni kimlik ürettirmez
+   (bkz. ensureCid — yalnız kaydın kendisine bakar). Henüz hiç açılmamış eski
+   bir kayıtta kimlik olmayabilir; o zaman burası boş dize taşır. */
 function metaOf(st){
   const tw=(st.fx&&st.fx.length)?Math.max.apply(null,st.fx.map(f=>f.length)):st.week;
   return {agent:st.agent?(st.agent.fn+' '+st.agent.ln):'',
@@ -68,6 +108,7 @@ function metaOf(st){
           season:st.season,week:Math.min(st.week,tw),
           cash:st.cash,rep:Math.round(st.rep),
           clients:(st.clients||[]).length,
+          cid:st.cid||'',
           ts:Date.now()};
 }
 
@@ -101,6 +142,14 @@ function loadSlot(n){
     const d=migrateSave(rec);
     if(!validSave(d))return dropSlotMeta(n,'broken');
     S=d.S;PID=d.PID;curSlot=n;
+    /* Kariyer kimliği eski kayıtlarda yok; ilk açılışta veriliyor ve hemen
+       yazılıyor. saveToSlot() senkron dönüyor ama bu yalnız "kuyruğa alındı"
+       demek — yazmanın gerçekten tuttuğunu SAVEH söylüyor ve başarısızlık
+       ui.js'in kalıcı uyarı şeridine düşüyor. Bu yüzden buradan "kimlik
+       kalıcılaştı" anlamına gelecek bir dönüş YOK: bu fonksiyon bunu bilemez,
+       bilmediği bir şeyi de rapor etmemeli. Yazma tutmazsa kimlik bellekte
+       kalır ve bir sonraki açılışta yeniden denenir. */
+    if(ensureCid(S))saveToSlot(n);
     /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
     L=PREFS.lang||S.lang||'tr';
     return {ok:true};

@@ -158,7 +158,9 @@ function regenPlayer(p){
 }
 function newGame(){
   PID=1;
-  S={lang:L,week:1,season:1,cash:250,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
+  /* cid: kariyerin yuvadan bağımsız kimliği (js/saves.js — newCid).
+     Aynı yuvada silinip yeniden kurulan kariyer yeni bir kimlik alır. */
+  S={cid:newCid(),lang:L,week:1,season:1,cash:250,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
   TEAMS.forEach((lgTeams,lg)=>{
     lgTeams.forEach(([n,ab,c1,c2,str])=>{
       const tm={id:S.teams.length,n,ab,c1,c2,lg,str,bud:clamp((str-55)/30,0.4,1.05),pts:0,w:0,d:0,l:0,gf:0,ga:0};
@@ -356,7 +358,18 @@ function weeklyCost(){
   return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
 }
 function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
-function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap');}
+/* Satın alınmış ek müşteri kapasitesi — bugün her zaman 0. Mağaza da yok,
+   teslim edilmiş bir satın alma da. Yine de maxClients() içinde tek bir toplama
+   olarak duruyor ki kapasitenin oyuna girdiği yer tek olsun; sonraki aşama
+   yalnız bu fonksiyonun GÖVDESİNİ değiştirecek, formülün geri kalanına
+   dokunmayacak.
+
+   Burada bir S alanı okunmuyor ve okunmayacak: bir sayı, hangi satın alma
+   tokenlarının işlendiğini yeniden kuramaz — kaybolmuş bir defterden sonra
+   gelen satın alma sessizce karşılıksız kalırdı. Kapasitenin kaynağı kariyer
+   kaydındaki teslim edilmiş token kümesi olacak. */
+function iapCap(){return 0;}
+function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')+iapCap();}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,

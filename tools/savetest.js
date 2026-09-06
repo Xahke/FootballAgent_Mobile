@@ -32,7 +32,11 @@ function makeIDB(disk, ctl) {
   function objectStore(name) {
     const data = disk[name];
     return {
-      get(key) { const r = req(); r.__work = () => { r.result = data[key]; }; return r; },
+      // get de kopya döndürüyor: gerçek IndexedDB her okumada yapısal kopya
+      // verir, aynı nesneyi değil. Kopyalamazsak yüklenen kaydın sonraki
+      // mutasyonları "diske" yazılmadan sızar — yazma başarısızken kaydın
+      // değişmediğini iddia eden test, olmayan bir yazmayı görmüş sayardı.
+      get(key) { const r = req(); r.__work = () => { r.result = structuredClone(data[key]); }; return r; },
       getAllKeys() { const r = req(); r.__work = () => { r.result = Object.keys(data); }; return r; },
       put(val, key) {
         const r = req();
@@ -152,6 +156,10 @@ function session(disk, lsStore, ctl) {
     document: doc, navigator: { language: 'tr', userAgent: 'node' },
     localStorage: makeLS(lsStore, ctl),
     indexedDB: ctl.noIDB ? undefined : makeIDB(disk, ctl),
+    /* vm bağlamı Node'un globallerini devralmıyor; crypto elle veriliyor.
+       ctl.noCrypto ile kapatılabiliyor çünkü newCid()'in Math.random yedeği de
+       gerçekten çalışmak zorunda (eski tarayıcı, güvensiz bağlam). */
+    crypto: ctl.noCrypto ? undefined : crypto,
     location: { protocol: 'file:', href: 'file:///x' },
     performance: { now: () => Date.now() },
     getComputedStyle: () => ({ getPropertyValue: () => '' }),
@@ -456,6 +464,165 @@ async function tSlotDeleteAndCoalesce() {
   ok(a.R('saveHealthy()') === true, 'birleştirme sağlığı bozmadı');
 }
 
+async function tCareerIdentity() {
+  console.log('\n[10] kariyer kimliği: üretim, kalıcılık, yuvadan bağımsızlık');
+  const disk = newDisk(), ls = {};
+  const a = session(disk, ls, {});
+  await a.booted;
+
+  ok(a.R('typeof crypto!=="undefined"&&!!crypto.getRandomValues'), 'kumandada crypto var (asıl yol ölçülüyor)');
+  const ids = JSON.parse(a.R('JSON.stringify(Array.from({length:500},()=>newCid()))'));
+  ok(ids.every(x => /^[0-9a-f]{32}$/.test(x)), 'kimlik 32 haneli onaltılık', ids[0]);
+  ok(new Set(ids).size === 500, '500 kimlik benzersiz');
+
+  await freshCareer(a, 2);
+  const cid1 = a.R('S.cid');
+  ok(/^[0-9a-f]{32}$/.test(cid1), 'yeni kariyer kimlik aldı', cid1);
+  ok(disk.saves.s1.S.cid === cid1, 'kimlik diske yazıldı');
+  ok(a.R('allMeta().s1.cid') === cid1, 'özet kimliği taşıyor');
+  ok(!ids.includes(cid1), 'kimlik bir sayaç değil — önceki üretimlerle çakışmıyor');
+
+  const b = session(disk, ls, {});
+  await b.booted;
+  const r = await b.R('loadSlot(1)');
+  ok(r.ok === true && b.R('S.cid') === cid1, 'yeniden yüklemede kimlik aynı', JSON.stringify(r));
+  b.R('save();');
+  await b.R('saveDrain()');
+  ok(disk.saves.s1.S.cid === cid1, 'ikinci açılış ve kaydetme kimliği değiştirmedi');
+
+  // META eksikse kimlik yine kayıttan geliyor; özet yeniden kurulur.
+  delete disk.meta.meta;
+  const c = session(disk, ls, {});
+  await c.booted;
+  const rc = await c.R('loadSlot(1)');
+  ok(rc.ok === true && c.R('S.cid') === cid1, 'META silinmişken kimlik değişmedi');
+  ok(c.R('allMeta().s1.cid') === cid1, 'özet kayıttan yeniden türetildi');
+
+  // Aynı yuvada silip yeniden kurmak: yeni kimlik, özette eski kimlikten iz yok.
+  c.R('deleteSlot(1);');
+  await c.R('saveDrain()');
+  ok(!c.R('allMeta().s1'), 'silinen yuvanın özeti gitti');
+  await freshCareer(c, 1);
+  const cid2 = c.R('S.cid');
+  ok(cid2 !== cid1, 'aynı yuvadaki yeni kariyerin kimliği farklı');
+  ok(c.R('allMeta().s1.cid') === cid2, 'özet eski kimliği taşımıyor');
+
+  // Ana menü: açık kariyer yokken çizim hata üretmemeli.
+  let crash = null;
+  try { c.R('S=null;curSlot=0;stack=[{v:"menu"}];render();stack=[{v:"settings"}];render();'); }
+  catch (e) { crash = e.message; }
+  ok(!crash, 'S===null iken menü ve ayarlar çiziliyor', crash || '');
+
+  // crypto yoksa yedek yol.
+  const f = session(newDisk(), {}, { noCrypto: true });
+  await f.booted;
+  ok(f.R('typeof crypto') === 'undefined', 'crypto kapatıldı');
+  const ids2 = JSON.parse(f.R('JSON.stringify(Array.from({length:200},()=>newCid()))'));
+  ok(ids2.every(x => /^[0-9a-f]{32}$/.test(x)) && new Set(ids2).size === 200,
+     'crypto yokken Math.random yedeği çalışıyor');
+}
+
+async function tCidLegacyMigration() {
+  console.log('\n[11] kimliksiz eski kayda kimlik ataması');
+  const disk = newDisk(), ls = {};
+  const seed = session(disk, ls, {});
+  await seed.booted;
+  await freshCareer(seed, 2);
+  // Eski kaydı taklit et: ne kayıtta ne özette kimlik var.
+  delete disk.saves.s1.S.cid;
+  delete disk.meta.meta;
+  const before = structuredClone(disk.saves.s1.S);
+
+  const a = session(disk, ls, {});
+  await a.booted;
+  const r = await a.R('loadSlot(1)');
+  ok(r.ok === true, 'kimliksiz eski kayıt açıldı', JSON.stringify(r));
+  const cid = a.R('S.cid');
+  ok(/^[0-9a-f]{32}$/.test(cid), 'kimlik atandı', cid);
+  await a.R('saveDrain()');
+  ok(disk.saves.s1.S.cid === cid, 'kimlik diske yazıldı — yalnız bellekte kalmadı');
+  ok(a.R('saveHealthy()') === true, 'yazma sağlıklı');
+
+  const b = session(disk, ls, {});
+  await b.booted;
+  const r2 = await b.R('loadSlot(1)');
+  ok(r2.ok === true && b.R('S.cid') === cid, 'yeniden açılan kayıtta aynı kimlik');
+  const after = JSON.parse(b.R('JSON.stringify(S)'));
+  delete after.cid;
+  ok(JSON.stringify(after) === JSON.stringify(before), 'kimlik dışında oyun verisi bit bit aynı');
+  ok(after.cash === before.cash && after.week === before.week && after.season === before.season &&
+     after.clients.length === before.clients.length, 'kasa/hafta/sezon/müşteriler korundu');
+
+  // Yazma başarısızsa: göç olmuş sayılmıyor, kullanıcı görüyor.
+  const disk2 = newDisk(), ls2 = {};
+  const seed2 = session(disk2, ls2, {});
+  await seed2.booted;
+  await freshCareer(seed2, 1);
+  delete disk2.saves.s1.S.cid;
+  const ctl = { failWrite: () => quotaErr() };
+  const c = session(disk2, ls2, ctl);
+  await c.booted;
+  const r3 = await c.R('loadSlot(1)');
+  ok(r3.ok === true, 'yazma bozukken de kayıt açılabiliyor');
+  await waitFor(() => !c.R('saveHealthy()'), 'kayıt hatası');
+  ok(!disk2.saves.s1.S.cid, 'yazma başarısızken disk hâlâ kimliksiz');
+  c.R('render();');
+  ok(c.nodes.saveWarn.__cls.has('show') === true, 'başarısızlık uyarı şeridine düştü');
+
+  // Yer açılınca bir sonraki açılış yeniden deniyor ve bu kez kalıcılaşıyor.
+  const d = session(disk2, ls2, {});
+  await d.booted;
+  await d.R('loadSlot(1)');
+  await d.R('saveDrain()');
+  ok(!!disk2.saves.s1.S.cid, 'sonraki açılışta kimlik kalıcılaştı');
+  ok(d.R('saveHealthy()') === true, 'toparlanma sağlıklı');
+}
+
+async function tCidSlotsAndCapacity() {
+  console.log('\n[12] yuvalar arası karışma yok + maxClients() değişmedi');
+  const disk = newDisk(), ls = {};
+  const a = session(disk, ls, {});
+  await a.booted;
+
+  const cids = {};
+  for (const n of [1, 2, 3]) {
+    a.R("curSlot=" + n + ";newGame();createAgent('T" + n + "','A','tr','C" + n + "');");
+    a.R('save();');
+    cids[n] = a.R('S.cid');
+  }
+  await a.R('saveDrain()');
+  ok(new Set(Object.values(cids)).size === 3, 'üç kariyer üç farklı kimlik');
+  for (const n of [1, 2, 3]) {
+    ok(disk.saves['s' + n].S.cid === cids[n], 'yuva ' + n + ' kimliği doğru kayda düştü');
+    ok(a.R('allMeta().s' + n + '.cid') === cids[n], 'yuva ' + n + ' özeti doğru kimliği taşıyor');
+  }
+
+  // Gecikmiş yazma: 1. yuvanın kaydı kuyruktayken 2. yuvaya geçiliyor.
+  await a.R('loadSlot(1)');
+  a.R('S.cash+=1;save();');
+  await a.R('loadSlot(2)');
+  a.R('save();');
+  await a.R('saveDrain()');
+  ok(disk.saves.s1.S.cid === cids[1], 'geçişten sonra 1. yuvanın kimliği bozulmadı');
+  ok(disk.saves.s2.S.cid === cids[2], 'geçişten sonra 2. yuvanın kimliği bozulmadı');
+  ok(a.R('S.cid') === cids[2], 'aktif kariyer 2. yuvanın kimliğini taşıyor');
+
+  // Kapasite: yardımcı sıfır ve formül eski sonucu veriyor.
+  ok(a.R('iapCap()') === 0, 'iapCap() sıfır döndürüyor');
+  let n = 0, bad = [];
+  for (const rep of [0, 5, 17, 18, 35, 60, 100, 130, 250, 502]) {
+    for (const sk of ['[]', "['ag2']", "['ag2','ag4']"]) {
+      for (const ag of ['{}', '{cap:1}', '{cap:3}']) {
+        const got = a.R('S.rep=' + rep + ';S.skills=' + sk + ';S.ag=' + ag + ';maxClients()');
+        const want = a.R("2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')");
+        n++;
+        if (got !== want) bad.push(rep + '/' + sk + '/' + ag + ': ' + got + '≠' + want);
+      }
+    }
+  }
+  ok(bad.length === 0, 'maxClients() ' + n + ' itibar/yetenek/olay birleşiminde eski formülle aynı', bad.join(' '));
+}
+
 /* Oturum kurucusu başka doğrulama betiklerinden de kullanılabilsin (tam uygulama
    taraması, çok sezonlu regresyon). Doğrudan çalıştırıldığında testler koşuyor. */
 module.exports = { session, newDisk, makeEl, waitFor, tick };
@@ -465,7 +632,8 @@ if (require.main !== module) return;
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
                  tQuotaVisible, tLocalStorageFallback, tSchemaVersion, tTwoSeasons,
-                 tSlotDeleteAndCoalesce];
+                 tSlotDeleteAndCoalesce, tCareerIdentity, tCidLegacyMigration,
+                 tCidSlotsAndCapacity];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }
