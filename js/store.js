@@ -177,14 +177,25 @@ function recGet(key){
   if(SAVEH.backend==='ls')return Promise.resolve(jparse(lsGet(LSKEY[key])));
   return dbTx(storeName(key),'readonly',st=>st.get(key));
 }
-function recPut(key,val){
+/* seal(val): içerik depolamaya VERİLDİĞİ anda, aynı içerikten çağrılıyor.
+   Kalıcılık kanıtı burada donuyor (bkz. flushRec). İki arka uçta o an farklı:
+   localStorage'da serileştirme, IndexedDB'de put() çağrısı — put yapısal
+   kopyayı o anda alır ve sonraki mutasyonlar diske ulaşmaz. Her ikisinde de
+   seal, içeriği donduran ifadeyle AYNI senkron blokta duruyor; araya hiçbir
+   mutasyon giremiyor. */
+function recPut(key,val,seal){
   if(SAVEH.backend==='ls'){
     let s;
     try{s=JSON.stringify(val);}catch(e){return Promise.reject(e);}
+    if(seal)seal(val);
     return lsSet(LSKEY[key],s)?Promise.resolve(true)
       :Promise.reject(new Error('QuotaExceededError'));
   }
-  return dbTx(storeName(key),'readwrite',st=>st.put(val,key)).then(()=>true);
+  return dbTx(storeName(key),'readwrite',st=>{
+    const r=st.put(val,key);
+    if(seal)seal(val);
+    return r;
+  }).then(()=>true);
 }
 function recDel(key){
   if(SAVEH.backend==='ls'){lsDel(LSKEY[key]);return Promise.resolve(true);}
@@ -218,17 +229,49 @@ let _inflight=0;
    yoksa silinen yuva geri yazılabilirdi. */
 const REC_DEL={del:true};
 
-function queueRec(key,build){
+/* ===== dar bir soru: "yazdırmak istediğim şey gerçekten depolandı mı?" =====
+   save() senkron kalmak zorunda ve öyle kalıyor; kuyruğun tamamı da olduğu gibi
+   duruyor. Eklenen tek şey: queueRec() bir söz döndürüyor ve isteğe bağlı bir
+   TANIK (witness) alıyor.
+
+   Neden tanık, neden kaydın kendisi değil: "bu anahtarda bir yazma tamamlandı"
+   ile "benim içeriğim depolandı" aynı soru değil. Kuyruk anahtar başına
+   birleşiyor ve uçuşa giden değer build()'in o anda okuduğu CANLI durumdan
+   kuruluyor. Yazılan nesneyi olduğu gibi geri vermek de yetmez: o nesne S'ye
+   referans taşır ve put'tan SONRA değişmeye devam edebilir — depolamada eski
+   kopya dururken elimizdeki "kanıt" yeni mutasyonu gösterir, yani yalan söyler.
+
+   Bu yüzden kanıt, içeriğin depolamaya verildiği anda, verilen içerikten
+   üretiliyor (recPut — seal) ve orada donuyor. Tanık üç alan okuyor; 7 MB'lık
+   bir kaydı kopyalamak gerekmiyor.
+
+   Bekleyenin hangi uçuşa bağlanacağı da önemli: liste build() çağrılmadan hemen
+   önce dondurulup boşaltılıyor, çünkü bir uçuş yalnız kendisinden önce kaydolmuş
+   bekleyenlerin mutasyonunu görmüş olabilir. Bekleyen yalnız queueRec() içinde,
+   _pend yazıldıktan sonra oluşturuluyor: böylece her bekleyeni çözecek bir uçuş
+   garanti, hiçbiri askıda kalmıyor.
+
+   Söz true döner ancak yazma tamamlandıysa VE tanık depolanan içerikte doğru
+   çıktıysa. Tanıksız çağıranlar için (oyunun geri kalanı) yalnız "yazma
+   tamamlandı" anlamına gelir; silme ve hata her zaman false. */
+const _wait={};
+
+function queueRec(key,build,witness){
   _pend[key]=build;
-  if(_busy[key])return;
-  flushRec(key);
+  const w={res:null,fn:witness,proof:false};
+  const p=new Promise(res=>{w.res=res;});
+  (_wait[key]=_wait[key]||[]).push(w);
+  if(!_busy[key])flushRec(key);
+  return p;
 }
 /* Bekleyen yazma varsa iptal ediliyor — birazdan silinecek şeyi yazmanın anlamı yok. */
-function queueDel(key){queueRec(key,()=>REC_DEL);}
+function queueDel(key){return queueRec(key,()=>REC_DEL);}
 function flushRec(key){
   const build=_pend[key];
   if(!build){_busy[key]=false;return;}
   delete _pend[key];
+  /* Bu uçuşun cevaplayacağı bekleyenler — build()'den önce donduruluyor. */
+  const waiters=_wait[key]||[];_wait[key]=[];
   _busy[key]=true;_inflight++;
   let val;
   try{val=build();}
@@ -236,13 +279,19 @@ function flushRec(key){
     /* Değeri kuramadık. Kuyruğu yine de ilerlet: arkada bekleyen bir istek
        varsa (örneğin silme) onun askıda kalmaması gerekiyor. */
     _busy[key]=false;_inflight--;noteSaveFail(key,e);
+    waiters.forEach(w=>w.res(false));
     if(_pend[key])flushRec(key);
     return;
   }
-  const op=(val===REC_DEL)?recDel(key):recPut(key,val);
-  op.then(()=>noteSaveOk(key),e=>noteSaveFail(key,e)).then(()=>{
+  /* Silme "durum kalıcılaştı" demek değil: seal hiç çağrılmaz, kanıt false kalır. */
+  const del=(val===REC_DEL);
+  const seal=v=>{waiters.forEach(w=>{w.proof=w.fn?!!w.fn(v):true;});};
+  const op=del?recDel(key):recPut(key,val,seal);
+  let ok=false;
+  op.then(()=>{noteSaveOk(key);ok=!del;},e=>{noteSaveFail(key,e);ok=false;}).then(()=>{
     _inflight--;
     _busy[key]=false;
+    waiters.forEach(w=>w.res(ok&&w.proof));
     if(_pend[key])flushRec(key);
   });
 }

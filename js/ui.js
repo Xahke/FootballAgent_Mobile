@@ -36,6 +36,10 @@ function openSlot(n){
     /* Rakip ajanslar kayıtta olmayabilir (eski kayıt). İlk çizimden önce kuruluyor,
        yoksa panelin sıralama hücresi boş bir dünyaya bakardı. */
     ensureRivals();
+    /* Saat onarımı ve bekleyen kazanılmış ödülün teslimi (js/reward.js).
+       Beklenmiyor: render() gecikmemeli ve teslimat kendi kaydını yapıyor.
+       Üretimde bekleyen kayıt hiç oluşmuyor — rwEarned() çağıran kod yok. */
+    rwSync();
     stack=[{v:'dash'}];lastSig=null;
     render();
     /* Karar verilmemiş olay kaydın içinde duruyor — yuva değiştirerek de atlanamaz. */

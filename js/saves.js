@@ -118,7 +118,7 @@ function validSave(d){return !!(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEA
 /* Senkron döner: "kuyruğa alındı" demek, "diske yazıldı" demek değil. Gerçek
    sonuç SAVEH üzerinden görünür oluyor (ui.js kalıcı bir şerit çiziyor) —
    eskiden burada dönen false hiçbir yere gitmiyordu, asıl hata oydu. */
-function saveToSlot(n){
+function saveToSlot(n,witness){
   if(!n||typeof S==='undefined'||!S)return false;
   META['s'+n]=metaOf(S);
   /* Kayıt nesnesi yazma anında kuruluyor ki birleşen istekler en güncel durumu
@@ -127,9 +127,23 @@ function saveToSlot(n){
      eskimişini yazmak yeniden yüklemede id çakışması demek olurdu, bu yüzden
      hâlâ aynı kariyerdeysek güncel değeri alınıyor. */
   const snap=S,pidAtQueue=PID;
-  queueRec('s'+n,()=>({v:SAVE_SCHEMA,S:snap,PID:(S===snap?PID:pidAtQueue)}));
+  const p=queueRec('s'+n,()=>({v:SAVE_SCHEMA,S:snap,PID:(S===snap?PID:pidAtQueue)}),witness);
   metaDirty();
-  return true;
+  return p;
+}
+/* Aynı kaydı yapar, ama "istediğim içerik gerçekten depolandı mı" sorusunu
+   cevaplar (true/false). Tanık, kaydın depolamaya verildiği anda o içerik
+   üzerinde çalıştırılıyor (js/store.js — seal), yani canlı bir referansı
+   sonradan okumuyor: put'tan sonra aynı nesneye eklenen bir şey kanıta
+   giremiyor.
+
+   false üç şeyi birden kapsar: yazma düştü, arkadan gelen bir silme kaydı yok
+   etti, ya da uçuşa giden içerik beklenen kariyer/içerik değildi (kuyruk anahtar
+   başına birleşiyor; araya giren bir yuva değişimi başka bir kariyerin
+   snapshot'ını yazdırabilir). Oyunun geri kalanı save() ile senkron kalıyor. */
+function saveSlotConfirmed(n,witness){
+  const p=saveToSlot(n,witness);
+  return p?Promise.resolve(p):Promise.resolve(false);
 }
 
 /* Asenkron: yalnız üç yerden çağrılıyor (yuva açma, göç doğrulaması, testler).
@@ -161,6 +175,12 @@ function dropSlotMeta(n,reason){
   return {ok:false,reason:reason};
 }
 function deleteSlot(n){
+  /* Kimlik özetten okunuyor çünkü kayıt birazdan gidiyor. Kariyere ait sürmekte
+     olan bir ödül gösterimi varsa o da gider: ödül yalnız o cid'ye aitti ve
+     başka bir kariyere aktarılmıyor. Aynı yuvada kurulacak yeni kariyerin cid'i
+     zaten farklı olacağı için ona da geçemez. */
+  const meta=META['s'+n];
+  if(meta&&meta.cid)rwDropCid(meta.cid);
   delete META['s'+n];
   queueDel('s'+n);
   metaDirty();
