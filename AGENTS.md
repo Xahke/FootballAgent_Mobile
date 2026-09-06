@@ -614,6 +614,25 @@ janky on a phone. Any future view with live listeners needs the same moves.
   or `WebSocket` anywhere in `js/`. Keep it that way — it's the basis of the privacy
   claim for the store listing. `tools/build-geo.js` does download its source, but it is a
   developer tool that is never loaded by the app; its output is committed instead.
+  The one exception is an address, not a request: the **Privacy Policy** row in Settings
+  (`PRIVACY_URL` in `js/i18n.js`, rendered by `VIEWS.settings`) points at
+  `xahke.github.io`. It is a plain `<a target="_blank" rel="noopener noreferrer">` and
+  nothing follows it until the user taps it; on Android the tap hands the URL to the
+  **external browser** and the WebView stays where it is, and viewing the page needs an
+  internet connection. The game itself still fetches nothing, online or off.
+  *(Measured on an Android 17 / API 37 emulator with the debug APK: tapping the row logs
+  `START ... act=android.intent.action.VIEW ... cmp=com.android.chrome` from uid
+  `com.xahke.profootballagent`, with `capturedLink` equal to the `tr.html` or `en.html`
+  address for the language selected in Settings. Chrome opens in its own task and the game's
+  task keeps `MainActivity`. What the player sees on the way back depends on the route:
+  going straight from Chrome to the game through recents came back to the same Settings
+  screen at the same scroll position, while backing out of Chrome to the launcher first and
+  returning after that reloaded the WebView and opened on the career menu. Don't promise
+  either one — the WebView may be reloaded on resume like any Android WebView. What did hold
+  in both runs is the save: the career, its season and week and its cash were unchanged
+  afterwards, and the game was playable. The mechanism is Capacitor's `Bridge.launchIntent`,
+  which fires `ACTION_VIEW` for any host that isn't the app's own; `setSupportMultipleWindows`
+  is never enabled, so `target="_blank"` takes that same path.)*
 
 ## Naming and trademark policy (hard constraint)
 

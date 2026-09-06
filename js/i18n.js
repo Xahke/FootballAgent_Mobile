@@ -159,7 +159,9 @@ skOpenTree:'Ağacı Aç',skBranchProg:'{a}/{b} düğüm',
 /* Saha yetenek ekranı: kimlik bandı, puan özeti ve kart durumları. */
 skTitle:'Yetenek Merkezi',skSub:'Ajansını geliştir',skPointsL:'Yetenek puanı',
 skProgress:'Gelişim',skPoorShort:'Puan yetersiz',skUpgradeBtn:'Geliştir',skLockedBtn:'Kilitli',
-settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',
+settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',aboutLbl:'Hakkında',
+privacyPolicy:'Gizlilik Politikası',
+privacyHint:'Tarayıcıda açılır. Oyunun hiçbir veri toplamadığını anlatan metin.',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
 transfersSub:'Bu ligin kulüplerini ilgilendiren son transferler.',feeL:'Bonservis',
@@ -347,7 +349,9 @@ skOpenTree:'Open the Tree',skBranchProg:'{a}/{b} nodes',
 /* Saha talent screen: identity band, point summary and card states. */
 skTitle:'Talent Centre',skSub:'Grow your agency',skPointsL:'Skill points',
 skProgress:'Progress',skPoorShort:'Not enough points',skUpgradeBtn:'Unlock',skLockedBtn:'Locked',
-settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',
+settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',aboutLbl:'About',
+privacyPolicy:'Privacy Policy',
+privacyHint:'Opens in your browser. The text explaining that the game collects nothing.',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',
 transfersSub:'Recent moves involving clubs in this league.',feeL:'Fee',
@@ -393,6 +397,12 @@ tut:'You start in a tiny office. Find young talent in lower leagues and Africa, 
 };
 let L='tr';
 const t=k=>STR[L][k]||k;
+/* Oyunun tek dış bağlantısı: mağazanın istediği gizlilik metni. Dile göre ayrı sayfa.
+   Çeviri değil adres olduğu için STR'de değil, {tr,en} tablosu olarak burada duruyor —
+   tema/arketip nesneleriyle aynı biçim, [L] ile okunuyor. Bağlantı yalnız kullanıcı
+   dokununca açılıyor; oyun kendiliğinden hiçbir istek atmıyor. */
+const PRIVACY_URL={tr:'https://xahke.github.io/privacy/pro-football-agent/tr.html',
+                   en:'https://xahke.github.io/privacy/pro-football-agent/en.html'};
 /* inline links inside news: player → profile, team → team page, league → standings, cup → bracket */
 function goLg(i){S.curLg=i;S.curCtry=LEAGUES[i].ctry;S.curCon=LEAGUES[i].con;S.ltab='table';S.vSe=undefined;navTo('league');}
 function goCup(i){S.curCon='cup';S.curCup=i;navTo('league');}

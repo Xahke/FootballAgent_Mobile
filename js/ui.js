@@ -2366,7 +2366,13 @@ settings(){
     <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
   </div>
   <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
-  <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}`;
+  <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}
+  <div class="sect">${t('aboutLbl')}</div>
+  ${listWrap(`<a class="pitem" href="${PRIVACY_URL[L]}" target="_blank" rel="noopener noreferrer"
+    style="text-decoration:none;color:inherit">
+    <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
+    <span class="faint">↗</span></a>`)}`;
 },
 player(id){
   if(useSahaPlayerProfile())return pfSahaView(id);
