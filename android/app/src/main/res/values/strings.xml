@@ -4,4 +4,8 @@
     <string name="title_activity_main">Pro Football Agent</string>
     <string name="package_name">com.xahke.profootballagent</string>
     <string name="custom_url_scheme">com.xahke.profootballagent</string>
+    <!-- Google Mobile Ads uygulama kimligi. Bu, Google'in yayimladigi ORNEK
+         (test) kimligidir; gercek AdMob kimligi degil ve bu kapsamda gercek
+         kimlik kullanilmiyor. developers.google.com/admob/android/quick-start -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
 </resources>

@@ -669,6 +669,15 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
 .hmAg.onb b{font-family:var(--serif);font-size:14.5px;font-weight:700;color:var(--txt);line-height:1.2}
 .hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
+/* Ödüllü reklam satırı (js/ads.js). İki satırlık metin düzeni gündem satırının
+   onboarding varyantıyla aynı; .onb yeniden kullanılmıyor çünkü o rengi ve
+   anlamı da taşıyor. Kilitli hâl <button disabled> ile geliyor: hak
+   kullanılmışken ya da reklam hazırlanırken satır soluk ve tıklanamaz. */
+.hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
+.hmAg.ad b{font-family:var(--serif);font-size:14.5px;font-weight:700;color:var(--txt);line-height:1.2}
+.hmAg.ad i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
+.hmAg.ad[disabled]{opacity:.55;cursor:default}
+.hmAg.ad[disabled]:active{background:none;transform:none}
 .hmEmpty{background:var(--sur);border:1px solid var(--line2);border-radius:var(--r-s);
   padding:13px 11px;margin-bottom:7px;color:var(--txt3);font-size:13px;text-align:center}
 

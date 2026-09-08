@@ -311,6 +311,30 @@ function hmBadgeFail(img){
   if(p&&p.classList)p.classList.remove('badge');
   img.remove();
 }
+/* ================= ÖDÜLLÜ REKLAM SATIRI =================
+   Ana ekranda, hızlı erişim kartlarının altında. Durumu js/ads.js veriyor;
+   burada yalnız görünüm var — bu dosya SDK'yı hiç tanımıyor.
+
+   Native eklenti yoksa (web, PWA, tek dosya sürümü) adsRowState() null döner
+   ve satır HİÇ çizilmez: reklamı kapatmak için ayrı bir bayrak yok.
+
+   Tutar metne gömülmüyor, fmtK(RW.amount) ile basılıyor — ödül miktarı tek
+   yerde (js/reward.js) tanımlı kalsın.
+
+   'busy' ve 'used' hâllerinde <button disabled>: yükleme/gösterim sırasında
+   ikinci dokunuş native'e hiç ulaşmıyor, hak kullanılmışken de satır yarın
+   yeniden açılacağını söylüyor. */
+function adsRowHtml(){
+  const st=adsRowState();
+  if(!st)return '';
+  const on=st==='go';
+  const sub=st==='go'?t('adRewardSub'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
+  const ttl=on?`${t('adRewardTitle')} · +${fmtK(RW.amount)}`:t('adRewardTitle');
+  return `<button class="hmAg ad gold" ${on?'onclick="adsWatch()"':'disabled'}>
+    <span class="hmAgIc">${hmIcon('cash',50)}</span>
+    <span class="hmAgT"><b>${ttl}</b><i>${sub}</i></span>
+    ${on?'<span class="hmAgC">›</span>':''}</button>`;
+}
 /* ================= KUTU KATEGORİLERİ =================
    Kutu mesajlarının TEK eşleme kaynağı. Her kategori kendi rozetini, iki
    dildeki adını, filtre grubunu ve ürettiği NEWS anahtarlarını taşıyor;
@@ -1943,6 +1967,8 @@ dash(){
     ${qCard('blue','inbox',t('inbox'),unread,"navTo('inbox')")}
     ${qCard('viol','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
   </div>
+
+  ${adsRowHtml()}
 
   ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
     <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>

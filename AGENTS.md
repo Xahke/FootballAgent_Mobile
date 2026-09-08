@@ -57,21 +57,24 @@ global, loaded in the order listed in `index.html`. A function defined in `ui.js
 call one from `core.js` because `core.js` loaded first — nothing enforces this, so
 load order is the contract.
 
-**Adding a JS file means updating three places, or things break silently:**
+**Adding a JS file means updating four places, or things break silently:**
 
 1. `index.html` — `<script>` tag, in the right position
 2. `build.js` — the `order` array (single-file build)
 3. `sw.js` — the `SHELL` array, **and bump `CACHE`** (otherwise offline users get a
    stale shell missing the new file)
+4. `tools/savetest.js` — the `FILES` array. This one fails quietly in the other
+   direction: the headless harness still boots, but the new file is simply absent, so
+   every test that touches it passes by not running it.
 
-`npm run www` copies `js/` wholesale, so there is no fourth place.
+`npm run www` copies `js/` wholesale, so there is no fifth place.
 
 `js/badges.js` was the most recent file to go through this, and it is a worked
 example: it sits after `data.js` (badges read a team object) and before `core.js`
 (where `tmBadge()` lives), and the same position appears in all three lists.
 
 Load order:
-`i18n → store → saves → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → store → saves → reward → ads → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -91,6 +94,7 @@ call time. The parts that are load-time real:
 |---|---|
 | `js/i18n.js` | `L`, `STR{tr,en}` (436 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
+| `js/ads.js` | Rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -357,6 +361,58 @@ six-agency world and have **not** been re-run since; the formula is unchanged an
 direct `poachChance` sample above came out slightly *lower*, so the spread should hold,
 but if you need the exact numbers, measure them rather than quoting this table.
 
+### Rewarded ads are a prototype, and the scope is the design
+
+`js/ads.js` plays a rewarded ad through `@capacitor-community/admob` (pinned to exactly
+`8.1.0`) and hands the result to the existing entitlement accounting in `js/reward.js`.
+It is a **technical trial on a branch**, not a shipped feature: it uses Google's *sample*
+app id and *sample* rewarded unit, no mediation is configured, and no real ad unit is
+wired. `js/ads.js` never touches `S.cash` — the only money path is still `rwEarned()`.
+
+**Two lifetimes, and conflating them is the easy bug.** `ADS.cur` is the *on-screen*
+show — a UI lock, cleared by the first terminal event. `att` is the *delivery record* —
+the reward's fate, alive in closures after `ADS.cur` is gone. The reward handler must
+never read `ADS.cur`: a correct result arriving after the ad closed would be dropped.
+
+**Correlation comes from the bridge, not from us.** Every `showRewardVideoAd()` call gets
+a unique `callbackId` (`native-bridge.js`), a fresh `PluginCall` (`MessageHandler.java`),
+and the plugin resolves the reward on *that* call. So the promise is a genuine per-show
+identity and it is the single authorised reward entry. The global
+`onRewardedVideoAdReward` event is deliberately **not** listened to — it carries no
+identity, so an old show's reward could reach a new attempt.
+
+**Terminal events carry no identity at all.** `Dismissed`/`FailedToShow`/`FailedToLoad`
+ship an empty object. `ADS.cur` means "whatever is on screen", which is the best
+available and not a guarantee. Damage is bounded: because payment rides the promise, a
+wrong or double payment is impossible; the worst case is a lost reward.
+
+**The supported order is Google's.** Google documents `onUserEarnedReward` *before*
+`onAdDismissedFullScreenContent` for ads it serves itself, and under mediation the ad
+source decides. That ordering is what makes the immediate `rwAbandon()` on close safe:
+`rwEarned()` promotes the record to `earned` synchronously in the first microtask, and
+`rwAbandon()` cannot delete an `earned` record. **So `onReward` must call `rwEarned()`
+with no `await` in front of it** — an extra microtask hop and close wins the race.
+The reverse order (close first, reward second) is **not supported**: the reward is lost,
+the day's entitlement stays open, and `tools/savetest.js` block 18 asserts exactly that
+rather than hiding it. No grace timer was added; measuring mediation is a prerequisite
+for deserving one.
+
+**Known losses:** a WebView reload or an Activity recreation during a show loses the
+reward — derived from source (bridge callbacks and listeners are gone; the plugin does
+not retain events), **not reproduced on device**: no reload or recreation occurred in
+the prototype runs. Process death kills `AdActivity` too — this one was measured — so a
+stale `req` genuinely has no live ad and `rwReap()` is right there. Recovering the first
+two needs a native change the plugin does not have today — a caller-supplied id echoed on
+the events plus a way for a new JS session to query and settle a pending result. That is
+a separate decision and nothing in this branch pretends it is solved.
+
+**Android configuration that goes with it:** `playServicesAdsVersion` is pinned in
+`android/variables.gradle` because the plugin's default is the dynamic `25.4.+`;
+`admob_app_id` lives in `strings.xml` and is referenced from the manifest, without which
+the SDK crashes with "Missing application ID". The merged manifest gains
+`ACCESS_NETWORK_STATE`, `AD_ID`, three `ACCESS_ADSERVICES_*`, `WAKE_LOCK` and
+`FOREGROUND_SERVICE` — a Play Data Safety concern before any release.
+
 ### The world runs without the player
 
 `sim.js` and `market.js` simulate all 22 leagues every week regardless of what the
@@ -610,9 +666,10 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Sound is synthesised** with Web Audio (`js/sfx.js`) — no audio assets. A single
   capture-phase listener on `SFX_SEL` fires one sound per tap; don't add `SFX` calls in
   individual handlers, they'd double up.
-- **The game makes no network requests at all.** There is no `fetch`, `XMLHttpRequest`
-  or `WebSocket` anywhere in `js/`. Keep it that way — it's the basis of the privacy
-  claim for the store listing. `tools/build-geo.js` does download its source, but it is a
+- **The game makes no network requests at all** *(no longer true of the Android build
+  on the `feat/rewarded-ad-prototype` branch — see *Rewarded ads* below)*. There is no
+  `fetch`, `XMLHttpRequest` or `WebSocket` anywhere in `js/`. Keep it that way — it's the
+  basis of the privacy claim for the store listing. `tools/build-geo.js` does download its source, but it is a
   developer tool that is never loaded by the app; its output is committed instead.
   The one exception is an address, not a request: the **Privacy Policy** row in Settings
   (`PRIVACY_URL` in `js/i18n.js`, rendered by `VIEWS.settings`) points at

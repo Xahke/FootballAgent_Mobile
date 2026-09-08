@@ -273,6 +273,7 @@ node tools/build-themes.js && node build.js   # → dist/menajer.html
 | Dosya | İçerik |
 |---|---|
 | js/i18n.js | Çeviriler, haber şablonları, haber-içi linkler |
+| js/ads.js | Ödüllü reklam adaptörü (@capacitor-community/admob). Yalnız Android; deneme kapsamı, ayrıntılar CLAUDE.md |
 | js/data.js | İsim havuzları, ligler, takımlar, kupa tanımları (tamamı özgün) |
 | js/core.js | Oyun durumu, fikstür/kupa kurulum, keşif ağı, ekonomi |
 | js/sim.js | Haftalık simülasyon, sezon sonu, gelişim, kariyer sonu, küme, milli turnuva |

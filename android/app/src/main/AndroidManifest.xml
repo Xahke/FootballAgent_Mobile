@@ -24,6 +24,12 @@
 
         </activity>
 
+        <!-- Google Mobile Ads: bu meta-data olmadan SDK baslatilirken
+             "Missing application ID" ile cokuyor. Deger strings.xml'de. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

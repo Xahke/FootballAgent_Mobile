@@ -13,4 +13,9 @@ ext {
     androidxJunitVersion = '1.3.0'
     androidxEspressoCoreVersion = '3.7.0'
     cordovaAndroidVersion = '14.0.1'
+    /* @capacitor-community/admob'un varsayilani '25.4.+' — dinamik surum.
+       Sabitlenmezse ayni commit farkli gunlerde farkli Google Mobile Ads SDK'si
+       ile derlenir ve gelecekte gelen bir surum native kutuphane getirirse
+       CI'daki 'dogrula-7-native-so-yok' adimi kimse bir sey degistirmeden kirilir. */
+    playServicesAdsVersion = '25.4.0'
 }

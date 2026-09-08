@@ -15,7 +15,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['i18n','store','saves','reward','data','worldgeo','atlas','rivals','core',
+const FILES = ['i18n','store','saves','reward','ads','data','worldgeo','atlas','rivals','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= IndexedDB taklidi ================= */
@@ -1091,6 +1091,211 @@ async function tRewardRegressions() {
   }
 }
 
+
+/* ================= [18] REKLAM ADAPTÖRÜ (js/ads.js) =================
+   Taklit, @capacitor-community/admob 8.1.0'in Android tarafında GERÇEKTEN
+   yaydığı yüzeyi taklit ediyor, fazlasını değil:
+
+   - showRewardVideoAd() promise'i YALNIZ ödül kazanılınca çözülüyor; ödülsüz
+     kapanışta hiç settle olmuyor (AdRewardExecutor: PluginCall yalnız
+     OnUserEarnedRewardListener içinden resolve ediliyor).
+   - Terminal olayların yükü boş nesne / hata nesnesi. GÖSTERİM KİMLİĞİ YOK ve
+     buraya uydurma bir alan EKLENMİYOR — eklentide olmayan bir güvenceyi
+     testte kurmak, testi geçirip ürünü yanıltırdı.
+   - Her native bildirimi ayrı bir görev olarak veriliyor (emit/reward + tick),
+     çünkü köprü de her mesajı ayrı postMessage olarak taşıyor: mikrogörevler
+     iki bildirim ARASINDA boşalıyor.
+
+   Bunlar native olay doğrulaması DEĞİLDİR; yalnız adaptörün sözleşmesini
+   ölçerler. Gerçek olay sırası cihazda ölçülmek zorunda. */
+function fakeAdMob(ctx, opt) {
+  opt = opt || {};
+  const L = {}, st = { prepares: 0, shows: 0, rewardResolve: null };
+  ctx.Capacitor = {
+    Plugins: {
+      AdMob: {
+        initialize() { return opt.initFail ? Promise.reject(new Error('init')) : Promise.resolve(); },
+        addListener(ev, cb) { (L[ev] = L[ev] || []).push(cb); return { remove() {} }; },
+        prepareRewardVideoAd(o) {
+          st.prepares++;
+          return opt.loadFail ? Promise.reject(new Error('load'))
+                              : Promise.resolve({ adUnitId: o && o.adId });
+        },
+        showRewardVideoAd() {
+          st.shows++;
+          // Ödülsüz kapanışta HİÇ settle olmayan promise — gerçeğiyle aynı.
+          return new Promise(res => { st.rewardResolve = res; });
+        }
+      }
+    }
+  };
+  return {
+    stat: st,
+    // Native "ödül kazanıldı": gösterime özgü promise çözülüyor.
+    reward(item) { if (st.rewardResolve) st.rewardResolve(item || { type: 'coin', amount: 1 }); },
+    // Native terminal olay: kimliksiz, tam da eklentinin yaydığı yük.
+    emit(ev, data) { (L[ev] || []).slice().forEach(f => f(data === undefined ? {} : data)); },
+    bound(ev) { return (L[ev] || []).length; }
+  };
+}
+
+async function tAdsAdapter() {
+  console.log('\n[18] reklam adaptörü: sıra, kilit ve kapsam sınırı');
+
+  /* (1) DESTEKLENEN SIRA — ödül önce işleniyor, kapanış sonra geliyor,
+         kalıcı yazma gecikmeli tamamlanıyor. Teslimat bozulmamalı. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    ok(await a.R('adsInit()') === 'ready', '(1) SDK başlatıldı, dinleyiciler kuruldu');
+    ok(fake.bound('onRewardedVideoAdDismissed') === 1
+      && fake.bound('onRewardedVideoAdFailedToShow') === 1
+      && fake.bound('onRewardedVideoAdFailedToLoad') === 1, '(1) üç terminal olay dinleniyor');
+    ok(fake.bound('onRewardedVideoAdReward') === 0, '(1) global ödül olayı BİLEREK dinlenmiyor');
+    ok(a.R('adsRowState()') === 'go', '(1) düğme açık');
+
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();');
+    await tick();
+    ok(a.R('ADS.cur!==null') === true, '(1) gösterim sürerken kilit kapalı');
+    ok(a.R('adsRowState()') === 'busy', '(1) düğme kilitli görünüyor');
+    ok(a.R('PREFS.rw["' + cid + '"].st') === 'req', '(1) istek kaydı açıldı, ödül henüz yok');
+
+    fake.reward(); await tick();                                  // ödül mesajı
+    ok(a.R('S.cash') === cash0 + 50, '(1) ödül işlendi, kasa +50');
+    ok(a.R('PREFS.rw["' + cid + '"].st') === 'earned', '(1) kayıt earned oldu');
+
+    a.R('ADS.__att=ADS.cur;');
+    fake.emit('onRewardedVideoAdDismissed'); await tick();         // kapanış mesajı
+    ok(a.R('ADS.cur===null') === true, '(1) kapanışta kilit açıldı');
+    ok(a.R('S.cash') === cash0 + 50, '(1) kapanış ödülü BOZMADI');
+    ok(a.R('ADS.__att.cl===true&&ADS.__att.rw===true') === true, '(1) iki yaşam süresi de kendi bayrağını taşıyor');
+
+    await a.R('saveDrain()');
+    await waitFor(() => a.R('PREFS.rw["' + cid + '"]===undefined'), '(1) kayıt temizliği');
+    ok(a.R('ADS.lastRw') === 'delivered', '(1) gecikmeli kalıcı yazma teslimatı tamamladı');
+    ok(a.R('S.cash') === cash0 + 50, '(1) yazma tamamlandıktan sonra da tek ödeme');
+    ok(a.R('adsRowState()') === 'used', '(1) aynı gün hak kapandı');
+  }
+
+  /* (2) DESTEKLENMEYEN SIRA — önce ödülsüz kapanış işleniyor, ödül sonra
+         geliyor. Bu, ilk kapsamın (yalnız Google'ın kendi sunduğu reklamlar)
+         desteklemediği sıradır ve KURTARILDIĞI İDDİA EDİLMİYOR: ödül kaybolur.
+         Test bunu belgeliyor, gizlemiyor.
+
+         Aynı test, ödül yolunun ADS.cur'a bakmadığını da kanıtlıyor: baksaydı
+         handler erken döner, rwEarned hiç çağrılmaz ve lastRw boş kalırdı. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick();
+
+    fake.emit('onRewardedVideoAdDismissed'); await tick();         // önce kapanış
+    ok(a.R('ADS.cur===null') === true, '(2) kilit açıldı');
+    ok(a.R('PREFS.rw["' + cid + '"]===undefined') === true, '(2) istek kaydı silindi');
+
+    fake.reward(); await tick();                                   // sonra ödül
+    await waitFor(() => a.R('ADS.lastRw') !== '', '(2) ödül yolu çalıştı');
+    ok(a.R('ADS.lastRw') === 'unknown', '(2) ödül yolu ADS.cur okumadan çalıştı');
+    ok(a.R('S.cash') === cash0, '(2) ters sırada ödül KAYIP — para yazılmadı');
+    ok(a.R('rwCanClaim(Date.now())') === true, '(2) günün hakkı yanmadı');
+  }
+
+  /* (3) Ödülsüz kapatma: para yok, hak tüketilmiyor, ikinci deneme mümkün. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick();
+    fake.emit('onRewardedVideoAdDismissed'); await tick();
+    ok(a.R('S.cash') === cash0, '(3) ödülsüz kapatma para vermedi');
+    ok(a.R('PREFS.rw["' + cid + '"]===undefined') === true, '(3) istek kaydı temizlendi');
+    ok(a.R('adsRowState()') === 'go', '(3) hak TÜKETİLMEDİ, düğme yeniden açık');
+    a.R('adsWatch();'); await tick();
+    ok(fake.stat.prepares === 2, '(3) ikinci deneme başlatılabildi');
+  }
+
+  /* (4) Yükleme hatası: prepare reject. Eklenti ayrıca FailedToLoad da yayıyor;
+         sahipsiz kalan o olay hakka dokunmamalı. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx, { loadFail: true });
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick();
+    ok(a.R('ADS.cur===null') === true, '(4) yükleme hatasında kilit açıldı');
+    ok(a.R('S.cash') === cash0, '(4) yükleme hatası para vermedi');
+    ok(a.R('PREFS.rw["' + cid + '"]===undefined') === true, '(4) istek kaydı silindi');
+    fake.emit('onRewardedVideoAdFailedToLoad', { code: 3, message: 'no fill' });
+    await tick();
+    ok(a.R('adsRowState()') === 'go', '(4) sahipsiz FailedToLoad hakka dokunmadı');
+  }
+
+  /* (5) Gösterim sürerken ikinci dokunuş native'e HİÇ ulaşmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    a.R('adsWatch();'); await tick();
+    a.R('adsWatch();adsWatch();'); await tick();
+    ok(fake.stat.prepares === 1 && fake.stat.shows === 1, '(5) tek gösterim: prepare/show birer kez');
+  }
+
+  /* (6) Native eklenti yoksa (web, PWA, tek dosya): satır çizilmiyor, çağrı yok. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    await careerIn(a, 1);
+    ok(a.R('typeof Capacitor') === 'undefined', '(6) ortamda Capacitor yok');
+    ok(await a.R('adsInit()') === 'off', '(6) adaptör kapalı');
+    ok(a.R('adsRowState()') === null, '(6) düğme HİÇ çizilmiyor');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick();
+    ok(a.R('S.cash') === cash0 && a.R('ADS.cur===null') === true, '(6) çağrı hiç başlamadı');
+    ok(a.R("VIEWS.dash().indexOf('adsWatch()')") === -1, '(6) ana ekranda düğme yok');
+  }
+
+  /* (7) SDK başlatılamazsa düğme hiç çizilmiyor — her dokunuşta patlayacak bir
+         düğme göstermek yalan olurdu. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    await careerIn(a, 1);
+    fakeAdMob(a.ctx, { initFail: true });
+    ok(await a.R('adsInit()') === 'fail', '(7) başlatma hatası görüldü');
+    ok(a.R('adsRowState()') === null, '(7) düğme çizilmiyor');
+  }
+
+  /* (8) Sahipsiz terminal olay (ADS.cur boşken) hiçbir şeyi bozmuyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    fake.emit('onRewardedVideoAdDismissed');
+    fake.emit('onRewardedVideoAdFailedToShow', { code: 0, message: 'x' });
+    await tick();
+    ok(a.R('S.cash') === cash0, '(8) sahipsiz olay para hareketi yapmadı');
+    ok(a.R('(PREFS.rw||{})["' + cid + '"]===undefined') === true, '(8) hiç istek kaydı oluşmadı');
+    ok(a.R('adsRowState()') === 'go', '(8) hak bozulmadı');
+  }
+}
+
 /* Oturum kurucusu başka doğrulama betiklerinden de kullanılabilsin (tam uygulama
    taraması, çok sezonlu regresyon). Doğrudan çalıştırıldığında testler koşuyor. */
 module.exports = { session, newDisk, makeEl, waitFor, tick };
@@ -1102,7 +1307,8 @@ if (require.main !== module) return;
                  tQuotaVisible, tLocalStorageFallback, tSchemaVersion, tTwoSeasons,
                  tSlotDeleteAndCoalesce, tCareerIdentity, tCidLegacyMigration,
                  tCidSlotsAndCapacity, tRewardDailyRight, tRewardCareersAndMidnight,
-                 tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions];
+                 tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions,
+                 tAdsAdapter];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

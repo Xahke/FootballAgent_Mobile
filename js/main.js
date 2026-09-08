@@ -17,6 +17,13 @@ stack=[{v:'menu'}];
 render();
 storeInit().then(()=>{render();},()=>{render();});
 
+/* Ödüllü reklam adaptörü (js/ads.js). Açılışta bir kez: önce SDK başlatılıyor,
+   sonra terminal olay dinleyicileri kuruluyor — reklam ancak bundan sonra
+   yüklenebiliyor. Beklenmiyor: menü çizimi buna takılmamalı, hazır olunca
+   ads.js kendisi yeniden çizdiriyor. Native eklenti yoksa (web/PWA/tek dosya)
+   sessizce 'off' dönüyor ve hiçbir şey çizilmiyor. */
+adsInit();
+
 /* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta
    tamamlanma sözü vermiyor, ama yazmayı başlatmak hiç başlatmamaktan iyi. */
 function flushOnHide(){if(curSlot&&S)saveToSlot(curSlot);}
