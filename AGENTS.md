@@ -92,9 +92,9 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (436 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (449 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
-| `js/ads.js` | Rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
+| `js/ads.js` | UMP consent flow + rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -363,11 +363,13 @@ but if you need the exact numbers, measure them rather than quoting this table.
 
 ### Rewarded ads are a prototype, and the scope is the design
 
-`js/ads.js` plays a rewarded ad through `@capacitor-community/admob` (pinned to exactly
-`8.1.0`) and hands the result to the existing entitlement accounting in `js/reward.js`.
-It is a **technical trial on a branch**, not a shipped feature: it uses Google's *sample*
-app id and *sample* rewarded unit, no mediation is configured, and no real ad unit is
-wired. `js/ads.js` never touches `S.cash` — the only money path is still `rwEarned()`.
+`js/ads.js` gathers UMP consent, then plays a rewarded ad through
+`@capacitor-community/admob` (pinned to exactly `8.1.0`, which pulls
+`com.google.android.ump:user-messaging-platform:4.0.0`) and hands the result to the
+existing entitlement accounting in `js/reward.js`. It is a **technical trial**, not a
+shipped feature: it uses Google's *sample* app id and *sample* rewarded unit, no
+mediation is configured, and no real ad unit is wired. `js/ads.js` never touches
+`S.cash` — the only money path is still `rwEarned()`.
 
 **Two lifetimes, and conflating them is the easy bug.** `ADS.cur` is the *on-screen*
 show — a UI lock, cleared by the first terminal event. `att` is the *delivery record* —
@@ -406,8 +408,71 @@ two needs a native change the plugin does not have today — a caller-supplied i
 the events plus a way for a new JS session to query and settle a pending result. That is
 a separate decision and nothing in this branch pretends it is solved.
 
+### Consent has three states, and the ad gate is none of them
+
+The plugin's `initialize()` calls `MobileAds.initialize()` and never consults UMP
+(`AdMob.java`), so the ordering Google's setup guide requires — consent **before** the
+Mobile Ads SDK is initialised — has to be built in `js/ads.js`. It is:
+`requestConsentInfo()` → `showConsentForm()` → `canRequestAds` → `initialize()` →
+prepare/show. **The screen never waits for any of it.** `main.js` draws the menu first
+(`render()`), then fires `adsInit()` and moves on without awaiting it — so consent runs
+*after* the first paint, and an offline device still opens its menu and its saves at
+normal speed.
+
+Three separate things, and merging any two is the bug this design exists to prevent:
+
+| | Meaning |
+|---|---|
+| `ADS.sdk` | the Mobile Ads SDK's own life. Once `'on'` it **never goes back** — `MobileAds.initialize()` cannot be undone, and writing that it was would be a lie |
+| `ADS.cs` | the last **successful read** from the SDK — a *copy*, not "the SDK's current answer". The plugin exposes no standalone `canRequestAds()`; the only way to re-read is another `requestConsentInfo()` |
+| `adsReady()` | the **ad gate**: SDK on **and** listeners bound **and** eligibility current and true **and** nothing else running. An initialised SDK does not open it |
+
+**`canRequestAds` is the only decision field.** `status` and `isConsentFormAvailable` are
+carried for diagnosis and nothing branches on them. `OBTAINED` is not "every purpose
+allowed" and `REQUIRED` is not "ads forbidden" — mapping the user's choice onto a verdict
+ourselves is exactly the mistake. `privacyOptionsRequirementStatus` decides one thing
+only: whether the Settings entry is drawn.
+
+**A form error is not "nothing happened".** A rejection from `showConsentForm()` or
+`showPrivacyOptionsForm()` says the call failed, not at which stage — consent may have
+changed — but a re-read is only issued where the form did **not** already hand one back.
+A successful `showConsentForm()` resolves with fresh `canRequestAds`, so that value is
+adopted directly and **no extra query is made**. A *failed* `showConsentForm()` gets one
+`requestConsentInfo()` refresh. `showPrivacyOptionsForm()` returns no payload at all, so
+both its success and its failure get one refresh. Where a refresh is issued and it fails,
+`ADS.stale = true` and the old `canRequestAds: true` **stops starting ads**. That state
+is "could not be verified", never "you refused" — `adEligUnknown` and `adRewardFail` are
+separate strings on purpose. There is no retry loop: at most one read per refresh point,
+and the recovery path is the Settings row, which is why `ADS.pors` lives *outside*
+`ADS.cs` and survives a failed refresh.
+
+**Consent work and ad work never overlap.** `adsBusy()` is the single lock, and its
+`'ad'` state derives from `ADS.cur`, which is set *before* `prepareRewardVideoAd()` — so
+the load wait counts too. There **is** a loaded, unshown ad in that window: once prepare
+resolves the plugin holds a real ad in `preparedAds`, and if eligibility drops we simply
+never show it — 8.1.0 has no API to discard it. Every gate sits at the **top of the
+function**, not on the button: a hidden or disabled row is presentation, not a gate.
+
+**Measured on the emulator with the sample app id** (Android 17 / API 37): `status`
+`NOT_REQUIRED`, `canRequestAds` `true`, `isConsentFormAvailable` `false`,
+`privacyOptionsRequirementStatus` `NOT_REQUIRED` — so `showConsentForm()` resolved
+without drawing anything and **no real form has ever been exercised**. It cannot be:
+a European regulations message has to be published against *your own* AdMob app in
+Privacy & messaging, and the sample id is not one. `showPrivacyOptionsForm()` rejects
+there with message `"Error when show privacy form"` and the real UMP text in **`code`**
+(`"Privacy options form is not required."`) — Capacitor's `reject(msg, code)` puts it
+there, so log `err.code`, not `err.message`.
+
+`tools/savetest.js` block **19** holds the consent contract — ordering, the lock in both
+directions, stale eligibility, single initialisation across a true→false→true flip, and
+that no consent path ever moves money, burns the daily right or reaches `S`/`PREFS`. Its
+mock returns whatever a scenario hands it and claims nothing about what the real SDK
+answers; **that** only gets measured on a device.
+
 **Android configuration that goes with it:** `playServicesAdsVersion` is pinned in
 `android/variables.gradle` because the plugin's default is the dynamic `25.4.+`;
+`userMessagingPlatformVersion` is left alone because the plugin's default is already the
+fixed `4.0.0`;
 `admob_app_id` lives in `strings.xml` and is referenced from the manifest, without which
 the SDK crashes with "Missing application ID". The merged manifest gains
 `ACCESS_NETWORK_STATE`, `AD_ID`, three `ACCESS_ADSERVICES_*`, `WAKE_LOCK` and
@@ -658,7 +723,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 436 today, but count them rather than trusting this line; it has
+  counts must match — 449 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
@@ -666,11 +731,18 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Sound is synthesised** with Web Audio (`js/sfx.js`) — no audio assets. A single
   capture-phase listener on `SFX_SEL` fires one sound per tap; don't add `SFX` calls in
   individual handlers, they'd double up.
-- **The game makes no network requests at all** *(no longer true of the Android build
-  on the `feat/rewarded-ad-prototype` branch — see *Rewarded ads* below)*. There is no
-  `fetch`, `XMLHttpRequest` or `WebSocket` anywhere in `js/`. Keep it that way — it's the
-  basis of the privacy claim for the store listing. `tools/build-geo.js` does download its source, but it is a
-  developer tool that is never loaded by the app; its output is committed instead.
+- **The game makes no network requests at all** — but **the Android app now does.** There
+  is still no `fetch`, `XMLHttpRequest` or `WebSocket` anywhere in `js/`, and that has to
+  stay true. What changed is underneath it: `adsInit()` runs at every launch — *after* the
+  first paint, never blocking it — and `requestConsentInfo()` reaches Google's UMP servers,
+  then `MobileAds.initialize()` reaches AdMob's. **The store listing's
+  privacy claim can no longer be "the app never goes online" for the Android build**, and
+  `xahke.github.io/privacy/pro-football-agent/*.html` still says the opposite — it states
+  no ad SDK and no UMP are integrated. That page has to be rewritten before any release,
+  and it is also the URL a UMP message would point at. The web/PWA/single-file builds are
+  unaffected: no Capacitor, no plugin, no requests. `tools/build-geo.js` does download its
+  source, but it is a developer tool that is never loaded by the app; its output is
+  committed instead.
   The one exception is an address, not a request: the **Privacy Policy** row in Settings
   (`PRIVACY_URL` in `js/i18n.js`, rendered by `VIEWS.settings`) points at
   `xahke.github.io`. It is a plain `<a target="_blank" rel="noopener noreferrer">` and

@@ -335,6 +335,24 @@ function adsRowHtml(){
     <span class="hmAgT"><b>${ttl}</b><i>${sub}</i></span>
     ${on?'<span class="hmAgC">›</span>':''}</button>`;
 }
+/* ================= GİZLİLİK SEÇENEKLERİ SATIRI =================
+   Ayarlar > Hakkında, Gizlilik Politikası satırının yanında. Yalnız UMP
+   "giriş noktası gerekli" dediğinde (privacyOptionsRequirementStatus REQUIRED)
+   çiziliyor; durumu js/ads.js veriyor.
+
+   Yenileme düştüğünde satır KAYBOLMUYOR (ADS.pors son bilinen değeri tutuyor):
+   uygunluğu doğrulanamamış bir kullanıcının tek toparlanma yolu bu satır.
+   O hâlde altına ayrı bir ipucu düşüyor — "reddettin" değil, "doğrulanamadı". */
+function adsPrivacyRowHtml(){
+  const st=adsPrivacyState();
+  if(!st)return '';
+  const on=st==='go';
+  const sub=on?(ADS.stale?t('adEligUnknown'):t('adPrivacySub')):t('adBusy');
+  return `${listWrap(`<div class="pitem${on?'':' faint'}" ${on?'onclick="adsPrivacy()"':''}>
+    <div class="pinfo"><div class="pname">${t('adPrivacyTitle')}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${sub}</div></div>
+    <span class="faint">${on?'›':'…'}</span></div>`)}`;
+}
 /* ================= KUTU KATEGORİLERİ =================
    Kutu mesajlarının TEK eşleme kaynağı. Her kategori kendi rozetini, iki
    dildeki adını, filtre grubunu ve ürettiği NEWS anahtarlarını taşıyor;
@@ -2402,7 +2420,8 @@ settings(){
     style="text-decoration:none;color:inherit">
     <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
-    <span class="faint">↗</span></a>`)}`;
+    <span class="faint">↗</span></a>`)}
+  ${adsPrivacyRowHtml()}`;
 },
 player(id){
   if(useSahaPlayerProfile())return pfSahaView(id);

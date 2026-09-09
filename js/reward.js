@@ -1,13 +1,16 @@
 'use strict';
 /* js/reward.js — kariyer başına günlük ödül hakkı ve ödülün güvenilir teslimatı.
 
-   BU DOSYA REKLAM GÖSTERMİYOR. Reklam SDK'sı, satın alma, mağaza ekranı ve
-   oyuncuya görünen bir düğme burada yok; hiçbiri de bu aşamanın kapsamında
-   değil. Burada yalnız "hak" ve "teslimat" muhasebesi var. Üretim akışında
-   rwRequest()/rwEarned() çağıran hiçbir yer YOK — dolayısıyla normal oynanışta
-   bu dosya kimseye para vermiyor. Sahte bir sağlayıcı, hata ayıklama bayrağı ya
-   da bedava para yolu da yok: taklit reklam sonuçları yalnız tools/ altındaki
-   test ortamından, bu fonksiyonlar doğrudan çağrılarak geliyor.
+   BU DOSYA REKLAM GÖSTERMİYOR. Reklam SDK'sı, izin akışı, satın alma ve
+   mağaza ekranı burada yok. Burada yalnız "hak" ve "teslimat" muhasebesi var.
+   Tek çağıran js/ads.js: rwRequest()'i düğmeye basıldığında, rwEarned()'i
+   yalnız gösterime özgü promise çözülünce çağırıyor. Sahte bir sağlayıcı, hata
+   ayıklama bayrağı ya da bedava para yolu YOK — taklit reklam sonuçları yalnız
+   tools/ altındaki test ortamından, bu fonksiyonlar doğrudan çağrılarak geliyor.
+
+   İzin akışının bu dosyaya hiç dokunmadığına dikkat: UMP formunu görüntülemek
+   ne ödül sayılıyor ne de günün hakkını tüketiyor, çünkü izin yolunda
+   rwRequest() hiç çağrılmıyor.
 
    ===== İki durum birbirine karıştırılmıyor =====
 
