@@ -402,8 +402,22 @@ function adsPorsRequired() {
 }
 /* Tek okuma denemesi. Reddi yutuyor — çağıran taraf ne yapacağına kendi karar
    veriyor (açılışta hiçbir şey, form sonrasında 'doğrulanamadı'). */
+/* İzin sorgusunun seçenekleri. YAYIN yapısında her zaman boş nesne:
+   js/ads-testcfg.js'teki ADS_TESTCFG null ve yalnız Android debug paketinde
+   başka bir dosyayla eziliyor (gerekçesi orada yazılı).
+
+   Buradan geçen TEK alan debugGeography. Rıza kararına dokunan hiçbir alan
+   — tagForUnderAgeOfConsent, test cihazı listesi — okunmuyor; bozuk ya da
+   beklenmedik bir değer de sessizce düşürülüyor, yani en kötü hâlde eski
+   davranış (boş seçenek) kalıyor. */
+function adsTestOpts() {
+  const c = (typeof ADS_TESTCFG === 'undefined') ? null : ADS_TESTCFG;
+  if (!c || typeof c !== 'object') return {};
+  const g = c.debugGeography;
+  return (g === 1 || g === 2 || g === 3 || g === 4) ? { debugGeography: g } : {};
+}
 function adsAsk(P, src, op) {
-  try { return P.requestConsentInfo({}).then(i => adsAdopt(i, src, op), () => false); }
+  try { return P.requestConsentInfo(adsTestOpts()).then(i => adsAdopt(i, src, op), () => false); }
   catch (e) { return Promise.resolve(false); }
 }
 /* Güncel uygunluğu okumanın tek yolu — yalnız formun kendisi taze bir değer
@@ -514,8 +528,19 @@ function adsPrivacy() {
     }
     return P.showPrivacyOptionsForm().then(
       () => adsRefresh(P, 'privacy', op),
-      /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe. */
-      () => adsRefresh(P, 'privacyfail', op)
+      /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe: durum değişmiş
+         olabilir, o yüzden yeniden okuma yine yapılıyor.
+
+         Kullanıcı tarafında ise ret, dokunuşun karşılıksız kalması demekti.
+         Artık bir bildirim çıkıyor. Ham hata metni GEÇMİYOR: eklentinin
+         döndürdüğü dizge (ör. "Privacy options form is being loading") bir
+         geliştirici mesajı, üstelik çevrilmemiş. Otomatik tekrar ya da sabit
+         bekleme de eklenmiyor — yeniden deneme kullanıcının dokunuşuna kalıyor
+         ve satır yerinde duruyor. Başarılı kapanışta bu dal hiç çalışmıyor. */
+      () => {
+        if (typeof toast === 'function') toast(t('adPrivacyRetry'));
+        return adsRefresh(P, 'privacyfail', op);
+      }
     );
   }).then(done, () => done(false));
 }

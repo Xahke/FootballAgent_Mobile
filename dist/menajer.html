@@ -4898,6 +4898,7 @@ adEligUnknown:'Reklam tercihin şu anda doğrulanamadı. Bağlantını kontrol e
 adPrivacyTitle:'Reklam gizlilik seçenekleri',
 adPrivacySub:'Reklam izinlerini gözden geçir ya da değiştir.',
 adPrivacyFail:'Gizlilik seçenekleri şu anda açılamadı. Bağlantını kontrol edip yeniden dene.',
+adPrivacyRetry:'Gizlilik seçenekleri şu anda açılamadı. Lütfen biraz sonra yeniden deneyin.',
 adPrivacyNot:'Bu cihazda gizlilik seçenekleri şu anda gerekli değil.',
 /* Yaş beyanı (js/ads.js). Ekran NÖTR olmak zorunda: eşik yazılmıyor, alan
    önceden doldurulmuyor, "şu yaşı yaz" imâsı taşıyan bir ifade yok ve eşiğin
@@ -5116,6 +5117,7 @@ adEligUnknown:'Your ad preference could not be verified right now. Check your co
 adPrivacyTitle:'Ad privacy options',
 adPrivacySub:'Review or change your advertising consent.',
 adPrivacyFail:'Ad privacy options could not be opened right now. Check your connection and try again.',
+adPrivacyRetry:'Ad privacy options could not be opened right now. Please try again in a moment.',
 adPrivacyNot:'Ad privacy options are not required on this device right now.',
 adAgeTitle:'Your birth year',
 adAgeBody:'The rewarded ad is an optional feature, and we ask for your birth year before it can be opened. You can continue without sharing it — the whole game, your careers and your saves stay available.',
@@ -6199,6 +6201,44 @@ function rwSync(now){
   return Promise.resolve('idle');
 }
 
+/* js/ads-testcfg.js — UMP izin sorgusunun TEST yapılandırması.
+
+   ===== BU DOSYANIN TAMAMI YAYIN İÇİN ETKİSİZDİR =====
+
+   Depodaki bu sürüm null. Yani web, PWA, tek dosya ve Android RELEASE
+   yapılarının hepsinde izin sorgusu bugüne kadar olduğu gibi BOŞ seçenekle
+   çağrılıyor; bir bölge ya da test cihazı varsayımı kod tarafında yapılmıyor.
+
+   ===== AYRIM NEREDE KURULUYOR =====
+
+   Ayrım bir yoruma ya da bir tercih anahtarına DAYANMIYOR. Android'in kendi
+   varyant birleştirmesine dayanıyor:
+
+     android/app/src/main/assets/public/js/ads-testcfg.js   ← bu dosya (cap sync)
+     android/app/src/debug/assets/public/js/ads-testcfg.js  ← YALNIZ debug
+
+   Derleme türüne ait kaynak kümesi main'i ezdiği için, debug APK'sında ikinci
+   dosya paketleniyor; release paketinde ise ezecek bir dosya olmadığı için bu
+   null sürüm gidiyor. İkisi ayrı ayrı üretilebilir ve paketin içi açılıp
+   karşılaştırılabilir — iddia ölçülebilir.
+
+   Release tarafına sızmanın yolu, debug kaynak kümesindeki bir dosyayı release
+   paketine koymak olurdu; bu da Android'in varyant modelini kırmadan mümkün
+   değil.
+
+   ===== NE GEÇEBİLİR, NE GEÇEMEZ =====
+
+   Buradan geçebilen TEK alan debugGeography. Rıza kararını etkileyen hiçbir
+   şey — tagForUnderAgeOfConsent, canRequestAds, test cihazı listesi — bu
+   dosyadan verilmiyor ve adsTestOpts() tarafından okunmuyor. debugGeography
+   yalnız UMP'ye "bu cihazı şu bölgedeymiş gibi değerlendir" diyor; kullanıcının
+   formda ne seçtiğini değiştirmiyor ve seçimi bizim adımıza yapmıyor.
+
+   Test cihazı kimliği de VERİLMİYOR: UMP 2.2.0'dan beri emülatörler zaten
+   varsayılan test cihazı sayılıyor, dolayısıyla listeye ihtiyaç yok ve gerçek
+   bir cihazın kimliğini koda yazmak gerekmiyor. */
+const ADS_TESTCFG = null;
+
 /* js/ads.js — ödüllü reklam adaptörü + UMP izin akışı
    (@capacitor-community/admob 8.1.0, com.google.android.ump 4.0.0).
 
@@ -6602,8 +6642,22 @@ function adsPorsRequired() {
 }
 /* Tek okuma denemesi. Reddi yutuyor — çağıran taraf ne yapacağına kendi karar
    veriyor (açılışta hiçbir şey, form sonrasında 'doğrulanamadı'). */
+/* İzin sorgusunun seçenekleri. YAYIN yapısında her zaman boş nesne:
+   js/ads-testcfg.js'teki ADS_TESTCFG null ve yalnız Android debug paketinde
+   başka bir dosyayla eziliyor (gerekçesi orada yazılı).
+
+   Buradan geçen TEK alan debugGeography. Rıza kararına dokunan hiçbir alan
+   — tagForUnderAgeOfConsent, test cihazı listesi — okunmuyor; bozuk ya da
+   beklenmedik bir değer de sessizce düşürülüyor, yani en kötü hâlde eski
+   davranış (boş seçenek) kalıyor. */
+function adsTestOpts() {
+  const c = (typeof ADS_TESTCFG === 'undefined') ? null : ADS_TESTCFG;
+  if (!c || typeof c !== 'object') return {};
+  const g = c.debugGeography;
+  return (g === 1 || g === 2 || g === 3 || g === 4) ? { debugGeography: g } : {};
+}
 function adsAsk(P, src, op) {
-  try { return P.requestConsentInfo({}).then(i => adsAdopt(i, src, op), () => false); }
+  try { return P.requestConsentInfo(adsTestOpts()).then(i => adsAdopt(i, src, op), () => false); }
   catch (e) { return Promise.resolve(false); }
 }
 /* Güncel uygunluğu okumanın tek yolu — yalnız formun kendisi taze bir değer
@@ -6714,8 +6768,19 @@ function adsPrivacy() {
     }
     return P.showPrivacyOptionsForm().then(
       () => adsRefresh(P, 'privacy', op),
-      /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe. */
-      () => adsRefresh(P, 'privacyfail', op)
+      /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe: durum değişmiş
+         olabilir, o yüzden yeniden okuma yine yapılıyor.
+
+         Kullanıcı tarafında ise ret, dokunuşun karşılıksız kalması demekti.
+         Artık bir bildirim çıkıyor. Ham hata metni GEÇMİYOR: eklentinin
+         döndürdüğü dizge (ör. "Privacy options form is being loading") bir
+         geliştirici mesajı, üstelik çevrilmemiş. Otomatik tekrar ya da sabit
+         bekleme de eklenmiyor — yeniden deneme kullanıcının dokunuşuna kalıyor
+         ve satır yerinde duruyor. Başarılı kapanışta bu dal hiç çalışmıyor. */
+      () => {
+        if (typeof toast === 'function') toast(t('adPrivacyRetry'));
+        return adsRefresh(P, 'privacyfail', op);
+      }
     );
   }).then(done, () => done(false));
 }

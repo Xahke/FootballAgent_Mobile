@@ -4,8 +4,11 @@
     <string name="title_activity_main">Pro Football Agent</string>
     <string name="package_name">com.xahke.profootballagent</string>
     <string name="custom_url_scheme">com.xahke.profootballagent</string>
-    <!-- Google Mobile Ads uygulama kimligi. Bu, Google'in yayimladigi ORNEK
-         (test) kimligidir; gercek AdMob kimligi degil ve bu kapsamda gercek
-         kimlik kullanilmiyor. developers.google.com/admob/android/quick-start -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- Google Mobile Ads uygulama kimligi: bu uygulamanin GERCEK AdMob
+         kimligi. UMP izin mesaji AdMob'da bu uygulama kaydina baglandigi icin
+         gercek formun cizilebilmesi buna bagli.
+         Reklam BIRIMI bundan ayri ve hala Google'in ORNEK odullu birimi
+         (js/ads.js ADS.unit), istekler de isTesting ile gidiyor: gercek reklam
+         yayinlamaya gecis DEGIL. -->
+    <string name="admob_app_id">ca-app-pub-6695238757557885~9045271955</string>
 </resources>

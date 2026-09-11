@@ -74,7 +74,7 @@ example: it sits after `data.js` (badges read a team object) and before `core.js
 (where `tmBadge()` lives), and the same position appears in all three lists.
 
 Load order:
-`i18n → store → saves → reward → ads → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → store → saves → reward → ads-testcfg → ads → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -92,8 +92,9 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (464 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (465 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
+| `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -571,6 +572,43 @@ there with message `"Error when show privacy form"` and the real UMP text in **`
 (`"Privacy options form is not required."`) — Capacitor's `reject(msg, code)` puts it
 there, so log `err.code`, not `err.message`.
 
+### Test geography lives in a build variant, not in a flag
+
+The consent query used to be `requestConsentInfo({})` with a literal empty object.
+It now passes `adsTestOpts()`, which reads `ADS_TESTCFG` from `js/ads-testcfg.js`.
+That file is `null` in the repo, so web, PWA, single-file and the Android **release**
+package all send `{}` exactly as before.
+
+The one place it is not null is `android/app/src/debug/assets/public/js/ads-testcfg.js`,
+which sets `{debugGeography: 1}` (EEA). **The separation is Android's asset merging, not
+a comment and not a preference key**: a build-type source set overrides `main`, so the
+debug package ships the EEA file and the release package ships the null one — there is no
+file to override it. Verified by running `:app:mergeDebugAssets` and
+`:app:mergeReleaseAssets` and reading both outputs; `tools/savetest.js` block **21** (6)
+additionally scans the release-bound source paths for a non-null config.
+
+Why it exists: the published European consent message targets the EEA, the UK and
+Switzerland, so a device that looks like it is anywhere else never draws the form and that
+branch of the flow cannot be exercised. `debugGeography` only tells UMP where to pretend
+the device is. **It does not give, refuse or assume consent** — `canRequestAds` still comes
+only from the SDK's real answer. No test-device id is carried either: UMP 2.2.0+ already
+treats emulators as test devices, so no real device id needs to live in the repo.
+
+`adsTestOpts()` passes **one** field. `tagForUnderAgeOfConsent`, a test-device list and
+anything else that could colour the consent decision are not read, and a malformed value
+falls back to `{}`.
+
+**A rejected privacy form now says so.** `showPrivacyOptionsForm()` can reject for reasons
+that have nothing to do with the network — measured on device: a cold start where the form
+had not finished loading yet, which the plugin reports as *"Privacy options form is being
+loading"*. The chain already handled it correctly (the mandatory re-read still runs, the
+lock is released, the Settings row stays so the user can tap again), but the tap produced
+no visible result. It now toasts `adPrivacyRetry`, which is a **separate string** from
+`adPrivacyFail`: that one blames the connection and belongs to the failed *pre-read*, while
+this one says only "not now, try again shortly". The raw SDK message is never shown — it is
+a developer string and untranslated. No automatic retry and no fixed delay were added; the
+next attempt is the user's tap.
+
 `tools/savetest.js` block **19** holds the consent contract — ordering, the lock in both
 directions, stale eligibility, single initialisation across a true→false→true flip, and
 that no consent path ever moves money, burns the daily right or reaches `S`/`PREFS`. Its
@@ -831,7 +869,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 464 today, but count them rather than trusting this line; it has
+  counts must match — 465 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning

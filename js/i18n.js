@@ -178,6 +178,7 @@ adEligUnknown:'Reklam tercihin şu anda doğrulanamadı. Bağlantını kontrol e
 adPrivacyTitle:'Reklam gizlilik seçenekleri',
 adPrivacySub:'Reklam izinlerini gözden geçir ya da değiştir.',
 adPrivacyFail:'Gizlilik seçenekleri şu anda açılamadı. Bağlantını kontrol edip yeniden dene.',
+adPrivacyRetry:'Gizlilik seçenekleri şu anda açılamadı. Lütfen biraz sonra yeniden deneyin.',
 adPrivacyNot:'Bu cihazda gizlilik seçenekleri şu anda gerekli değil.',
 /* Yaş beyanı (js/ads.js). Ekran NÖTR olmak zorunda: eşik yazılmıyor, alan
    önceden doldurulmuyor, "şu yaşı yaz" imâsı taşıyan bir ifade yok ve eşiğin
@@ -396,6 +397,7 @@ adEligUnknown:'Your ad preference could not be verified right now. Check your co
 adPrivacyTitle:'Ad privacy options',
 adPrivacySub:'Review or change your advertising consent.',
 adPrivacyFail:'Ad privacy options could not be opened right now. Check your connection and try again.',
+adPrivacyRetry:'Ad privacy options could not be opened right now. Please try again in a moment.',
 adPrivacyNot:'Ad privacy options are not required on this device right now.',
 adAgeTitle:'Your birth year',
 adAgeBody:'The rewarded ad is an optional feature, and we ask for your birth year before it can be opened. You can continue without sharing it — the whole game, your careers and your saves stay available.',

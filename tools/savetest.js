@@ -15,7 +15,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['i18n','store','saves','reward','ads','data','worldgeo','atlas','rivals','core',
+const FILES = ['i18n','store','saves','reward','ads-testcfg','ads','data','worldgeo','atlas','rivals','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= IndexedDB taklidi ================= */
@@ -1127,6 +1127,7 @@ function fakeAdMob(ctx, opt) {
   opt = opt || {};
   const L = {}, st = {
     prepares: 0, shows: 0, inits: 0, asks: 0, forms: 0, privs: 0,
+    askOpts: [],                     // requestConsentInfo'ya geçen seçenekler
     order: [],                       // çağrı sırası — "izin önce, SDK sonra" ölçülebilsin
     rewardResolve: null, prepareResolve: null, initResolve: null, privResolve: null
   };
@@ -1147,8 +1148,9 @@ function fakeAdMob(ctx, opt) {
           return Promise.resolve();
         },
         addListener(ev, cb) { (L[ev] = L[ev] || []).push(cb); return { remove() {} }; },
-        requestConsentInfo() {
+        requestConsentInfo(o) {
           st.asks++; st.order.push('ask');
+          st.askOpts.push(JSON.parse(JSON.stringify(o === undefined ? null : o)));
           const bad = askFail || (askFailFrom && st.asks >= askFailFrom);
           if (bad) return Promise.reject(new Error('ask'));
           /* Yalnız İLK okuma tutuluyor: yaş kapısı testleri "okuma uçuştayken
@@ -2300,6 +2302,157 @@ async function tAdAgeGate() {
   }
 }
 
+
+/* ================= [21] GİZLİLİK FORMU GERİ BİLDİRİMİ + TEST YAPILANDIRMASI =====
+   İki ayrı sözleşme:
+
+   (a) Gizlilik seçenekleri formu açılamazsa kullanıcı bunu GÖRMELİ. Cihazda
+       ölçülen hâl, soğuk açılışta eklentinin "form henüz yükleniyor" diye
+       reddetmesiydi; kod doğru davranıyor ama dokunuş sessiz kalıyordu.
+       Ölçülen: bildirim çizildi mi, ham SDK metni sızdı mı, zorunlu yeniden
+       okuma yine koştu mu, kilit bırakıldı mı, ikinci deneme çalışıyor mu,
+       başarılı kapanışta yanlışlıkla hata çıkıyor mu.
+
+   (b) EEA test coğrafyası YALNIZ Android debug varlıklarında olmalı. Bu blok
+       dosyaları okuyup bakıyor; Gradle'ın birleştirme çıktısı ayrı bir ölçüm ve
+       burada tekrarlanmıyor. */
+async function tPrivacyFeedback() {
+  console.log('\n[21] gizlilik formu geri bildirimi ve test yapılandırmasının kapsamı');
+
+  const settle = async n => { for (let i = 0; i < (n || 8); i++) await tick(); };
+  const T = (a, k) => a.R("t('" + k + "')");
+  const toastOf = a => a.R("document.getElementById('toast').textContent");
+  const clearToast = a => a.R("document.getElementById('toast').textContent='';");
+
+  /* (1) FORM REDDİ — bildirim çıkıyor, ham metin sızmıyor, kilit bırakılıyor,
+         ikinci deneme çalışıyor ve başarılı kapanışta hata GÖSTERİLMİYOR. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, privFail: true });
+    await a.R('adsInit()');
+    const asks0 = fake.stat.asks;
+    clearToast(a);
+    await a.R('adsPrivacy()'); await settle();
+    ok(toastOf(a) === T(a, 'adPrivacyRetry'), '(1) kullanıcıya bildirim çizildi', toastOf(a));
+    ok(toastOf(a).indexOf('Privacy options form') === -1
+       && toastOf(a).indexOf('being loading') === -1, '(1) ham SDK metni gösterilmedi');
+    ok(fake.stat.privs === 1, '(1) form bir kez denendi');
+    ok(fake.stat.asks === asks0 + 1, '(1) ret sonrası zorunlu yeniden okuma yine koştu');
+    ok(a.R("ADS.busy===''") === true && a.R('adsBusy()') === '', '(1) kilit bırakıldı');
+    ok(a.R('adsPrivacyState()') === 'go', '(1) satır duruyor — yeniden denenebilir');
+    /* İkinci dokunuş: otomatik değil, çağıran taraf yeniden deniyor. */
+    fake.setPrivFail(false);
+    clearToast(a);
+    await a.R('adsPrivacy()'); await settle();
+    ok(fake.stat.privs === 2, '(1) ikinci deneme formu açtı');
+    ok(toastOf(a) === '', '(1) başarılı kapanışta hata gösterilmedi');
+    ok(a.R("ADS.cs.src") === 'privacy', '(1) başarı yolunda zorunlu yenileme koştu');
+  }
+
+  /* (2) OTOMATİK TEKRAR YOK — ret tek denemede kalıyor, kendiliğinden yeniden
+         çağrılmıyor ve sabit bir bekleme kurulmuyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, privFail: true });
+    await a.R('adsInit()');
+    await a.R('adsPrivacy()'); await settle(20);
+    ok(fake.stat.privs === 1, '(2) form kendiliğinden yeniden denenmedi');
+    const asks1 = fake.stat.asks;
+    await settle(20);
+    ok(fake.stat.privs === 1 && fake.stat.asks === asks1, '(2) beklemede yeni çağrı doğmadı');
+  }
+
+  /* (3) YAŞ KAPALIYKEN — bildirim çıkıyor ama reklam yolu BAŞLAMIYOR.
+         Cihazda ölçülen sıralamanın aynısı: ipucu yazılmış, beyan silinmiş,
+         uygulama yeniden açılmış. */
+  {
+    const disk = newDisk(), ls = {};
+    const a = session(disk, ls, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMobAged(a, { consent: REQ_PORS });
+    await a.R('adsInit()');
+    a.R('adsAgeClear();'); await tick();
+
+    const b = session(disk, ls, {});                 // YENİDEN AÇILIŞ
+    await b.booted;
+    const fb = fakeAdMob(b.ctx, { consent: REQ_PORS, privFail: true });
+    ok(await b.R('adsInit()') === 'noage', '(3) kapı kapalı');
+    ok(b.R('adsPrivacyState()') === 'go', '(3) gizlilik yolu açık');
+    clearToast(b);
+    await b.R('adsPrivacy()'); await settle();
+    ok(toastOf(b) === T(b, 'adPrivacyRetry'), '(3) kapı kapalıyken de bildirim çizildi');
+    ok(fb.stat.inits === 0 && fb.stat.prepares === 0 && fb.stat.shows === 0,
+       '(3) reklam yolu BAŞLAMADI');
+    ok(b.R("ADS.sdk") === 'off', '(3) SDK kapalı kaldı');
+    ok(b.R('adsAgeOk()') === false, '(3) yaş kapısı kapalı');
+    ok(b.R("ADS.busy===''") === true, '(3) kilit bırakıldı');
+    ok(b.R('adsPrivacyState()') === 'go', '(3) yeniden denenebilir');
+  }
+
+  /* (4) İKİ DİL — dize her iki dilde var ve birbirinden farklı. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    ok(a.R("['tr','en'].every(l=>typeof STR[l].adPrivacyRetry==='string'&&STR[l].adPrivacyRetry.length>10)") === true,
+       '(4) adPrivacyRetry iki dilde de var');
+    ok(a.R("STR.tr.adPrivacyRetry!==STR.en.adPrivacyRetry") === true, '(4) çeviri kopyalanmamış');
+    ok(a.R("STR.tr.adPrivacyRetry!==STR.tr.adPrivacyFail") === true,
+       '(4) bağlantı hatasından AYRI bir dize (biri bağlantıyı, diğeri zamanı işaret ediyor)');
+  }
+
+  /* (5) İZİN SORGUSUNA GEÇEN SEÇENEK — depodaki yapılandırmayla BOŞ. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, {});
+    ok(a.R('ADS_TESTCFG') === null, '(5) depodaki test yapılandırması null');
+    ok(a.R('JSON.stringify(adsTestOpts())') === '{}', '(5) adsTestOpts boş nesne veriyor');
+    await a.R('adsInit()');
+    ok(fake.stat.askOpts.length > 0 && JSON.stringify(fake.stat.askOpts[0]) === '{}',
+       '(5) köprüye boş seçenek gitti', JSON.stringify(fake.stat.askOpts[0]));
+  }
+
+  /* (6) SIZINTI KONTROLÜ — EEA yapılandırması yalnız debug varlıklarında.
+         Dosya tabanlı; Gradle birleştirme ölçümünün yerine geçmez, onu
+         tamamlar: burada kaynakların kendisi denetleniyor. */
+  {
+    const shipped = fs.readFileSync(path.join(ROOT, 'js', 'ads-testcfg.js'), 'utf8');
+    ok(/const ADS_TESTCFG = null;/.test(shipped), '(6) yayın sürümü null');
+    ok(!/debugGeography/.test(shipped.replace(/\/\*[\s\S]*?\*\//g, '')),
+       '(6) yayın sürümünde kod olarak debugGeography yok (yorum sayılmıyor)');
+
+    const dbg = path.join(ROOT, 'android', 'app', 'src', 'debug', 'assets', 'public', 'js', 'ads-testcfg.js');
+    ok(fs.existsSync(dbg), '(6) debug varyant dosyası yerinde');
+    ok(/const ADS_TESTCFG = \{ debugGeography: 1 \};/.test(fs.readFileSync(dbg, 'utf8')),
+       '(6) debug sürümü EEA veriyor');
+
+    /* Release paketine giden her yol null sürümü taşımalı. */
+    const bad = [];
+    const scan = rel => {
+      const abs = path.join(ROOT, rel);
+      if (!fs.existsSync(abs)) return;
+      const st = fs.statSync(abs);
+      if (st.isDirectory()) { fs.readdirSync(abs).forEach(n => scan(path.join(rel, n))); return; }
+      if (!/\.(js|html)$/.test(abs)) return;
+      const txt = fs.readFileSync(abs, 'utf8');
+      const m = txt.match(/const ADS_TESTCFG = ([^;]*);/);
+      if (m && m[1].trim() !== 'null') bad.push(rel + ' → ' + m[1].trim());
+    };
+    ['android/app/src/main', 'android/app/src/release', 'www', 'dist', 'js'].forEach(scan);
+    ok(bad.length === 0, '(6) release yollarında EEA yapılandırması yok', bad.join(' | '));
+
+    /* adsTestOpts yalnız debugGeography geçirebilsin: rıza kararına dokunan
+       alanlar fonksiyonun kaynağında hiç geçmemeli. */
+    const src = fs.readFileSync(path.join(ROOT, 'js', 'ads.js'), 'utf8');
+    const fn = src.slice(src.indexOf('function adsTestOpts'), src.indexOf('function adsAsk'));
+    ok(fn.length > 40, '(6) adsTestOpts bulundu');
+    ok(!/tagForUnderAgeOfConsent|testDeviceIdentifiers|canRequestAds/.test(fn),
+       '(6) yalnız debugGeography — rıza/test-cihazı alanı geçmiyor');
+  }
+}
+
 /* Oturum kurucusu başka doğrulama betiklerinden de kullanılabilsin (tam uygulama
    taraması, çok sezonlu regresyon). Doğrudan çalıştırıldığında testler koşuyor. */
 module.exports = { session, newDisk, makeEl, waitFor, tick };
@@ -2312,7 +2465,7 @@ if (require.main !== module) return;
                  tSlotDeleteAndCoalesce, tCareerIdentity, tCidLegacyMigration,
                  tCidSlotsAndCapacity, tRewardDailyRight, tRewardCareersAndMidnight,
                  tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions,
-                 tAdsAdapter, tUmpConsent, tAdAgeGate];
+                 tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }
