@@ -92,9 +92,9 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (449 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (464 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
-| `js/ads.js` | UMP consent flow + rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
+| `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -360,6 +360,114 @@ on the `REP_SOFT` equilibrium described above. Those three rows were measured on
 six-agency world and have **not** been re-run since; the formula is unchanged and the
 direct `poachChance` sample above came out slightly *lower*, so the spread should hold,
 but if you need the exact numbers, measure them rather than quoting this table.
+
+### The ad path has an age gate, and it is not a consent verdict
+
+The rewarded ad sits behind a second, **independent** gate: an age declaration stored on
+the device. `AD_AGE_MIN` (ads.js) is **18** and it is the *ad access* threshold — **not the
+game's audience, which is 13+**. A player with no declaration, or one below the threshold,
+plays the whole game with every career and save intact; only the ad and its daily reward
+are closed, and **nothing replaces that reward**.
+
+**Age and consent are never the same term.** `adsAgeOk()` reads our threshold;
+`adsEligible()` reads the SDK's `canRequestAds`. They appear side by side in `adsReady()`,
+`adsApply()` and `adsWatch()` and are never merged — folding one into the other would let
+a consent result carry an age decision.
+
+Only the birth **year** is stored (`PREFS.adBY`), never month or day, and never in the
+career save — the declaration belongs to the device, so deleting a career leaves it alone.
+Because the birthday is unknown the person is counted as the *younger* possible age:
+`(currentYear − birthYear) > AD_AGE_MIN`. So someone born in 2008 becomes eligible on
+1 January 2027. That delay is the accepted price of storing less; it is not a bug to
+"fix" by asking for a full date. Any stored value that is not a plain integer year in a
+sane range — text, fraction, future year — resolves to `null` and **closes** the gate.
+It is a self-declaration: not verification, and no compliance claim rests on it.
+
+**The screen never blocks launch.** The declaration is asked at first use of the optional
+ad feature, not at startup, so a game that asks for nothing else does not open with a
+question. That forces one design consequence: `adsRowState()` reads the age gate **before**
+the SDK state, because the SDK is never started while the gate is closed and the row would
+otherwise be undrawable — the user could never reach the question. The `'age'` and
+`'noage'` rows deliberately **omit the reward amount**: showing the money and then asking
+for a birth year is a direct incentive to overstate it, and the below-threshold row carries
+no invitation to correct upwards. Correcting and deleting live together in Settings, at
+equal weight in both directions.
+
+**Ownership, because a declaration can change mid-flight.** Entry checks are not enough —
+every await in the consent chain is followed by another native call. Two tokens:
+`ADS.ageSeq` (bumped on every write/delete, captured at chain start, re-checked through
+`adsAgeHolds()` before each next native step) and `ADS.op` (who holds `busy`/`cp`, so a
+late chain's cleanup cannot release a newer round's lock, and `adsAdopt()` refuses to write
+`ADS.cs`/`ADS.pors` for a chain that no longer owns the lock). Losing ownership **does not
+cancel** the in-flight native call — there is no such API — and the lock is never released
+early, so no second form can overlap the first.
+
+"Before each next native step" is literal, and the ad-purposed boot chain has **two** such
+steps: the form after the boot read, and the one refresh after a *failed* form. Skipping
+that refresh is not "the old answer still stands" — the chain marks `ADS.stale` and returns
+`'abort'`, so the previous `canRequestAds: true` copy **stops being an authority to start
+ads** and the next valid declaration goes through a current consent flow instead of
+inheriting a stale one. The user-opened privacy path is untouched by any of this:
+`adsPrivacy()` is a separate entry and deliberately does not read the age gate.
+
+`ADS.boot` now means **"the flow completed"**, not "the flow started". Only an age abort
+leaves it false, and that is what lets a half-finished flow re-run — but the re-run needs
+somewhere to happen, because an aborted chain still holds its lock until the in-flight
+native call returns. `adsResume()` is that place: every `adsInit()` that joins a pending
+`ADS.cp` runs it once the old promise settles, and it opens exactly one new round when the
+gate is still open and `ADS.boot` is still false. Three properties hold it together:
+
+- **No retry loop.** A network or form failure marks the flow *completed* (`boot = true`),
+  so `adsResume()` never reopens on it. Only a user changing the declaration produces a new
+  round.
+- **Singular.** Several `adsInit()` calls can be waiting on the same old promise;
+  `adsConsentFlow()`'s own `ADS.cp` gate means the first one opens the round and the rest
+  receive that same promise — never a second `requestConsentInfo`, form, `initialize()` or
+  duplicated listener.
+- **Gate-respecting.** If the user closed the gate again while the old chain was in flight,
+  `adsResume()` opens nothing.
+
+Without it, a player who fixes a typo in their birth year while the boot read is still in
+the air would see the consent form never appear and the reward row vanish for the rest of
+the session. A *completed* flow that goes eligible→ineligible→eligible still does **not**
+issue a new `requestConsentInfo`: consent did not change, and
+`ADS.sdkP`/`ADS.sdk === 'on'`/`ADS.bnd` keep initialisation and listeners singular. An
+initialised SDK is never written as reverted.
+
+**A declaration change repaints before it awaits.** `adsAgeApply()` calls `adsRepaint()` on
+both branches and only then kicks the flow. The consent read can take seconds, and leaving
+the row saying "your birth year will be asked" during that window would read as "what I just
+entered was not saved".
+
+**The gate binds starting, not delivery.** `adsReward()`, `rwEarned()` and `rwSync()` carry
+**no** age or age-seq veto: the gate was open when the show began, the reward belongs to
+that show, and the accounting rides the nonce. A reward that lands after the declaration is
+deleted is still paid and still marks the day used.
+
+**Deleting the declaration is not withdrawing consent.** `adsPrivacyState()` therefore does
+not look at the age gate. Since a closed gate means no launch read happens, `ADS.pors` stays
+`UNKNOWN` on a cold start and the entry point would vanish — so `PREFS.adPors` persists a
+**hint only**: it is not a copy of the consent decision and not an authority on ad
+eligibility. It is written when a successful read says `REQUIRED` and removed only when a
+successful read says `NOT_REQUIRED`; an error, an offline device or `UNKNOWN` never clears
+it, and no decision is ever taken by parsing an error message. On a cold start
+`adsPrivacy()` issues one user-initiated `requestConsentInfo()` before the form, because
+the form needs current information — that read happens on the user's tap, never at launch,
+and it cannot start ads: `adsApply()` still requires both consent and age.
+
+`tools/savetest.js` block **20** holds this contract, including the recovery orderings:
+scenarios (18)–(22) hold a real deferred `requestConsentInfo` promise and change the
+declaration inside that window — valid→valid and delete→valid — then assert that exactly one
+new round runs to completion, that the form is called when it is needed, that several waiting
+`adsInit()` calls still produce one round, that a closed gate produces none, and that a
+failed read does not become a retry loop. Scenario (23) covers the skipped
+form-failure refresh, and (24) asserts against the **rendered** `#view` rather than
+`adsRowState()`, because a missing repaint leaves the state right and the screen wrong.
+
+What all of this can prove is one class of evidence only — *the JS made no call to the
+bridge*. It is **not** evidence that no native component started or that no network traffic
+occurred; `MobileAdsInitProvider` is in the merged manifest and is instantiated at process
+start regardless of our code. Those are separate measurements and they have not been made.
 
 ### Rewarded ads are a prototype, and the scope is the design
 
@@ -723,7 +831,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 449 today, but count them rather than trusting this line; it has
+  counts must match — 464 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning

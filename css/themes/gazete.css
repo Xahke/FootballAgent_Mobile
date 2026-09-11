@@ -1122,3 +1122,12 @@ body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 .cmPlus,.cmNewIc{border-radius:0}
 .cmNewMain{border:1px dashed var(--n4);border-radius:0;padding:16px;margin-bottom:14px}
 .cmNewT{font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:-.01em}
+
+/* Yaş beyanı alanı (js/ui.js · adsAgeOpen). Dört temada da tanımlı: beyan ekranı
+   tek bir temaya ait değil ve .mkInp yalnız saha'da var. 16px, odaklanınca
+   mobilde sayfanın yakınlaşmasını önlüyor. */
+.adAgeInp{width:100%;box-sizing:border-box;padding:12px 14px;
+  background:transparent;color:var(--txt);border:1px solid var(--line2);
+  border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
+.adAgeInp:focus{border-color:var(--txt3)}
+.adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}

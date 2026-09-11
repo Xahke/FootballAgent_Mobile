@@ -2129,6 +2129,11 @@ html[data-theme="saha"] .mcIn,html[data-theme="saha"] .mcSel{padding:12px 11px}
 html[data-theme="saha"] .mcSel{padding-right:30px}
 html[data-theme="saha"] .mcConB{padding:8px 13px;font-size:13px}
 html[data-theme="saha"] .mcGo{font-size:18px}}
+html[data-theme="saha"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px 14px;
+  background:transparent;color:var(--txt);border:1px solid var(--line2);
+  border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
+html[data-theme="saha"] .adAgeInp:focus{border-color:var(--txt3)}
+html[data-theme="saha"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
@@ -2978,6 +2983,11 @@ html[data-theme="gazete"] .cmNewRow .cmRowGo,html[data-theme="gazete"] .cmNewRow
 html[data-theme="gazete"] .cmPlus,html[data-theme="gazete"] .cmNewIc{border-radius:0}
 html[data-theme="gazete"] .cmNewMain{border:1px dashed var(--n4);border-radius:0;padding:16px;margin-bottom:14px}
 html[data-theme="gazete"] .cmNewT{font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:-.01em}
+html[data-theme="gazete"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px 14px;
+  background:transparent;color:var(--txt);border:1px solid var(--line2);
+  border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
+html[data-theme="gazete"] .adAgeInp:focus{border-color:var(--txt3)}
+html[data-theme="gazete"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
 
 /* ===== tema: terminal ===== */
 html[data-theme="terminal"]{
@@ -3833,6 +3843,11 @@ html[data-theme="terminal"] .cmNewMain{border-radius:10px;min-height:160px}
 html[data-theme="terminal"] .cmPlus,html[data-theme="terminal"] .cmNewIc{border-radius:6px}
 html[data-theme="terminal"] .cmNewT{font-size:17px;font-weight:600;letter-spacing:.05em}
 html[data-theme="terminal"] .cmNewS{font-family:var(--mono);font-size:11px}
+html[data-theme="terminal"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px 14px;
+  background:transparent;color:var(--txt);border:1px solid var(--line2);
+  border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
+html[data-theme="terminal"] .adAgeInp:focus{border-color:var(--txt3)}
+html[data-theme="terminal"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
 
 /* ===== tema: dosya ===== */
 html[data-theme="dosya"]{
@@ -4666,3 +4681,8 @@ html[data-theme="dosya"] .cmNewRow,html[data-theme="dosya"] .cmNewMain{backgroun
 html[data-theme="dosya"] .cmNewRow{border-radius:var(--r)}
 html[data-theme="dosya"] .cmNewMain{border-radius:var(--r)}
 html[data-theme="dosya"] .cmNewT{font-size:19px;font-weight:600;letter-spacing:-.01em}
+html[data-theme="dosya"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px 14px;
+  background:transparent;color:var(--txt);border:1px solid var(--line2);
+  border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
+html[data-theme="dosya"] .adAgeInp:focus{border-color:var(--txt3)}
+html[data-theme="dosya"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}

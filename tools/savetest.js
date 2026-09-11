@@ -1150,13 +1150,36 @@ function fakeAdMob(ctx, opt) {
         requestConsentInfo() {
           st.asks++; st.order.push('ask');
           const bad = askFail || (askFailFrom && st.asks >= askFailFrom);
-          return bad ? Promise.reject(new Error('ask')) : Promise.resolve(snap());
+          if (bad) return Promise.reject(new Error('ask'));
+          /* Yalnız İLK okuma tutuluyor: yaş kapısı testleri "okuma uçuştayken
+             beyan değişti" hâlini kurabilsin, sonraki okumalar akmaya devam
+             etsin diye. */
+          if (opt.askHold && !st.askHeld) {
+            st.askHeld = true;
+            return new Promise(res => { st.askResolve = () => res(snap()); });
+          }
+          return Promise.resolve(snap());
         },
         showConsentForm() {
           st.forms++; st.order.push('form');
           if (formFail) return Promise.reject(new Error('form'));
-          const r = snap(); delete r.isConsentFormAvailable;   // eklenti bu alanı döndürmüyor
-          return Promise.resolve(r);
+          /* Form YÜKÜ: gerçekte formdan sonraki canRequestAds, formdan ÖNCEKİ
+             okumadan farklı olabilir — formun varlık sebebi zaten bu. Senaryo
+             ayrı bir yük verdiyse onu döndürüyoruz; vermediyse eski davranış. */
+          const fc = () => {
+            const r = Object.assign({}, ci, opt.formConsent || {});
+            delete r.isConsentFormAvailable;   // eklenti bu alanı döndürmüyor
+            return JSON.parse(JSON.stringify(r));
+          };
+          /* Tutulabilir: "form ekrandayken beyan değişti" hâli kurulabilsin. */
+          if (opt.formHold && !st.formHeld) {
+            st.formHeld = true;
+            return new Promise((res, rej) => {
+              st.formResolve = () => res(fc());
+              st.formReject = () => rej(new Error('form'));
+            });
+          }
+          return Promise.resolve(fc());
         },
         showPrivacyOptionsForm() {
           st.privs++; st.order.push('priv');
@@ -1190,12 +1213,24 @@ function fakeAdMob(ctx, opt) {
     finishInit() { if (st.initResolve) { const r = st.initResolve; st.initResolve = null; r(); } },
     finishPriv() { if (st.privResolve) { const r = st.privResolve; st.privResolve = null; r(); } },
     finishPrepare() { if (st.prepareResolve) { const r = st.prepareResolve; st.prepareResolve = null; r(); } },
+    finishAsk() { if (st.askResolve) { const r = st.askResolve; st.askResolve = null; r(); } },
+    finishForm() { if (st.formResolve) { const r = st.formResolve; st.formResolve = null; st.formReject = null; r(); } },
+    failForm() { if (st.formReject) { const r = st.formReject; st.formReject = null; st.formResolve = null; r(); } },
     // Native "ödül kazanıldı": gösterime özgü promise çözülüyor.
     reward(item) { if (st.rewardResolve) st.rewardResolve(item || { type: 'coin', amount: 1 }); },
     // Native terminal olay: kimliksiz, tam da eklentinin yaydığı yük.
     emit(ev, data) { (L[ev] || []).slice().forEach(f => f(data === undefined ? {} : data)); },
     bound(ev) { return (L[ev] || []).length; }
   };
+}
+
+/* Taklit + UYGUN yaş beyanı. [18] ve [19] blokları reklam ve izin mekaniğini
+   ölçüyor, YAŞ KAPISINI değil — kapı [20]'de ölçülüyor. Beyan burada yazılmasa
+   bu blokların tamamı kapıda durur ve ölçmek istedikleri şeye hiç ulaşamazdı.
+   Kapının kendisi bu yardımcıyı KULLANMIYOR, beyanı senaryo başına veriyor. */
+function fakeAdMobAged(a, opt) {
+  a.R('setPref("adBY",' + (new Date().getFullYear() - 30) + ');');
+  return fakeAdMob(a.ctx, opt);
 }
 
 async function tAdsAdapter() {
@@ -1207,7 +1242,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     ok(await a.R('adsInit()') === 'ready', '(1) SDK başlatıldı, dinleyiciler kuruldu');
     ok(fake.bound('onRewardedVideoAdDismissed') === 1
       && fake.bound('onRewardedVideoAdFailedToShow') === 1
@@ -1250,7 +1285,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     await a.R('adsInit()');
     const cash0 = a.R('S.cash');
     a.R('adsWatch();'); await tick();
@@ -1271,7 +1306,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     await a.R('adsInit()');
     const cash0 = a.R('S.cash');
     a.R('adsWatch();'); await tick();
@@ -1289,7 +1324,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { loadFail: true });
+    const fake = fakeAdMobAged(a, { loadFail: true });
     await a.R('adsInit()');
     const cash0 = a.R('S.cash');
     a.R('adsWatch();'); await tick();
@@ -1306,7 +1341,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     await a.R('adsInit()');
     a.R('adsWatch();'); await tick();
     a.R('adsWatch();adsWatch();'); await tick();
@@ -1333,7 +1368,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     await careerIn(a, 1);
-    fakeAdMob(a.ctx, { initFail: true });
+    fakeAdMobAged(a, { initFail: true });
     ok(await a.R('adsInit()') === 'fail', '(7) başlatma hatası görüldü');
     ok(a.R('adsRowState()') === null, '(7) düğme çizilmiyor');
   }
@@ -1343,7 +1378,7 @@ async function tAdsAdapter() {
     const a = session(newDisk(), {}, {});
     await a.booted;
     const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     await a.R('adsInit()');
     const cash0 = a.R('S.cash');
     fake.emit('onRewardedVideoAdDismissed');
@@ -1375,7 +1410,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     ok(await a.R('adsInit()') === 'ready', '(1) uygunluk true → hazır');
     ok(fake.stat.order[0] === 'ask', '(1) ilk native çağrı izin okuması');
     ok(fake.stat.order.indexOf('init') > fake.stat.order.indexOf('ask'),
@@ -1395,7 +1430,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: { canRequestAds: false, status: 'REQUIRED' } });
+    const fake = fakeAdMobAged(a, { consent: { canRequestAds: false, status: 'REQUIRED' } });
     ok(await a.R('adsInit()') === 'noconsent', '(2) uygunluk yok');
     ok(fake.stat.inits === 0, '(2) initialize hiç çağrılmadı');
     ok(a.R('adsRowState()') === null, '(2) satır çizilmiyor');
@@ -1411,7 +1446,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx);
+    const fake = fakeAdMobAged(a);
     await a.R('Promise.all([adsInit(),adsInit(),adsInit()])');
     ok(fake.stat.asks === 1, '(3) tek izin okuması');
     ok(fake.stat.forms === 1, '(3) tek form denemesi');
@@ -1426,7 +1461,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS, privHold: true });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, privHold: true });
     await a.R('adsInit()');
     ok(a.R('adsPrivacyState()') === 'go', '(4) gizlilik girişi görünür');
     a.R('adsPrivacy();'); await tick();
@@ -1444,7 +1479,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS, prepareHold: true });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, prepareHold: true });
     await a.R('adsInit()');
     a.R('adsWatch();'); await tick();
     ok(fake.stat.prepares === 1 && fake.stat.shows === 0, '(5) yükleme sürüyor, gösterim yok');
@@ -1462,7 +1497,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { prepareHold: true });
+    const fake = fakeAdMobAged(a, { prepareHold: true });
     await a.R('adsInit()');
     const cash0 = a.R('S.cash');
     a.R('adsWatch();'); await tick();
@@ -1481,7 +1516,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS, privHold: true });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, privHold: true });
     await a.R('adsInit()');
     a.R('adsPrivacy();'); await tick();
     ok(a.R("adsBusy()") === 'consent', '(7) izin işlemi sürüyor');
@@ -1498,7 +1533,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS });
     await a.R('adsInit()');
     ok(a.R('adsRowState()') === 'go' && a.R('adsEligible()') === true, '(8) başta uygun');
     const asks0 = fake.stat.asks;
@@ -1534,7 +1569,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { formFail: true });
+    const fake = fakeAdMobAged(a, { formFail: true });
     ok(await a.R('adsInit()') === 'ready', '(10) yeniden okuma tuttu, akış sürdü');
     ok(fake.stat.forms === 1 && fake.stat.asks === 2, '(10) form 1, okuma 2 (açılış + yenileme)');
     ok(a.R('ADS.stale') === false, '(10) doğrulanmış uygunluk');
@@ -1546,7 +1581,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { formFail: true, askFailFrom: 2 });
+    const fake = fakeAdMobAged(a, { formFail: true, askFailFrom: 2 });
     ok(await a.R('adsInit()') === 'noconsent', '(11) uygunluk doğrulanamadı');
     ok(a.R('ADS.stale') === true, '(11) bayat olarak işaretlendi');
     ok(a.R('ADS.cs.can') === true, '(11) açılış okuması true idi');
@@ -1559,7 +1594,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS, privFail: true });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS, privFail: true });
     await a.R('adsInit()');
     const asks0 = fake.stat.asks;
     await a.R('adsPrivacy()'); await tick();
@@ -1577,7 +1612,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { initHold: true });
+    const fake = fakeAdMobAged(a, { initHold: true });
     const p = a.R('adsInit()'); await tick();
     ok(a.R('ADS.sdk') === 'init' && fake.stat.inits === 1, '(13) başlatma uçuşta');
     a.R('ADS.cs.can=false;');                       // uygunluk beklerken düştü
@@ -1597,7 +1632,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { initFail: true });
+    const fake = fakeAdMobAged(a, { initFail: true });
     ok(await a.R('adsInit()') === 'fail', '(14) başlatma hatası görüldü');
     ok(a.R('adsRowState()') === null, '(14) satır çizilmiyor');
     ok(fake.bound('onRewardedVideoAdDismissed') === 0, '(14) dinleyici kurulmadı');
@@ -1612,7 +1647,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; const cid = await careerIn(a, 1);
-    const fake = fakeAdMob(a.ctx, { consent: REQ_PORS });
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS });
     const cash0 = a.R('S.cash');
     await a.R('adsInit()');
     await a.R('adsPrivacy()');
@@ -1633,7 +1668,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    fakeAdMob(a.ctx);                                   // pors NOT_REQUIRED
+    fakeAdMobAged(a);                                   // pors NOT_REQUIRED
     await a.R('adsInit()');
     ok(a.R('adsPrivacyState()') === null, '(16) gerekli değilken durum null');
     ok(a.R("VIEWS.settings().indexOf('adsPrivacy()')") === -1, '(16) Ayarlar\'da satır yok');
@@ -1641,7 +1676,7 @@ async function tUmpConsent() {
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    fakeAdMob(a.ctx, { consent: REQ_PORS });
+    fakeAdMobAged(a, { consent: REQ_PORS });
     await a.R('adsInit()');
     ok(a.R('adsPrivacyState()') === 'go', '(16) gerekliyken durum go');
     ok(a.R("VIEWS.settings().indexOf('adsPrivacy()')") > -1, '(16) Ayarlar\'da satır var');
@@ -1662,6 +1697,609 @@ async function tUmpConsent() {
   }
 }
 
+/* ================= [20] YAŞ KAPISI (js/ads.js) =================
+   Bu blok yalnız KAPIYI ölçüyor. Beyan bir ÖZ BEYANDIR; hiçbir kontrol "yaş
+   doğrulandı" iddiası taşımıyor — ölçülen tek şey, beyanın uygulamada hangi
+   çağrıları açıp kapattığı.
+
+   Sözleşme: beyansız ya da eşik altındayken reklam yolunun HİÇBİR native çağrısı
+   yapılmıyor; oyun ve kayıtlar çalışmaya devam ediyor; ödül ekonomisi
+   değişmiyor; kazanılmış bir ödül kapı kapansa da teslim ediliyor; verilmiş
+   rızayı yönetme yolu soğuk açılıştan sonra da açık kalıyor.
+
+   NOT: satırın çizilmemesi ya da JS'ten çağrı yapılmaması, cihazda native
+   başlangıç bileşeni ya da ağ trafiği OLMADIĞININ kanıtı değildir. Burada
+   ölçülen tek kanıt sınıfı "JS köprüye çağrı yapmadı"dır. */
+const AD_Y_OK = new Date().getFullYear() - 30;     // rahatça eşiğin üstünde
+const AD_Y_UNDER = new Date().getFullYear() - 5;   // rahatça eşiğin altında
+
+async function tAdAgeGate() {
+  console.log('\n[20] yaş kapısı: beyan, sahiplik, gizlilik erişimi, ödül teslimatı');
+
+  /* (0) SÖZLEŞME SABİTİ — eşik 18. Aşağıdaki sınır senaryosu AD_AGE_MIN'i
+         uygulamadan okuyup İLİŞKİYİ ölçüyor; DEĞERİ burada bağımsız olarak
+         sabitliyoruz, yoksa eşik sessizce değişse blok tümüyle yeşil kalırdı.
+         Bu sayı hem CLAUDE.md'de hem yayımlanacak gizlilik metninde geçiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    ok(a.R('AD_AGE_MIN') === 18, '(0) reklam erişim eşiği 18', a.R('AD_AGE_MIN'));
+    ok(a.R('typeof AD_AGE_MIN') === 'number', '(0) eşik sayı');
+  }
+
+  /* (1) BEYAN YOK — reklam yolunun hiçbir çağrısı yapılmıyor, satır beyana
+         çağırıyor ve TUTAR yazmıyor (yüksek yaş beyanına teşvik olmasın). */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; const cid = await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    ok(await a.R('adsInit()') === 'noage', '(1) kapı kapalı');
+    ok(fake.stat.asks === 0 && fake.stat.forms === 0 && fake.stat.inits === 0,
+       '(1) izin okuması, form ve initialize hiç çağrılmadı');
+    ok(a.R('ADS.cs===null') === true && a.R('ADS.boot') === false,
+       '(1) izin durumu kurulmadı, boot işaretlenmedi');
+    ok(a.R('adsRowState()') === 'age', '(1) satır beyan istiyor');
+    ok(a.R("adsRowHtml().indexOf('adsAgeOpen()')") !== -1, '(1) satır beyan ekranını açıyor');
+    ok(a.R("adsRowHtml().indexOf(fmtK(RW.amount))") === -1, '(1) tutar yazılmıyor');
+    a.R('adsWatch();'); await tick();
+    ok(fake.stat.prepares === 0 && fake.stat.shows === 0, '(1) adsWatch hiçbir şey yapmadı');
+    ok(a.R('(PREFS.rw||{})["' + cid + '"]===undefined') === true, '(1) hak isteği kaydı yok');
+    ok(a.R('rwCanClaim()') === true, '(1) günlük hak tüketilmedi');
+  }
+
+  /* (2) OYUN ÇALIŞMAYA DEVAM EDİYOR — kapı yalnız reklamı bağlıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash'), wk0 = a.R('S.week'), wc = a.R('weeklyCost()');
+    a.R('nextWeek();'); a.R('save();'); await a.R('saveDrain()');
+    ok(a.R('S.week') === wk0 + 1, '(2) hafta ilerledi');
+    /* Kasanın "tanımlı olması" hiçbir şey ölçmez. Ölçülen şu: haftalık gider
+       gerçekten işlendi ve tutar tam olarak ekonominin söylediği kadar değişti
+       — kapalı kapı araya ne para koydu ne de bir şey eksiltti. */
+    ok(a.R('S.cash') === cash0 - wc, '(2) haftalık gider birebir işlendi', a.R('S.cash'));
+    ok(fake.stat.asks === 0 && fake.stat.inits === 0 && fake.stat.prepares === 0,
+       '(2) hafta boyunca reklam yolundan hiçbir native çağrı çıkmadı');
+    /* Günlük hak ne tüketildi ne de "kullanılmış" işaretlendi: kapalı kapı
+       hakkı yakmıyor, yerine de bir şey koymuyor. */
+    ok(a.R('rwCanClaim()') === true && a.R('Object.keys((S.rw||{}).n||{}).length') === 0,
+       '(2) günlük hak dokunulmadan duruyor');
+    ok(a.R('RW.amount') === 50, '(2) ödül tutarı değişmedi');
+    ok(a.R('SAVE_SCHEMA') === 10, '(2) kayıt şeması değişmedi');
+  }
+
+  /* (3) EŞİK ALTI — kapı kapalı, satır nötr, yukarı düzeltme daveti yok. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    ok(a.R('adsAgeSet("' + AD_Y_UNDER + '")') === true, '(3) beyan yazıldı');
+    await tick();
+    ok(a.R('adsAgeState()') === 'under' && a.R('adsAgeOk()') === false, '(3) eşik altı');
+    ok(await a.R('adsInit()') === 'noage', '(3) kapı kapalı');
+    ok(fake.stat.asks === 0 && fake.stat.inits === 0, '(3) hiçbir native çağrı yok');
+    ok(a.R('adsRowState()') === 'noage', '(3) satır nötr hâlde');
+    ok(a.R("adsRowHtml().indexOf('adsAgeOpen()')") === -1, '(3) satırda düzeltme daveti yok');
+  }
+
+  /* (4) SINIR — yalnız yıl saklandığı için kişi KÜÇÜK yaş sayılıyor.
+         Eşit fark kapıyı açmıyor, bir fazlası açıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMob(a.ctx);
+    const now = new Date().getFullYear();
+    a.R('adsAgeSet("' + (now - AD_AGE_MIN_T()) + '")');
+    ok(a.R('adsAgeOk()') === false, '(4) fark eşiğe eşitken kapı kapalı');
+    a.R('adsAgeSet("' + (now - AD_AGE_MIN_T() - 1) + '")');
+    ok(a.R('adsAgeOk()') === true, '(4) fark eşikten bir fazlayken kapı açık');
+    function AD_AGE_MIN_T() { return a.R('AD_AGE_MIN'); }
+  }
+
+  /* (5) BOZUK/GEÇERSİZ TERCİH — kapıyı AÇMIYOR, çökmüyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMob(a.ctx);
+    const bad = ['"1990"', '1990.5', 'null', 'true', '{}', '(new Date().getFullYear()+1)', '1200'];
+    let allClosed = true;
+    for (const v of bad) {
+      a.R('setPref("adBY",' + v + ');');
+      if (a.R('adsAgeOk()') !== false || a.R('adsBirthYear()') !== null) allClosed = false;
+    }
+    ok(allClosed, '(5) geçersiz, kesirli, metin, gelecek ve saçma değerler kapıyı açmıyor');
+    ok(a.R('adsAgeSet("19a0")') === false && a.R('adsAgeSet("")') === false
+       && a.R('adsAgeSet(null)') === false, '(5) geçersiz girdi yazılmıyor');
+    ok(a.R('adsAgeSet("' + (new Date().getFullYear() + 1) + '")') === false,
+       '(5) gelecek yıl yazılmıyor');
+  }
+
+  /* (6) UYGUN BEYAN — akış BİR KEZ koşuyor, sıra bozulmuyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx);
+    await a.R('adsInit()');
+    ok(fake.stat.asks === 0, '(6) beyansızken okuma yok');
+    a.R('adsAgeSet("' + AD_Y_OK + '");');
+    await tick(); await tick(); await tick();
+    ok(fake.stat.asks === 1 && fake.stat.forms === 1 && fake.stat.inits === 1,
+       '(6) beyandan sonra akış bir kez koştu');
+    ok(fake.stat.order.indexOf('init') > fake.stat.order.indexOf('ask'),
+       '(6) initialize izin okumasından SONRA');
+    ok(a.R('adsRowState()') === 'go', '(6) ödül satırı açıldı');
+    ok(await a.R('adsInit()') === 'ready' && fake.stat.asks === 1,
+       '(6) ikinci adsInit yeni tur açmadı');
+  }
+
+  /* (7) UYGUN → UYGUN DEĞİL — yeni istek durur, SDK 'on' KALIR.
+         Başlatılmış SDK geri alınmış gibi yazılmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; const cid = await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, {});
+    await a.R('adsInit()');
+    ok(a.R('ADS.sdk') === 'on' && a.R('adsRowState()') === 'go', '(7) başlangıçta açık');
+    a.R('adsAgeClear();'); await tick();
+    ok(a.R('ADS.sdk') === 'on', '(7) SDK hâlâ on — geri alınmadı');
+    ok(a.R('adsRowState()') === 'age', '(7) satır beyan istiyor');
+    a.R('adsWatch();'); await tick();
+    ok(fake.stat.prepares === 0 && fake.stat.shows === 0, '(7) yeni istek başlamadı');
+    ok(a.R('(PREFS.rw||{})["' + cid + '"]===undefined') === true, '(7) hak isteği kaydı yok');
+    ok(a.R('PREFS.adBY===undefined') === true, '(7) beyan alanı gerçekten kalktı');
+    ok(a.R('ADS.cs!==null') === true, '(7) izin durumu silinmedi — yaş rıza hükmü değil');
+  }
+
+  /* (8) UYGUN → UYGUN DEĞİL → UYGUN (aynı oturum, akış TAMAMLANMIŞTI):
+         yeni izin turu açılmıyor, initialize ve dinleyiciler tekrarlanmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, {});
+    await a.R('adsInit()');
+    a.R('adsAgeClear();'); await tick();
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await tick(); await tick();
+    ok(fake.stat.asks === 1, '(8) yeni izin okuması yapılmadı');
+    ok(fake.stat.forms === 1, '(8) form yeniden denenmedi');
+    ok(fake.stat.inits === 1, '(8) initialize tekrarlanmadı');
+    ok(fake.bound('onRewardedVideoAdDismissed') === 1, '(8) dinleyici çoğalmadı');
+    ok(a.R('adsRowState()') === 'go', '(8) satır yeniden açıldı');
+  }
+
+  /* (9) YARIDA KALMIŞ AKIŞ — okuma beklerken beyan siliniyor: form BAŞLAMIYOR,
+         boot false kalıyor ve sonraki uygun beyan akışı BAŞTAN koşturuyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { askHold: true });
+    a.R('adsInit();'); await tick();
+    ok(fake.stat.asks === 1 && fake.stat.forms === 0, '(9) okuma uçuşta, form yok');
+    a.R('adsAgeClear();'); await tick();
+    fake.finishAsk(); await tick(); await tick();
+    ok(fake.stat.forms === 0, '(9) beyan silinince form başlatılmadı');
+    ok(fake.stat.inits === 0, '(9) initialize yapılmadı');
+    ok(a.R('ADS.boot') === false, '(9) boot işaretlenmedi — akış tamamlanmadı');
+    ok(a.R("ADS.busy===''") === true && a.R('ADS.cp===null') === true,
+       '(9) kilit ve uçuş sözü sahibi tarafından bırakıldı');
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await tick(); await tick(); await tick();
+    ok(fake.stat.asks === 2 && fake.stat.forms === 1 && fake.stat.inits === 1,
+       '(9) yeniden uygun beyanda akış baştan koştu');
+  }
+
+  /* (10) SAHİPLİK KONTROLLERİ — kısmen SAVUNMA AMAÇLI BİRİM KONTROLÜ.
+          Kilidin uçuş sırasında eski zincirde kaldığı ve yalnız sahibince
+          bırakıldığı gerçek akıştan ölçülüyor. Son iki satır ise adsAdopt'u
+          DOĞRUDAN çağırıyor: bugünkü kodda ADS.op yalnız adsConsentFlow ve
+          adsPrivacy içinde artıyor, ikisi de ADS.cp/adsBusy() ile korunduğu
+          için busyOp'un uçuş sırasında değiştiği bir yol YOK. O iki satır bu
+          yüzden yarış testi değil, kontrolün kendi birim doğrulaması; gerçek
+          yarış sıralamaları (18)–(23)'te kuruluyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { askHold: true });
+    a.R('adsInit();'); await tick();
+    const op1 = a.R('ADS.busyOp');
+    a.R('adsAgeClear();'); await tick();
+    /* Eski zincir hâlâ uçuşta; yeni bir tur AÇILMIYOR çünkü kilit hâlâ onda. */
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await tick();
+    ok(a.R('ADS.busyOp') === op1, '(10) kilit hâlâ eski zincirde — çakışan form açılmadı');
+    ok(fake.stat.forms === 0, '(10) ikinci form başlamadı');
+    fake.finishAsk(); await tick(); await tick();
+    ok(a.R("ADS.busy===''") === true, '(10) kilit sahibi tarafından bırakıldı');
+    const seqBefore = a.R('ADS.seq');
+    /* Sahipliği yitirmiş bir okuma sonucu durumu yazamaz. */
+    ok(a.R('adsAdopt({canRequestAds:true,status:"OBTAINED",privacyOptionsRequirementStatus:"REQUIRED"},"stale",' + op1 + ')') === false,
+       '(10) sahipsiz okuma benimsenmedi (birim kontrolü)');
+    ok(a.R('ADS.seq') === seqBefore, '(10) okuma sayacı artmadı (birim kontrolü)');
+  }
+
+  /* (11) PREPARE ↔ SHOW ARASI — yükleme beklerken beyan silinirse gösterim
+          BAŞLAMIYOR ve günün hakkı İADE ediliyor (yanmıyor). */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; const cid = await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { prepareHold: true });
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick();
+    ok(fake.stat.prepares === 1 && fake.stat.shows === 0, '(11) yükleme uçuşta');
+    ok(a.R('(PREFS.rw||{})["' + cid + '"]!==undefined') === true, '(11) hak isteği açıldı');
+    a.R('adsAgeClear();'); await tick();
+    fake.finishPrepare(); await tick(); await tick();
+    ok(fake.stat.shows === 0, '(11) gösterim başlatılmadı');
+    ok(a.R('S.cash') === cash0, '(11) para değişmedi');
+    ok(a.R('(PREFS.rw||{})["' + cid + '"]===undefined') === true, '(11) istek kaydı iade edildi');
+    ok(a.R('rwCanClaim()') === true, '(11) günün hakkı yanmadı');
+  }
+
+  /* (12) KAZANILMIŞ ÖDÜL — gösterim sürerken beyan silinse bile doğru gösterime
+          ait ödül teslim ediliyor. Kapı BAŞLATMAYI bağlıyor, teslimatı değil. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, {});
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await tick(); await tick();
+    ok(fake.stat.shows === 1, '(12) gösterim başladı');
+    a.R('adsAgeClear();'); await tick();
+    fake.reward(); await tick(); await tick(); await tick();
+    await a.R('saveDrain()');
+    ok(a.R('S.cash') === cash0 + a.R('RW.amount'), '(12) ödül yazıldı');
+    ok(a.R('Object.keys((S.rw||{}).n||{}).length') === 1, '(12) gün ödenmiş işaretlendi');
+    ok(a.R('rwCanClaim()') === false, '(12) günün hakkı kullanıldı');
+    ok(a.R('adsRowState()') === 'age', '(12) buna rağmen kapı kapalı');
+  }
+
+  /* (13) GİZLİLİK ERİŞİMİ SOĞUK AÇILIŞTA — beyan silindikten ve uygulama
+          yeniden açıldıktan sonra da verilmiş rızayı yönetme yolu açık.
+          Kalıcı iz YALNIZ giriş noktasına dair ipucu; rıza kopyası değil. */
+  {
+    const disk = newDisk(), ls = {};
+    const a = session(disk, ls, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMobAged(a, { consent: REQ_PORS });
+    await a.R('adsInit()');
+    ok(a.R('adsPrivacyState()') === 'go', '(13) ilk oturumda gizlilik girişi var');
+    ok(a.R('PREFS.adPors') === 1, '(13) kalıcı ipucu yazıldı');
+    a.R('adsAgeClear();'); await tick();
+
+    const b = session(disk, ls, {});                     // YENİDEN AÇILIŞ
+    await b.booted;
+    const fb = fakeAdMob(b.ctx, { consent: REQ_PORS });
+    ok(await b.R('adsInit()') === 'noage', '(13) yeni oturumda kapı kapalı');
+    ok(fb.stat.asks === 0, '(13) açılışta izin okuması yapılmadı');
+    ok(b.R("ADS.pors") === 'UNKNOWN', '(13) bellekte okuma yok');
+    ok(b.R('adsPrivacyState()') === 'go', '(13) gizlilik girişi yine de görünüyor');
+    ok(b.R("VIEWS.settings().indexOf('adsPrivacy()')") !== -1, '(13) Ayarlar\'da satır var');
+    /* Kullanıcı dokunuşu: gerekli güncel okuma BU yolda yapılıyor, açılışta değil. */
+    await b.R('adsPrivacy()'); await tick(); await tick();
+    /* İki okuma: soğuk açılış ön okuması + formdan sonraki zorunlu yenileme
+       (showPrivacyOptionsForm yük döndürmüyor). İkisi de bu KULLANICI yolunda. */
+    ok(fb.stat.asks === 2, '(13) güncel okuma kullanıcı yolunda yapıldı');
+    ok(fb.stat.order[0] === 'ask' && fb.stat.order[1] === 'priv',
+       '(13) önce okuma, sonra form');
+    ok(fb.stat.privs === 1, '(13) gizlilik formu açıldı');
+    ok(fb.stat.inits === 0, '(13) bu yol reklam SDK\'sını başlatmadı');
+    ok(b.R('ADS.sdk') === 'off', '(13) SDK kapalı kaldı');
+    ok(b.R("JSON.stringify(PREFS).indexOf('canRequestAds')") === -1
+       && b.R("JSON.stringify(PREFS).indexOf('OBTAINED')") === -1,
+       '(13) kalıcı izde rıza kopyası yok');
+  }
+
+  /* (14) İZ YALNIZ AÇIK SONUÇLA KALKIYOR — hata ve çevrimdışılık silmiyor,
+          hata metni ayrıştırılmıyor; NOT_REQUIRED okuması siliyor. */
+  {
+    const disk = newDisk(), ls = {};
+    const a = session(disk, ls, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { consent: REQ_PORS });
+    await a.R('adsInit()');
+    ok(a.R('PREFS.adPors') === 1, '(14) iz var');
+    a.R('adsAgeClear();'); await tick();
+    /* Bu oturumda okuma VAR, dolayısıyla ön okumaya gerek yok ve form deneniyor.
+       Formdan sonraki zorunlu yenileme düşüyor: uygunluk bayatlıyor ama iz
+       DURUYOR — hata "artık gerekli değil" demek değil. */
+    fake.setAskFail(true);
+    await a.R('adsPrivacy()'); await tick(); await tick();
+    ok(fake.stat.privs === 1, '(14) form denendi');
+    ok(a.R('ADS.stale') === true, '(14) düşen yenileme uygunluğu bayatlattı');
+    ok(a.R('PREFS.adPors') === 1, '(14) okuma hatası izi silmedi');
+    ok(a.R('adsPrivacyState()') === 'go', '(14) toparlanma yolu duruyor');
+    fake.setAskFail(false);
+    fake.setConsent({ privacyOptionsRequirementStatus: 'NOT_REQUIRED' });
+    await a.R('adsPrivacy()'); await tick(); await tick();
+    ok(a.R('PREFS.adPors===undefined') === true, '(14) açık NOT_REQUIRED sonucu izi kaldırdı');
+    ok(a.R('adsPrivacyState()') === null, '(14) satır kalktı');
+  }
+
+  /* (14b) SOĞUK AÇILIŞTA ÖN OKUMA DÜŞERSE — form HİÇ denenmiyor (güncel bilgi
+           olmadan çalışmaz) ve iz yine silinmiyor. */
+  {
+    const disk = newDisk(), ls = {};
+    const a = session(disk, ls, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMobAged(a, { consent: REQ_PORS });
+    await a.R('adsInit()');
+    a.R('adsAgeClear();'); await tick();
+
+    const b = session(disk, ls, {});                     // YENİDEN AÇILIŞ
+    await b.booted;
+    const fb = fakeAdMob(b.ctx, { consent: REQ_PORS, askFail: true });
+    ok(b.R('adsPrivacyState()') === 'go', '(14b) iz sayesinde satır var');
+    await b.R('adsPrivacy()'); await tick(); await tick();
+    ok(fb.stat.asks === 1, '(14b) tek ön okuma denendi');
+    ok(fb.stat.privs === 0, '(14b) güncel bilgi olmadan form denenmedi');
+    ok(b.R('PREFS.adPors') === 1, '(14b) çevrimdışı/hata izi silmedi');
+    ok(b.R('adsPrivacyState()') === 'go', '(14b) satır duruyor');
+    ok(fb.stat.inits === 0 && b.R('ADS.sdk') === 'off', '(14b) reklam başlatılmadı');
+  }
+
+  /* (15) KARİYER SİLMEK BEYANI SİLMİYOR — beyan cihaza ait, kariyere değil. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMob(a.ctx);
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await tick();
+    a.R('deleteSlot(1);'); await a.R('saveDrain()');
+    ok(a.R('adsBirthYear()') === AD_Y_OK, '(15) beyan yerinde');
+    ok(a.R('adsAgeOk()') === true, '(15) kapı hâlâ açık');
+  }
+
+  /* (16) AYARLAR — düzeltme ve silme aynı yerde; beyan yokken silme satırı yok. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMob(a.ctx);
+    ok(a.R("adsAgeRowHtml().indexOf('adsAgeOpen()')") !== -1, '(16) düzeltme yolu var');
+    ok(a.R("adsAgeRowHtml().indexOf('adsAgeForget()')") === -1, '(16) beyan yokken silme yok');
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await tick();
+    ok(a.R("adsAgeRowHtml().indexOf('adsAgeForget()')") !== -1, '(16) beyan varken silme var');
+    ok(a.R("VIEWS.settings().indexOf('adsAgeOpen()')") !== -1, '(16) Ayarlar\'da görünüyor');
+    for (const lang of ['tr', 'en']) {
+      a.R("L='" + lang + "';");
+      const h = a.R('adsAgeRowHtml()+adsRowHtml()');
+      ok(h.indexOf('undefined') === -1 && h.indexOf('[object') === -1,
+         '(16) ' + lang + ' metinleri eksiksiz');
+    }
+    a.R("L='tr';");
+  }
+
+  /* (17) BEYAN EKRANI NÖTR — alan boş açılıyor, eşik hiçbir yerde yazmıyor,
+          paylaşmadan devam yolu var ve hiçbir şey saklamıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeAdMob(a.ctx);
+    for (const lang of ['tr', 'en']) {
+      a.R("L='" + lang + "';");
+      a.R('adsAgeOpen();');
+      const h = a.R("document.getElementById('sheet').innerHTML");
+      ok(h.indexOf('value=') === -1, '(17) ' + lang + ' alan önceden doldurulmamış');
+      ok(h.indexOf(String(a.R('AD_AGE_MIN'))) === -1, '(17) ' + lang + ' eşik yazılmıyor');
+      ok(h.indexOf('adsAgeSkip') !== -1 || h.indexOf(a.R("t('adAgeSkip')")) !== -1,
+         '(17) ' + lang + ' paylaşmadan devam yolu var');
+      a.R('closeModal();');
+    }
+    a.R("L='tr';");
+    ok(a.R('PREFS.adBY===undefined') === true, '(17) ekranı açmak/atlamak bir şey saklamadı');
+    ok(a.R('adsAgeState()') === 'ask', '(17) durum değişmedi');
+  }
+
+  /* ===== (18)–(22) YARIDA KALAN AKIŞIN TOPARLANMASI =====
+     Ortak kurgu: açılış okuması GERÇEKTEN ertelenmiş bir promise üzerinde
+     tutuluyor (askHold) ve beyan tam o pencerede değişiyor. Eski zincir kendi
+     kilidini bıraktıktan sonra, güncel beyan uygunsa ve gerekli izin akışı
+     tamamlanmamışsa TEK bir yeni tur açılmalı.
+
+     Senaryo yükü bilerek "izin gerçekten gerekli" hâli: açılış okuması
+     canRequestAds:false diyor, formdan sonra true dönüyor. Form hiç çağrılmazsa
+     uygunluk kurulamaz, SDK açılmaz ve satır sessizce kaybolur — kaybın somut
+     görüldüğü yer burası. */
+  const AGE_REQ = { canRequestAds: false, status: 'REQUIRED', isConsentFormAvailable: true,
+                    privacyOptionsRequirementStatus: 'REQUIRED' };
+  const AGE_FORM_OK = { canRequestAds: true, status: 'OBTAINED' };
+  const settle = async n => { for (let i = 0; i < (n || 8); i++) await tick(); };
+
+  /* (18) UYGUN BEYAN → BAŞKA UYGUN BEYAN, okuma uçuştayken.
+          Yazım hatasını düzeltmek gerçekçi tetik: iki yıl da eşiği geçtiği için
+          kapı hiç kapanmıyor, yalnız ageSeq artıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('setPref("adBY",' + AD_Y_OK + ');');
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R('adsInit();'); await tick();
+    ok(fake.stat.asks === 1 && fake.stat.forms === 0, '(18) açılış okuması uçuşta, form yok');
+    a.R('adsAgeSet("' + (AD_Y_OK - 5) + '");'); await settle(3);
+    ok(fake.stat.asks === 1, '(18) eski zincir uçuştayken ikinci tur AÇILMADI');
+    ok(a.R("ADS.busy==='consent'") === true, '(18) kilit hâlâ eski zincirde');
+    fake.finishAsk(); await settle();
+    ok(fake.stat.asks === 2, '(18) eski zincir bitince tam bir yeni okuma yapıldı');
+    ok(fake.stat.forms === 1, '(18) izin formu gerektiği için çağrıldı');
+    ok(fake.stat.inits === 1, '(18) initialize bir kez');
+    ok(fake.bound('onRewardedVideoAdDismissed') === 1, '(18) dinleyici çoğalmadı');
+    ok(a.R('ADS.boot') === true, '(18) yeni akış TAMAMLANDI');
+    ok(a.R("ADS.cs.src") === 'form', '(18) karar formun döndürdüğü taze değere dayanıyor');
+    ok(a.R('adsEligible()') === true && a.R('ADS.sdk') === 'on', '(18) uygunluk kuruldu, SDK açıldı');
+    ok(a.R('adsRowState()') === 'go', '(18) ödül satırı açıldı');
+    ok(a.R("ADS.busy===''") === true && a.R('ADS.cp===null') === true, '(18) kilit bırakıldı');
+  }
+
+  /* (19) SİL → UYGUN BEYAN, okuma uçuştayken. Kapı arada gerçekten kapanıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('setPref("adBY",' + AD_Y_OK + ');');
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R('adsInit();'); await tick();
+    a.R('adsAgeClear();'); await tick();
+    ok(a.R('adsAgeOk()') === false, '(19) kapı arada kapandı');
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await settle(3);
+    ok(fake.stat.asks === 1, '(19) eski zincir uçuştayken ikinci tur AÇILMADI');
+    fake.finishAsk(); await settle();
+    ok(fake.stat.asks === 2 && fake.stat.forms === 1 && fake.stat.inits === 1,
+       '(19) eski zincir bitince yeni akış baştan koştu');
+    ok(a.R('ADS.boot') === true && a.R('adsRowState()') === 'go', '(19) akış tamamlandı, satır açıldı');
+    ok(fake.bound('onRewardedVideoAdFailedToShow') === 1, '(19) dinleyici çoğalmadı');
+  }
+
+  /* (20) AYNI BEKLEYEN SÖZE BİRDEN ÇOK adsInit KATILIRSA tek tur açılıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('setPref("adBY",' + AD_Y_OK + ');');
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R('adsInit();adsInit();adsInit();'); await tick();
+    ok(fake.stat.asks === 1, '(20) üç çağrı tek okuma');
+    a.R('adsAgeSet("' + (AD_Y_OK - 5) + '");'); await tick();
+    a.R('adsInit();adsInit();'); await settle(3);
+    fake.finishAsk(); await settle();
+    ok(fake.stat.asks === 2, '(20) beş bekleyen çağrıdan TEK yeni okuma doğdu');
+    ok(fake.stat.forms === 1, '(20) tek form denemesi');
+    ok(fake.stat.inits === 1, '(20) tek initialize');
+    ok(fake.bound('onRewardedVideoAdDismissed') === 1, '(20) tek dinleyici');
+    ok(await a.R('adsInit()') === 'ready' && fake.stat.asks === 2,
+       '(20) akış tamamlandıktan sonraki çağrı yeni tur açmıyor');
+  }
+
+  /* (21) KULLANICI KAPIYI YENİDEN KAPATTIYSA yeni tur YOK. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('setPref("adBY",' + AD_Y_OK + ');');
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R('adsInit();'); await tick();
+    a.R('adsAgeSet("' + (AD_Y_OK - 5) + '");'); await tick();   // hâlâ uygun
+    a.R('adsAgeClear();'); await tick();                        // ama sonra silindi
+    fake.finishAsk(); await settle();
+    ok(fake.stat.asks === 1, '(21) kapı kapalıyken yeni okuma yapılmadı');
+    ok(fake.stat.forms === 0 && fake.stat.inits === 0, '(21) form ve initialize yok');
+    ok(a.R("ADS.sdk!=='on'") === true, '(21) SDK açılmadı');
+    ok(a.R('ADS.boot') === false, '(21) akış tamamlanmış sayılmadı');
+    ok(a.R('adsRowState()') === 'age', '(21) satır beyan istiyor');
+    ok(a.R("ADS.busy===''") === true && a.R('ADS.cp===null') === true, '(21) kilit bırakıldı');
+  }
+
+  /* (22) TOPARLANMA BİR YENİDEN DENEME DÖNGÜSÜ DEĞİL — yeni turun okuması
+          düşerse akış TAMAMLANMIŞ sayılıyor ve kendiliğinden tekrar denenmiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('setPref("adBY",' + AD_Y_OK + ');');
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R('adsInit();'); await tick();
+    a.R('adsAgeSet("' + (AD_Y_OK - 5) + '");'); await tick();
+    fake.setAskFail(true);                     // yeni turun okuması ağ yüzünden düşüyor
+    fake.finishAsk(); await settle(12);
+    ok(fake.stat.asks === 2, '(22) yeni tur tek okuma denedi');
+    ok(fake.stat.forms === 0, '(22) okuma düştüğü için form denenmedi');
+    ok(a.R('ADS.boot') === true, '(22) ağ hatası akışı TAMAMLANMIŞ sayıyor');
+    ok(a.R('adsEligible()') === false, '(22) uygunluk kurulmadı');
+    await settle(12);
+    ok(fake.stat.asks === 2, '(22) kendiliğinden yeniden denenmedi');
+    ok(await a.R('adsInit()') === 'noconsent' && fake.stat.asks === 2,
+       '(22) sonraki adsInit de yeni tur açmıyor');
+    a.R('adsAgeSet("' + (AD_Y_OK - 6) + '");'); await settle();
+    ok(fake.stat.asks === 2, '(22) beyan değişikliği de döngü başlatmıyor');
+  }
+
+  /* (23) FORM REDDİNDEN ÖNCEKİ KAPI — form ekrandayken beyan silinirse, reklam
+          amaçlı zincir YENİ bir requestConsentInfo başlatmıyor. Atlanan yenileme
+          eski canRequestAds kopyasını yetki hâline getirmiyor: uygunluk bayat
+          işaretleniyor ve sonraki uygun beyan GÜNCEL akıştan geçiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { formHold: true, consent: REQ_PORS });
+    a.R('adsInit();'); await settle(3);
+    ok(fake.stat.asks === 1 && fake.stat.forms === 1, '(23) açılış okuması bitti, form ekranda');
+    ok(a.R('ADS.cs.can') === true, '(23) açılış okuması true idi');
+    a.R('adsAgeClear();'); await tick();
+    fake.failForm(); await settle();
+    ok(fake.stat.asks === 1, '(23) kapı kapalıyken yeni izin okuması BAŞLATILMADI');
+    ok(a.R('ADS.stale') === true, '(23) atlanan yenileme uygunluğu bayat bıraktı');
+    ok(a.R('adsEligible()') === false, '(23) eski rıza kopyası reklam yetkisi sayılmıyor');
+    ok(a.R('ADS.boot') === false, '(23) akış tamamlanmış sayılmadı');
+    ok(fake.stat.inits === 0 && a.R("ADS.sdk!=='on'") === true, '(23) SDK başlatılmadı');
+    ok(a.R("ADS.busy===''") === true && a.R('ADS.cp===null') === true, '(23) kilit bırakıldı');
+    /* Kullanıcının kendi açtığı gizlilik yönetimi yolu kapı kapalıyken ÇALIŞIYOR. */
+    ok(a.R('adsPrivacyState()') === 'go', '(23) gizlilik yolu açık kaldı');
+    await a.R('adsPrivacy()'); await settle();
+    ok(fake.stat.privs === 1, '(23) gizlilik formu kapı kapalıyken açıldı');
+    ok(fake.stat.inits === 0, '(23) gizlilik yolu reklam SDK\'sını başlatmadı');
+    /* Sonraki uygun beyan taze bir izin akışından geçiyor. */
+    const asks0 = fake.stat.asks, forms0 = fake.stat.forms;
+    a.R('adsAgeSet("' + AD_Y_OK + '");'); await settle();
+    ok(fake.stat.asks === asks0 + 1 && fake.stat.forms === forms0 + 1,
+       '(23) yeniden uygun beyanda güncel izin akışı koştu');
+    ok(a.R('ADS.stale') === false && a.R('adsEligible()') === true,
+       '(23) uygunluk taze okumadan kuruldu');
+    ok(a.R('ADS.boot') === true && a.R('adsRowState()') === 'go', '(23) satır açıldı');
+  }
+
+  /* (24) İLK BEYANDAN SONRA ÇİZİLMİŞ EKRAN — native cevap BEKLETİLİRKEN
+          arayüz güncel durumu göstermeli. Bu senaryo bilerek adsRowState()
+          dönüşüne değil, gerçekten çizilmiş #view içeriğine bakıyor: eksik bir
+          yeniden çizim durumu doğru, ekranı yanlış bırakır. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
+    a.R("navTo('dash');");
+    const h0 = a.R("document.getElementById('view').innerHTML");
+    const askSub = a.R("t('adAgeRowSub')");
+    ok(h0.indexOf(askSub) !== -1 && h0.indexOf('adsAgeOpen()') !== -1,
+       '(24) başlangıçta çizilen satır beyan istiyor');
+    /* Gerçek kullanıcı yolu: satır → beyan ekranı → alan → Kaydet. */
+    a.R('adsAgeOpen();');
+    ok(a.R("document.getElementById('modal').classList.contains('open')") === true,
+       '(24) beyan ekranı açıldı');
+    a.R("document.getElementById('adAgeInp').value='" + AD_Y_OK + "';");
+    a.R('adsAgeSubmit();');
+    ok(a.R('adsBirthYear()') === AD_Y_OK, '(24) beyan yazıldı');
+    ok(a.R("document.getElementById('modal').classList.contains('open')") === false,
+       '(24) beyan ekranı kapandı');
+    /* Native cevap HÂLÂ bekletiliyor. */
+    ok(fake.stat.asks === 1 && a.R("ADS.sdk!=='on'") === true, '(24) native cevap hâlâ bekliyor');
+    const h1 = a.R("document.getElementById('view').innerHTML");
+    ok(h1.indexOf(askSub) === -1, '(24) eski "doğum yılın sorulacak" metni ekranda kalmadı');
+    ok(h1.indexOf('adsAgeOpen()') === -1, '(24) beyan ekranını yeniden açan tıklama yolu kalmadı');
+    ok(h1.indexOf('adsWatch()') === -1, '(24) tutulamayacak bir reklam sözü de çizilmedi');
+    ok(h1.indexOf('undefined') === -1 && h1.indexOf('[object') === -1, '(24) ekran bozulmadı');
+    /* Tek dokunuş tek işlem: ikinci bir izin turu ya da çift beyan yazımı yok. */
+    ok(fake.stat.asks === 1 && fake.stat.forms === 0, '(24) çift işlem başlamadı');
+    fake.finishAsk(); await settle();
+    const h2 = a.R("document.getElementById('view').innerHTML");
+    ok(h2.indexOf('adsWatch()') !== -1, '(24) akış bitince ödül satırı çizildi');
+    ok(a.R('adsRowState()') === 'go', '(24) durum da açık');
+  }
+
+  /* (25) KAZANILMIŞ ÖDÜLE YAŞ VETOSU EKLENMEDİ — (12) teslimatı ölçüyor, bu
+          senaryo teslimat yolunda yaş/yaş-seq okuyan bir dal OLMADIĞINI
+          ölçüyor: beyan silinmiş ve ageSeq ilerlemişken gelen ödül tam ödeniyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, {});
+    await a.R('adsInit()');
+    const cash0 = a.R('S.cash');
+    a.R('adsWatch();'); await settle(3);
+    const seq0 = a.R('ADS.ageSeq');
+    a.R('adsAgeClear();'); a.R('adsAgeSet("' + AD_Y_UNDER + '");'); await tick();
+    ok(a.R('ADS.ageSeq') > seq0 && a.R('adsAgeOk()') === false,
+       '(25) ödül gelmeden önce kapı kapandı ve ageSeq ilerledi');
+    fake.reward(); await settle();
+    await a.R('saveDrain()');
+    ok(a.R('S.cash') === cash0 + a.R('RW.amount'), '(25) ödül tam ödendi');
+    ok(a.R('rwCanClaim()') === false, '(25) günün hakkı kullanılmış işaretlendi');
+    ok(a.R("ADS.lastRw==='delivered'") === true, '(25) teslimat kaydı yazıldı');
+  }
+}
+
 /* Oturum kurucusu başka doğrulama betiklerinden de kullanılabilsin (tam uygulama
    taraması, çok sezonlu regresyon). Doğrudan çalıştırıldığında testler koşuyor. */
 module.exports = { session, newDisk, makeEl, waitFor, tick };
@@ -1674,7 +2312,7 @@ if (require.main !== module) return;
                  tSlotDeleteAndCoalesce, tCareerIdentity, tCidLegacyMigration,
                  tCidSlotsAndCapacity, tRewardDailyRight, tRewardCareersAndMidnight,
                  tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions,
-                 tAdsAdapter, tUmpConsent];
+                 tAdsAdapter, tUmpConsent, tAdAgeGate];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

@@ -16,6 +16,10 @@
    requestConsentInfo BOŞ seçenekle çağrılıyor: bir bölge ya da yaş tercihini
    kod tarafında varsaymak, o tercihi kullanıcı adına vermek olurdu.
 
+   Aşağıdaki yaş kapısı bunların hiçbiri DEĞİL: SDK'ya bir bayrak geçirmiyor,
+   izin sorgusunun seçeneklerine dokunmuyor. Yaptığı tek şey, reklam yolunun
+   çağrılarını hiç başlatmamak.
+
    Sahte ödül sağlayıcısı, hata ayıklama bayrağı, izin atlama yolu ya da
    canRequestAds'i elle true yapan bir kapı da YOK: hem ödül hem uygunluk
    yalnız SDK'nın gerçek sonucundan geliyor.
@@ -33,6 +37,46 @@
      canRequestAds         → TEK karar alanı
      initialize()          → ancak uygunluk true iken
      prepare/show          → ancak düğmeye basınca
+
+   ===== YAŞ KAPISI: RIZA UYGUNLUĞUNDAN AYRI =====
+
+   Reklam yolunun önünde ikinci ve BAĞIMSIZ bir kapı var: cihazda saklanan
+   doğum yılından türeyen yaş uygunluğu (adsAgeOk). Rıza uygunluğuyla (adsEligible)
+   asla aynı fonksiyona konmuyor, çünkü ikisi farklı şeyler: biri kullanıcının
+   SDK'ya verdiği izni, diğeri bizim koyduğumuz erişim eşiğini okuyor. İkisini
+   birleştirmek, izin sonucunu yaş kararıyla kirletirdi.
+
+   Eşik (AD_AGE_MIN) OYUNUN hedef kitlesi DEĞİL — oyun 13+. Bu sayı yalnız
+   ödüllü reklam yolunun açılıp açılmayacağını belirliyor. Beyansız ya da eşik
+   altındaki kullanıcı oyunu ve kayıtlarını tam olarak kullanır; yalnız reklam
+   ve onun günlük ödülü kapalıdır, yerine başka bir kazanç KONMUYOR.
+
+   Beyan öz beyandır: yaş doğrulaması değil. Yalnız doğum YILI saklanıyor, ay ve
+   gün istenmiyor; doğum günü bilinmediği için kişi küçük yaş sayılıyor
+   (adsAgeOk'taki karşılaştırma bu yüzden > ile yazıldı).
+
+   ===== SAHİPLİK: ESKİ ZİNCİR YENİYİ EZMEZ =====
+
+   Yaş beyanı bir izin işlemi uçuştayken değişebilir. Giriş kontrolü tek başına
+   yetmez, çünkü zincirin her adımı yeni bir native çağrı başlatıyor. İki ayrı
+   belirteç var ve ikisi ayrı şeyi koruyor:
+
+     ADS.ageSeq  Beyan her değiştiğinde artıyor. Zincir başlarken yakalanıyor;
+                 her asenkron adımdan SONRA, yeni native çağrıdan ÖNCE
+                 adsAgeHolds() ile bakılıyor — hem belirteç hem anlık kapı.
+     ADS.op      İşlem kimliği. Kilidi ve uçuş sözünü KİMİN tuttuğunu söylüyor.
+                 Temizlik yalnız sahibi tarafından yapılıyor (busyOp/cpOp), yoksa
+                 geciken eski bir zincir yeni turun kilidini açardı.
+
+   Sahipliği yitirmek uçuştaki native işlemi İPTAL ETMEZ — öyle bir API yok ve
+   olmadığı hâlde varmış gibi yazmak yalan olurdu. Yaptığı tek şey bir SONRAKİ
+   adımı başlatmamak. Kilit de erken bırakılmıyor: çakışan ikinci bir form
+   açılmasın diye, biten zincir kendi done'ında bırakıyor.
+
+   Bu kapı YALNIZ başlatmayı bağlıyor. Doğru bir gösterime ait ödül teslimatı
+   (adsReward → rwEarned → rwSync) yaş ya da yaş-seq değişikliğinden ETKİLENMEZ:
+   gösterim başlarken kapı açıktı, ödül o gösterime ait ve muhasebe nonce
+   üzerinden yürüyor.
 
    ===== TEK KARAR ALANI: canRequestAds =====
 
@@ -189,9 +233,16 @@ const ADS = {
   /* '' | 'consent'. 'ad' hâli ADS.cur'dan türüyor (bkz. adsBusy). */
   busy: '',
   cp: null,
-  /* Açılış akışı bir kez koştu mu. adsInit() aynı oturumda ikinci kez
-     çağrılırsa yeni bir requestConsentInfo + form denemesi başlatmasın. */
+  /* Açılış akışı TAMAMLANDI mı. "Başladı" değil tamamlandı: yaş değişikliği
+     yarıda kesen tek şey ve o hâlde false kalıyor ki sonraki uygun beyan akışı
+     baştan koşturabilsin. Tamamlanmış akış ikinci kez koşmuyor. */
   boot: false,
+  /* İşlem kimliği ve sahipleri. Temizliği yalnız sahibi yapıyor. */
+  op: 0,
+  busyOp: 0,
+  cpOp: 0,
+  /* Yaş beyanı sahiplik sayacı — beyan her yazıldığında/silindiğinde artıyor. */
+  ageSeq: 0,
 
   /* Ekrandaki gösterim (att) ya da null. Kayda GİRMEZ — CAM/MKQ/SKTAB gibi
      yalnız görünüm durumu. */
@@ -227,6 +278,72 @@ function adsConsentApi() {
 }
 function adsAvailable() { return !!adsPlugin(); }
 
+/* ================= YAŞ KAPISI =================
+   Reklam erişim eşiği. Oyunun hedef kitlesi değil (oyun 13+); bu sayı yalnız
+   ödüllü reklam yolunu bağlıyor. */
+const AD_AGE_MIN = 18;
+/* Cihaz tercihlerindeki anahtarlar. Kariyer kaydına GİRMİYOR: beyan cihaza ait,
+   kariyere değil — üç yuva da silinse yerinde kalmalı. */
+const AD_BY_KEY = 'adBY';       // doğum yılı (sayı)
+const AD_PORS_KEY = 'adPors';   // gizlilik girişi ipucu (1 = gerekli görülmüştü)
+
+/* Saklanan doğum yılı ya da null. Geçersiz, gelecek tarihli, kesirli, metin ya
+   da başka türlü bozuk her değer null: bozuk bir tercih dosyası reklam yolunu
+   AÇMAMALI, kapatmalı. */
+function adsBirthYear() {
+  const v = pref(AD_BY_KEY, null);
+  if (typeof v !== 'number' || !isFinite(v) || Math.floor(v) !== v) return null;
+  const now = new Date().getFullYear();
+  if (v > now || v < now - 130) return null;
+  return v;
+}
+/* Yaş uygunluğu. Yalnız YIL saklandığı için doğum gününün geçip geçmediği
+   bilinmiyor; fark eşikten BİR FAZLA olmadıkça kapı açılmıyor, yani kişi küçük
+   yaş sayılıyor. Bedeli kabul edilmiş bir gecikmedir: 2008 doğumlu kullanıcı
+   1 Ocak 2027'de uygun olur. */
+function adsAgeOk() {
+  const y = adsBirthYear();
+  return y !== null && (new Date().getFullYear() - y) > AD_AGE_MIN;
+}
+/* 'ask' = beyan yok ya da bozuk · 'under' = eşik altı · 'ok' = uygun. */
+function adsAgeState() {
+  if (adsBirthYear() === null) return 'ask';
+  return adsAgeOk() ? 'ok' : 'under';
+}
+/* Zincir hâlâ sahibi mi VE kapı hâlâ açık mı. İkisi ayrı: birincisi geciken eski
+   zinciri, ikincisi anlık durumu yakalıyor. */
+function adsAgeHolds(tok) { return ADS.ageSeq === tok && adsAgeOk(); }
+/* Beyan değişti. Uygun hâle gelindiyse akış BURADAN tetikleniyor — yarıda kalmış
+   bir açılış akışı da böylece baştan koşabiliyor (bkz. ADS.boot).
+
+   Çizim her iki dalda da ÖNCE yapılıyor ve akışın asenkron sonuna bırakılmıyor:
+   izin okuması saniyeler sürebilir (çevrimdışı cihazda daha da uzun) ve o süre
+   boyunca satırın hâlâ "doğum yılın sorulacak" demesi, kullanıcının az önce
+   verdiği beyanın kaydedilmediği anlamına gelirdi. */
+function adsAgeApply() {
+  ADS.ageSeq++;
+  adsRepaint();
+  if (adsAgeOk()) adsInit();
+}
+/* Serbest girdi YALNIZ burada sayıya çevriliyor ve yalnız geçerliyse yazılıyor.
+   Ham metin ne saklanıyor ne de bir yere basılıyor. Dönüş: yazıldı mı. */
+function adsAgeSet(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!/^[0-9]{4}$/.test(s)) return false;
+  const y = parseInt(s, 10), now = new Date().getFullYear();
+  if (y > now || y < now - 130) return false;
+  setPref(AD_BY_KEY, y);
+  adsAgeApply();
+  return true;
+}
+/* Beyanı unut. Bu bir RIZA GERİ ÇEKME DEĞİL: verilmiş UMP rızası olduğu yerde
+   kalır ve gizlilik seçenekleri yolu açık kalmaya devam eder (adsPrivacyState). */
+function adsAgeClear() {
+  delete PREFS[AD_BY_KEY];   // alan gerçekten kalkıyor, null bırakılmıyor
+  savePrefs();
+  adsAgeApply();
+}
+
 /* ================= TÜRETİLMİŞ YÜKLEMLER ================= */
 /* Uygunluk: TEK karar. Güncel ve true olmalı; "doğrulanamadı" true saymaz. */
 function adsEligible() { return !!(ADS.cs && ADS.cs.can === true && !ADS.stale); }
@@ -237,16 +354,21 @@ function adsBound() {
   if (!ADS.bnd) return false;
   return ADS_EV.every(ev => ADS.bnd[ev] === true);
 }
-/* REKLAM KAPISI. SDK'nın 'on' olması tek başına yetmez. */
+/* REKLAM KAPISI. SDK'nın 'on' olması tek başına yetmez. Yaş kapısı burada da
+   ayrı bir terim: rıza uygunluğunun içine karıştırılmıyor. */
 function adsReady() {
-  return ADS.sdk === 'on' && adsBound() && adsEligible() && !adsBusy();
+  return ADS.sdk === 'on' && adsBound() && adsEligible() && adsAgeOk() && !adsBusy();
 }
 
 /* ================= İZİN ================= */
 /* Okumayı benimse. privacyOptionsRequirementStatus YALNIZ başarılı okumada
    yazılıyor: düşen bir yenileme onu silmemeli. */
-function adsAdopt(info, src) {
+function adsAdopt(info, src, op) {
   if (!info || typeof info !== 'object') return false;
+  /* SAHİPLİK: geciken eski bir zincirin okuması yeni durumu EZEMEZ. op verilmişse
+     kilidin hâlâ o zincirde olması şart; değilse hiçbir alan yazılmıyor —
+     ADS.seq de artmıyor, pors da korunuyor. */
+  if (op !== undefined && ADS.busyOp !== op) return false;
   ADS.seq++;
   ADS.cs = {
     can: info.canRequestAds === true,
@@ -254,21 +376,41 @@ function adsAdopt(info, src) {
     avail: info.isConsentFormAvailable === true,
     src: src, seq: ADS.seq
   };
-  if (info.privacyOptionsRequirementStatus) ADS.pors = info.privacyOptionsRequirementStatus;
+  if (info.privacyOptionsRequirementStatus) adsPorsAdopt(info.privacyOptionsRequirementStatus);
   ADS.stale = false;
   return true;
 }
+/* Gizlilik girişi ipucu. ADS.pors bellekte, PREFS'teki iz ise SOĞUK AÇILIŞ için:
+   yaş kapısı kapalıyken açılışta hiç okuma yapılmadığından bellekteki değer
+   'UNKNOWN' kalır ve satır kaybolurdu — verilmiş rızayı yönetme yolu kapanırdı.
+
+   İz YALNIZ bir ipucudur: rızanın ya da reklam uygunluğunun otoritesi değil,
+   kopyası da değil. Yalnız başarılı bir SDK okumasının AÇIK sonucuyla değişir —
+   hata, çevrimdışılık ya da 'UNKNOWN' onu SİLMEZ, çünkü bunlar "artık gerekli
+   değil" demek değildir. Hata metnini ayrıştırıp karar vermek de yok. */
+function adsPorsAdopt(v) {
+  ADS.pors = v;
+  if (v === 'REQUIRED') setPref(AD_PORS_KEY, 1);
+  else if (v === 'NOT_REQUIRED') { delete PREFS[AD_PORS_KEY]; savePrefs(); }
+}
+/* Gizlilik girişi gerekli mi? Bu oturumda başarılı okuma varsa ONA, yoksa
+   PREFS'teki ize bakılıyor. */
+function adsPorsRequired() {
+  if (ADS.pors === 'REQUIRED') return true;
+  if (ADS.pors === 'UNKNOWN') return pref(AD_PORS_KEY, 0) === 1;
+  return false;
+}
 /* Tek okuma denemesi. Reddi yutuyor — çağıran taraf ne yapacağına kendi karar
    veriyor (açılışta hiçbir şey, form sonrasında 'doğrulanamadı'). */
-function adsAsk(P, src) {
-  try { return P.requestConsentInfo({}).then(i => adsAdopt(i, src), () => false); }
+function adsAsk(P, src, op) {
+  try { return P.requestConsentInfo({}).then(i => adsAdopt(i, src, op), () => false); }
   catch (e) { return Promise.resolve(false); }
 }
 /* Güncel uygunluğu okumanın tek yolu — yalnız formun kendisi taze bir değer
    VERMEDİĞİ yerlerden çağrılıyor. Düşerse uygunluk bayatlıyor. Döngü yok:
    çağrı başına tam olarak bir deneme. */
-function adsRefresh(P, src) {
-  return adsAsk(P, src || 'refresh').then(ok => { if (!ok) ADS.stale = true; return ok; });
+function adsRefresh(P, src, op) {
+  return adsAsk(P, src || 'refresh', op).then(ok => { if (!ok) ADS.stale = true; return ok; });
 }
 
 /* Açılış izin akışı. TEK uçuş: eşzamanlı çağrılar aynı promise'i paylaşır,
@@ -278,9 +420,21 @@ function adsConsentFlow() {
   if (!P) return Promise.resolve(false);
   if (adsBusy() === 'ad') return Promise.resolve(false);   // reklam sürerken izin işlemi başlamaz
   if (ADS.cp) return ADS.cp;
-  ADS.busy = 'consent';
-  const done = r => { ADS.busy = ''; ADS.cp = null; return r; };
-  ADS.cp = adsAsk(P, 'boot').then(okBoot => {
+  const op = ++ADS.op, tok = ADS.ageSeq;
+  ADS.busy = 'consent'; ADS.busyOp = op;
+  /* Temizliği YALNIZ sahibi yapıyor: geciken eski bir zincir yeni turun kilidini
+     açamaz, uçuş sözünü de silemez. adsClose()'daki deyimin aynısı. */
+  const done = r => {
+    if (ADS.busyOp === op) { ADS.busy = ''; ADS.busyOp = 0; }
+    if (ADS.cpOp === op) { ADS.cp = null; ADS.cpOp = 0; }
+    return r;
+  };
+  ADS.cpOp = op;
+  ADS.cp = adsAsk(P, 'boot', op).then(okBoot => {
+    /* Okuma sürerken beyan değiştiyse bir SONRAKİ native adım başlamıyor.
+       Uçuşta olan işlem iptal edilmiyor — öyle bir API yok — ve kilit erken
+       bırakılmıyor ki çakışan bir form açılmasın. */
+    if (!adsAgeHolds(tok)) return 'abort';
     /* Açılış okuması düştüyse elimizde hiçbir değer yok; form denemenin de
        anlamı yok (loadAndShowConsentFormIfRequired güncel bilgi olmadan
        çalışmaz). Bu oturumda uygunluk kurulmuyor, sonraki açılışta yeniden
@@ -289,13 +443,33 @@ function adsConsentFlow() {
     /* GEREKMİYORSA hiçbir şey göstermez; "gerekli mi" kapısı SDK'nın kendisinde,
        bizim status'e dallanmamıza gerek yok. Çözüm yükü zaten TAZE bir okuma. */
     return P.showConsentForm().then(
-      i => adsAdopt(i, 'form'),
+      i => adsAdopt(i, 'form', op),
       /* Ret "form gösterilmedi, durum değişmedi" DEMEK DEĞİL: hata hangi
          aşamada olduğunu söylemiyor. Desteklenen yöntemle bir kez yeniden
-         okuyoruz; o da düşerse uygunluk doğrulanamamış sayılır. */
-      () => adsRefresh(P, 'formfail')
+         okuyoruz; o da düşerse uygunluk doğrulanamamış sayılır.
+
+         Ama yenileme de bir native çağrı: form ekrandayken beyan değişmiş
+         olabilir, o yüzden kapı ve sahiplik burada YENİDEN okunuyor — reklam
+         amaçlı bu zincirde her yeni native adımın önünde aynı kontrol var.
+
+         Yenilemeyi atlamak, elimizdeki eski canRequestAds kopyasını "hâlâ
+         geçerli" saymak DEĞİL: uygunluk bayat işaretleniyor (adsEligible false)
+         ve akış tamamlanmamış sayılıyor ('abort' → ADS.boot false), böylece
+         sonraki uygun beyan güncel bir izin akışından geçiyor. Kullanıcının
+         kendi açtığı gizlilik yönetimi yolu bundan etkilenmiyor: adsPrivacy()
+         ayrı bir giriş ve yaş kapısına bakmıyor. */
+      () => {
+        if (!adsAgeHolds(tok)) { ADS.stale = true; return 'abort'; }
+        return adsRefresh(P, 'formfail', op);
+      }
     );
-  }).then(done, () => done(false));
+  }).then(
+    /* boot YALNIZ tamamlanmış akış için işaretleniyor. Yaş değişikliği kestiyse
+       false kalıyor ve sonraki uygun beyan akışı BAŞTAN koşturuyor. Okuma hatası
+       tamamlanma sayılıyor — bugünkü davranış: aynı oturumda döngü kurulmuyor. */
+    r => { if (r !== 'abort') ADS.boot = true; return done(r); },
+    () => { ADS.boot = true; return done(false); }
+  );
   return ADS.cp;
 }
 
@@ -309,14 +483,41 @@ function adsPrivacy() {
     if (typeof toast === 'function') toast(t('adBusy'));
     return Promise.resolve(false);
   }
-  ADS.busy = 'consent';
+  const op = ++ADS.op;
+  ADS.busy = 'consent'; ADS.busyOp = op;
   adsRepaint();                          // satır meşgul görünsün
-  const done = r => { ADS.busy = ''; adsApply(); return r; };
-  return P.showPrivacyOptionsForm().then(
-    () => adsRefresh(P, 'privacy'),
-    /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe. */
-    () => adsRefresh(P, 'privacyfail')
-  ).then(done, () => done(false));
+  const done = r => {
+    if (ADS.busyOp === op) { ADS.busy = ''; ADS.busyOp = 0; }
+    /* adsApply() reklam BAŞLATMAZ: SDK yalnız rıza VE yaş uygunken kuruluyor.
+       Yaş kapısı kapalıyken bu yol yalnız rızayı yönetir. */
+    adsApply();
+    return r;
+  };
+  /* SOĞUK AÇILIŞ ÖN OKUMASI. Yaş kapısı kapalıyken açılışta hiç okuma yapılmıyor,
+     dolayısıyla UMP'nin bu süreçteki gizlilik durumu kurulmamış oluyor; forma
+     doğrudan gitmek başarısız olurdu. Bu okuma KULLANICI dokunuşuyla başlıyor,
+     açılışta değil, ve tek denemedir. */
+  const pre = ADS.cs ? Promise.resolve(true) : adsRefresh(P, 'privacypre', op);
+  return pre.then(ok => {
+    /* Okuma tuttuysa artık AÇIK bir sonucumuz var. Gizlilik girişi gerekmiyorsa
+       formu hiç denemiyoruz: satır zaten kaybolacak. Bu karar başarılı okumadan
+       geliyor, hata metninden değil. */
+    if (ok && !adsPorsRequired()) {
+      if (typeof toast === 'function') toast(t('adPrivacyNot'));
+      return false;
+    }
+    /* Okuma düştüyse forma gitmiyoruz — güncel bilgi olmadan çalışmaz — ve izi
+       SİLMİYORUZ: hata "artık gerekli değil" demek değildir. */
+    if (!ok) {
+      if (typeof toast === 'function') toast(t('adPrivacyFail'));
+      return false;
+    }
+    return P.showPrivacyOptionsForm().then(
+      () => adsRefresh(P, 'privacy', op),
+      /* Ret de "hiçbir şey olmadı" sayılmıyor — aynı gerekçe. */
+      () => adsRefresh(P, 'privacyfail', op)
+    );
+  }).then(done, () => done(false));
 }
 
 /* ================= SDK ================= */
@@ -376,22 +577,51 @@ function adsSdkInit() {
    true→false→true: sdk zaten 'on' olduğu için initialize BİR KEZ kalır. */
 function adsApply() {
   if (ADS.sdk === 'on') adsBind(adsPlugin());             // eksik kalmış dinleyici varsa tamamla
-  else if (adsEligible() && ADS.sdk !== 'init') adsSdkInit();
+  else if (adsEligible() && adsAgeOk() && ADS.sdk !== 'init') adsSdkInit();
   adsRepaint();
 }
 
 /* Açılışta bir kez, main.js'ten. BEKLENMİYOR: menü çizimi ve kayıt yüklemesi
    izin akışına takılmamalı.
-   Dönüş: 'off' | 'noconsent' | 'ready' | 'fail'. */
+   Dönüş: 'off' | 'noage' | 'noconsent' | 'ready' | 'fail'. */
 function adsInit() {
   if (!adsPlugin()) { ADS.sdk = 'off'; return Promise.resolve('off'); }
   /* Eklenti var ama izin yüzeyi yok: uygunluk kurulamaz, reklam da açılmaz. */
   if (!adsConsentApi()) { ADS.sdk = 'off'; return Promise.resolve('noconsent'); }
-  if (ADS.cp) return ADS.cp.then(() => adsSettle());
+  /* YAŞ KAPISI — reklam yolunun İLK native çağrısından önce. Beyan yoksa ya da
+     eşiğin altındaysa açılış izin okuması da initialize de yapılmıyor.
+     ADS.boot burada İŞARETLENMİYOR: sonraki uygun beyan akışı baştan koşmalı. */
+  if (!adsAgeOk()) return Promise.resolve('noage');
+  /* Uçuştaki bir akışa katılıyoruz. O akış yaş değişikliğiyle YARIDA kesilmiş
+     olabilir; kesilen akış kilidini uçuştaki native çağrı bitmeden bırakmıyor,
+     bu yüzden yeni tur ancak burada, beklenen söz çözüldükten sonra açılabilir
+     (bkz. adsResume). */
+  if (ADS.cp) return ADS.cp.then(() => adsResume());
   /* İkinci çağrı yeni bir izin turu başlatmıyor; yalnız mevcut duruma göre
-     uygunluğu uygular ve etiketi döndürür. */
+     uygunluğu uygular ve etiketi döndürür. Yarıda kesilmiş bir akıştan sonra
+     boot false kaldığı için buraya düşülmez ve akış yeniden koşar. */
   if (ADS.boot) { adsApply(); return adsSettle(); }
-  ADS.boot = true;
+  return adsConsentFlow().then(() => adsSettle());
+}
+/* Beklenen akış bittikten SONRAKİ karar. Eski zincir kendi kilidini bıraktıktan
+   sonra çalışıyor; o zincir yaş değişikliğiyle kesilmişse ADS.boot false kalır
+   ve gereken izin akışı hiç koşmamıştır. Bu durumda — ve yalnız bu durumda —
+   tek bir yeni tur açılıyor. Olmasaydı, okuma uçuştayken beyanını düzelten
+   kullanıcı o oturumda izin ekranını hiç göremez, reklam satırı da açıklamasız
+   kaybolurdu; toparlanma ancak uygulama yeniden açılınca gelirdi.
+
+   DÖNGÜ OLMUYOR, çünkü ADS.boot'u false bırakan tek şey yaş kesintisi: ağ ya da
+   form hatası akışı TAMAMLANMIŞ sayıyor (boot = true) ve buradan bir daha tur
+   açılmıyor. Yeni tur ancak kullanıcı beyanını bir kez daha değiştirirse doğar.
+
+   TEKİLLİK adsConsentFlow'un kendi ADS.cp kapısından geliyor: aynı eski sözü
+   bekleyen birden çok çağrı uyandığında ilki turu açıyor, kalanları aynı sözü
+   alıyor — ikinci bir requestConsentInfo, ikinci bir form, ikinci bir
+   initialize ya da çoğalan dinleyici olmuyor. */
+function adsResume() {
+  /* Kullanıcı bu arada kapıyı yeniden kapattıysa yeni tur YOK. */
+  if (!adsPlugin() || !adsConsentApi() || !adsAgeOk()) return adsSettle();
+  if (ADS.boot) return adsSettle();
   return adsConsentFlow().then(() => adsSettle());
 }
 /* Akış bittikten sonra uygunluğu uygula ve — başlatma uçuşa geçtiyse — onu da
@@ -402,6 +632,7 @@ function adsSettle() {
 }
 function adsInitLabel() {
   if (!adsPlugin()) return 'off';
+  if (!adsAgeOk()) return 'noage';
   if (ADS.sdk === 'fail') return 'fail';
   if (ADS.sdk === 'on') return 'ready';
   return adsEligible() ? 'init' : 'noconsent';
@@ -420,6 +651,12 @@ function adsRepaint() {
    bir söz göstermektense hiç göstermemek doğru. */
 function adsRowState() {
   if (!adsPlugin()) return null;
+  /* Yaş kapısı SDK'dan ÖNCE okunuyor: beyan istenen hâlde SDK zaten hiç
+     başlatılmadığı için aşağıdaki koşullara düşülse satır hiç çizilmez ve
+     kullanıcı soruya ulaşamazdı. */
+  const ag = adsAgeState();
+  if (ag === 'ask') return 'age';       // nötr beyan ekranına giriş
+  if (ag === 'under') return 'noage';   // nötr bilgi; yükseltme daveti YOK
   if (ADS.sdk !== 'on' || !adsBound()) return null;
   if (!adsEligible()) return null;
   if (adsBusy()) return 'busy';
@@ -430,7 +667,10 @@ function adsRowState() {
    kaybettirmiyor — kullanıcının toparlanma yolu bu satır. */
 function adsPrivacyState() {
   if (!adsConsentApi()) return null;
-  if (ADS.pors !== 'REQUIRED') return null;
+  /* Yaş kapısına BAKMIYOR. Beyanı silmek rızayı geri çekmek değil: verilmiş
+     rızayı yönetme yolu, reklam yolu kapalıyken de açık kalmalı. Soğuk açılışta
+     bellekte okuma olmadığı için PREFS'teki ipucu devreye giriyor. */
+  if (!adsPorsRequired()) return null;
   if (adsBusy()) return 'busy';
   return 'go';
 }
@@ -451,19 +691,21 @@ function adsWatch() {
   if (ADS.sdk !== 'on' || !adsBound()) return;
   if (adsBusy()) return;                       // izin işlemi ya da süren gösterim
   if (!adsEligible()) return;                  // uygunluk yok ya da doğrulanamadı
+  if (!adsAgeOk()) return;                     // yaş kapısı — rızadan AYRI terim
   const nonce = rwRequest();
   if (!nonce) { adsRepaint(); return; }
-  const att = { n: nonce, rw: false, cl: false, seq: ADS.cs.seq };
+  const att = { n: nonce, rw: false, cl: false, seq: ADS.cs.seq, ageSeq: ADS.ageSeq };
   ADS.cur = att;                               // buradan itibaren adsBusy()==='ad'
   adsRepaint();                                // düğme kilitli görünsün
   P.prepareRewardVideoAd({ adId: ADS.unit, isTesting: true }).then(() => {
     /* adId VERİLMİYOR ve verilmemeli: preparedAds haritası reklamın GERÇEKTEN
        yüklendiği birimle anahtarlanıyor, isTesting altında bu örnek birimdir.
        İstenen id'yi göndermek aramayı boşa düşürür (AdRewardExecutor). */
-    if (!adsEligible()) {
-      /* Yükleme ile gösterim arasında uygunluk düştü. Kilit sayesinde bu
-         aralıkta bir izin işlemi başlayamaz, yine de kapı burada da var.
-         Reklam yüklü kaldı ve düşürülemiyor (yukarıdaki not). */
+    if (!adsEligible() || !adsAgeHolds(att.ageSeq)) {
+      /* Yükleme ile gösterim arasında uygunluk ya da yaş kapısı düştü. Kilit
+         sayesinde bu aralıkta bir izin işlemi başlayamaz, yine de kapı burada
+         da var. Reklam yüklü kaldı ve düşürülemiyor (yukarıdaki not).
+         Günün hakkı adsClose → rwAbandon ile iade ediliyor: yanmıyor. */
       adsClose(att);                           // rwAbandon'ı adsClose yapıyor
       if (ADS.stale && typeof toast === 'function') toast(t('adEligUnknown'));
       return;
@@ -484,7 +726,13 @@ function adsWatch() {
    kaydı senkron olarak 'earned'a yükseltiyor ve rwAbandon 'earned' kaydı
    silemiyor; desteklenen sırada (ödül önce, kapanış sonra) teslimatı koruyan
    şey tam olarak bu. Araya bir await girerse promosyon bir sonraki mikrogörev
-   turuna kayar ve kapanış öne geçer. */
+   turuna kayar ve kapanış öne geçer.
+
+   YAŞ KONTROLÜ YOK ve olmamalı: gösterim başlarken kapı açıktı, ödül o
+   gösterime ait ve muhasebe nonce üzerinden yürüyor. Yaş ya da yaş-seq
+   değişikliği burada bir veto olsaydı, kazanılmış bir ödül düşerdi — kapı
+   BAŞLATMAYI bağlıyor, teslimatı değil. Aynı gerekçeyle rwSync() de bir sonraki
+   açılışta kapı kapalıyken beklemedeki kaydı teslim eder. */
 function adsReward(att) {
   if (att.rw) return Promise.resolve('dup');
   att.rw = true;

@@ -327,6 +327,16 @@ function hmBadgeFail(img){
 function adsRowHtml(){
   const st=adsRowState();
   if(!st)return '';
+  /* Yaş kapısı hâllerinde TUTAR YAZILMIYOR. Ödülün miktarını gösterip ardından
+     doğum yılı sormak, doğrudan yüksek yaş beyanına teşvik olurdu; eşiğin
+     altındaki kullanıcıya da yukarı düzeltme daveti çıkarılmıyor. */
+  if(st==='age')return `<button class="hmAg ad gold" onclick="adsAgeOpen()">
+    <span class="hmAgIc">${hmIcon('cash',50)}</span>
+    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeRowSub')}</i></span>
+    <span class="hmAgC">›</span></button>`;
+  if(st==='noage')return `<button class="hmAg ad gold" disabled>
+    <span class="hmAgIc">${hmIcon('cash',50)}</span>
+    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeUnder')}</i></span></button>`;
   const on=st==='go';
   const sub=st==='go'?t('adRewardSub'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
   const ttl=on?`${t('adRewardTitle')} · +${fmtK(RW.amount)}`:t('adRewardTitle');
@@ -343,6 +353,43 @@ function adsRowHtml(){
    Yenileme düştüğünde satır KAYBOLMUYOR (ADS.pors son bilinen değeri tutuyor):
    uygunluğu doğrulanamamış bir kullanıcının tek toparlanma yolu bu satır.
    O hâlde altına ayrı bir ipucu düşüyor — "reddettin" değil, "doğrulanamadı". */
+/* ================= YAŞ BEYANI EKRANI =================
+   Nötr olmak zorunda: alan BOŞ açılıyor, eşik hiçbir yerde yazmıyor ve
+   "paylaşmadan devam" ile "kaydet" aynı ağırlıkta duruyor. Serbest girdi
+   doğrudan js/ads.js'e veriliyor; oradan geçmeden hiçbir yere yazılmıyor ve
+   ham hâliyle DOM'a hiç basılmıyor. */
+function adsAgeOpen(){
+  openModal(`<h2>${t('adAgeTitle')}</h2>
+  <div class="sub" style="margin-top:10px;white-space:normal;line-height:1.5">${t('adAgeBody')}</div>
+  <input class="adAgeInp" id="adAgeInp" type="text" inputmode="numeric" autocomplete="off"
+    maxlength="4" placeholder="${t('adAgeYear')}" style="margin-top:14px">
+  <button class="btn" style="margin-top:14px" onclick="adsAgeSubmit()">${t('adAgeSave')}</button>
+  <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('adAgeSkip')}</button>`);
+}
+function adsAgeSubmit(){
+  const el=document.getElementById('adAgeInp');
+  if(!adsAgeSet(el?el.value:'')){toast(t('adAgeBad'));return;}
+  closeModal();
+}
+function adsAgeForget(){
+  adsAgeClear();
+  toast(t('adAgeCleared'));
+}
+/* Ayarlar'daki beyan satırı. Düzeltme ile silme aynı yerde ve aynı ağırlıkta:
+   aşağı düzeltmek yukarı düzeltmek kadar kolay olmalı. Eklenti yoksa (web, PWA,
+   tek dosya) hiç çizilmiyor — orada reklam yolu zaten yok. */
+function adsAgeRowHtml(){
+  if(typeof adsPlugin!=='function'||!adsPlugin())return '';
+  const y=adsBirthYear();
+  const sub=y===null?t('adAgeNone'):t('adAgeHave').replace('{y}',esc(String(y)));
+  return listWrap(`<div class="pitem" onclick="adsAgeOpen()">
+    <div class="pinfo"><div class="pname">${t('adAgeSetting')}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${sub}</div></div>
+    <span class="faint">›</span></div>`
+    +(y===null?'':`<div class="pitem" onclick="adsAgeForget()">
+    <div class="pinfo"><div class="pname">${t('adAgeClear')}</div></div>
+    <span class="faint">›</span></div>`));
+}
 function adsPrivacyRowHtml(){
   const st=adsPrivacyState();
   if(!st)return '';
@@ -2421,6 +2468,7 @@ settings(){
     <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
     <span class="faint">↗</span></a>`)}
+  ${adsAgeRowHtml()}
   ${adsPrivacyRowHtml()}`;
 },
 player(id){
