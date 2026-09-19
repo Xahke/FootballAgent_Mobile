@@ -62,6 +62,19 @@ header{position:sticky;top:0;z-index:60;background:rgba(11,17,30,.82);backdrop-f
 .htitle .t1{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .htitle .t2{font-size:10.5px;color:var(--txt3);margin-top:1px;font-variant-numeric:tabular-nums;font-weight:600;
   text-transform:uppercase;letter-spacing:.05em}
+/* t2 SARMAZ. Sarınca 360px'te üst çubuk üç satıra çıkıp 44px'lik satırı 84px'e
+   şişiriyordu: geri düğmesi açıkken başlık sütunu 30px'e iniyor ve "Sezon 1 ·
+   Hafta 10" oraya sığmıyor. t2 hiçbir zaman çok satırlı olmak üzere
+   tasarlanmamıştı — kırpılması doğru davranış. */
+.htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* İkinci düzey tam ekranlarda kasa/itibar rozetleri gizleniyor — ana ekranda
+   zaten gizli olanların aynısı, aynı gerekçeyle: 360px'te geri + başlık + iki
+   rozet + ayarlar + Devam aynı satıra sığmıyor ve ilk feda edilen başlık
+   oluyordu. Bu üç ekran ne haftaya ne paraya bağlı; ikisi de bir dokunuş
+   ötede, ana ekranda. */
+body[data-view="settings"] header .hstat,
+body[data-view="shop"] header .hstat,
+body[data-view="atlas"] header .hstat{display:none}
 .hstat{display:flex;align-items:center;gap:5px;background:var(--sur2);border-radius:10px;
   padding:6px 9px;flex-shrink:0;line-height:1}
 .hstat svg{width:13px;height:13px;flex-shrink:0}
@@ -707,6 +720,32 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .hmBalV{font-size:19.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   white-space:nowrap}
 .hmBalV.neg{color:var(--bad)}
+/* --- bakiye yanındaki ödül düğmesi ---
+   Tutar ve + aynı satırda. İkisi de flex-shrink:0 ve tutar nowrap: dar ekranda
+   sıkışan taraf kartın ortasındaki 1fr sütunu (itibar çubuğu) oluyor, bakiye
+   değil. Görünen çap 28px ama dokunma hedefi ::after ile 44x40'a açılıyor —
+   düğme bakiyenin yanında büyümeden rahat dokunuluyor. */
+.hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+.hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+.hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+.hmPlus:active{transform:scale(.9)}
+/* --- ödüllü reklam penceresi ---
+   Tutar ve günlük hak durumu. Pencere yalnız anlatıyor; açılması hiçbir reklam
+   çağrısı yapmıyor (js/ui.js adsRewardOpen). */
+.rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+.rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+.rwAmtI svg{width:26px;height:26px}
+.rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+.rwState>span{white-space:nowrap}
+.rwState b{color:var(--txt);font-weight:800;text-align:right}
+.rwState.on b{color:var(--acc)}
 .hmBalL{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2)}
 
 /* --- ana aksiyon: ekrandaki en güçlü öğe --- */
@@ -759,16 +798,6 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .hmAg.onb b{font-family:var(--cond);font-size:15.5px;font-weight:800;letter-spacing:.01em;
   color:var(--txt);line-height:1.15}
 .hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
-/* Ödüllü reklam satırı (js/ads.js). İki satırlık metin düzeni gündem satırının
-   onboarding varyantıyla aynı; .onb yeniden kullanılmıyor çünkü o rengi ve
-   anlamı da taşıyor. Kilitli hâl <button disabled> ile geliyor: hak
-   kullanılmışken ya da reklam hazırlanırken satır soluk ve tıklanamaz. */
-.hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-.hmAg.ad b{font-family:var(--cond);font-size:15.5px;font-weight:800;letter-spacing:.01em;
-  color:var(--txt);line-height:1.15}
-.hmAg.ad i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
-.hmAg.ad[disabled]{opacity:.55;cursor:default}
-.hmAg.ad[disabled]:active{background:none;transform:none}
 .hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
   box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
 
@@ -3058,3 +3087,149 @@ body[data-view="setup"] main{padding-bottom:0}
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 .adAgeInp:focus{border-color:var(--txt3)}
 .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+
+/* ===================== MAĞAZA (yalnız saha) =====================
+   Ekranın sorusu üç parçalı ve sıralama o: şu an neredeyim → bu kariyerde ne
+   kadar hakkım var → hangi paket. Satın almanın kapalı olduğu en üstte, TEK
+   satırda; kart değil, çünkü kart bu ekranın en büyük öğesi olurdu ve ürünü
+   değil derlemeyi öne çıkarırdı.
+
+   İmza öğe: özet kartındaki segmentli hak ölçeri. Kariyer başına +10 tavanı bu
+   ekranın gerçek kısıtı ve tek cümleyle anlatılan bir şey olmaktan çıkıp
+   sayılabilir hâle geliyor — dolu segment kullanılmış hak, boş segment kalan.
+   Bugün hepsi boş; boşken de anlamlı olması bir çubuğa değil segmentlere
+   gidilmesinin sebebi (boş bir ilerleme çubuğu hiçbir şey söylemez).
+
+   Renk rolleri ekranın geri kalanıyla aynı sözlükten:
+     yeşil = kapasite ve aksiyon   · altın = en büyük paketin ölçülü detayı
+     amber = satın almanın kapalı olduğu durum satırı
+   KIRMIZI YOK: satın almanın kapalı olması bir hata değil, bu sürümün hâli.
+   Altın yalnız +10 kartında ve yalnız ikon ile artı işaretinde — "en iyi paket"
+   demiyor (öyle bir karar verilmedi), yalnız tavanla aynı sayı olduğunu
+   söylüyor.
+
+   Yeni raster varlık yok; ürün ikonları js/ui.js ICONS içinde, currentColor. */
+
+/* --- durum satırı: küçük, okunur, bir kez --- */
+.shpOff{display:flex;align-items:center;gap:9px;margin-bottom:13px;padding:9px 11px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:12.5px;line-height:1.35;box-shadow:inset 0 0 0 1px rgba(230,162,60,.22)}
+.shpOff svg{width:16px;height:16px;flex-shrink:0}
+
+/* --- özet: solda bugünkü kapasite, sağda bu kariyerdeki hak --- */
+.shpSum{display:flex;align-items:stretch;gap:13px;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:16px;
+  box-shadow:var(--sh)}
+.shpSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+.shpSumP{flex:0 0 auto;min-width:84px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;text-align:center}
+.shpSumV{font-family:var(--cond);font-weight:800;font-size:33px;line-height:1;letter-spacing:-.03em}
+.shpSumL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.2;overflow-wrap:anywhere}
+.shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.shpLeft{font-family:var(--cond);font-weight:700;font-size:15.5px;line-height:1.2;
+  letter-spacing:.01em;color:var(--txt);overflow-wrap:anywhere}
+/* Segment sayısı IAP.capMax'ten geliyor, genişlik flex ile paylaşılıyor — tavan
+   değişirse ne CSS'e ne de bir sayıya dokunmak gerekiyor. */
+.shpPips{display:flex;gap:3px}
+.shpPips i{flex:1 1 0;height:7px;border-radius:2.5px;background:var(--sur3);
+  box-shadow:inset 0 0 0 1px var(--line)}
+.shpPips i.on{background:linear-gradient(180deg,var(--acc),var(--accD));box-shadow:none}
+.shpCeil{font-size:11.5px;line-height:1.35;color:var(--txt3);overflow-wrap:anywhere}
+
+/* --- bölüm girişi ve paketlerin ORTAK kuralları --- */
+.shpLead{font-size:12.5px;line-height:1.45;color:var(--txt2);margin:-3px 2px 10px}
+/* Kapsam ve tavan kuralı paketlerin hemen ÜSTÜNDE, bir kez. Dört kartın altına
+   aynı paragrafı yazmak kartı okunmaz, kuralı görünmez yapardı. */
+.shpRules{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:11px 12px;
+  border-radius:var(--r-s);background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+.shpRules p{font-size:12px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+/* Kapsam etiketi metnin İÇİNDE akmıyor: satır kutusunu şişirip alttaki
+   satırı aşağı itiyordu. Kendi satırında duruyor, metin altında hizalı akıyor. */
+.shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.shpRules .tag{flex:0 0 auto}
+
+/* --- paketler: iki sütun, rakam önce --- */
+.shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:20px}
+.shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:14px 10px 0;background:linear-gradient(180deg,var(--sur2),var(--sur) 62%);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.shpIc svg{width:34px;height:34px}
+.shpN{display:block;font-family:var(--cond);font-weight:800;font-size:41px;line-height:1;
+  letter-spacing:-.035em;margin-top:9px;font-variant-numeric:tabular-nums}
+/* Artı vurgu renginde, rakam metin renginde: ikisi bir arada okunuyor ama
+   "eklenen" olduğu artıdan anlaşılıyor. */
+.shpN i{font-style:normal;color:var(--acc);letter-spacing:-.02em}
+.shpL{display:block;font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.25;margin:6px 0 12px;overflow-wrap:anywhere}
+.shpNote{display:block;font-size:11px;line-height:1.35;color:var(--warn);margin:-6px 0 11px;
+  overflow-wrap:anywhere}
+/* Düğme kartın tam genişliğinde: negatif kenar boşluğu gövdenin dolgusunu geri
+   alıyor. 42px yüksekliğinde ve devre dışıyken de okunur — kapalı bir düğmeyi
+   görünmez yapmak "böyle bir ürün yok" demek olurdu. */
+.shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -10px 0;
+  width:calc(100% + 20px);min-height:42px;padding:8px 10px;border:none;background:var(--sur3);
+  color:var(--txt3);font-family:var(--cond);font-weight:700;font-size:12.5px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+.shpBuy:not([disabled]){background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5;cursor:pointer}
+.shpBuy:not([disabled]):active{transform:scale(.985)}
+.shpCard.out{background:var(--sur);border-style:dashed;border-color:var(--line2)}
+.shpCard.out .shpIc,.shpCard.out .shpN,.shpCard.out .shpN i{color:var(--txt3)}
+/* +10 kartı tavanla aynı sayı: altın YALNIZ ikon, artı ve ince kenarlıkta —
+   zemine taşsaydı bir iddia ("en iyisi") olurdu, oysa öyle bir karar yok. */
+.shpCard.top{border-color:rgba(233,188,90,.26)}
+.shpCard.top:not(.out) .shpIc,.shpCard.top:not(.out) .shpN i{color:var(--gold)}
+
+/* --- reklam kaldırma: tam genişlik, kendi bölümü --- */
+.shpAd{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh)}
+.shpAdH{display:flex;align-items:center;gap:12px;padding:14px 14px 0}
+.shpAdIc{width:50px;height:50px;flex:0 0 50px;border-radius:15px;display:flex;align-items:center;
+  justify-content:center;background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+.shpAdIc svg{width:28px;height:28px}
+.shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.shpAdT b{font-family:var(--cond);font-weight:800;font-size:19px;line-height:1.14;
+  letter-spacing:-.01em;overflow-wrap:anywhere}
+.shpAdB{display:flex;flex-direction:column;gap:8px;padding:13px 14px 14px}
+.shpAdB p{font-size:12.5px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+/* Kalan şey vurgulu: ödüllü reklam KAPANMIYOR ve bu, ürünün kapsamı kadar
+   önemli — satın alan kişi neyi kaybetmediğini de bilmeli. */
+.shpAdB p.keep{padding:9px 11px;border-radius:var(--r-s);background:var(--acc-soft);color:var(--acc)}
+/* Reklam kartındaki durum notu gövdenin akışında: kapasite kartındaki
+   negatif üst boşluk burada yeri kaydırırdı. */
+.shpAdB .shpNote{margin:0}
+.shpBuy.wide{margin:2px 0 0;width:100%;border-radius:13px;min-height:48px;font-size:14px}
+
+/* 360px: iki sütun kalıyor (tek sütuna düşmek dört kartı ekrandan taşırırdı),
+   rakam ve dolgular bir kademe iniyor. */
+@media (max-width:374px){
+  .shpSum{padding:12px 11px;gap:11px}
+  .shpSumP{min-width:76px}
+  .shpSumV{font-size:30px}
+  .shpGrid{gap:8px}
+  .shpCard{padding:13px 8px 0}
+  .shpIc svg{width:31px;height:31px}
+  .shpN{font-size:37px}
+  .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);
+    font-size:12px;letter-spacing:.05em}
+  .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+  .shpAdH{gap:10px}
+  .shpAdIc{width:44px;height:44px;flex:0 0 44px;border-radius:13px}
+  .shpAdIc svg{width:25px;height:25px}
+  .shpAdT b{font-size:17.5px}
+}
+/* 320px sınıfı cihazlarda iki sütun 140px'in altına iner ve kart etiketi üç
+   satıra çıkar: orada tek sütun ve yatay düzen daha okunur. */
+@media (max-width:339px){
+  .shpGrid{grid-template-columns:1fr;gap:9px}
+  .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:11px}
+  .shpIc{flex:0 0 auto;padding:12px 0 12px 13px}
+  .shpN{margin:0;font-size:34px;flex:0 0 auto}
+  .shpL{margin:0;flex:1 1 0}
+  .shpNote{display:none}
+  .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch}
+  .shpBuy.wide{flex:none;width:100%}
+}

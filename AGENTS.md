@@ -74,7 +74,7 @@ example: it sits after `data.js` (badges read a team object) and before `core.js
 (where `tmBadge()` lives), and the same position appears in all three lists.
 
 Load order:
-`i18n → store → saves → reward → ads-testcfg → ads → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → store → saves → reward → ads-testcfg → ads → iap → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -92,10 +92,11 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (465 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (498 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
-| `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
+| `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
+| `js/iap.js` | Store catalogue: `IAP`, `IAP_PRODUCTS` (four capacity packs + remove-auto-ads), the two purchase ledgers and the entitlement readers. **Sells nothing** — see *The store lists what it cannot sell* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -387,12 +388,32 @@ It is a self-declaration: not verification, and no compliance claim rests on it.
 **The screen never blocks launch.** The declaration is asked at first use of the optional
 ad feature, not at startup, so a game that asks for nothing else does not open with a
 question. That forces one design consequence: `adsRowState()` reads the age gate **before**
-the SDK state, because the SDK is never started while the gate is closed and the row would
-otherwise be undrawable — the user could never reach the question. The `'age'` and
-`'noage'` rows deliberately **omit the reward amount**: showing the money and then asking
-for a birth year is a direct incentive to overstate it, and the below-threshold row carries
-no invitation to correct upwards. Correcting and deleting live together in Settings, at
-equal weight in both directions.
+the SDK state, because the SDK is never started while the gate is closed and the entry
+point would otherwise be undrawable — the user could never reach the question. The `'age'`
+and `'noage'` states deliberately **omit the reward amount**: showing the money and then
+asking for a birth year is a direct incentive to overstate it, and the below-threshold
+state carries no invitation to correct upwards. Correcting and deleting live together in
+Settings, at equal weight in both directions.
+
+**The entry point is a `+` next to the balance, and the window does the talking.** The
+old full-width "Watch an ad" row on the home screen is gone. `adsPlusHtml()` draws a 28px
+`+` inside `.hmBalRow` (touch target widened to 44x40 by `.hmPlus::after`), and
+`adsRewardOpen()` opens a sheet carrying the amount, the daily-allowance state and one
+clearly labelled **Watch an ad** button. `adsRowState()` is still the single source of
+state for both — the view layer branches on nothing else.
+
+Three properties of that split are load-bearing:
+
+- **Opening the window starts no ad.** It renders and returns; the only path into
+  `adsWatch()` is `adsRewardGo()`, behind the button, and every gate still sits at the top
+  of `adsWatch()` itself.
+- **The `'age'` state skips the window entirely** and goes straight to the neutral
+  birth-year screen. A window that showed the reward and *then* asked for a year would be
+  the exact incentive the neutral screen exists to avoid.
+- **The button carries `data-ad="<state>"`.** Its label is `+` in every state, so without
+  that attribute a missing repaint would leave the state right and the screen wrong with
+  nothing to observe. `.hmPlus.on` is the same signal in CSS. `tools/savetest.js` block 20
+  scenario (24) asserts against it.
 
 **Ownership, because a declaration can change mid-flight.** Entry checks are not enough —
 every await in the consent chain is followed by another native call. Two tokens:
@@ -476,9 +497,20 @@ start regardless of our code. Those are separate measurements and they have not 
 `@capacitor-community/admob` (pinned to exactly `8.1.0`, which pulls
 `com.google.android.ump:user-messaging-platform:4.0.0`) and hands the result to the
 existing entitlement accounting in `js/reward.js`. It is a **technical trial**, not a
-shipped feature: it uses Google's *sample* app id and *sample* rewarded unit, no
-mediation is configured, and no real ad unit is wired. `js/ads.js` never touches
-`S.cash` — the only money path is still `rwEarned()`.
+shipped feature: no mediation is configured and **no real ad unit is wired** — both the
+rewarded and the interstitial requests use Google's *sample* ad units with
+`isTesting: true`. `js/ads.js` never touches `S.cash` — the only money path is still
+`rwEarned()`.
+
+**The AdMob *application* id is real and the *ad units* are samples. They are different
+things and the distinction is load-bearing.** `admob_app_id` in `strings.xml` is
+`ca-app-pub-6695238757557885~9045271955`, this app's own AdMob registration, and it has
+been since commit `fe390d5` — a UMP consent message can only be published against a real
+app registration, so the real form cannot be drawn without it. The ad units stay
+`ca-app-pub-3940256099942544/...`, which is what keeps this a test and not ad serving.
+There is no debug/release override of either: one `strings.xml` in `main`, no `resValue`,
+no `manifestPlaceholders`. If a doc line or a report ever says "sample app id", check
+`strings.xml` before repeating it — this file said exactly that for one commit too long.
 
 **Two lifetimes, and conflating them is the easy bug.** `ADS.cur` is the *on-screen*
 show — a UI lock, cleared by the first terminal event. `att` is the *delivery record* —
@@ -516,6 +548,68 @@ stale `req` genuinely has no live ad and `rwReap()` is right there. Recovering t
 two needs a native change the plugin does not have today — a caller-supplied id echoed on
 the events plus a way for a new JS session to query and settle a pending result. That is
 a separate decision and nothing in this branch pretends it is solved.
+
+### Season transitions get one ad each, and the season engine owns the right
+
+There are exactly **two** automatic ad moments in a career-season, and both are read out
+of the fixture rather than assumed from a week number: the week the mid-season transfer
+window opens (`midWeek()` in core.js, `ceil(totalWeeks()/2)+1`) and the moment the season
+ends (`S.week > totalWeeks()`). Change the league length and both move on their own.
+
+**The right and the showing are two different jobs, in two different files.**
+`adBreakClaim(kind, season)` lives in `js/sim.js` because *which moment is a transition*
+and *whether that transition still has its ad* are season-engine facts; `adsInterShow()`
+lives in `js/ads.js` and only answers "can I show one right now". Neither asks the other's
+question.
+
+| | |
+|---|---|
+| `S.adb` | `{m: <season>, e: <season>}` — the transitions already spent. Absent on every old save; built on first use |
+| `ADS.iSt` | `off` / `load` / `ready` / `show` — the *preloaded* ad's life. Never reaches the save |
+
+Five properties, each of which a different mistake would break:
+
+- **The claim is written before `save()`, not after the ad.** So a redraw, a reload of the
+  same slot, or reopening the app cannot produce the same transition's ad twice — the
+  marker is already on disk. It is also claimed *before* `endSeason()` runs, because
+  `endSeason()` increments `S.season` and asking afterwards would bill the ending season's
+  ad to the new one.
+- **No ad is ever waited for.** `adsInterShow()` shows only when `ADS.iSt === 'ready'`;
+  otherwise it returns `'none'` and the week advances exactly as it would have. That is the
+  reason for preloading at all: loading at the transition would mean either blocking the
+  screen or opening an ad later, on some unrelated screen. The claim is spent either way —
+  a transition that found no ad loaded does **not** keep its right for later.
+- **Nothing about the ad touches game state.** `adsInterShow()` is the last statement of
+  `nextWeek()`, after `save()` and `render()`, and the dismissal/failure events only
+  release `ADS.iSt`. There is no callback that advances a week or a season, so a close or
+  an error cannot run the transition a second time.
+- **It cannot collide with the rewarded ad or a consent form.** `adsBusy()` returns
+  `'inter'` while `ADS.iSt === 'show'`, which closes `adsReady()` and makes
+  `adsConsentFlow()`/`adsPrivacy()` bail; in the other direction `adsInterShow()` returns
+  `'none'` whenever `adsBusy()` is set. Background *loading* (`'load'`) is deliberately not
+  busy — it takes nothing away from the user.
+- **The same two gates as the rewarded path, and they stay separate terms.** Neither
+  `adsInterPrep()` nor `adsInterShow()` runs without both `adsAgeOk()` and `adsEligible()`.
+  A declaration that changes while a load is in flight is caught by `adsAgeHolds()`, and
+  the loaded ad is then simply never shown — 8.1.0 still has no way to discard one.
+
+**Re-arming has three triggers and no timer**: SDK initialisation, `adsApply()` when
+eligibility is newly won, and a transition being handled (after a show, or instead of one
+when nothing was loaded). At most two of those exist per season, so a failed load is
+retried rarely and never in a loop.
+
+`iapNoAds()` (core.js) is the single read site for the purchased removal, checked at the
+top of both `adsInterPrep()` and `adsInterShow()` — so the product turns off *loading* as
+well as showing. It never touches the rewarded ad: that one the player starts themselves
+and gets paid for.
+
+**Measured on the emulator** (Android 17 / API 37, debug APK, Google's sample interstitial
+unit `…/1033173712` with `isTesting: true`): a real `AdActivity` opened at the mid-season
+week and again at the season end, the week and the season advanced without waiting, closing
+the ad moved neither, re-rendering and re-reaching the same transition — including after a
+`loadSlot()` round-trip — opened nothing, and the next season's transition opened one again.
+`tools/savetest.js` block **22** holds the same contract deterministically, including the
+"loaded late, never shown" case and the no-retry-loop case.
 
 ### Consent has three states, and the ad gate is none of them
 
@@ -562,15 +656,15 @@ resolves the plugin holds a real ad in `preparedAds`, and if eligibility drops w
 never show it — 8.1.0 has no API to discard it. Every gate sits at the **top of the
 function**, not on the button: a hidden or disabled row is presentation, not a gate.
 
-**Measured on the emulator with the sample app id** (Android 17 / API 37): `status`
-`NOT_REQUIRED`, `canRequestAds` `true`, `isConsentFormAvailable` `false`,
-`privacyOptionsRequirementStatus` `NOT_REQUIRED` — so `showConsentForm()` resolved
-without drawing anything and **no real form has ever been exercised**. It cannot be:
-a European regulations message has to be published against *your own* AdMob app in
-Privacy & messaging, and the sample id is not one. `showPrivacyOptionsForm()` rejects
-there with message `"Error when show privacy form"` and the real UMP text in **`code`**
+**Measured on the emulator outside the EEA** (Android 17 / API 37, `ADS_TESTCFG` null):
+`status` `NOT_REQUIRED`, `canRequestAds` `true`, `isConsentFormAvailable` `false`,
+`privacyOptionsRequirementStatus` `NOT_REQUIRED` — so `showConsentForm()` resolves without
+drawing anything, which is the correct outcome there and not a failure.
+`showPrivacyOptionsForm()` rejects in that geography with message
+`"Error when show privacy form"` and the real UMP text in **`code`**
 (`"Privacy options form is not required."`) — Capacitor's `reject(msg, code)` puts it
-there, so log `err.code`, not `err.message`.
+there, so log `err.code`, not `err.message`. The **EEA** measurement, where a form is
+actually drawn, is in *Test geography* below.
 
 ### Test geography lives in a build variant, not in a flag
 
@@ -624,6 +718,153 @@ the SDK crashes with "Missing application ID". The merged manifest gains
 `ACCESS_NETWORK_STATE`, `AD_ID`, three `ACCESS_ADSERVICES_*`, `WAKE_LOCK` and
 `FOREGROUND_SERVICE` — a Play Data Safety concern before any release.
 
+**The real EEA form has now been exercised, end to end.** Measured on the emulator
+(Android 17 / API 37, debug APK, `debugGeography: 1`, the real `admob_app_id`):
+`requestConsentInfo` answers `status: REQUIRED`, `isConsentFormAvailable: true`,
+`canRequestAds: false`; `showConsentForm()` then draws the published message inside the
+host activity — branded "Pro Football Agent", with **Consent / Do not consent / Manage
+options**. Tapping *Consent* resolves the form with `status: OBTAINED` and
+`canRequestAds: true`, and that value is adopted with `src: 'form'` — **no extra
+`requestConsentInfo` is issued**, which is the one thing this branch of the flow exists to
+avoid. `initialize()` runs only after that, `adsPrivacyState()` becomes `'go'`, and the
+reward and season-transition paths open.
+
+Two things this measurement settles, because both had been claimed wrongly before:
+
+- **The form is drawn inside `MainActivity`'s own window**, not a separate one. Checking
+  `mCurrentFocus` for a UMP activity will say "no form" while the form is on screen; look
+  at the view tree instead.
+- **While the form is up, `ADS.boot` is `false` and `adsBusy()` is `'consent'` for as long
+  as the user takes to answer.** That is the designed state, not a hang. An earlier run
+  read a long wait here as the flow being stuck and blamed the app id; the app id was
+  never the sample one, and that run happened in the minute after Android replaced the
+  system WebView package (`ActivityManager: Killing … stop com.google.android.webview due
+  to installPackageLI`, `lastUpdateTime` on the WebView package matching to the second) —
+  which had just killed the app. What actually caused that one non-returning form call was
+  never established, and nothing here should be read as an explanation of it. Do not add a
+  timeout on the strength of it: a timer that released the lock would let a second form
+  open behind the first.
+
+### The store lists what it cannot sell, and says so
+
+`js/iap.js` is a **catalogue and two ledgers**. It contains no purchase call, no receipt
+check and no path that grants anything. `VIEWS.shop` draws the five products and leaves
+every Buy button disabled.
+
+**The screen says one thing about purchasing: "not available right now."** It does not
+explain *why* — no "billing is not connected", no "nothing is granted", no price. Those
+sentences described the build to a developer, not the product to a player, and a player
+who cannot buy anything does not need the reason enumerated six times. The status line
+appears **once**, above the products; only genuinely product-specific states (`full`,
+`owned`, `nocareer`) print under a button. What stays visible is what changes a decision:
+what each product does, which scope it lands in, the +10 per-career ceiling, and that
+career-scoped capacity goes when that career is deleted.
+There is no "unlocked for now" flag and no fake success — that was the explicit
+requirement, and blocks **23** (1)–(3) and (6) of `tools/savetest.js` keep it true,
+including a source scan proving no file in `js/` ever writes either ledger.
+
+**The screen is drawn once and themed four times.** There is no `useSahaShop()` gate —
+unlike `market`/`league`/`skills`/`inbox`/`transfer`, the store emits one `.shp*` markup
+for every theme and each of the four stylesheets carries its own block for it, written in
+that theme's own variables (`--acc`, `--gold`, `--sur`, `--line`, `--txt3`). No colour
+literal appears in any of them, which is what lets saha answer in emerald with a measured
+gold accent on the +10 card while gazete answers in ink on paper. Product icons live in
+`ICONS` (`shopCap1/3/5/10`, `shopNoAds`) in the same 24-box / 1.8-stroke / `currentColor`
+language as the rest, and the four capacity icons differ in **composition**, not colour —
+one card, a fan, a stack, an archive box — because at 34px on a 360px screen colour alone
+does not tell four products apart.
+
+**The signature element is the ten-segment allowance meter**, and its length is derived:
+`Array.from({length: IAP.capMax})`, filled to `iapCapOwned()`. Raising the ceiling moves
+the meter with it and touches no CSS. It is a row of segments rather than a progress bar
+precisely because it has to read correctly at zero, which is where every career starts.
+
+**The layout rules that are decisions, not styling:** no `<h2>` page title (the header bar
+already says Mağaza, and 360px has no line to spare); the closed-purchase line is a small
+status row, never a card; the shared scope and ceiling rules sit **once** above the grid
+rather than repeated under four cards; and the ad-removal product is full width in its own
+section because its scope (device) and what it leaves running (the rewarded ad) are not
+the capacity packs' contract. Measured at 360px and at 320px, where the grid drops to one
+column and the card turns horizontal: no horizontal overflow, and 80px clear between the
+last button and the floating nav at the bottom of the scroll.
+
+**Entitlement is derived from delivered purchase tokens, never from a counter.** That was
+already the intent of the `iapCap()` comment in core.js: a number cannot reconstruct which
+tokens it has already counted, so a restore would have no way to avoid double-counting.
+
+| Ledger | Lives in | Shape | Read by |
+|---|---|---|---|
+| career | `S.iap.t` | `{<purchase token>: <product id>}` | `iapCapOwned()` → `iapCap()` → `maxClients()` |
+| device | `PREFS.iap.t` | same | `iapNoAdsOwned()` → `iapNoAds()` → `adsInterPrep`/`adsInterShow` |
+
+Both are absent today and absent on every old save; both reads fall to empty. Each has
+exactly **one** read site in the game, which is what keeps the scopes honest: a capacity
+token in `PREFS` grants nothing and a no-ads token in `S` grants nothing.
+
+**Scope is a field on the product (`sc`), not a decision in the view.** `'career'` products
+apply to the open career and go with it when that career is deleted; `'device'` products
+cover every career on the device. The screen prints both the chip and the sentence, in both
+languages, from that one field.
+
+**The capacity ceiling is `IAP.capMax` (+10) per career and it binds in one place** — the
+clamp at the end of `iapCapOwned()`. The store also *prints* the remaining allowance, but
+that is presentation; a ledger that somehow carried more could still not push more than +10
+into `maxClients()`.
+
+**Capacity means player clients. It is not the three career save slots** (`SLOTS`,
+js/saves.js) and must never be conflated with them; the store says so on screen and block
+23 (7) asserts that buying capacity leaves `SLOTS` at 3.
+
+**No price is printed anywhere.** Google Play returns the localised price once billing is
+connected; writing a number now would be a guess. `shopPrice` says exactly that.
+
+**What is still missing for a real purchase** — none of it exists yet, and the order of
+the steps is not a preference:
+
+1. **A Play Billing bridge.** `IAP.plugin` names the Capacitor plugin and `IAP.wired` is
+   the switch; `iapAvailable()` requires **both**, so flipping the flag alone still sells
+   nothing.
+2. **The five product ids in Play Console**, matching `IAP.sku` byte for byte — four
+   **consumable** capacity packs and one **non-consumable** ad removal. Permanent once
+   published.
+3. **Verify → grant → acknowledge/consume, in that order.** Play's flow is
+   `launchBillingFlow` → `onPurchasesUpdated` → check `purchaseState == PURCHASED` →
+   verify → **deliver the entitlement** → *then* `acknowledgePurchase` (non-consumable) or
+   `consumeAsync` (consumable; consuming acknowledges implicitly). Acknowledging before
+   delivering is the wrong way round: a crash in between would leave Play believing the
+   purchase was honoured while the ledger is empty. There is a hard deadline on the other
+   side — a purchase not acknowledged or consumed **within three days is automatically
+   refunded and revoked** — so delivery must not be able to stall behind a user action.
+   The ledger key is the purchase token precisely so verify-and-deliver is idempotent, and
+   the writer must be the verifying code, never the UI.
+4. **Pending transactions, and the career they belong to.** Play can hold a purchase in
+   `PENDING` (cash, family approval) and deliver it hours later, on a launch that may not
+   even have a career open. Nothing is written to a ledger until the state is `PURCHASED`;
+   a purchase that expires in `PENDING` was never granted and needs no refund of ours.
+   **Unresolved design question:** a capacity pack is career-scoped, so the target career
+   has to be pinned at purchase time (the same move `rwRequest()` makes with `S.cid`) —
+   and nothing decides yet what happens when a pending purchase lands after that career
+   was deleted. Pay it to another career, hold it until one is chosen, convert it to
+   device scope, or refund it: all four are defensible and none is chosen. Whoever wires
+   billing has to answer this before the first consumable ships.
+5. **Restore, and what restore cannot reach.** `queryPurchasesAsync` returns only
+   purchases that are still *owned* — non-consumables, and consumables that have not been
+   consumed yet. **Once a capacity pack is consumed it stops being returned**, so a
+   reinstall cannot recover already-consumed capacity by querying the account: that needs
+   a server-side record of delivered tokens (Play Developer API), which this project does
+   not have and is not planned. Ad removal, being non-consumable, *is* fully restorable.
+   Replaying a restored token through the delivery path is safe by construction — a token
+   already in the ledger is a no-op.
+6. **The device cache is not the restore source.** `PREFS.iap` is a local copy so the game
+   behaves correctly offline and before the first Play query returns; the authority is
+   Play, on the signed-in Google account. That means the cache has to be refreshed from a
+   query (a refunded or revoked purchase should eventually clear it), it does not follow
+   the user to a different Google account on the same device, and it is not what makes the
+   entitlement survive a reinstall — Play is. Treating the cache as the source of truth
+   would turn "I paid on my other phone" into "you did not".
+
+Until all of it lands, `iapBuy()` stays a function whose only job is to explain itself.
+
 ### The world runs without the player
 
 `sim.js` and `market.js` simulate all 22 leagues every week regardless of what the
@@ -642,7 +883,8 @@ Tuning happens at these, not scattered magic numbers:
   brake in the game. `repFactor()` is `clamp(1 − rep/125, 0.15, 1)`, so above rep ≈106
   every gain is throttled to 15% forever. Climbing to rep 502 therefore costs about
   2,875 *nominal* reputation (≈2,500 with `ag5`'s +15%). It also feeds back on itself:
-  `maxClients()` is `2 + floor(rep/18)`, so low reputation means few clients, which
+  `maxClients()` is `2 + floor(rep/18)` (plus `iapCap()`, which is 0 until a purchase is
+  ever delivered), so low reputation means few clients, which
   means few reputation sources.
 
   Losses are deliberately **not** throttled — `repEvent()` applies `repFactor()` to gains
@@ -708,6 +950,9 @@ Tuning happens at these, not scattered magic numbers:
   `signRate`/`loseRate` (the market pool), `worth`/`poachGrace` (whether poaching is a
   decision or a spiral) and `tuneN` (the roster size those weekly rates were tuned at —
   `rivScale()` divides by it, so changing the roster does not change the world's pace)
+- `IAP.capMax` (iap.js) — the most purchased client capacity a single career can ever
+  carry (+10). It is not a balance dial you can raise alone: it sits on top of the whole
+  `maxClients()` curve, so raising it moves the late game the skill tree cannot reach
 - `SK_GEO` (skills.js) — tree geometry: grid unit, node radii, touch radius, viewBox padding
 - `CAM_K` / `CAM_SPAN` / `CAM_KEEP` (atlas.js) — map zoom limits, the minimum width the
   home framing shows so you see your neighbours, and how much of the map must stay on
@@ -741,7 +986,7 @@ There are three slots plus device preferences, all in `localStorage`:
 |---|---|
 | `menajerSaveV9s1..3` | the full career, `{S, PID}` |
 | `menajerMetaV1` | a small per-slot summary so the main menu never parses a full save |
-| `menajerPrefsV1` | `PREFS` — theme, language, sound. Device-level, outside any career |
+| `menajerPrefsV1` | `PREFS` — theme, language, sound, the ad birth year, the device purchase ledger. Device-level, outside any career |
 | `menajerSaveV9` | the old single-save key; `migrateLegacy()` moves it into slot 1 on boot |
 
 The rival layer is a worked example of degrading gracefully: `S.rivals`, `S.chase`,
@@ -758,6 +1003,11 @@ lowering `RIV.notable` in the same release left a band of players with no `p.ra`
 on a six-agency save: 425 named players → 1,066, every new agency non-empty). If you ever
 add an archetype *without* moving the threshold, expect the newcomers to fill up slowly
 from weekly signings instead.
+
+The three fields this branch added follow the same rule and are all absent by default:
+`S.adb` (which season transitions have spent their ad), `S.iap` (the career purchase
+ledger) and `PREFS.iap` (the device one). Every reader falls to a default —
+`adBreakClaim()` builds `S.adb` on first use, `iapTokens()` returns `null`.
 
 `validSave()` accepts any save whose `S.fx` length matches `LEAGUES.length`; a slot whose
 summary exists but whose payload is broken is dropped from the meta so the menu doesn't
@@ -869,7 +1119,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 465 today, but count them rather than trusting this line; it has
+  counts must match — 498 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
@@ -962,7 +1212,13 @@ close-out for a gameplay change:
 6. **Old-save compatibility** — load a save with the new fields deleted, and check the
    legacy path: a `menajerSaveV9` payload must land in slot 1 with its theme/language
    carried into `PREFS`.
-7. `npm run themes && npm run dist`, and bump `sw.js` `CACHE` if any cached file changed.
+7. **Ads and purchases**, if `js/ads.js`, `js/iap.js`, `js/sim.js`'s transition points or
+   the store screen changed — `node tools/savetest.js` blocks **18–23** cover the rewarded
+   adapter, the consent flow, the age gate, the privacy feedback, the season-transition
+   contract and the store's scope/ceiling rules. They prove what the JS asked the bridge to
+   do and nothing more; whether an ad really appeared is only measurable on a device, and
+   the EEA debug variant is not the build to measure it on (see *Test geography*).
+8. `npm run themes && npm run dist`, and bump `sw.js` `CACHE` if any cached file changed.
    A new JS file also needs `index.html`, the `order` array in `build.js` and the `SHELL`
    array in `sw.js`.
 

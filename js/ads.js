@@ -196,6 +196,10 @@
 /* Yalnız TERMİNAL olaylar. Ödül olayı bilerek listede yok (korelasyon notu). */
 const ADS_EV = ['onRewardedVideoAdDismissed', 'onRewardedVideoAdFailedToShow',
                 'onRewardedVideoAdFailedToLoad'];
+/* Sezon geçişi reklamının terminal olayları. AYRI bir liste ve AYRI bir işleyici:
+   iki reklam biçiminin kilidi ayrı, biri diğerininkini açmamalı. */
+const ADS_IEV = ['interstitialAdDismissed', 'interstitialAdFailedToShow',
+                 'interstitialAdFailedToLoad'];
 
 const ADS = {
   /* Google'ın yayımladığı ÖRNEK ödüllü reklam birimi (Android). Gerçek birim
@@ -244,6 +248,17 @@ const ADS = {
   /* Yaş beyanı sahiplik sayacı — beyan her yazıldığında/silindiğinde artıyor. */
   ageSeq: 0,
 
+  /* ===== SEZON GEÇİŞİ REKLAMI ===== */
+  /* Google'ın yayımladığı ÖRNEK interstitial birimi (Android). Ödüllü birimle
+     aynı gerekçe: gerçek birim bu kapsamda kullanılmıyor.
+     developers.google.com/admob/android/test-ads */
+  iUnit: 'ca-app-pub-3940256099942544/1033173712',
+  /* 'off'   hazır reklam yok
+     'load'  yükleme uçuşta
+     'ready' yüklü ve henüz gösterilmedi — geçiş ancak bu hâlde reklam görür
+     'show'  ekranda */
+  iSt: 'off',
+  iP: null,          // uçuştaki hazırlama sözü; ikinci yüklemeyi engelliyor
   /* Ekrandaki gösterim (att) ya da null. Kayda GİRMEZ — CAM/MKQ/SKTAB gibi
      yalnız görünüm durumu. */
   cur: null,
@@ -275,6 +290,14 @@ function adsConsentApi() {
   const P = adsBridge();
   return (P && typeof P.requestConsentInfo === 'function'
     && typeof P.showConsentForm === 'function') ? P : null;
+}
+/* Sezon geçişi yüzeyi de AYRI sorgulanıyor: ödüllü reklam metotları olan bir
+   köprüde interstitial metotları olmayabilir (eski eklenti sürümü). O hâlde
+   geçiş reklamı hiç başlamamalı, ödüllü reklam çalışmaya devam etmeli. */
+function adsInterApi() {
+  const P = adsBridge();
+  return (P && typeof P.prepareInterstitial === 'function'
+    && typeof P.showInterstitial === 'function') ? P : null;
 }
 function adsAvailable() { return !!adsPlugin(); }
 
@@ -348,11 +371,17 @@ function adsAgeClear() {
 /* Uygunluk: TEK karar. Güncel ve true olmalı; "doğrulanamadı" true saymaz. */
 function adsEligible() { return !!(ADS.cs && ADS.cs.can === true && !ADS.stale); }
 /* Meşguliyet. 'ad' ADS.cur'dan türüyor, o da prepare'den önce kurulduğu için
-   yükleme beklemesini kapsıyor. */
-function adsBusy() { return ADS.cur ? 'ad' : ADS.busy; }
+   yükleme beklemesini kapsıyor. 'inter' yalnız EKRANDAKİ geçiş reklamı: arka
+   planda süren ön yükleme ('load') meşguliyet değil, kullanıcıdan hiçbir şey
+   kapatmıyor. */
+function adsBusy() { return ADS.cur ? 'ad' : (ADS.iSt === 'show' ? 'inter' : ADS.busy); }
 function adsBound() {
   if (!ADS.bnd) return false;
   return ADS_EV.every(ev => ADS.bnd[ev] === true);
+}
+function adsInterBound() {
+  if (!ADS.bnd) return false;
+  return ADS_IEV.every(ev => ADS.bnd[ev] === true);
 }
 /* REKLAM KAPISI. SDK'nın 'on' olması tek başına yetmez. Yaş kapısı burada da
    ayrı bir terim: rıza uygunluğunun içine karıştırılmıyor. */
@@ -432,7 +461,11 @@ function adsRefresh(P, src, op) {
 function adsConsentFlow() {
   const P = adsConsentApi();
   if (!P) return Promise.resolve(false);
-  if (adsBusy() === 'ad') return Promise.resolve(false);   // reklam sürerken izin işlemi başlamaz
+  /* Ekranda bir reklam varken izin işlemi başlamaz — ödüllü de olsa sezon
+     geçişi reklamı da olsa. İkisi de tam ekran ve izin formu onların üstüne
+     açılamaz. Arka plandaki ön yükleme ('load') meşguliyet sayılmıyor. */
+  const b0 = adsBusy();
+  if (b0 === 'ad' || b0 === 'inter') return Promise.resolve(false);
   if (ADS.cp) return ADS.cp;
   const op = ++ADS.op, tok = ADS.ageSeq;
   ADS.busy = 'consent'; ADS.busyOp = op;
@@ -556,6 +589,13 @@ function adsBind(P) {
     if (ADS.bnd[ev]) return;
     try { P.addListener(ev, adsTerminal); ADS.bnd[ev] = true; } catch (e) {}
   });
+  /* Sezon geçişi reklamı yüzeyi olmayan bir köprüde bu üç olay hiç bağlanmıyor
+     ve adsInterBound() false kalıyor — ön yükleme de gösterim de başlamıyor. */
+  if (!adsInterApi()) return;
+  ADS_IEV.forEach(ev => {
+    if (ADS.bnd[ev]) return;
+    try { P.addListener(ev, adsInterTerminal); ADS.bnd[ev] = true; } catch (e) {}
+  });
 }
 
 /* Tek seferlik SDK başlatma.
@@ -578,6 +618,9 @@ function adsSdkInit() {
     ADS.sdkP = null;
     ADS.sdk = 'on';
     adsBind(P);
+    /* Sezon geçişi reklamı ŞİMDİ yükleniyor, geçiş anında değil: geçişin
+       yükleme beklememesi için tek yol bu (bkz. adsInterPrep). */
+    adsInterPrep();
     adsRepaint();
     return 'on';
   }, () => {
@@ -601,8 +644,13 @@ function adsSdkInit() {
                kapatılmaz.
    true→false→true: sdk zaten 'on' olduğu için initialize BİR KEZ kalır. */
 function adsApply() {
-  if (ADS.sdk === 'on') adsBind(adsPlugin());             // eksik kalmış dinleyici varsa tamamla
-  else if (adsEligible() && adsAgeOk() && ADS.sdk !== 'init') adsSdkInit();
+  if (ADS.sdk === 'on') {
+    adsBind(adsPlugin());                                 // eksik kalmış dinleyici varsa tamamla
+    /* Uygunluk yeni kazanıldıysa (izin formu sonrası) geçiş reklamı burada
+       kuruluyor. Kapıların hepsi adsInterPrep()'in içinde; burada karar yok ve
+       zaten yüklü/uçuşta olan bir reklam ikinci kez istenmiyor. */
+    adsInterPrep();
+  } else if (adsEligible() && adsAgeOk() && ADS.sdk !== 'init') adsSdkInit();
   adsRepaint();
 }
 
@@ -773,6 +821,100 @@ function adsReward(att) {
     adsRepaint();
     return st;
   }, e => { ADS.lastRw = 'error'; adsRepaint(); return 'error'; });
+}
+
+/* ================= SEZON GEÇİŞİ REKLAMI =================
+
+   ===== KAPSAM =====
+   Sezon ortası ve sezon sonu geçişlerinde, KARİYER/SEZON BAŞINA EN FAZLA BİRER
+   kez. Hangi anın geçiş olduğuna ve o geçişin hakkının kullanılıp
+   kullanılmadığına bu dosya karar VERMİYOR: ikisi de sezon motorunun bilgisi ve
+   js/sim.js'te (adBreakClaim) duruyor. Burada yalnız "gösterebiliyor muyum"
+   sorusu var.
+
+   ===== NEDEN ÖN YÜKLEME =====
+   Şart şuydu: hazır reklam yoksa geçiş BEKLEMEYECEK, ve o geçişin reklamı daha
+   sonra alakasız bir ekranda AÇILMAYACAK. Gösterim anında yükleme başlatmak
+   ikisini birden ihlal ederdi — ya beklerdik ya da yükleme bitince ekran çoktan
+   değişmiş olurdu. Bu yüzden reklam önceden yükleniyor ve geçiş anında yalnız
+   "yüklü mü" diye bakılıyor; değilse o geçiş sessizce reklamsız geçiyor.
+
+   ===== DÖNGÜ YOK =====
+   Yükleme yalnız üç doğal tetikleyicide deneniyor: SDK başlatıldığında, uygunluk
+   yeni kazanıldığında (adsApply) ve bir geçiş işlendiğinde (gösterildiyse
+   sonrası için, gösterilemediyse bir sonraki için). Zamanlayıcı yok, başarısız
+   bir yüklemeyi tekrarlayan bir sarmal yok.
+
+   ===== İKİ ÖMÜR AYRI =====
+   ADS.cur ödüllü gösterimin kilidi, ADS.iSt geçiş reklamınınki. Terminal
+   olaylar ayrı dinleyicilere bağlı (ADS_IEV) — biri diğerinin kilidini açamaz.
+   showInterstitial() kapanışta değil, gösterim BAŞLAYINCA çözülüyor
+   (AdInterstitialExecutor: adToShow.show() → call.resolve()), bu yüzden kilidi
+   açan şey söz değil terminal olay. */
+
+/* Önceden yükler. Kapılar fonksiyonun BAŞINDA: uygun yaş beyanı ve
+   canRequestAds sağlanmadan hazırlama çağrısı bile yapılmıyor.
+   Dönüş (söz): 'ready' | 'off' | 'noads' | 'fail'. */
+function adsInterPrep() {
+  const P = adsInterApi();
+  if (!P) return Promise.resolve('off');
+  if (typeof iapNoAds === 'function' && iapNoAds()) return Promise.resolve('off');
+  if (ADS.sdk !== 'on' || !adsInterBound()) return Promise.resolve('off');
+  if (!adsEligible()) return Promise.resolve('noads');    // rıza yok ya da doğrulanamadı
+  if (!adsAgeOk()) return Promise.resolve('noads');       // yaş kapısı — rızadan AYRI terim
+  if (ADS.iSt === 'ready' || ADS.iSt === 'show') return Promise.resolve(ADS.iSt);
+  if (ADS.iP) return ADS.iP;                              // uçuştaki yükleme tekilleştiriliyor
+  ADS.iSt = 'load';
+  const tok = ADS.ageSeq;
+  ADS.iP = P.prepareInterstitial({ adId: ADS.iUnit, isTesting: true }).then(() => {
+    ADS.iP = null;
+    /* Yükleme sürerken beyan ya da uygunluk düştüyse reklam yüklü KALIR ama
+       gösterilmez: 8.1.0'da yüklenmiş bir reklamı atma yolu yok (ödüllü
+       reklamda da aynı durum). 'off' kalması adsInterShow()'u hiç başlatmıyor. */
+    if (!adsAgeHolds(tok) || !adsEligible()) { ADS.iSt = 'off'; return 'off'; }
+    ADS.iSt = 'ready';
+    return 'ready';
+  }, () => {
+    /* Eklenti ayrıca interstitialAdFailedToLoad da yayıyor; o olay 'load'
+       hâlinde sahipsiz sayılıp düşürülüyor (bkz. adsInterDone). */
+    ADS.iP = null; ADS.iSt = 'off';
+    return 'fail';
+  });
+  return ADS.iP;
+}
+
+/* Geçiş anı. js/sim.js çağırıyor ve YALNIZ hakkı olan bir geçiş için çağırıyor;
+   bu yüzden burada "gösterilsin mi" sorusu yok, yalnız "gösterilebilir mi".
+   Dönüş: 'shown' | 'none'. */
+function adsInterShow() {
+  const P = adsInterApi();
+  if (!P) return 'none';
+  if (typeof iapNoAds === 'function' && iapNoAds()) return 'none';
+  if (ADS.iSt !== 'ready') {
+    /* Hazır reklam yok → geçiş BEKLEMİYOR. Bir sonraki geçiş için kuruluyor;
+       tek seferlik, çünkü bunu tetikleyen şey bir zamanlayıcı değil geçişin
+       kendisi ve sezon başına en fazla iki geçiş var. */
+    adsInterPrep();
+    return 'none';
+  }
+  if (adsBusy()) return 'none';                 // ödüllü reklam ya da izin işlemi sürüyor
+  if (!adsEligible() || !adsAgeOk()) return 'none';
+  ADS.iSt = 'show';
+  adsRepaint();
+  P.showInterstitial().then(() => {}, () => adsInterDone());
+  return 'shown';
+}
+
+/* Terminal olay: kapandı, gösterilemedi ya da (gösterim isteğinde) yüklü reklam
+   bulunamadı. Kimlik taşımıyorlar — ödüllü taraftaki gerekçenin aynısı: "ekranda
+   ne varsa o". Oyun durumuna HİÇ dokunmuyor; sezon ilerlemesi bu yola hiç
+   uğramadığı için bir kapanış ya da hata onu ikinci kez çalıştıramaz. */
+function adsInterTerminal() { adsInterDone(); }
+function adsInterDone() {
+  if (ADS.iSt !== 'show') return;               // sahipsiz olay: yüklü reklamı düşürmüyoruz
+  ADS.iSt = 'off';
+  adsRepaint();
+  adsInterPrep();                               // bir sonraki geçiş için
 }
 
 /* ===== KAPANIŞ — ARAYÜZ KİLİDİ =====

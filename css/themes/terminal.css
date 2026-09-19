@@ -55,6 +55,19 @@ header{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px s
   text-overflow:ellipsis;line-height:1.2}
 .htitle .t2{font-family:var(--mono);font-size:10.5px;color:var(--txt3);margin-top:2px;font-weight:400;
   text-transform:none;letter-spacing:0}
+/* t2 SARMAZ. Sarınca 360px'te üst çubuk üç satıra çıkıp 44px'lik satırı 84px'e
+   şişiriyordu: geri düğmesi açıkken başlık sütunu 30px'e iniyor ve "Sezon 1 ·
+   Hafta 10" oraya sığmıyor. t2 hiçbir zaman çok satırlı olmak üzere
+   tasarlanmamıştı — kırpılması doğru davranış. */
+.htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* İkinci düzey tam ekranlarda kasa/itibar rozetleri gizleniyor — ana ekranda
+   zaten gizli olanların aynısı, aynı gerekçeyle: 360px'te geri + başlık + iki
+   rozet + ayarlar + Devam aynı satıra sığmıyor ve ilk feda edilen başlık
+   oluyordu. Bu üç ekran ne haftaya ne paraya bağlı; ikisi de bir dokunuş
+   ötede, ana ekranda. */
+body[data-view="settings"] header .hstat,
+body[data-view="shop"] header .hstat,
+body[data-view="atlas"] header .hstat{display:none}
 .hstat{display:flex;flex-direction:column;align-items:flex-end;gap:0;background:none;border-radius:0;
   padding:0 0 0 12px;flex-shrink:0;line-height:1.25;border-left:1px solid var(--line2)}
 .hstat svg{display:none}
@@ -618,6 +631,32 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmBalV{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em;
   white-space:nowrap;color:var(--txt);line-height:1.2}
 .hmBalV.neg{color:var(--bad)}
+/* --- bakiye yanındaki ödül düğmesi ---
+   Tutar ve + aynı satırda. İkisi de flex-shrink:0 ve tutar nowrap: dar ekranda
+   sıkışan taraf kartın ortasındaki 1fr sütunu (itibar çubuğu) oluyor, bakiye
+   değil. Görünen çap 28px ama dokunma hedefi ::after ile 44x40'a açılıyor —
+   düğme bakiyenin yanında büyümeden rahat dokunuluyor. */
+.hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+.hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+.hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+.hmPlus:active{transform:scale(.9)}
+/* --- ödüllü reklam penceresi ---
+   Tutar ve günlük hak durumu. Pencere yalnız anlatıyor; açılması hiçbir reklam
+   çağrısı yapmıyor (js/ui.js adsRewardOpen). */
+.rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+.rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+.rwAmtI svg{width:26px;height:26px}
+.rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+.rwState>span{white-space:nowrap}
+.rwState b{color:var(--txt);font-weight:800;text-align:right}
+.rwState.on b{color:var(--acc)}
 .hmBalL{font-size:10px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;
   color:var(--txt3);line-height:1.2}
 
@@ -671,15 +710,6 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
 .hmAg.onb b{font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--txt);line-height:1.2}
 .hmAg.onb i{font-style:normal;font-size:12px;font-weight:400;color:var(--txt2);line-height:1.25}
-/* Ödüllü reklam satırı (js/ads.js). İki satırlık metin düzeni gündem satırının
-   onboarding varyantıyla aynı; .onb yeniden kullanılmıyor çünkü o rengi ve
-   anlamı da taşıyor. Kilitli hâl <button disabled> ile geliyor: hak
-   kullanılmışken ya da reklam hazırlanırken satır soluk ve tıklanamaz. */
-.hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-.hmAg.ad b{font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--txt);line-height:1.2}
-.hmAg.ad i{font-style:normal;font-size:12px;font-weight:400;color:var(--txt2);line-height:1.25}
-.hmAg.ad[disabled]{opacity:.55;cursor:default}
-.hmAg.ad[disabled]:active{background:none;transform:none}
 .hmEmpty{background:var(--n1);border:1px solid var(--line2);border-radius:4px;
   padding:13px 11px;margin-bottom:7px;color:var(--txt3);font-size:12.5px;text-align:center}
 
@@ -1129,3 +1159,108 @@ body[data-view="menu"]{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 .adAgeInp:focus{border-color:var(--txt3)}
 .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+
+/* ===================== MAĞAZA =====================
+   Aynı markup, terminalin kendi dili: nötr koyu yüzey, monospace rakam, tek
+   piksellik çizgi, sıfır gölge. Renk yalnız veri anlamı taşıyor — kapasite
+   yeşil, kapalı durum amber, geri kalan her şey nötr.
+
+   İmza öğe saha ile aynı: kariyer başına +10 tavanını gösteren segmentli hak
+   ölçeri. Burada segmentler köşeli hücreler; bu temada yuvarlak biçim yok. */
+.shpOff{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding:8px 10px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:12.5px;line-height:1.4;border:1px solid var(--line2)}
+.shpOff svg{width:16px;height:16px;flex-shrink:0}
+
+.shpSum{display:flex;align-items:stretch;gap:13px;background:var(--sur2);
+  border:1px solid var(--line2);border-radius:var(--r);padding:12px 13px;margin-bottom:16px}
+.shpSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+.shpSumP{flex:0 0 auto;min-width:84px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;text-align:center}
+.shpSumV{font-family:var(--mono);font-weight:600;font-size:28px;line-height:1;letter-spacing:-.03em}
+.shpSumL{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);
+  font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.shpLeft{font-size:13.5px;font-weight:600;line-height:1.3;color:var(--txt);overflow-wrap:anywhere}
+.shpPips{display:flex;gap:3px}
+.shpPips i{flex:1 1 0;height:8px;border-radius:1px;background:var(--n2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.shpPips i.on{background:var(--acc);box-shadow:none}
+.shpCeil{font-size:11.5px;line-height:1.4;color:var(--txt3);overflow-wrap:anywhere}
+
+.shpLead{font-size:12.5px;line-height:1.5;color:var(--txt2);margin:-4px 0 10px}
+.shpRules{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:10px 11px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+.shpRules p{font-size:12px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+/* Kapsam etiketi kendi satırında: metnin içinde aktığında satır kutusunu
+   şişirip alttaki satırı aşağı itiyordu. */
+.shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.shpRules .tag{flex:0 0 auto}
+
+.shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:18px}
+.shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:13px 10px 0;background:var(--sur2);border:1px solid var(--line2);
+  border-radius:var(--r);overflow:hidden}
+.shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.shpIc svg{width:32px;height:32px}
+.shpN{display:block;font-family:var(--mono);font-weight:600;font-size:35px;line-height:1;
+  letter-spacing:-.045em;margin-top:9px}
+.shpN i{font-style:normal;color:var(--acc)}
+.shpL{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt3);font-weight:600;line-height:1.3;margin:7px 0 12px;overflow-wrap:anywhere}
+.shpNote{display:block;font-size:11px;line-height:1.4;color:var(--warn);margin:-6px 0 11px;
+  overflow-wrap:anywhere}
+.shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -10px 0;
+  width:calc(100% + 20px);min-height:40px;padding:8px 10px;border:none;border-top:1px solid var(--line2);
+  background:var(--n2);color:var(--txt3);font-family:inherit;font-weight:600;font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+.shpBuy:not([disabled]){background:var(--acc);border-top-color:var(--acc);color:var(--accT);cursor:pointer}
+.shpCard.out{border-style:dashed}
+.shpCard.out .shpIc,.shpCard.out .shpN,.shpCard.out .shpN i{color:var(--txt3)}
+/* Bu temada altın diye bir renk yok (--gold nötr açık gri). +10 kartı renkle
+   değil kenarlık kontrastıyla ayrılıyor. */
+.shpCard.top{border-color:var(--n4)}
+
+.shpAd{background:var(--sur2);border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+.shpAdH{display:flex;align-items:center;gap:12px;padding:13px 13px 0}
+.shpAdIc{width:48px;height:48px;flex:0 0 48px;border-radius:var(--r-s);display:flex;align-items:center;
+  justify-content:center;background:var(--n2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+.shpAdIc svg{width:27px;height:27px}
+.shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.shpAdT b{font-size:16.5px;font-weight:600;line-height:1.2;letter-spacing:-.01em;overflow-wrap:anywhere}
+.shpAdB{display:flex;flex-direction:column;gap:8px;padding:12px 13px 13px}
+.shpAdB p{font-size:12.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+.shpAdB p.keep{padding:9px 10px;border-radius:var(--r-s);background:var(--acc-soft);color:var(--acc);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+/* Reklam kartındaki durum notu gövdenin akışında: kapasite kartındaki
+   negatif üst boşluk burada yeri kaydırırdı. */
+.shpAdB .shpNote{margin:0}
+.shpBuy.wide{margin:2px 0 0;width:100%;border:1px solid var(--line2);border-radius:var(--r-s);
+  min-height:46px;font-size:12.5px}
+
+@media (max-width:374px){
+  .shpSum{padding:11px 10px;gap:11px}
+  .shpSumP{min-width:76px}
+  .shpSumV{font-size:26px}
+  .shpGrid{gap:8px}
+  .shpCard{padding:12px 8px 0}
+  .shpIc svg{width:29px;height:29px}
+  .shpN{font-size:32px}
+  .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);font-size:11px;letter-spacing:.07em}
+  .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+  .shpAdIc{width:43px;height:43px;flex:0 0 43px}
+  .shpAdIc svg{width:24px;height:24px}
+  .shpAdT b{font-size:15.5px}
+}
+@media (max-width:339px){
+  .shpGrid{grid-template-columns:1fr}
+  .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:11px}
+  .shpIc{flex:0 0 auto;padding:12px 0 12px 12px}
+  .shpN{margin:0;font-size:30px;flex:0 0 auto}
+  .shpL{margin:0;flex:1 1 0}
+  .shpNote{display:none}
+  .shpBuy{margin:0;width:auto;flex:0 0 94px;min-height:60px;align-self:stretch;
+    border-top:none;border-left:1px solid var(--line2)}
+  .shpBuy.wide{flex:none;width:100%;border:1px solid var(--line2)}
+}

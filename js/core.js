@@ -358,17 +358,21 @@ function weeklyCost(){
   return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
 }
 function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
-/* Satın alınmış ek müşteri kapasitesi — bugün her zaman 0. Mağaza da yok,
-   teslim edilmiş bir satın alma da. Yine de maxClients() içinde tek bir toplama
-   olarak duruyor ki kapasitenin oyuna girdiği yer tek olsun; sonraki aşama
-   yalnız bu fonksiyonun GÖVDESİNİ değiştirecek, formülün geri kalanına
-   dokunmayacak.
+/* Satın alınmış ek müşteri kapasitesi — bugün her zaman 0, çünkü teslim
+   edilmiş bir satın alma yok: js/iap.js'in defteri (S.iap.t) hiçbir yerden
+   yazılmıyor ve faturalandırma akışı bağlı değil. Yine de maxClients() içinde
+   tek bir toplama olarak duruyor ki kapasitenin oyuna girdiği yer tek olsun.
 
-   Burada bir S alanı okunmuyor ve okunmayacak: bir sayı, hangi satın alma
-   tokenlarının işlendiğini yeniden kuramaz — kaybolmuş bir defterden sonra
-   gelen satın alma sessizce karşılıksız kalırdı. Kapasitenin kaynağı kariyer
-   kaydındaki teslim edilmiş token kümesi olacak. */
-function iapCap(){return 0;}
+   Sayının kaynağı bir alan DEĞİL, defterden türetilen toplam: bir sayı, hangi
+   satın alma tokenlarının işlendiğini yeniden kuramaz — kaybolmuş bir defterden
+   sonra gelen satın alma sessizce karşılıksız kalırdı. Türetme ve kariyer başına
+   tavan (IAP.capMax) js/iap.js'te; burası yalnız okuma yeri. */
+function iapCap(){return iapCapOwned();}
+/* Otomatik (sezon geçişi) reklamlarının kapalı olup olmadığının TEK okuma yeri.
+   Cihaz kapsamlı: satın alındığında cihazdaki bütün kariyerleri kapsar, çünkü
+   defteri PREFS'te (js/iap.js). İsteğe bağlı ÖDÜLLÜ reklamı kapatmıyor — onu
+   kullanıcı kendi dokunuşuyla açıyor ve karşılığında ödül alıyor. */
+function iapNoAds(){return iapNoAdsOwned();}
 function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')+iapCap();}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}

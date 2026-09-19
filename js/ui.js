@@ -311,39 +311,68 @@ function hmBadgeFail(img){
   if(p&&p.classList)p.classList.remove('badge');
   img.remove();
 }
-/* ================= ÖDÜLLÜ REKLAM SATIRI =================
-   Ana ekranda, hızlı erişim kartlarının altında. Durumu js/ads.js veriyor;
-   burada yalnız görünüm var — bu dosya SDK'yı hiç tanımıyor.
+/* ================= ÖDÜLLÜ REKLAM: BAKİYE YANINDAKİ + =================
+   Eskiden ana ekranda hızlı erişim kartlarının altında tam genişlikte bir
+   "Reklam izle" satırı vardı. Yerini bakiyenin yanındaki küçük bir + aldı ve
+   anlatının tamamı (tutar, günlük hak, düğme) açılan pencereye taşındı.
 
-   Native eklenti yoksa (web, PWA, tek dosya sürümü) adsRowState() null döner
-   ve satır HİÇ çizilmez: reklamı kapatmak için ayrı bir bayrak yok.
+   İki şey değişmedi ve değişmemeli:
 
-   Tutar metne gömülmüyor, fmtK(RW.amount) ile basılıyor — ödül miktarı tek
-   yerde (js/reward.js) tanımlı kalsın.
+   - Native eklenti yoksa (web, PWA, tek dosya sürümü) adsRowState() null döner
+     ve + HİÇ çizilmez. Reklamı kapatmak için ayrı bir bayrak yok, tek kaynak o.
+   - Tutar metne gömülmüyor; fmtK(RW.amount) ile basılıyor, yani ödül miktarı
+     hâlâ yalnız js/reward.js'te tanımlı.
 
-   'busy' ve 'used' hâllerinde <button disabled>: yükleme/gösterim sırasında
-   ikinci dokunuş native'e hiç ulaşmıyor, hak kullanılmışken de satır yarın
-   yeniden açılacağını söylüyor. */
-function adsRowHtml(){
+   + her durumda dokunulabilir, çünkü pencerenin işi ANLATMAK: hak kullanılmışsa
+   nedenini, reklam hazırlanıyorsa onu söylüyor. Açılması hiçbir native çağrı
+   yapmıyor — reklamı yalnız pencerenin içindeki düğme başlatıyor. */
+function adsPlusHtml(){
+  if(typeof adsRowState!=='function')return '';
   const st=adsRowState();
   if(!st)return '';
-  /* Yaş kapısı hâllerinde TUTAR YAZILMIYOR. Ödülün miktarını gösterip ardından
-     doğum yılı sormak, doğrudan yüksek yaş beyanına teşvik olurdu; eşiğin
-     altındaki kullanıcıya da yukarı düzeltme daveti çıkarılmıyor. */
-  if(st==='age')return `<button class="hmAg ad gold" onclick="adsAgeOpen()">
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeRowSub')}</i></span>
-    <span class="hmAgC">›</span></button>`;
-  if(st==='noage')return `<button class="hmAg ad gold" disabled>
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeUnder')}</i></span></button>`;
-  const on=st==='go';
-  const sub=st==='go'?t('adRewardSub'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
-  const ttl=on?`${t('adRewardTitle')} · +${fmtK(RW.amount)}`:t('adRewardTitle');
-  return `<button class="hmAg ad gold" ${on?'onclick="adsWatch()"':'disabled'}>
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${ttl}</b><i>${sub}</i></span>
-    ${on?'<span class="hmAgC">›</span>':''}</button>`;
+  /* Durum düğmenin ÜSTÜNDE görünüyor: bugünün hakkı açıkken vurgulu, kapalıyken
+     sönük. data-ad hem CSS'in okuduğu hem de bir yeniden çizimin gerçekten olup
+     olmadığını dışarıdan görülebilir kılan tek işaret — düğmenin kendisi her
+     durumda aynı metni (+) taşıdığı için başka ayırt edici yok. */
+  return `<button class="hmPlus${st==='go'?' on':''}" data-ad="${st}" onclick="adsRewardOpen()"
+    aria-label="${esc(t('adRewardTitle'))}">+</button>`;
+}
+/* Ödül penceresi. Görünüm burada, karar js/ads.js'te: hangi durumda olduğumuzu
+   adsRowState() söylüyor ve bu fonksiyon ondan başka hiçbir şeye bakmıyor. */
+function adsRewardOpen(){
+  const st=adsRowState();
+  if(!st)return;
+  /* Beyan istenen hâlde doğrudan nötr yaş ekranına gidiliyor. Araya ödülü
+     ANLATAN bir pencere koymak, tutarı gösterip ardından doğum yılı sormak
+     olurdu — tam olarak kaçınılan şey. */
+  if(st==='age'){adsAgeOpen();return;}
+  const close=`<button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('adRewardClose')}</button>`;
+  /* Eşiğin altındaki kullanıcıya da tutar yazılmıyor ve yukarı düzeltme daveti
+     çıkarılmıyor; beyanı düzeltme/silme yolu Ayarlar'da, eşit ağırlıkta. */
+  if(st==='noage'){
+    openModal(`<h2>${t('adRewardTitle')}</h2>
+    <div class="sub" style="margin-top:10px;white-space:normal;line-height:1.5">${t('adAgeUnder')}</div>
+    ${close}`);
+    return;
+  }
+  const amt=fmtK(RW.amount);
+  const stat=st==='go'?t('adRewardReady'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
+  const why=st==='busy'?t('adRewardBusyWhy'):(st==='used'?t('adRewardUsedWhy'):t('adRewardCareer'));
+  openModal(`<h2>${t('adRewardTitle')}</h2>
+  <div class="rwAmt"><span class="rwAmtI">${ICONS.cash}</span><b>+${esc(amt)}</b></div>
+  <div class="sub" style="margin-top:2px;white-space:normal;line-height:1.5">${t('adRewardWhat').replace('{a}',esc(amt))}</div>
+  <div class="rwState${st==='go'?' on':''}">
+    <span>${t('adRewardDaily')}</span><b>${stat}</b></div>
+  <div class="sub" style="margin-top:8px;white-space:normal;line-height:1.5">${why}</div>
+  <button class="btn" style="margin-top:14px" ${st==='go'?'onclick="adsRewardGo()"':'disabled'}>${t('adRewardWatch')}</button>
+  ${close}`);
+}
+/* Pencereden reklamı başlatan TEK yol. Önce pencere kapanıyor: altındaki ekran
+   ADS.cur kurulduğu anda yeniden çiziliyor ve açık bir modalın üstüne çizim
+   yapmak sırayı bozardı. Kapı yine adsWatch()'un kendi girişinde. */
+function adsRewardGo(){
+  closeModal();
+  adsWatch();
 }
 /* ================= GİZLİLİK SEÇENEKLERİ SATIRI =================
    Ayarlar > Hakkında, Gizlilik Politikası satırının yanında. Yalnız UMP
@@ -1995,7 +2024,10 @@ dash(){
     </div>
     <div class="hmBal">
       <span class="hmCoin">${ICONS.cash}</span>
-      <span class="hmBalV${S.cash<0?' neg':''}">${fmtK(S.cash)}</span>
+      <span class="hmBalRow">
+        <span class="hmBalV${S.cash<0?' neg':''}">${fmtK(S.cash)}</span>
+        ${adsPlusHtml()}
+      </span>
       <span class="hmBalL">${t('hmBalance')}</span>
     </div>
   </div>
@@ -2032,8 +2064,6 @@ dash(){
     ${qCard('blue','inbox',t('inbox'),unread,"navTo('inbox')")}
     ${qCard('viol','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
   </div>
-
-  ${adsRowHtml()}
 
   ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
     <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
@@ -2471,6 +2501,106 @@ settings(){
   ${adsAgeRowHtml()}
   ${adsPrivacyRowHtml()}`;
 },
+/* ================= MAĞAZA =================
+   Ürünler GÖRÜNÜR, satın alma kapalı ve ekran bunu saklamıyor. Ama "kapalı"
+   ekranın KONUSU değil: durum tek satırda bir kez söyleniyor, geri kalan yer
+   kararı değiştiren şeye ayrılıyor — ürün ne yapıyor, hangi kutuya işleniyor,
+   bu kariyerde ne kadar hak kaldı. Beş düğmenin altında aynı cümleyi altı kez
+   yazmak ürünü değil, derlemeyi anlatmaktı.
+
+   Ürün listesi bu dosyada DEĞİL: IAP_PRODUCTS (js/iap.js) tek kaynak, kapsam da
+   ürünün kendi alanı (sc). Ekran yalnız çiziyor; hiçbir hak buradan verilmiyor
+   ve "şimdilik ücretsiz açıldı" gibi bir yol yok.
+
+   Fiyat hiçbir yerde yazmıyor. Yerelleştirilmiş fiyat, ödeme bağlantısı
+   kurulduğunda Google Play'den gelecek; şimdiden bir sayı basmak tahmin olurdu.
+   "En popüler", indirim ya da avantaj iddiası da yok — hiçbiri kararlaştırılmış
+   değil ve olmayan bir şeyi rozetlemek satmaya çalışmak olurdu.
+
+   ===== EKRANIN İMZASI: ON SEGMENTLİ HAK ÖLÇERİ =====
+   Bu ekranın gerçek kısıtı bir cümle değil, bir sayı: kariyer başına +10
+   (IAP.capMax). Özet kartındaki segmentler onu rakamdan ÖNCE gösteriyor —
+   dolular bu kariyerde kullanılmış hakkı, boşlar kalanı. Segment sayısı
+   IAP.capMax'ten TÜRÜYOR, elle yazılmıyor: tavan değişirse ölçer de değişir.
+
+   Sayfa başlığı YOK. Üst çubukta zaten "Mağaza" yazıyor (hdr() eşlemesi) ve
+   360px'te aynı kelimeyi iki kez yazmak bir satırlık dikey bütçeyi harcamaktı.
+
+   Yeni sınıf ailesi (.shp*) dört temada da temanın KENDİ değişkenlerinden
+   boyanıyor — --acc, --gold, --sur, --line, --txt3. Renk sabiti yok, bu yüzden
+   her tema kendi dilinde konuşuyor ve hiçbirine ikinci bir palet girmiyor. */
+shop(){
+  const off=iapWhy()!=='';
+  const ing=!!(S&&S.agent);
+  const used=ing?iapCapOwned():0;
+  /* Ölçer tavanı IAP.capMax'ten okuyor: on segment "on" yazdığı için değil,
+     tavan on olduğu için on tane. */
+  const pips=Array.from({length:IAP.capMax},(_,i)=>
+    '<i class="'+(i<used?'on':'')+'"></i>').join('');
+  /* Kapasite paketi. Kartın okuduğu ilk şey rakam; ürünün tam adı düğmenin
+     erişilebilir adında duruyor, böylece ekran okuyucu dört düğmeyi birbirinin
+     aynısı "Satın al" diye görmüyor. */
+  const pack=p=>{
+    const st=iapState(p.id);
+    const note=st==='full'?t('shopCapFull'):st==='nocareer'?t('shopNeedCareer'):'';
+    return `<div class="shpCard${p.cap===IAP.capMax?' top':''}${note?' out':''}">
+      <span class="shpIc">${ICONS['shopCap'+p.cap]}</span>
+      <span class="shpN"><i>+</i>${p.cap}</span>
+      <span class="shpL">${t('shopCapSec')}</span>
+      ${note?`<span class="shpNote">${note}</span>`:''}
+      <button class="shpBuy" aria-label="${t('shopBuy')} · ${t(p.k)}"
+        ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
+    </div>`;
+  };
+  /* Reklam kaldırma tam genişlikte ve kendi bölümünde: kapsamı da (cihaz),
+     bıraktığı şey de (isteğe bağlı ödüllü reklam) kapasite paketlerininkinden
+     başka. Aynı ızgaraya sıkıştırmak iki farklı sözleşmeyi tek satır gibi
+     göstermek olurdu. */
+  const adItem=p=>{
+    const st=iapState(p.id);
+    /* Ürüne ÖZGÜ durum burada da yazılıyor: bu ürün alınmışsa düğmenin kapalı
+       olmasının sebebi "satın alma kullanılamıyor" değil, "zaten senin" — ve
+       ikisi kullanıcı için aynı cümle değil. */
+    const note=st==='owned'?t('shopOwned'):'';
+    return `<div class="shpAd">
+      <div class="shpAdH">
+        <span class="shpAdIc">${ICONS.shopNoAds}</span>
+        <span class="shpAdT"><b>${t(p.k)}</b>
+        <span class="tag pos">${t('shopScopeDevice')}</span></span>
+      </div>
+      <div class="shpAdB">
+        <p>${t('shopNoAdsDesc')}</p>
+        <p>${t('shopScopeDeviceSub')}</p>
+        <p class="keep">${t('shopNoAdsKeep')}</p>
+        <button class="shpBuy wide" aria-label="${t('shopBuy')} · ${t(p.k)}"
+          ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
+        ${note?`<p class="shpNote">${note}</p>`:''}
+      </div>
+    </div>`;
+  };
+  return `${!off?'':`<div class="shpOff">${ICONS.alert}<span>${t('shopOff')}</span></div>`}
+
+  <div class="shpSum">
+    <span class="shpSumP"><span class="shpSumV num">${ing?`${S.clients.length}/${maxClients()}`:'—'}</span>
+    <span class="shpSumL">${t('shopCapNow')}</span></span><i></i>
+    <span class="shpSumR">
+      <span class="shpLeft">${t('shopCapLeft').replace('{n}',ing?iapCapLeft():IAP.capMax)}</span>
+      <span class="shpPips" aria-hidden="true">${pips}</span>
+      <span class="shpCeil">${t('shopCapCeil').replace('{n}',IAP.capMax)}</span>
+    </span>
+  </div>
+
+  <div class="sect">${t('shopCapSec')}</div>
+  <p class="shpLead">${t('shopCapDesc')}</p>
+  <div class="shpRules">
+    <p><span class="tag w">${t('shopScopeCareer')}</span>${t('shopScopeCareerSub')}</p>
+    <p>${t('shopCapNote')}</p>
+  </div>
+  <div class="shpGrid">${IAP_PRODUCTS.filter(p=>p.cap).map(pack).join('')}</div>
+
+  <div class="sect">${t('shopAdSec')}</div>
+  ${IAP_PRODUCTS.filter(p=>p.noads).map(adItem).join('')}`;
+},
 player(id){
   if(useSahaPlayerProfile())return pfSahaView(id);
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
@@ -2904,6 +3034,24 @@ gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.
 skills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/></svg>',
 calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/><path d="M3.2 10h17.6M8 3v4M16 3v4"/><circle cx="8.4" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.4" cy="17.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor" stroke="none"/></svg>',
 trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg>',
+/* Mağaza ürünleri. Dördü de "oyuncu kartı" ama BİÇİMLERİ farklı, yalnız
+   rengi değil: tek kart → yelpaze → deste → arşiv kasası. Paket büyüdükçe
+   kompozisyon büyüyor, çünkü aynı çizimin dört rengi ürünü ayırt ettirmez —
+   360px'te 34px'lik bir ikonda renk tek başına okunmaz.
+   Kart yüzü her ikonda aynı: baş + omuz + sözleşme satırı. Ortak öğe ailenin
+   ne olduğunu söylüyor, değişen öğe kaçıncı olduğunu. */
+shopCap1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.8" y="2.8" width="10.4" height="18.4" rx="2.2"/><circle cx="12" cy="8.9" r="2.05"/><path d="M8.9 15.1a3.3 3.3 0 0 1 6.2 0"/><path d="M9.6 18.3h4.8"/></svg>',
+shopCap3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.1 5.9 4.6 7.1a2 2 0 0 0-1.25 2.5l2.9 8.6"/><path d="M15.9 5.9l3.5 1.2a2 2 0 0 1 1.25 2.5l-2.9 8.6"/><rect x="8.1" y="3.1" width="7.8" height="17.4" rx="2"/><circle cx="12" cy="8.7" r="1.85"/><path d="M9.35 14.4a2.85 2.85 0 0 1 5.3 0"/><path d="M9.9 17.5h4.2"/></svg>',
+shopCap5:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="2.6" width="12.2" height="16" rx="2.2"/><circle cx="9" cy="8" r="1.9"/><path d="M6.2 13.7a2.9 2.9 0 0 1 5.6 0"/><path d="M17.6 5.7v12.6a2.2 2.2 0 0 1-2.2 2.2H5.9"/><path d="M20.7 8.6v9.7a2.2 2.2 0 0 1-2.2 2.2h-2.6"/></svg>',
+shopCap10:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.9" y="2.3" width="10.2" height="10.6" rx="2"/><circle cx="12" cy="6.2" r="1.75"/><path d="M9.45 10.5a2.7 2.7 0 0 1 5.1 0"/><path d="M2.9 15.1h18.2v4.4a2.2 2.2 0 0 1-2.2 2.2H5.1a2.2 2.2 0 0 1-2.2-2.2z"/><path d="M9.7 15.1v1.9h4.6v-1.9"/></svg>',
+/* Reklam kaldırma: tam ekran reklam + üzerinden geçen tek iptal çizgisi.
+   Çizgi kutunun İÇİNDEN geçiyor (köşeden köşeye değil) — "bu ekran artık
+   çıkmıyor" demek istiyor, "ekran bozuk" değil. */
+shopNoAds:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 6.1v8a2.2 2.2 0 0 1-2.2 2.2H5"/><path d="M2.8 13.3V6.1a2.2 2.2 0 0 1 2.2-2.2h11.4"/><path d="M8.2 20.1h7.6"/><path d="M12 16.3v3.8"/><path d="M7.1 8.4h5.1"/><path d="M4.4 19.2 19.6 4"/></svg>',
+/* Mağaza: ayar dişlisiyle aynı çizim dili (24'lük kutu, 1.8 kalınlık, yuvarlak
+   uçlar, currentColor). Sepetin iki tekerleği dolu daire değil çünkü diğer
+   ikonların hiçbiri dolu değil — burada da çizgi kalıyor. */
+cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3.6h2.4l2.2 10.2a1.9 1.9 0 0 0 1.9 1.5h7.6a1.9 1.9 0 0 0 1.9-1.45L21.2 7H6"/><circle cx="10" cy="19.6" r="1.5"/><circle cx="17.4" cy="19.6" r="1.5"/></svg>',
 settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
@@ -3115,6 +3263,8 @@ function render(){
     document.getElementById('hBack').classList.toggle('show',stack.length>1);
     const b0=document.getElementById('btnSet');
     if(b0)b0.classList.remove('show');   // ayarlara menüden giriliyor
+    const s0=document.getElementById('btnShop');
+    if(s0)s0.classList.remove('show');   // mağaza kariyerin içinden açılıyor
     showChrome(false);
     document.getElementById('hT1').textContent=c.v==='settings'?t('settings'):'Menajer';
     /* Menü ekranı kendi başlığını taşıyor (KARİYERLERİM); üst çubukta ikinci
@@ -3137,6 +3287,7 @@ function render(){
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
+  else if(c.v==='shop')t1=t('shop');
   else if(c.v==='skills')t1=t('skills');
   else if(c.v==='atlas')t1=t('scoutNet');
   else if(c.v==='rival')t1=rivalName(rivalById(c.id))||t('rivals');
@@ -3151,6 +3302,16 @@ function render(){
   if(bs){
     bs.classList.add('show');
     if(!bs.firstChild){bs.innerHTML=ICONS.settings;const sv=bs.querySelector('svg');if(sv){sv.style.width='17px';sv.style.height='17px';}}
+  }
+  /* Sepet YALNIZ ana ekranda. Diğer kariyer ekranlarında üst çubuk zaten geri +
+     başlık + kasa + itibar + ayarlar + Devam taşıyor; 360px'te başlığa kalan
+     yer sıfıra iniyordu. Ana ekranda ise çubuk bilerek boşaltılmış (dört temada
+     da .hstat ve #btnNext gizli), yani sepetin yanına konduğu tek düğme
+     gerçekten ayarlar. */
+  const bsh=document.getElementById('btnShop');
+  if(bsh){
+    bsh.classList.toggle('show',c.v==='dash');
+    if(!bsh.firstChild){bsh.innerHTML=ICONS.cart;const cv=bsh.querySelector('svg');if(cv){cv.style.width='18px';cv.style.height='18px';}}
   }
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;

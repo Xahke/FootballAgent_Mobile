@@ -15,7 +15,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['i18n','store','saves','reward','ads-testcfg','ads','data','worldgeo','atlas','rivals','core',
+const FILES = ['i18n','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= IndexedDB taklidi ================= */
@@ -1127,6 +1127,7 @@ function fakeAdMob(ctx, opt) {
   opt = opt || {};
   const L = {}, st = {
     prepares: 0, shows: 0, inits: 0, asks: 0, forms: 0, privs: 0,
+    iprepares: 0, ishows: 0, iprepOpts: [],
     askOpts: [],                     // requestConsentInfo'ya geçen seçenekler
     order: [],                       // çağrı sırası — "izin önce, SDK sonra" ölçülebilsin
     rewardResolve: null, prepareResolve: null, initResolve: null, privResolve: null
@@ -1200,6 +1201,29 @@ function fakeAdMob(ctx, opt) {
           st.shows++;
           // Ödülsüz kapanışta HİÇ settle olmayan promise — gerçeğiyle aynı.
           return new Promise(res => { st.rewardResolve = res; });
+        },
+        /* Sezon geçişi reklamı. prepareInterstitial YÜKLENİNCE çözülüyor
+           (InterstitialAdCallbackAndListeners.onAdLoaded → call.resolve). */
+        prepareInterstitial(o) {
+          st.iprepares++; st.order.push('iprep');
+          st.iprepOpts.push(JSON.parse(JSON.stringify(o === undefined ? null : o)));
+          if (opt.interLoadFail) return Promise.reject(new Error('iload'));
+          if (opt.interPrepareHold && !st.iprepHeld) {
+            st.iprepHeld = true;
+            return new Promise((res, rej) => {
+              st.iprepResolve = () => res({ adUnitId: o && o.adId });
+              st.iprepReject = () => rej(new Error('iload'));
+            });
+          }
+          return Promise.resolve({ adUnitId: o && o.adId });
+        },
+        /* GÖSTERİM BAŞLAYINCA çözülüyor, kapanınca değil — gerçeğiyle aynı
+           (AdInterstitialExecutor: adToShow.show() → call.resolve()). Kilidi
+           açan şey bu söz değil, terminal olay. */
+        showInterstitial() {
+          st.ishows++; st.order.push('ishow');
+          if (opt.interShowFail) return Promise.reject(new Error('ishow'));
+          return Promise.resolve();
         }
       }
     }
@@ -1215,6 +1239,8 @@ function fakeAdMob(ctx, opt) {
     finishInit() { if (st.initResolve) { const r = st.initResolve; st.initResolve = null; r(); } },
     finishPriv() { if (st.privResolve) { const r = st.privResolve; st.privResolve = null; r(); } },
     finishPrepare() { if (st.prepareResolve) { const r = st.prepareResolve; st.prepareResolve = null; r(); } },
+    finishInterPrepare() { if (st.iprepResolve) { const r = st.iprepResolve; st.iprepResolve = null; st.iprepReject = null; r(); } },
+    failInterPrepare() { if (st.iprepReject) { const r = st.iprepReject; st.iprepReject = null; st.iprepResolve = null; r(); } },
     finishAsk() { if (st.askResolve) { const r = st.askResolve; st.askResolve = null; r(); } },
     finishForm() { if (st.formResolve) { const r = st.formResolve; st.formResolve = null; st.formReject = null; r(); } },
     failForm() { if (st.formReject) { const r = st.formReject; st.formReject = null; st.formResolve = null; r(); } },
@@ -1361,7 +1387,8 @@ async function tAdsAdapter() {
     const cash0 = a.R('S.cash');
     a.R('adsWatch();'); await tick();
     ok(a.R('S.cash') === cash0 && a.R('ADS.cur===null') === true, '(6) çağrı hiç başlamadı');
-    ok(a.R("VIEWS.dash().indexOf('adsWatch()')") === -1, '(6) ana ekranda düğme yok');
+    ok(a.R("VIEWS.dash().indexOf('adsRewardOpen()')") === -1, '(6) ana ekranda + düğmesi yok');
+    ok(a.R("VIEWS.dash().indexOf('adsWatch()')") === -1, '(6) reklam başlatan yol da yok');
   }
 
   /* (7) SDK başlatılamazsa düğme hiç çizilmiyor — her dokunuşta patlayacak bir
@@ -1741,8 +1768,17 @@ async function tAdAgeGate() {
     ok(a.R('ADS.cs===null') === true && a.R('ADS.boot') === false,
        '(1) izin durumu kurulmadı, boot işaretlenmedi');
     ok(a.R('adsRowState()') === 'age', '(1) satır beyan istiyor');
-    ok(a.R("adsRowHtml().indexOf('adsAgeOpen()')") !== -1, '(1) satır beyan ekranını açıyor');
-    ok(a.R("adsRowHtml().indexOf(fmtK(RW.amount))") === -1, '(1) tutar yazılmıyor');
+    /* Giriş noktası artık bakiyenin yanındaki +; anlatı açılan pencerede.
+       Ölçülen sözleşme aynı: beyan istenen hâlde yol NÖTR yaş ekranına gidiyor
+       ve hiçbir yüzeyde tutar yazmıyor. */
+    ok(a.R("adsPlusHtml().indexOf('adsRewardOpen()')") !== -1, '(1) + düğmesi çizildi');
+    ok(a.R("adsPlusHtml().indexOf(fmtK(RW.amount))") === -1, '(1) + üstünde tutar yazmıyor');
+    a.R('adsRewardOpen();');
+    ok(a.R("document.getElementById('sheet').innerHTML.indexOf('adAgeInp')") !== -1,
+       '(1) + doğrudan beyan ekranını açtı');
+    ok(a.R("document.getElementById('sheet').innerHTML.indexOf(fmtK(RW.amount))") === -1,
+       '(1) beyan ekranında da tutar yazmıyor');
+    a.R('closeModal();');
     a.R('adsWatch();'); await tick();
     ok(fake.stat.prepares === 0 && fake.stat.shows === 0, '(1) adsWatch hiçbir şey yapmadı');
     ok(a.R('(PREFS.rw||{})["' + cid + '"]===undefined') === true, '(1) hak isteği kaydı yok');
@@ -1783,7 +1819,14 @@ async function tAdAgeGate() {
     ok(await a.R('adsInit()') === 'noage', '(3) kapı kapalı');
     ok(fake.stat.asks === 0 && fake.stat.inits === 0, '(3) hiçbir native çağrı yok');
     ok(a.R('adsRowState()') === 'noage', '(3) satır nötr hâlde');
-    ok(a.R("adsRowHtml().indexOf('adsAgeOpen()')") === -1, '(3) satırda düzeltme daveti yok');
+    a.R('adsRewardOpen();');
+    {
+      const sh = a.R("document.getElementById('sheet').innerHTML");
+      ok(sh.indexOf('adsAgeOpen()') === -1, '(3) pencerede yukarı düzeltme daveti yok');
+      ok(sh.indexOf(a.R('fmtK(RW.amount)')) === -1, '(3) pencerede tutar yazmıyor');
+      ok(sh.indexOf('adsRewardGo()') === -1, '(3) reklam başlatan yol da yok');
+    }
+    a.R('closeModal();');
   }
 
   /* (4) SINIR — yalnız yıl saklandığı için kişi KÜÇÜK yaş sayılıyor.
@@ -2063,7 +2106,7 @@ async function tAdAgeGate() {
     ok(a.R("VIEWS.settings().indexOf('adsAgeOpen()')") !== -1, '(16) Ayarlar\'da görünüyor');
     for (const lang of ['tr', 'en']) {
       a.R("L='" + lang + "';");
-      const h = a.R('adsAgeRowHtml()+adsRowHtml()');
+      const h = a.R('adsAgeRowHtml()+adsPlusHtml()');
       ok(h.indexOf('undefined') === -1 && h.indexOf('[object') === -1,
          '(16) ' + lang + ' metinleri eksiksiz');
     }
@@ -2253,11 +2296,12 @@ async function tAdAgeGate() {
     const fake = fakeAdMob(a.ctx, { askHold: true, consent: AGE_REQ, formConsent: AGE_FORM_OK });
     a.R("navTo('dash');");
     const h0 = a.R("document.getElementById('view').innerHTML");
-    const askSub = a.R("t('adAgeRowSub')");
-    ok(h0.indexOf(askSub) !== -1 && h0.indexOf('adsAgeOpen()') !== -1,
-       '(24) başlangıçta çizilen satır beyan istiyor');
-    /* Gerçek kullanıcı yolu: satır → beyan ekranı → alan → Kaydet. */
-    a.R('adsAgeOpen();');
+    /* Çizilen düğme durumunu data-ad ile taşıyor: metni her durumda "+"
+       olduğu için yeniden çizimin gerçekten olduğunu gösteren tek işaret o. */
+    ok(h0.indexOf('data-ad="age"') !== -1 && h0.indexOf('adsRewardOpen()') !== -1,
+       '(24) başlangıçta çizilen düğme beyan bekliyor');
+    /* Gerçek kullanıcı yolu: + → beyan ekranı → alan → Kaydet. */
+    a.R('adsRewardOpen();');
     ok(a.R("document.getElementById('modal').classList.contains('open')") === true,
        '(24) beyan ekranı açıldı');
     a.R("document.getElementById('adAgeInp').value='" + AD_Y_OK + "';");
@@ -2268,15 +2312,14 @@ async function tAdAgeGate() {
     /* Native cevap HÂLÂ bekletiliyor. */
     ok(fake.stat.asks === 1 && a.R("ADS.sdk!=='on'") === true, '(24) native cevap hâlâ bekliyor');
     const h1 = a.R("document.getElementById('view').innerHTML");
-    ok(h1.indexOf(askSub) === -1, '(24) eski "doğum yılın sorulacak" metni ekranda kalmadı');
-    ok(h1.indexOf('adsAgeOpen()') === -1, '(24) beyan ekranını yeniden açan tıklama yolu kalmadı');
-    ok(h1.indexOf('adsWatch()') === -1, '(24) tutulamayacak bir reklam sözü de çizilmedi');
+    ok(h1.indexOf('data-ad="age"') === -1, '(24) eski "beyan bekleniyor" hâli ekranda kalmadı');
+    ok(h1.indexOf('data-ad="go"') === -1, '(24) tutulamayacak bir reklam sözü de çizilmedi');
     ok(h1.indexOf('undefined') === -1 && h1.indexOf('[object') === -1, '(24) ekran bozulmadı');
     /* Tek dokunuş tek işlem: ikinci bir izin turu ya da çift beyan yazımı yok. */
     ok(fake.stat.asks === 1 && fake.stat.forms === 0, '(24) çift işlem başlamadı');
     fake.finishAsk(); await settle();
     const h2 = a.R("document.getElementById('view').innerHTML");
-    ok(h2.indexOf('adsWatch()') !== -1, '(24) akış bitince ödül satırı çizildi');
+    ok(h2.indexOf('data-ad="go"') !== -1, '(24) akış bitince ödül düğmesi açık çizildi');
     ok(a.R('adsRowState()') === 'go', '(24) durum da açık');
   }
 
@@ -2453,6 +2496,381 @@ async function tPrivacyFeedback() {
   }
 }
 
+/* ================= [22] SEZON GEÇİŞİ REKLAMI =================
+   Ölçülen sözleşme:
+
+   - Geçiş noktaları SEZON MOTORUNDAN geliyor, sabit bir hafta sayısından değil:
+     sezon ortası core.js midWeek(), sezon sonu S.week > totalWeeks().
+   - Kariyer/sezon başına en fazla BİRER gösterim; işaret kayda save()'den önce
+     düşüyor, bu yüzden yeniden çizim / yeniden yükleme / yeniden açılış aynı
+     geçişi ikinci kez üretmiyor.
+   - Uygun yaş beyanı ve canRequestAds olmadan ne hazırlama ne gösterim var.
+   - Hazır reklam yoksa geçiş BEKLEMİYOR ve o reklam sonradan açılmıyor.
+   - Ödüllü reklam / izin formu ile çakışmıyor.
+   - Gösterimin kapanışı ya da hatası sezon ilerlemesine HİÇ dokunmuyor.
+
+   Taklit, gerçek eklentinin gözlenen davranışını taşıyor: prepareInterstitial
+   yüklenince çözülüyor, showInterstitial ise KAPANIŞTA değil gösterim
+   başlayınca. Neyin gerçekten reklam gösterdiği ancak cihazda ölçülür; burada
+   ölçülen şey köprüye hangi çağrının gittiği. */
+
+/* Haftayı geçişin bir öncesine kurup tek bir nextWeek() koşturuyoruz. Yirmi
+   haftayı simüle etmenin ölçülen şeye kattığı bir şey yok: test geçiş
+   TESPİTİNİ ölçüyor, sezon simülasyonunu değil (o [8]'de). */
+async function atMid(a) { a.R('S.week=midWeek()-1;nextWeek();'); await tick(); }
+async function atEnd(a) { a.R('S.week=totalWeeks();nextWeek();'); await tick(); }
+
+async function tSeasonBreakAds() {
+  console.log('\n[22] sezon geçişi reklamı: iki nokta, birer kez, geçiş beklemiyor');
+
+  /* (1) İKİ GEÇİŞ, İKİ GÖSTERİM — ve ikisi de gerçekten o noktada. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a);
+    ok(await a.R('adsInit()') === 'ready', '(1) SDK hazır');
+    await tick();
+    ok(a.R('ADS.iSt') === 'ready', '(1) geçiş reklamı ÖNCEDEN yüklendi');
+    ok(fake.stat.iprepares === 1, '(1) tek hazırlama çağrısı');
+    ok(fake.stat.iprepOpts[0].isTesting === true
+      && fake.stat.iprepOpts[0].adId === a.R('ADS.iUnit'),
+      '(1) Google test birimi ve isTesting:true ile istendi');
+    ok(a.R('ADS.iUnit') === 'ca-app-pub-3940256099942544/1033173712',
+      '(1) birim Google belgesindeki ÖRNEK interstitial birimi');
+
+    const se = a.R('S.season'), mid = a.R('midWeek()');
+    await atMid(a);
+    ok(a.R('S.week') === mid, '(1) sezon ortası geçişi gerçekten oldu');
+    ok(fake.stat.ishows === 1, '(1) sezon ortasında bir gösterim');
+    ok(a.R('S.adb.m') === se, '(1) hak biten sezona işaretlendi');
+    ok(a.R("adsBusy()") === 'inter', '(1) gösterim sürerken kilit kapalı');
+
+    fake.emit('interstitialAdDismissed'); await tick();
+    ok(a.R('ADS.iSt') === 'ready', '(1) kapanışta kilit açıldı ve sonraki kuruldu');
+    ok(fake.stat.iprepares === 2, '(1) bir sonraki geçiş için yeniden yüklendi');
+
+    await atEnd(a);
+    ok(a.R('S.season') === se + 1, '(1) sezon gerçekten değişti');
+    ok(fake.stat.ishows === 2, '(1) sezon sonunda ikinci gösterim');
+    ok(a.R('S.adb.e') === se, '(1) hak BİTEN sezona yazıldı, yenisine değil');
+  }
+
+  /* (2) AYNI GEÇİŞ İKİNCİ KEZ REKLAM DOĞURMUYOR — yeniden çizim, aynı noktaya
+         yeniden gelme ve yeniden yükleme. */
+  {
+    const disk = newDisk(), ls = {};
+    const a = session(disk, ls, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    const se = a.R('S.season');
+    await atMid(a);
+    ok(fake.stat.ishows === 1, '(2) ilk geçişte bir gösterim');
+    fake.emit('interstitialAdDismissed'); await tick();
+
+    a.R('render();render();');
+    ok(fake.stat.ishows === 1, '(2) yeniden çizim reklam doğurmadı');
+
+    /* Aynı sezonda aynı noktaya yeniden gelmek (hangi yolla olursa olsun). */
+    await atMid(a);
+    ok(fake.stat.ishows === 1, '(2) aynı geçiş ikinci kez reklam doğurmadı');
+    ok(a.R("adBreakClaim('m'," + se + ")") === '', '(2) hak yeniden verilmiyor');
+
+    a.R('save();'); await a.R('saveDrain()');
+    const b = session(disk, ls, {});
+    await b.booted;
+    await b.R('loadSlot(1)');
+    const fake2 = fakeAdMobAged(b);
+    await b.R('adsInit()'); await tick();
+    ok(b.R('S.adb.m') === se, '(2) işaret kayıttan geri geldi');
+    await atMid(b);
+    ok(fake2.stat.ishows === 0, '(2) uygulamayı yeniden açmak da doğurmadı');
+  }
+
+  /* (3) HAZIR REKLAM YOKSA GEÇİŞ BEKLEMİYOR — ve o reklam sonradan açılmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { interPrepareHold: true });
+    await a.R('adsInit()'); await tick();
+    ok(a.R('ADS.iSt') === 'load', '(3) yükleme hâlâ uçuşta');
+
+    const se = a.R('S.season'), mid = a.R('midWeek()');
+    await atMid(a);
+    ok(a.R('S.week') === mid, '(3) geçiş BEKLEMEDİ, hafta ilerledi');
+    ok(fake.stat.ishows === 0, '(3) gösterim yok');
+    ok(a.R('S.adb.m') === se, '(3) hak yine de o geçişte yandı');
+
+    fake.finishInterPrepare(); await tick(); await tick();
+    ok(a.R('ADS.iSt') === 'ready', '(3) reklam sonradan yüklendi');
+    ok(fake.stat.ishows === 0, '(3) GECİKMELİ gösterim olmadı');
+    a.R('render();'); await tick();
+    ok(fake.stat.ishows === 0, '(3) sonraki çizimlerde de açılmadı');
+
+    await atEnd(a);
+    ok(fake.stat.ishows === 1, '(3) yüklü reklam ancak SONRAKİ geçişte gösterildi');
+  }
+
+  /* (4) YÜKLEME HATASI DÖNGÜ KURMUYOR. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { interLoadFail: true });
+    await a.R('adsInit()'); await tick(); await tick();
+    ok(a.R('ADS.iSt') === 'off', '(4) yükleme düştü');
+    const n0 = fake.stat.iprepares;
+    a.R('render();render();render();'); await tick();
+    ok(fake.stat.iprepares === n0, '(4) çizim yeniden deneme başlatmadı');
+    await atMid(a);
+    ok(fake.stat.ishows === 0, '(4) gösterim yok');
+    ok(fake.stat.iprepares === n0 + 1, '(4) yalnız geçişin kendisi bir deneme daha açtı');
+  }
+
+  /* (5) KAPILAR — yaş beyanı ve canRequestAds. İkisi de AYRI terim. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMob(a.ctx, {});                 // beyan YOK
+    ok(await a.R('adsInit()') === 'noage', '(5) yaş kapısı kapalı');
+    await atMid(a); await atEnd(a);
+    ok(fake.stat.iprepares === 0 && fake.stat.ishows === 0,
+      '(5) beyan yokken ne hazırlama ne gösterim');
+  }
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { consent: { canRequestAds: false, status: 'REQUIRED' },
+                                    formConsent: { canRequestAds: false } });
+    await a.R('adsInit()'); await tick();
+    ok(a.R('adsEligible()') === false, '(5) canRequestAds false');
+    await atMid(a); await atEnd(a);
+    ok(fake.stat.iprepares === 0 && fake.stat.ishows === 0,
+      '(5) rıza yokken ne hazırlama ne gösterim');
+  }
+
+  /* (6) ÇAKIŞMA — ödüllü reklam sürerken geçiş reklamı açılmıyor; geçiş reklamı
+         ekrandayken ödüllü reklam ve izin formu başlamıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { prepareHold: true });
+    await a.R('adsInit()'); await tick();
+    a.R('adsWatch();'); await tick();
+    ok(a.R('adsBusy()') === 'ad', '(6) ödüllü reklam kilidi kapalı');
+    await atMid(a);
+    ok(fake.stat.ishows === 0, '(6) geçiş reklamı ödüllü reklamın üstüne açılmadı');
+    ok(a.R('ADS.iSt') === 'ready', '(6) yüklü reklam yerinde kaldı');
+  }
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a, { consent: { privacyOptionsRequirementStatus: 'REQUIRED' } });
+    await a.R('adsInit()'); await tick();
+    await atMid(a);
+    ok(a.R('ADS.iSt') === 'show' && a.R('adsBusy()') === 'inter', '(6) geçiş reklamı ekranda');
+    const shows0 = fake.stat.shows, privs0 = fake.stat.privs;
+    a.R('adsWatch();'); await tick();
+    ok(fake.stat.shows === shows0, '(6) ödüllü reklam başlamadı');
+    await a.R('adsPrivacy()');
+    ok(fake.stat.privs === privs0, '(6) gizlilik formu açılmadı');
+    ok(a.R('adsRowState()') === 'busy', '(6) ödül düğmesi meşgul görünüyor');
+  }
+
+  /* (7) KAPANIŞ VE HATA SEZON İLERLEMESİNE DOKUNMUYOR. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    await atEnd(a);
+    ok(fake.stat.ishows === 1, '(7) sezon sonu gösterimi başladı');
+    const snap = a.R('JSON.stringify({se:S.season,wk:S.week,tw:S.tw,cash:S.cash,n:S.players.length})');
+    fake.emit('interstitialAdDismissed');
+    fake.emit('interstitialAdFailedToShow', { code: 3, message: 'x' });
+    fake.emit('interstitialAdFailedToLoad', { code: 3, message: 'x' });
+    await tick(); await tick();
+    ok(a.R('JSON.stringify({se:S.season,wk:S.week,tw:S.tw,cash:S.cash,n:S.players.length})') === snap,
+      '(7) kapanış/hata sezonu, haftayı, kasayı ve dünyayı kıpırdatmadı');
+    ok(a.R('ADS.iSt') === 'ready', '(7) kilit bir kez açıldı, sonraki kuruldu');
+  }
+
+  /* (8) SATIN ALINMIŞ "OTOMATİK REKLAMLARI KALDIR" GEÇİŞ REKLAMINI KAPATIYOR.
+
+         Defter burada ELLE kuruluyor. Üretimde bunu yazan hiçbir kod yolu yok
+         ([23] (6) bunu ayrıca tarıyor); bu senaryonun ölçtüğü şey satın almanın
+         kendisi değil, OKUMA YERİNİN gerçekten bağlı olduğu. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R("PREFS.iap={t:{'test-token':'noads'}};savePrefs();");
+    ok(a.R('iapNoAds()') === true, '(8) defter okundu');
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    ok(fake.stat.iprepares === 0, '(8) hazırlama hiç yapılmadı');
+    await atMid(a); await atEnd(a);
+    ok(fake.stat.ishows === 0, '(8) iki geçişte de gösterim yok');
+    /* Ödüllü reklam ETKİLENMİYOR: isteğe bağlı ve karşılığında ödül var. */
+    ok(a.R('adsRowState()') === 'go', '(8) ödüllü reklam yolu açık kaldı');
+  }
+
+  /* (9) Eski kayıt: S.adb yokken ilk geçiş çalışıyor ve alanı kendisi kuruyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('delete S.adb;');
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    ok(a.R('S.adb===undefined') === true, '(9) alan gerçekten yok');
+    await atMid(a);
+    ok(fake.stat.ishows === 1, '(9) eski kayıtta da geçiş çalıştı');
+    ok(a.R('typeof S.adb') === 'object', '(9) alan yokken kuruldu');
+  }
+}
+
+/* ================= [23] MAĞAZA VE SATIN ALMA KAPSAMI =================
+   Ölçülen sözleşme: ürünler GÖRÜNÜR, satın alma KAPALI ve bu gizlenmiyor;
+   hiçbir yerel bayrak ücretli hak vermiyor; kapasite kariyer, reklam kaldırma
+   cihaz kapsamlı; kariyer başına kapasite tavanı +10; ve kapasite, kariyer
+   kayıt yuvasıyla karıştırılmıyor. */
+async function tShopAndIap() {
+  console.log('\n[23] mağaza: görünür ürünler, kapalı satın alma, kapsam ve tavan');
+
+  /* (1) BUGÜNKÜ HÂL — satın alma kapalı, hiçbir hak verilmiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    ok(a.R('IAP.wired') === false, '(1) satın alma akışı bağlı değil');
+    ok(a.R('iapAvailable()') === false, '(1) satın alma kullanılamıyor');
+    ok(a.R('iapWhy()') === 'nobill', '(1) neden: faturalandırma bağlı değil');
+    ok(a.R('iapCap()') === 0 && a.R('iapCapOwned()') === 0, '(1) satın alınmış kapasite yok');
+    ok(a.R('iapNoAds()') === false, '(1) reklam kaldırma alınmamış');
+    ok(a.R("IAP_PRODUCTS.every(p=>iapState(p.id)!=='go')") === true,
+      '(1) hiçbir ürün satın alınabilir durumda değil');
+  }
+
+  /* (2) EKRAN — beş ürün görünüyor, satın alma kapalı olduğu YAZIYOR, hiçbir
+         satın alma yolu çizilmiyor ve iki dil de eksiksiz. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    for (const lang of ['tr', 'en']) {
+      a.R("L='" + lang + "';");
+      const h = a.R('VIEWS.shop()');
+      ok(h.indexOf('undefined') === -1 && h.indexOf('NaN') === -1 && h.indexOf('[object') === -1,
+        '(2) ' + lang + ' ekranda sızıntı yok');
+      const miss = a.R("IAP_PRODUCTS.filter(p=>VIEWS.shop().indexOf(t(p.k))===-1).map(p=>p.id).join(',')");
+      ok(miss === '', '(2) ' + lang + ' beş ürünün hepsi görünüyor', miss);
+      ok(h.indexOf(a.R("t('shopOff')")) !== -1,
+        '(2) ' + lang + ' satın almanın kapalı olduğu yazıyor');
+      /* Geliştirme açıklaması kullanıcıya GİTMİYOR: ödeme bağlantısı, doğrulama
+         ya da "hiçbir hak verilmez" gibi cümleler ekranda olmamalı. */
+      ok(!/ödeme bağlantısı|hak verilmez|Billing is not connected|grants anything/i.test(h),
+        '(2) ' + lang + ' geliştirme açıklaması ekranda yok');
+      ok(h.split(a.R("t('shopOff')")).length - 1 === 1,
+        '(2) ' + lang + ' durum cümlesi bir kez yazılıyor');
+      ok(h.replace(/on[a-z]+="[^"]*"/g, m => m.indexOf('iapBuy') === -1 ? '' : m).indexOf('iapBuy') === -1,
+        '(2) ' + lang + ' hiçbir satın alma yolu çizilmedi');
+      ok(h.indexOf('₺') === -1 && h.indexOf('$') === -1 && !/\d+[,.]\d\d\s*€/.test(h),
+        '(2) ' + lang + ' fiyat yazılmıyor — Play verecek');
+    }
+    a.R("L='tr';");
+  }
+
+  /* (3) MAĞAZAYI ÇİZMEK HİÇBİR ŞEYE DOKUNMUYOR. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const s0 = a.R('JSON.stringify(S)'), p0 = a.R('JSON.stringify(PREFS)');
+    a.R("pushV('shop');render();VIEWS.shop();");
+    a.R("IAP_PRODUCTS.forEach(p=>iapBuy(p.id));");
+    ok(a.R('JSON.stringify(S)') === s0, '(3) kariyer kaydı değişmedi');
+    ok(a.R('JSON.stringify(PREFS)') === p0, '(3) cihaz tercihleri değişmedi');
+    ok(a.R('iapCap()') === 0, '(3) iapBuy hiçbir hak vermedi');
+  }
+
+  /* (4) TAVAN — defter fazlasını taşısa bile oyuna giren sayı +10'u aşmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R("S.iap={t:{a:'cap5',b:'cap3',c:'cap1'}};");
+    ok(a.R('iapCapOwned()') === 9, '(4) toplam türetildi');
+    ok(a.R('iapCapLeft()') === 1, '(4) kalan hak doğru');
+    a.R("S.iap={t:{a:'cap10',b:'cap10',c:'cap5'}};");
+    ok(a.R('iapCapOwned()') === 10, '(4) tavan bağlıyor');
+    ok(a.R('iapCapLeft()') === 0, '(4) kalan hak sıfır');
+    ok(a.R("iapState('cap1')") === 'full', '(4) tavanda ürün "doldu" diyor');
+    const base = a.R("2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')");
+    ok(a.R('maxClients()') === base + 10, '(4) kapasite formüle TEK toplama olarak giriyor');
+    a.R('delete S.iap;');
+    ok(a.R('maxClients()') === base, '(4) defter yokken eski sonuç');
+  }
+
+  /* (5) KAPSAM — kariyer defteri reklam kapatmıyor, cihaz defteri kapasite
+         vermiyor. İkisi ayrı kutu ve karışmıyorlar. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R("S.iap={t:{x:'noads'}};PREFS.iap={t:{y:'cap10'}};savePrefs();");
+    ok(a.R('iapNoAds()') === false, '(5) kariyer defterindeki noads cihazı kapatmıyor');
+    ok(a.R('iapCapOwned()') === 0, '(5) cihaz defterindeki kapasite kariyere geçmiyor');
+    a.R("S.iap={t:{x:'cap3'}};PREFS.iap={t:{y:'noads'}};savePrefs();");
+    ok(a.R('iapCapOwned()') === 3 && a.R('iapNoAds()') === true, '(5) doğru kutular okunuyor');
+    /* Kariyer kapsamı gerçekten KARİYERE ait: ikinci kariyerde yok. */
+    await careerIn(a, 2);
+    ok(a.R('iapCapOwned()') === 0, '(5) diğer kariyerde kapasite yok');
+    ok(a.R('iapNoAds()') === true, '(5) cihaz kapsamı bütün kariyerlerde');
+  }
+
+  /* (6) SIZINTI TARAMASI — üretim kodunda deftere YAZAN hiçbir yol yok. */
+  {
+    const bad = [];
+    for (const f of FILES) {
+      const txt = fs.readFileSync(path.join(ROOT, 'js', f + '.js'), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      if (/\bS\.iap\s*=/.test(txt)) bad.push(f + ': S.iap yazımı');
+      if (/PREFS\.iap\s*=/.test(txt)) bad.push(f + ': PREFS.iap yazımı');
+      if (/\.iap\.t\s*\[[^\]]*\]\s*=/.test(txt)) bad.push(f + ': deftere token yazımı');
+    }
+    ok(bad.length === 0, '(6) hiçbir üretim dosyası defteri yazmıyor', bad.join(' | '));
+    const iap = fs.readFileSync(path.join(ROOT, 'js', 'iap.js'), 'utf8');
+    ok(/wired:\s*false/.test(iap), '(6) akış bağlı değil olarak işaretli');
+    ok(!/ADS_TESTCFG|debugGeography/.test(iap), '(6) mağaza reklam yapılandırmasına karışmıyor');
+  }
+
+  /* (7) KAPASİTE ≠ KAYIT YUVASI. Ürünler müşteri kapasitesini büyütüyor, yuva
+         sayısı sabit üç kalıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    ok(a.R('SLOTS') === 3, '(7) üç kayıt yuvası');
+    a.R("S.iap={t:{a:'cap10'}};");
+    ok(a.R('SLOTS') === 3, '(7) kapasite ürünü yuva sayısını değiştirmedi');
+    ok(a.R('iapCapOwned()') === 10, '(7) değiştirdiği şey müşteri kapasitesi');
+    ok(a.R("IAP_PRODUCTS.filter(p=>p.cap).map(p=>p.cap).join(',')") === '1,3,5,10',
+      '(7) paketler +1/+3/+5/+10');
+    ok(a.R('IAP.capMax') === 10, '(7) kariyer başına tavan +10');
+  }
+
+  /* (8) KAPSAM METİNLERİ — her ürün hangi kutuya işlendiğini EKRANDA söylüyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    for (const lang of ['tr', 'en']) {
+      a.R("L='" + lang + "';");
+      const h = a.R('VIEWS.shop()');
+      ok(h.indexOf(a.R("t('shopScopeCareer')")) !== -1, '(8) ' + lang + ' kariyer kapsamı yazıyor');
+      ok(h.indexOf(a.R("t('shopScopeDevice')")) !== -1, '(8) ' + lang + ' cihaz kapsamı yazıyor');
+      ok(h.indexOf(a.R("t('shopCapNote')")) !== -1, '(8) ' + lang + ' kapasite/yuva ayrımı yazıyor');
+      ok(h.indexOf(a.R("t('shopScopeCareerSub')")) !== -1,
+        '(8) ' + lang + ' kariyer silinince kapasitenin gittiği yazıyor');
+      ok(h.indexOf(a.R("t('shopNoAdsKeep')")) !== -1, '(8) ' + lang + ' ödüllü reklamın kaldığı yazıyor');
+      ok(h.indexOf(a.R("t('shopCapCeil').replace('{n}',IAP.capMax)")) !== -1,
+        '(8) ' + lang + ' tavan yazıyor');
+    }
+    a.R("L='tr';");
+  }
+}
+
 /* Oturum kurucusu başka doğrulama betiklerinden de kullanılabilsin (tam uygulama
    taraması, çok sezonlu regresyon). Doğrudan çalıştırıldığında testler koşuyor. */
 module.exports = { session, newDisk, makeEl, waitFor, tick };
@@ -2465,7 +2883,8 @@ if (require.main !== module) return;
                  tSlotDeleteAndCoalesce, tCareerIdentity, tCidLegacyMigration,
                  tCidSlotsAndCapacity, tRewardDailyRight, tRewardCareersAndMidnight,
                  tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions,
-                 tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback];
+                 tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
+                 tSeasonBreakAds, tShopAndIap];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

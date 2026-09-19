@@ -184,6 +184,28 @@ function simWeek(){
   });
   simCups();
 }
+/* ================= SEZON GEÇİŞİ REKLAM ARASI =================
+   İki gerçek geçiş var ve ikisi de FİKSTÜRDEN türüyor, sabit bir hafta
+   sayısından değil: sezon ortası transfer döneminin açıldığı hafta (core.js
+   midWeek(), yani ceil(totalWeeks()/2)+1) ve sezonun bittiği an (S.week
+   totalWeeks()'i aşınca). Lig uzunluğu değişirse ikisi de kendiliğinden kayar.
+
+   Hak KARİYER/SEZON BAŞINA BİRER. İşaret kariyer kaydında (S.adb) duruyor ve
+   save()'den ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi
+   ya da uygulamanın yeniden açılması aynı geçişi ikinci kez üretemesin.
+
+   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa geçiş beklemiyor ve o
+   geçişin hakkı orada yanıyor — alternatifi, reklamı sonradan alakasız bir
+   ekranda açmaktı ve istenen tam olarak bunun olmaması.
+
+   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor. */
+function adBreakClaim(kind,se){
+  if(!S)return '';
+  const b=(S.adb&&typeof S.adb==='object')?S.adb:(S.adb={});
+  if(b[kind]===se)return '';
+  b[kind]=se;
+  return kind;
+}
 function nextWeek(){
   if(!S.agent){render();return;}
   S.tw=(S.tw||0)+1;
@@ -299,6 +321,10 @@ function nextWeek(){
   }
   S.week++;
   const seasonOver=S.week>totalWeeks();
+  /* Reklam arası hakkı endSeason()'dan ÖNCE isteniyor: endSeason() S.season'ı
+     artırıyor, sonra sorulsaydı biten sezonun hakkı yeni sezona yazılırdı. */
+  const brk=seasonOver?adBreakClaim('e',S.season)
+    :(S.week===midWeek()?adBreakClaim('m',S.season):'');
   if(seasonOver)endSeason();
   const newN=S.inbox.filter(m=>!m.read).length-unreadBefore;
   if(newN>0&&cur().v!=='inbox'&&cur().v!=='dash')toast(newN+' '+t('newNotifsT'));
@@ -316,6 +342,12 @@ function nextWeek(){
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
+  /* EN SON: sezon ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
+     pencereleri sıraya girdi. Reklamın hiçbir sonucu buraya geri dönmüyor —
+     kapanış ve hata yalnız js/ads.js'teki kilidi açıyor, oyun durumuna hiç
+     dokunmuyor — bu yüzden bir gösterim sezon ilerlemesini ikinci kez
+     çalıştıramaz. Hazır reklam yoksa adsInterShow() sessizce 'none' döner. */
+  if(brk&&typeof adsInterShow==='function')adsInterShow();
 }
 function endSeason(){
   const myLgs=new Set(S.clients.map(id=>teamOf(byId(id)).lg));

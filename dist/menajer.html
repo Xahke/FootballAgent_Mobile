@@ -72,6 +72,8 @@ html[data-theme="saha"] .htitle{flex:1;min-width:0}
 html[data-theme="saha"] .htitle .t1{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html[data-theme="saha"] .htitle .t2{font-size:10.5px;color:var(--txt3);margin-top:1px;font-variant-numeric:tabular-nums;font-weight:600;
   text-transform:uppercase;letter-spacing:.05em}
+html[data-theme="saha"] .htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="saha"] body[data-view="settings"] header .hstat,html[data-theme="saha"] body[data-view="shop"] header .hstat,html[data-theme="saha"] body[data-view="atlas"] header .hstat{display:none}
 html[data-theme="saha"] .hstat{display:flex;align-items:center;gap:5px;background:var(--sur2);border-radius:10px;
   padding:6px 9px;flex-shrink:0;line-height:1}
 html[data-theme="saha"] .hstat svg{width:13px;height:13px;flex-shrink:0}
@@ -603,6 +605,24 @@ html[data-theme="saha"] .hmCoin svg{width:23px;height:23px}
 html[data-theme="saha"] .hmBalV{font-size:19.5px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   white-space:nowrap}
 html[data-theme="saha"] .hmBalV.neg{color:var(--bad)}
+html[data-theme="saha"] .hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+html[data-theme="saha"] .hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+html[data-theme="saha"] .hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+html[data-theme="saha"] .hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+html[data-theme="saha"] .hmPlus:active{transform:scale(.9)}
+html[data-theme="saha"] .rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+html[data-theme="saha"] .rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+html[data-theme="saha"] .rwAmtI svg{width:26px;height:26px}
+html[data-theme="saha"] .rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+html[data-theme="saha"] .rwState>span{white-space:nowrap}
+html[data-theme="saha"] .rwState b{color:var(--txt);font-weight:800;text-align:right}
+html[data-theme="saha"] .rwState.on b{color:var(--acc)}
 html[data-theme="saha"] .hmBalL{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2)}
 html[data-theme="saha"] .hmAdv{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;gap:15px;
   min-height:98px;padding:18px 17px;margin-bottom:22px;border:none;border-radius:20px;cursor:pointer;
@@ -646,12 +666,6 @@ html[data-theme="saha"] .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:
 html[data-theme="saha"] .hmAg.onb b{font-family:var(--cond);font-size:15.5px;font-weight:800;letter-spacing:.01em;
   color:var(--txt);line-height:1.15}
 html[data-theme="saha"] .hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
-html[data-theme="saha"] .hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-html[data-theme="saha"] .hmAg.ad b{font-family:var(--cond);font-size:15.5px;font-weight:800;letter-spacing:.01em;
-  color:var(--txt);line-height:1.15}
-html[data-theme="saha"] .hmAg.ad i{font-style:normal;font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
-html[data-theme="saha"] .hmAg.ad[disabled]{opacity:.55;cursor:default}
-html[data-theme="saha"] .hmAg.ad[disabled]:active{background:none;transform:none}
 html[data-theme="saha"] .hmEmpty{background:var(--sur2);border-radius:16px;padding:19px 15px;margin-bottom:10px;
   box-shadow:inset 0 0 0 1px var(--line);color:var(--txt2);font-size:13.5px;text-align:center}
 html[data-theme="saha"] .hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0 14px}
@@ -2147,6 +2161,94 @@ html[data-theme="saha"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px 
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 html[data-theme="saha"] .adAgeInp:focus{border-color:var(--txt3)}
 html[data-theme="saha"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+html[data-theme="saha"] .shpOff{display:flex;align-items:center;gap:9px;margin-bottom:13px;padding:9px 11px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:12.5px;line-height:1.35;box-shadow:inset 0 0 0 1px rgba(230,162,60,.22)}
+html[data-theme="saha"] .shpOff svg{width:16px;height:16px;flex-shrink:0}
+html[data-theme="saha"] .shpSum{display:flex;align-items:stretch;gap:13px;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:16px;
+  box-shadow:var(--sh)}
+html[data-theme="saha"] .shpSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="saha"] .shpSumP{flex:0 0 auto;min-width:84px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;text-align:center}
+html[data-theme="saha"] .shpSumV{font-family:var(--cond);font-weight:800;font-size:33px;line-height:1;letter-spacing:-.03em}
+html[data-theme="saha"] .shpSumL{font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.2;overflow-wrap:anywhere}
+html[data-theme="saha"] .shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px}
+html[data-theme="saha"] .shpLeft{font-family:var(--cond);font-weight:700;font-size:15.5px;line-height:1.2;
+  letter-spacing:.01em;color:var(--txt);overflow-wrap:anywhere}
+html[data-theme="saha"] .shpPips{display:flex;gap:3px}
+html[data-theme="saha"] .shpPips i{flex:1 1 0;height:7px;border-radius:2.5px;background:var(--sur3);
+  box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .shpPips i.on{background:linear-gradient(180deg,var(--acc),var(--accD));box-shadow:none}
+html[data-theme="saha"] .shpCeil{font-size:11.5px;line-height:1.35;color:var(--txt3);overflow-wrap:anywhere}
+html[data-theme="saha"] .shpLead{font-size:12.5px;line-height:1.45;color:var(--txt2);margin:-3px 2px 10px}
+html[data-theme="saha"] .shpRules{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:11px 12px;
+  border-radius:var(--r-s);background:var(--sur2);box-shadow:inset 0 0 0 1px var(--line)}
+html[data-theme="saha"] .shpRules p{font-size:12px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html[data-theme="saha"] .shpRules .tag{flex:0 0 auto}
+html[data-theme="saha"] .shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:20px}
+html[data-theme="saha"] .shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:14px 10px 0;background:linear-gradient(180deg,var(--sur2),var(--sur) 62%);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+html[data-theme="saha"] .shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+html[data-theme="saha"] .shpIc svg{width:34px;height:34px}
+html[data-theme="saha"] .shpN{display:block;font-family:var(--cond);font-weight:800;font-size:41px;line-height:1;
+  letter-spacing:-.035em;margin-top:9px;font-variant-numeric:tabular-nums}
+html[data-theme="saha"] .shpN i{font-style:normal;color:var(--acc);letter-spacing:-.02em}
+html[data-theme="saha"] .shpL{display:block;font-family:var(--cond);font-weight:700;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);line-height:1.25;margin:6px 0 12px;overflow-wrap:anywhere}
+html[data-theme="saha"] .shpNote{display:block;font-size:11px;line-height:1.35;color:var(--warn);margin:-6px 0 11px;
+  overflow-wrap:anywhere}
+html[data-theme="saha"] .shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -10px 0;
+  width:calc(100% + 20px);min-height:42px;padding:8px 10px;border:none;background:var(--sur3);
+  color:var(--txt3);font-family:var(--cond);font-weight:700;font-size:12.5px;letter-spacing:.07em;
+  text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+html[data-theme="saha"] .shpBuy:not([disabled]){background:linear-gradient(148deg,#1c8f5e 0%,#137a4d 46%,#0d5f3c 100%);
+  color:#eafff5;cursor:pointer}
+html[data-theme="saha"] .shpBuy:not([disabled]):active{transform:scale(.985)}
+html[data-theme="saha"] .shpCard.out{background:var(--sur);border-style:dashed;border-color:var(--line2)}
+html[data-theme="saha"] .shpCard.out .shpIc,html[data-theme="saha"] .shpCard.out .shpN,html[data-theme="saha"] .shpCard.out .shpN i{color:var(--txt3)}
+html[data-theme="saha"] .shpCard.top{border-color:rgba(233,188,90,.26)}
+html[data-theme="saha"] .shpCard.top:not(.out) .shpIc,html[data-theme="saha"] .shpCard.top:not(.out) .shpN i{color:var(--gold)}
+html[data-theme="saha"] .shpAd{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh)}
+html[data-theme="saha"] .shpAdH{display:flex;align-items:center;gap:12px;padding:14px 14px 0}
+html[data-theme="saha"] .shpAdIc{width:50px;height:50px;flex:0 0 50px;border-radius:15px;display:flex;align-items:center;
+  justify-content:center;background:var(--sur2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="saha"] .shpAdIc svg{width:28px;height:28px}
+html[data-theme="saha"] .shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html[data-theme="saha"] .shpAdT b{font-family:var(--cond);font-weight:800;font-size:19px;line-height:1.14;
+  letter-spacing:-.01em;overflow-wrap:anywhere}
+html[data-theme="saha"] .shpAdB{display:flex;flex-direction:column;gap:8px;padding:13px 14px 14px}
+html[data-theme="saha"] .shpAdB p{font-size:12.5px;line-height:1.5;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="saha"] .shpAdB p.keep{padding:9px 11px;border-radius:var(--r-s);background:var(--acc-soft);color:var(--acc)}
+html[data-theme="saha"] .shpAdB .shpNote{margin:0}
+html[data-theme="saha"] .shpBuy.wide{margin:2px 0 0;width:100%;border-radius:13px;min-height:48px;font-size:14px}
+@media (max-width:374px){html[data-theme="saha"] .shpSum{padding:12px 11px;gap:11px}
+html[data-theme="saha"] .shpSumP{min-width:76px}
+html[data-theme="saha"] .shpSumV{font-size:30px}
+html[data-theme="saha"] .shpGrid{gap:8px}
+html[data-theme="saha"] .shpCard{padding:13px 8px 0}
+html[data-theme="saha"] .shpIc svg{width:31px;height:31px}
+html[data-theme="saha"] .shpN{font-size:37px}
+html[data-theme="saha"] .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);
+    font-size:12px;letter-spacing:.05em}
+html[data-theme="saha"] .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+html[data-theme="saha"] .shpAdH{gap:10px}
+html[data-theme="saha"] .shpAdIc{width:44px;height:44px;flex:0 0 44px;border-radius:13px}
+html[data-theme="saha"] .shpAdIc svg{width:25px;height:25px}
+html[data-theme="saha"] .shpAdT b{font-size:17.5px}}
+@media (max-width:339px){html[data-theme="saha"] .shpGrid{grid-template-columns:1fr;gap:9px}
+html[data-theme="saha"] .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:11px}
+html[data-theme="saha"] .shpIc{flex:0 0 auto;padding:12px 0 12px 13px}
+html[data-theme="saha"] .shpN{margin:0;font-size:34px;flex:0 0 auto}
+html[data-theme="saha"] .shpL{margin:0;flex:1 1 0}
+html[data-theme="saha"] .shpNote{display:none}
+html[data-theme="saha"] .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch}
+html[data-theme="saha"] .shpBuy.wide{flex:none;width:100%}}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
@@ -2200,6 +2302,8 @@ html[data-theme="gazete"] .htitle{flex:1;min-width:0}
 html[data-theme="gazete"] .htitle .t1{font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:-.015em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
 html[data-theme="gazete"] .htitle .t2{font-size:11.5px;color:var(--txt3);margin-top:1px;font-variant-numeric:tabular-nums;font-weight:400}
+html[data-theme="gazete"] .htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="gazete"] body[data-view="settings"] header .hstat,html[data-theme="gazete"] body[data-view="shop"] header .hstat,html[data-theme="gazete"] body[data-view="atlas"] header .hstat{display:none}
 html[data-theme="gazete"] .hstat{display:flex;align-items:baseline;gap:5px;padding:0;flex-shrink:0;line-height:1.1;
   border-left:1px solid var(--line);padding-left:10px;min-height:28px;align-items:center}
 html[data-theme="gazete"] .hstat svg{display:none}
@@ -2657,6 +2761,24 @@ html[data-theme="gazete"] .hmCoin{display:none}
 html[data-theme="gazete"] .hmBalV{font-size:19px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
   white-space:nowrap;color:var(--txt);line-height:1.2}
 html[data-theme="gazete"] .hmBalV.neg{color:var(--bad)}
+html[data-theme="gazete"] .hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+html[data-theme="gazete"] .hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+html[data-theme="gazete"] .hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+html[data-theme="gazete"] .hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+html[data-theme="gazete"] .hmPlus:active{transform:scale(.9)}
+html[data-theme="gazete"] .rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+html[data-theme="gazete"] .rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] .rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+html[data-theme="gazete"] .rwAmtI svg{width:26px;height:26px}
+html[data-theme="gazete"] .rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+html[data-theme="gazete"] .rwState>span{white-space:nowrap}
+html[data-theme="gazete"] .rwState b{color:var(--txt);font-weight:800;text-align:right}
+html[data-theme="gazete"] .rwState.on b{color:var(--acc)}
 html[data-theme="gazete"] .hmBalL{font-size:10.5px;font-weight:400;letter-spacing:.02em;color:var(--txt3);line-height:1.2}
 html[data-theme="gazete"] .hmAdv{position:relative;width:100%;display:flex;align-items:center;gap:12px;
   min-height:82px;padding:11px 13px;margin-bottom:11px;border:none;border-radius:var(--r-s);
@@ -2700,11 +2822,6 @@ html[data-theme="gazete"] .hmAg.onb .hmAgIc{color:var(--acc)}
 html[data-theme="gazete"] .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
 html[data-theme="gazete"] .hmAg.onb b{font-family:var(--serif);font-size:14.5px;font-weight:700;color:var(--txt);line-height:1.2}
 html[data-theme="gazete"] .hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="gazete"] .hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-html[data-theme="gazete"] .hmAg.ad b{font-family:var(--serif);font-size:14.5px;font-weight:700;color:var(--txt);line-height:1.2}
-html[data-theme="gazete"] .hmAg.ad i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="gazete"] .hmAg.ad[disabled]{opacity:.55;cursor:default}
-html[data-theme="gazete"] .hmAg.ad[disabled]:active{background:none;transform:none}
 html[data-theme="gazete"] .hmEmpty{background:var(--sur);border:1px solid var(--line2);border-radius:var(--r-s);
   padding:13px 11px;margin-bottom:7px;color:var(--txt3);font-size:13px;text-align:center}
 html[data-theme="gazete"] .hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:11px 0 9px}
@@ -3001,6 +3118,90 @@ html[data-theme="gazete"] .adAgeInp{width:100%;box-sizing:border-box;padding:12p
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 html[data-theme="gazete"] .adAgeInp:focus{border-color:var(--txt3)}
 html[data-theme="gazete"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+html[data-theme="gazete"] .shpOff{display:flex;align-items:center;gap:9px;margin-bottom:14px;padding:9px 11px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:13px;line-height:1.4;border:1px solid var(--line2)}
+html[data-theme="gazete"] .shpOff svg{width:16px;height:16px;flex-shrink:0}
+html[data-theme="gazete"] .shpSum{display:flex;align-items:stretch;gap:14px;background:var(--sur);
+  border:1px solid var(--n8);border-radius:var(--r);padding:13px 14px;margin-bottom:18px}
+html[data-theme="gazete"] .shpSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="gazete"] .shpSumP{flex:0 0 auto;min-width:86px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;text-align:center}
+html[data-theme="gazete"] .shpSumV{font-family:var(--serif);font-weight:700;font-size:31px;line-height:1;letter-spacing:-.03em}
+html[data-theme="gazete"] .shpSumL{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--txt3);
+  font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:9px}
+html[data-theme="gazete"] .shpLeft{font-family:var(--serif);font-weight:700;font-size:16px;line-height:1.25;
+  color:var(--txt);overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpPips{display:flex;gap:3px}
+html[data-theme="gazete"] .shpPips i{flex:1 1 0;height:8px;border-radius:1px;background:var(--n2);
+  border:1px solid var(--line2)}
+html[data-theme="gazete"] .shpPips i.on{background:var(--acc);border-color:var(--acc)}
+html[data-theme="gazete"] .shpCeil{font-size:12px;line-height:1.4;color:var(--txt3);overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpLead{font-size:13px;line-height:1.5;color:var(--txt2);margin:-4px 0 11px}
+html[data-theme="gazete"] .shpRules{display:flex;flex-direction:column;gap:8px;margin-bottom:13px;padding:11px 12px;
+  border-radius:var(--r-s);background:var(--n1);border:1px solid var(--line)}
+html[data-theme="gazete"] .shpRules p{font-size:12.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+html[data-theme="gazete"] .shpRules .tag{flex:0 0 auto}
+html[data-theme="gazete"] .shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:22px}
+html[data-theme="gazete"] .shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:15px 10px 0;background:var(--sur);border:1px solid var(--n8);
+  border-radius:var(--r);overflow:hidden}
+html[data-theme="gazete"] .shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+html[data-theme="gazete"] .shpIc svg{width:33px;height:33px}
+html[data-theme="gazete"] .shpN{display:block;font-family:var(--serif);font-weight:700;font-size:39px;line-height:1;
+  letter-spacing:-.04em;margin-top:9px}
+html[data-theme="gazete"] .shpN i{font-style:normal;color:var(--acc)}
+html[data-theme="gazete"] .shpL{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--txt3);font-weight:700;line-height:1.3;margin:7px 0 13px;overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpNote{display:block;font-size:11.5px;line-height:1.4;color:var(--warn);margin:-7px 0 12px;
+  overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -10px 0;
+  width:calc(100% + 20px);min-height:42px;padding:8px 10px;border:none;border-top:1px solid var(--line2);
+  background:var(--n1);color:var(--txt3);font-family:inherit;font-weight:700;font-size:12px;
+  letter-spacing:.09em;text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+html[data-theme="gazete"] .shpBuy:not([disabled]){background:var(--acc);border-top-color:var(--acc);color:var(--accT);cursor:pointer}
+html[data-theme="gazete"] .shpCard.out{border-style:dashed;border-color:var(--line2)}
+html[data-theme="gazete"] .shpCard.out .shpIc,html[data-theme="gazete"] .shpCard.out .shpN,html[data-theme="gazete"] .shpCard.out .shpN i{color:var(--txt3)}
+html[data-theme="gazete"] .shpCard.top{box-shadow:0 0 0 1px var(--n8) inset}
+html[data-theme="gazete"] .shpAd{background:var(--sur);border:1px solid var(--n8);border-radius:var(--r);overflow:hidden}
+html[data-theme="gazete"] .shpAdH{display:flex;align-items:center;gap:13px;padding:14px 14px 0}
+html[data-theme="gazete"] .shpAdIc{width:50px;height:50px;flex:0 0 50px;border-radius:var(--r-s);display:flex;align-items:center;
+  justify-content:center;background:var(--n1);color:var(--txt2);border:1px solid var(--line2)}
+html[data-theme="gazete"] .shpAdIc svg{width:28px;height:28px}
+html[data-theme="gazete"] .shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html[data-theme="gazete"] .shpAdT b{font-family:var(--serif);font-weight:700;font-size:19px;line-height:1.2;
+  letter-spacing:-.015em;overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpAdB{display:flex;flex-direction:column;gap:9px;padding:13px 14px 14px}
+html[data-theme="gazete"] .shpAdB p{font-size:13px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpAdB p.keep{padding:9px 11px;border-radius:var(--r-s);background:var(--acc-soft);
+  color:var(--acc);border:1px solid var(--line2)}
+html[data-theme="gazete"] .shpAdB .shpNote{margin:0}
+html[data-theme="gazete"] .shpBuy.wide{margin:2px 0 0;width:100%;border:1px solid var(--n8);border-radius:var(--r-s);
+  min-height:48px;font-size:13px}
+@media (max-width:374px){html[data-theme="gazete"] .shpSum{padding:12px 11px;gap:12px}
+html[data-theme="gazete"] .shpSumP{min-width:78px}
+html[data-theme="gazete"] .shpSumV{font-size:28px}
+html[data-theme="gazete"] .shpGrid{gap:9px}
+html[data-theme="gazete"] .shpCard{padding:14px 8px 0}
+html[data-theme="gazete"] .shpIc svg{width:30px;height:30px}
+html[data-theme="gazete"] .shpN{font-size:35px}
+html[data-theme="gazete"] .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);font-size:11.5px;letter-spacing:.06em}
+html[data-theme="gazete"] .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+html[data-theme="gazete"] .shpAdIc{width:44px;height:44px;flex:0 0 44px}
+html[data-theme="gazete"] .shpAdIc svg{width:25px;height:25px}
+html[data-theme="gazete"] .shpAdT b{font-size:17.5px}}
+@media (max-width:339px){html[data-theme="gazete"] .shpGrid{grid-template-columns:1fr}
+html[data-theme="gazete"] .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:11px}
+html[data-theme="gazete"] .shpIc{flex:0 0 auto;padding:12px 0 12px 13px}
+html[data-theme="gazete"] .shpN{margin:0;font-size:32px;flex:0 0 auto}
+html[data-theme="gazete"] .shpL{margin:0;flex:1 1 0}
+html[data-theme="gazete"] .shpNote{display:none}
+html[data-theme="gazete"] .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch;
+    border-top:none;border-left:1px solid var(--line2)}
+html[data-theme="gazete"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--n8)}}
 
 /* ===== tema: terminal ===== */
 html[data-theme="terminal"]{
@@ -3053,6 +3254,8 @@ html[data-theme="terminal"] .htitle .t1{font-size:15.5px;font-weight:600;letter-
   text-overflow:ellipsis;line-height:1.2}
 html[data-theme="terminal"] .htitle .t2{font-family:var(--mono);font-size:10.5px;color:var(--txt3);margin-top:2px;font-weight:400;
   text-transform:none;letter-spacing:0}
+html[data-theme="terminal"] .htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="terminal"] body[data-view="settings"] header .hstat,html[data-theme="terminal"] body[data-view="shop"] header .hstat,html[data-theme="terminal"] body[data-view="atlas"] header .hstat{display:none}
 html[data-theme="terminal"] .hstat{display:flex;flex-direction:column;align-items:flex-end;gap:0;background:none;border-radius:0;
   padding:0 0 0 12px;flex-shrink:0;line-height:1.25;border-left:1px solid var(--line2)}
 html[data-theme="terminal"] .hstat svg{display:none}
@@ -3514,6 +3717,24 @@ html[data-theme="terminal"] .hmCoin{display:none}
 html[data-theme="terminal"] .hmBalV{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em;
   white-space:nowrap;color:var(--txt);line-height:1.2}
 html[data-theme="terminal"] .hmBalV.neg{color:var(--bad)}
+html[data-theme="terminal"] .hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+html[data-theme="terminal"] .hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+html[data-theme="terminal"] .hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+html[data-theme="terminal"] .hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+html[data-theme="terminal"] .hmPlus:active{transform:scale(.9)}
+html[data-theme="terminal"] .rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+html[data-theme="terminal"] .rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html[data-theme="terminal"] .rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+html[data-theme="terminal"] .rwAmtI svg{width:26px;height:26px}
+html[data-theme="terminal"] .rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+html[data-theme="terminal"] .rwState>span{white-space:nowrap}
+html[data-theme="terminal"] .rwState b{color:var(--txt);font-weight:800;text-align:right}
+html[data-theme="terminal"] .rwState.on b{color:var(--acc)}
 html[data-theme="terminal"] .hmBalL{font-size:10px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;
   color:var(--txt3);line-height:1.2}
 html[data-theme="terminal"] .hmAdv{position:relative;width:100%;display:flex;align-items:center;gap:12px;
@@ -3558,11 +3779,6 @@ html[data-theme="terminal"] .hmAg.onb .hmAgIc{color:var(--acc)}
 html[data-theme="terminal"] .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
 html[data-theme="terminal"] .hmAg.onb b{font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--txt);line-height:1.2}
 html[data-theme="terminal"] .hmAg.onb i{font-style:normal;font-size:12px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="terminal"] .hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-html[data-theme="terminal"] .hmAg.ad b{font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--txt);line-height:1.2}
-html[data-theme="terminal"] .hmAg.ad i{font-style:normal;font-size:12px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="terminal"] .hmAg.ad[disabled]{opacity:.55;cursor:default}
-html[data-theme="terminal"] .hmAg.ad[disabled]:active{background:none;transform:none}
 html[data-theme="terminal"] .hmEmpty{background:var(--n1);border:1px solid var(--line2);border-radius:4px;
   padding:13px 11px;margin-bottom:7px;color:var(--txt3);font-size:12.5px;text-align:center}
 html[data-theme="terminal"] .hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 9px}
@@ -3861,6 +4077,88 @@ html[data-theme="terminal"] .adAgeInp{width:100%;box-sizing:border-box;padding:1
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 html[data-theme="terminal"] .adAgeInp:focus{border-color:var(--txt3)}
 html[data-theme="terminal"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+html[data-theme="terminal"] .shpOff{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding:8px 10px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:12.5px;line-height:1.4;border:1px solid var(--line2)}
+html[data-theme="terminal"] .shpOff svg{width:16px;height:16px;flex-shrink:0}
+html[data-theme="terminal"] .shpSum{display:flex;align-items:stretch;gap:13px;background:var(--sur2);
+  border:1px solid var(--line2);border-radius:var(--r);padding:12px 13px;margin-bottom:16px}
+html[data-theme="terminal"] .shpSum>i{width:1px;background:var(--line2);flex:0 0 1px;margin:2px 0}
+html[data-theme="terminal"] .shpSumP{flex:0 0 auto;min-width:84px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;text-align:center}
+html[data-theme="terminal"] .shpSumV{font-family:var(--mono);font-weight:600;font-size:28px;line-height:1;letter-spacing:-.03em}
+html[data-theme="terminal"] .shpSumL{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);
+  font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px}
+html[data-theme="terminal"] .shpLeft{font-size:13.5px;font-weight:600;line-height:1.3;color:var(--txt);overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpPips{display:flex;gap:3px}
+html[data-theme="terminal"] .shpPips i{flex:1 1 0;height:8px;border-radius:1px;background:var(--n2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .shpPips i.on{background:var(--acc);box-shadow:none}
+html[data-theme="terminal"] .shpCeil{font-size:11.5px;line-height:1.4;color:var(--txt3);overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpLead{font-size:12.5px;line-height:1.5;color:var(--txt2);margin:-4px 0 10px}
+html[data-theme="terminal"] .shpRules{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding:10px 11px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+html[data-theme="terminal"] .shpRules p{font-size:12px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html[data-theme="terminal"] .shpRules .tag{flex:0 0 auto}
+html[data-theme="terminal"] .shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:18px}
+html[data-theme="terminal"] .shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:13px 10px 0;background:var(--sur2);border:1px solid var(--line2);
+  border-radius:var(--r);overflow:hidden}
+html[data-theme="terminal"] .shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+html[data-theme="terminal"] .shpIc svg{width:32px;height:32px}
+html[data-theme="terminal"] .shpN{display:block;font-family:var(--mono);font-weight:600;font-size:35px;line-height:1;
+  letter-spacing:-.045em;margin-top:9px}
+html[data-theme="terminal"] .shpN i{font-style:normal;color:var(--acc)}
+html[data-theme="terminal"] .shpL{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt3);font-weight:600;line-height:1.3;margin:7px 0 12px;overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpNote{display:block;font-size:11px;line-height:1.4;color:var(--warn);margin:-6px 0 11px;
+  overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -10px 0;
+  width:calc(100% + 20px);min-height:40px;padding:8px 10px;border:none;border-top:1px solid var(--line2);
+  background:var(--n2);color:var(--txt3);font-family:inherit;font-weight:600;font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+html[data-theme="terminal"] .shpBuy:not([disabled]){background:var(--acc);border-top-color:var(--acc);color:var(--accT);cursor:pointer}
+html[data-theme="terminal"] .shpCard.out{border-style:dashed}
+html[data-theme="terminal"] .shpCard.out .shpIc,html[data-theme="terminal"] .shpCard.out .shpN,html[data-theme="terminal"] .shpCard.out .shpN i{color:var(--txt3)}
+html[data-theme="terminal"] .shpCard.top{border-color:var(--n4)}
+html[data-theme="terminal"] .shpAd{background:var(--sur2);border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+html[data-theme="terminal"] .shpAdH{display:flex;align-items:center;gap:12px;padding:13px 13px 0}
+html[data-theme="terminal"] .shpAdIc{width:48px;height:48px;flex:0 0 48px;border-radius:var(--r-s);display:flex;align-items:center;
+  justify-content:center;background:var(--n2);color:var(--txt2);box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .shpAdIc svg{width:27px;height:27px}
+html[data-theme="terminal"] .shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html[data-theme="terminal"] .shpAdT b{font-size:16.5px;font-weight:600;line-height:1.2;letter-spacing:-.01em;overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpAdB{display:flex;flex-direction:column;gap:8px;padding:12px 13px 13px}
+html[data-theme="terminal"] .shpAdB p{font-size:12.5px;line-height:1.55;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpAdB p.keep{padding:9px 10px;border-radius:var(--r-s);background:var(--acc-soft);color:var(--acc);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="terminal"] .shpAdB .shpNote{margin:0}
+html[data-theme="terminal"] .shpBuy.wide{margin:2px 0 0;width:100%;border:1px solid var(--line2);border-radius:var(--r-s);
+  min-height:46px;font-size:12.5px}
+@media (max-width:374px){html[data-theme="terminal"] .shpSum{padding:11px 10px;gap:11px}
+html[data-theme="terminal"] .shpSumP{min-width:76px}
+html[data-theme="terminal"] .shpSumV{font-size:26px}
+html[data-theme="terminal"] .shpGrid{gap:8px}
+html[data-theme="terminal"] .shpCard{padding:12px 8px 0}
+html[data-theme="terminal"] .shpIc svg{width:29px;height:29px}
+html[data-theme="terminal"] .shpN{font-size:32px}
+html[data-theme="terminal"] .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);font-size:11px;letter-spacing:.07em}
+html[data-theme="terminal"] .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+html[data-theme="terminal"] .shpAdIc{width:43px;height:43px;flex:0 0 43px}
+html[data-theme="terminal"] .shpAdIc svg{width:24px;height:24px}
+html[data-theme="terminal"] .shpAdT b{font-size:15.5px}}
+@media (max-width:339px){html[data-theme="terminal"] .shpGrid{grid-template-columns:1fr}
+html[data-theme="terminal"] .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:11px}
+html[data-theme="terminal"] .shpIc{flex:0 0 auto;padding:12px 0 12px 12px}
+html[data-theme="terminal"] .shpN{margin:0;font-size:30px;flex:0 0 auto}
+html[data-theme="terminal"] .shpL{margin:0;flex:1 1 0}
+html[data-theme="terminal"] .shpNote{display:none}
+html[data-theme="terminal"] .shpBuy{margin:0;width:auto;flex:0 0 94px;min-height:60px;align-self:stretch;
+    border-top:none;border-left:1px solid var(--line2)}
+html[data-theme="terminal"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--line2)}}
 
 /* ===== tema: dosya ===== */
 html[data-theme="dosya"]{
@@ -3912,6 +4210,8 @@ html[data-theme="dosya"] .htitle .t1{font-size:17px;font-weight:600;letter-spaci
   text-overflow:ellipsis;line-height:1.2}
 html[data-theme="dosya"] .htitle .t2{font-size:11.5px;color:var(--txt3);margin-top:1px;font-variant-numeric:tabular-nums;font-weight:400;
   text-transform:none;letter-spacing:0}
+html[data-theme="dosya"] .htitle .t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="dosya"] body[data-view="settings"] header .hstat,html[data-theme="dosya"] body[data-view="shop"] header .hstat,html[data-theme="dosya"] body[data-view="atlas"] header .hstat{display:none}
 html[data-theme="dosya"] .hstat{display:flex;flex-direction:column;align-items:flex-end;gap:0;background:none;border-radius:0;padding:0;
   flex-shrink:0;line-height:1.3}
 html[data-theme="dosya"] .hstat+.hstat{border-left:1px solid var(--line2);padding-left:12px;margin-left:2px}
@@ -4365,6 +4665,24 @@ html[data-theme="dosya"] .hmCoin{display:none}
 html[data-theme="dosya"] .hmBalV{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
   white-space:nowrap;color:var(--txt);line-height:1.2}
 html[data-theme="dosya"] .hmBalV.neg{color:var(--bad)}
+html[data-theme="dosya"] .hmBalRow{display:flex;align-items:center;gap:7px;flex-shrink:0}
+html[data-theme="dosya"] .hmPlus{position:relative;width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;
+  background:var(--sur3);color:var(--txt3);font-family:inherit;font-size:18px;font-weight:800;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px var(--line2);transition:transform var(--tap)}
+html[data-theme="dosya"] .hmPlus.on{background:var(--gold-soft);color:var(--gold)}
+html[data-theme="dosya"] .hmPlus::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:40px;height:44px}
+html[data-theme="dosya"] .hmPlus:active{transform:scale(.9)}
+html[data-theme="dosya"] .rwAmt{display:flex;align-items:center;gap:9px;margin-top:14px}
+html[data-theme="dosya"] .rwAmt b{font-size:26px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html[data-theme="dosya"] .rwAmtI{color:var(--gold);display:flex;flex-shrink:0}
+html[data-theme="dosya"] .rwAmtI svg{width:26px;height:26px}
+html[data-theme="dosya"] .rwState{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding:10px 13px;border-radius:12px;background:var(--sur3);font-size:12.5px;color:var(--txt2)}
+html[data-theme="dosya"] .rwState>span{white-space:nowrap}
+html[data-theme="dosya"] .rwState b{color:var(--txt);font-weight:800;text-align:right}
+html[data-theme="dosya"] .rwState.on b{color:var(--acc)}
 html[data-theme="dosya"] .hmBalL{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--txt3);line-height:1.2}
 html[data-theme="dosya"] .hmAdv{position:relative;width:100%;display:flex;align-items:center;gap:13px;
   min-height:78px;padding:12px 14px;margin-bottom:12px;border:none;border-radius:12px;
@@ -4406,11 +4724,6 @@ html[data-theme="dosya"] .hmAg.onb .hmAgIc{color:var(--acc)}
 html[data-theme="dosya"] .hmAg.onb .hmAgT{display:flex;flex-direction:column;gap:2px}
 html[data-theme="dosya"] .hmAg.onb b{font-size:14px;font-weight:600;color:var(--txt);line-height:1.2}
 html[data-theme="dosya"] .hmAg.onb i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="dosya"] .hmAg.ad .hmAgT{display:flex;flex-direction:column;gap:2px}
-html[data-theme="dosya"] .hmAg.ad b{font-size:14px;font-weight:600;color:var(--txt);line-height:1.2}
-html[data-theme="dosya"] .hmAg.ad i{font-style:normal;font-size:12.5px;font-weight:400;color:var(--txt2);line-height:1.25}
-html[data-theme="dosya"] .hmAg.ad[disabled]{opacity:.55;cursor:default}
-html[data-theme="dosya"] .hmAg.ad[disabled]:active{background:none;transform:none}
 html[data-theme="dosya"] .hmEmpty{background:var(--sur);border:1px solid var(--line);border-radius:var(--r-s);
   padding:14px 12px;margin-bottom:8px;color:var(--txt3);font-size:13px;text-align:center}
 html[data-theme="dosya"] .hmQuick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 10px}
@@ -4699,6 +5012,90 @@ html[data-theme="dosya"] .adAgeInp{width:100%;box-sizing:border-box;padding:12px
   border-radius:10px;font:inherit;font-size:16px;letter-spacing:.08em;outline:none}
 html[data-theme="dosya"] .adAgeInp:focus{border-color:var(--txt3)}
 html[data-theme="dosya"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing:normal}
+html[data-theme="dosya"] .shpOff{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 12px;
+  border-radius:var(--r-s);background:var(--warn-soft);color:var(--warn);
+  font-size:13.5px;line-height:1.45;border:1px solid var(--line2)}
+html[data-theme="dosya"] .shpOff svg{width:17px;height:17px;flex-shrink:0}
+html[data-theme="dosya"] .shpSum{display:flex;align-items:stretch;gap:16px;background:var(--sur);
+  border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;margin-bottom:20px}
+html[data-theme="dosya"] .shpSum>i{width:1px;background:var(--line);flex:0 0 1px;margin:2px 0}
+html[data-theme="dosya"] .shpSumP{flex:0 0 auto;min-width:88px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;text-align:center}
+html[data-theme="dosya"] .shpSumV{font-weight:600;font-size:31px;line-height:1;letter-spacing:-.035em}
+html[data-theme="dosya"] .shpSumL{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--txt3);
+  font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpSumR{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:10px}
+html[data-theme="dosya"] .shpLeft{font-size:15px;font-weight:600;line-height:1.3;color:var(--txt);
+  letter-spacing:-.01em;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpPips{display:flex;gap:4px}
+html[data-theme="dosya"] .shpPips i{flex:1 1 0;height:8px;border-radius:2px;background:var(--n2);
+  box-shadow:inset 0 0 0 1px var(--line2)}
+html[data-theme="dosya"] .shpPips i.on{background:var(--acc);box-shadow:none}
+html[data-theme="dosya"] .shpCeil{font-size:12.5px;line-height:1.45;color:var(--txt3);overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpLead{font-size:13.5px;line-height:1.55;color:var(--txt2);margin:-6px 0 13px}
+html[data-theme="dosya"] .shpRules{display:flex;flex-direction:column;gap:9px;margin-bottom:15px;padding:13px 14px;
+  border-radius:var(--r-s);background:var(--n1);border:1px solid var(--line)}
+html[data-theme="dosya"] .shpRules p{font-size:13px;line-height:1.6;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpRules p:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+html[data-theme="dosya"] .shpRules .tag{flex:0 0 auto}
+html[data-theme="dosya"] .shpGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-bottom:26px}
+html[data-theme="dosya"] .shpCard{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:17px 11px 0;background:var(--sur);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden}
+html[data-theme="dosya"] .shpIc{display:flex;align-items:center;justify-content:center;color:var(--acc)}
+html[data-theme="dosya"] .shpIc svg{width:33px;height:33px}
+html[data-theme="dosya"] .shpN{display:block;font-weight:600;font-size:38px;line-height:1;letter-spacing:-.045em;margin-top:11px}
+html[data-theme="dosya"] .shpN i{font-style:normal;color:var(--acc)}
+html[data-theme="dosya"] .shpL{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);font-weight:600;line-height:1.35;margin:8px 0 15px;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpNote{display:block;font-size:12px;line-height:1.45;color:var(--warn);margin:-8px 0 14px;
+  overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpBuy{display:flex;align-items:center;justify-content:center;margin:auto -11px 0;
+  width:calc(100% + 22px);min-height:44px;padding:9px 10px;border:none;border-top:1px solid var(--line);
+  background:var(--n1);color:var(--txt3);font-family:inherit;font-weight:600;font-size:12.5px;
+  letter-spacing:.06em;text-transform:uppercase;line-height:1.2;text-align:center;cursor:default;
+  -webkit-appearance:none;appearance:none}
+html[data-theme="dosya"] .shpBuy:not([disabled]){background:var(--acc);border-top-color:var(--acc);color:var(--accT);cursor:pointer}
+html[data-theme="dosya"] .shpCard.out{border-style:dashed;border-color:var(--line2)}
+html[data-theme="dosya"] .shpCard.out .shpIc,html[data-theme="dosya"] .shpCard.out .shpN,html[data-theme="dosya"] .shpCard.out .shpN i{color:var(--txt3)}
+html[data-theme="dosya"] .shpCard.top{border-color:var(--n4)}
+html[data-theme="dosya"] .shpAd{background:var(--sur);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+html[data-theme="dosya"] .shpAdH{display:flex;align-items:center;gap:14px;padding:16px 16px 0}
+html[data-theme="dosya"] .shpAdIc{width:52px;height:52px;flex:0 0 52px;border-radius:var(--r-s);display:flex;align-items:center;
+  justify-content:center;background:var(--n1);color:var(--txt2);border:1px solid var(--line)}
+html[data-theme="dosya"] .shpAdIc svg{width:29px;height:29px}
+html[data-theme="dosya"] .shpAdT{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+html[data-theme="dosya"] .shpAdT b{font-size:18px;font-weight:600;line-height:1.25;letter-spacing:-.02em;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpAdB{display:flex;flex-direction:column;gap:10px;padding:15px 16px 16px}
+html[data-theme="dosya"] .shpAdB p{font-size:13.5px;line-height:1.6;color:var(--txt2);overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpAdB p.keep{padding:11px 12px;border-radius:var(--r-s);background:var(--acc-soft);
+  color:var(--acc);border:1px solid var(--line2)}
+html[data-theme="dosya"] .shpAdB .shpNote{margin:0}
+html[data-theme="dosya"] .shpBuy.wide{margin:3px 0 0;width:100%;border:1px solid var(--line2);border-radius:var(--r-s);
+  min-height:50px;font-size:13.5px}
+@media (max-width:374px){html[data-theme="dosya"] .shpSum{padding:13px 12px;gap:13px}
+html[data-theme="dosya"] .shpSumP{min-width:78px}
+html[data-theme="dosya"] .shpSumV{font-size:28px}
+html[data-theme="dosya"] .shpGrid{gap:9px}
+html[data-theme="dosya"] .shpCard{padding:15px 8px 0}
+html[data-theme="dosya"] .shpIc svg{width:30px;height:30px}
+html[data-theme="dosya"] .shpN{font-size:34px}
+html[data-theme="dosya"] .shpBuy{margin-left:-8px;margin-right:-8px;width:calc(100% + 16px);font-size:12px;letter-spacing:.04em}
+html[data-theme="dosya"] .shpBuy.wide{margin-left:0;margin-right:0;width:100%}
+html[data-theme="dosya"] .shpAdH{gap:12px;padding-left:13px;padding-right:13px}
+html[data-theme="dosya"] .shpAdB{padding-left:13px;padding-right:13px}
+html[data-theme="dosya"] .shpAdIc{width:46px;height:46px;flex:0 0 46px}
+html[data-theme="dosya"] .shpAdIc svg{width:26px;height:26px}
+html[data-theme="dosya"] .shpAdT b{font-size:16.5px}}
+@media (max-width:339px){html[data-theme="dosya"] .shpGrid{grid-template-columns:1fr}
+html[data-theme="dosya"] .shpCard{flex-direction:row;align-items:center;text-align:left;padding:0;gap:12px}
+html[data-theme="dosya"] .shpIc{flex:0 0 auto;padding:13px 0 13px 14px}
+html[data-theme="dosya"] .shpN{margin:0;font-size:32px;flex:0 0 auto}
+html[data-theme="dosya"] .shpL{margin:0;flex:1 1 0}
+html[data-theme="dosya"] .shpNote{display:none}
+html[data-theme="dosya"] .shpBuy{margin:0;width:auto;flex:0 0 98px;min-height:64px;align-self:stretch;
+    border-top:none;border-left:1px solid var(--line)}
+html[data-theme="dosya"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--line2)}}
 </style>
 </head>
 <body>
@@ -4708,6 +5105,7 @@ html[data-theme="dosya"] .adAgeInp::placeholder{color:var(--txt3);letter-spacing
     <div class="htitle"><div class="t1" id="hT1">Menajer</div><div class="t2" id="hT2"></div></div>
     <div class="hstat cash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9"/><path d="M14.8 9.2c-.6-.8-1.7-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2s1 1.7 2.8 2c1.8.3 2.8 1 2.8 2s-1.2 2-2.8 2c-1.1 0-2.2-.4-2.8-1.2"/></svg><span class="v" id="hCash">—</span><span class="l" id="hCashL">Kasa</span></div>
     <div class="hstat rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.2 9.4l6.1-.8z"/></svg><span class="v" id="hRep">—</span><span class="l" id="hRepL">İtibar</span></div>
+    <button class="hback" id="btnShop" onclick="pushV('shop')" aria-label="Mağaza"></button>
     <button class="hback show" id="btnSet" onclick="pushV('settings')" aria-label="Ayarlar"></button>
     <button id="btnNext" onclick="nextWeek()">Devam</button>
   </div>
@@ -4916,6 +5314,47 @@ adAgeNone:'Paylaşılmadı',
 adAgeHave:'Kayıtlı: {y}',
 adAgeClear:'Doğum yılını sil',
 adAgeCleared:'Doğum yılı silindi',
+/* Ödül penceresi (js/ui.js adsRewardOpen). Pencere yalnız ANLATIYOR: açılması
+   reklam başlatmıyor, başlatan tek şey aşağıdaki adRewardWatch düğmesi. Tutar
+   yine metne gömülmüyor, {a} ile fmtK(RW.amount) basılıyor. */
+adRewardWhat:'Kısa bir reklam izle, kasana {a} eklensin.',
+adRewardDaily:'Günlük hak',
+adRewardReady:'Bugün için hazır',
+adRewardWatch:'Reklam izle',
+adRewardCareer:'Ödül, açık olan kariyerin kasasına işlenir.',
+adRewardUsedWhy:'Bugünün ödülü bu kariyerde zaten alındı. Hak, cihazın yerel saatiyle gece yarısında yenilenir.',
+adRewardBusyWhy:'Bir reklam şu anda hazırlanıyor. Bittiğinde bu pencereyi yeniden açabilirsin.',
+adRewardClose:'Kapat',
+/* Mağaza (js/iap.js + js/ui.js VIEWS.shop). Ekranda TEK bir durum cümlesi var:
+   "satın alma şu anda kullanılamıyor". Nedenini (ödeme bağlantısı, doğrulama,
+   Play) anlatan geliştirme metni kullanıcıya gösterilmiyor; o bilgi CLAUDE.md'de
+   duruyor. Fiyat da yazmıyor — yerelleştirilmiş fiyatı Play verecek ve şimdiden
+   bir sayı basmak tahmin olurdu. */
+shop:'Mağaza',
+shopScope:'Kapsam',
+shopScopeCareer:'Bu kariyer',
+shopScopeDevice:'Tüm kariyerler',
+shopScopeCareerSub:'Yalnız açık olan kariyere işlenir; o kariyer silinince gider.',
+shopScopeDeviceSub:'Bu cihazdaki bütün kariyerleri kapsar.',
+shopCapSec:'Müşteri kapasitesi',
+shopCapDesc:'Aynı anda temsil edebileceğin oyuncu sayısını artırır.',
+shopCapNote:'Kapasite, aynı anda temsil ettiğin oyuncu sayısıdır — kariyer kayıt yuvası değildir.',
+shopCapLeft:'Bu kariyerde kalan hak: +{n}',
+shopCapCeil:'Kariyer başına en fazla +{n}',
+shopCapNow:'Şu anki kapasite',
+shopCap1:'+1 müşteri kapasitesi',
+shopCap3:'+3 müşteri kapasitesi',
+shopCap5:'+5 müşteri kapasitesi',
+shopCap10:'+10 müşteri kapasitesi',
+shopAdSec:'Reklamlar',
+shopNoAds:'Otomatik reklamları kaldır',
+shopNoAdsDesc:'Sezon ortası ve sezon sonu geçişlerinde çıkan tam ekran reklamları kapatır.',
+shopNoAdsKeep:'İsteğe bağlı ödüllü reklam açık kalır: onu sen başlatırsın ve karşılığında ödül alırsın.',
+shopBuy:'Satın al',
+shopOff:'Satın alma şu anda kullanılamıyor',
+shopOwned:'Zaten alındı',
+shopCapFull:'Bu kariyerde kapasite hakkın doldu',
+shopNeedCareer:'Bu ürün açık bir kariyere işlenir — önce bir kariyer aç.',
 themeHint:'Aynı oyun, dört farklı görünüm. İstediğin zaman değiştirebilirsin — ilerlemen etkilenmez.',
 transfersT:'Transferler',noTransfers:'Bu ligde henüz transfer hareketi yok.',
 transfersSub:'Bu ligin kulüplerini ilgilendiren son transferler.',feeL:'Bonservis',
@@ -5132,6 +5571,39 @@ adAgeNone:'Not shared',
 adAgeHave:'Saved: {y}',
 adAgeClear:'Delete birth year',
 adAgeCleared:'Birth year deleted',
+adRewardWhat:'Watch a short ad and {a} is added to your balance.',
+adRewardDaily:'Daily allowance',
+adRewardReady:'Ready for today',
+adRewardWatch:'Watch an ad',
+adRewardCareer:'The reward is credited to the career you have open.',
+adRewardUsedWhy:'Today’s reward has already been taken in this career. The allowance renews at local midnight on this device.',
+adRewardBusyWhy:'An ad is being prepared right now. You can open this window again once it finishes.',
+adRewardClose:'Close',
+shop:'Store',
+shopScope:'Scope',
+shopScopeCareer:'This career',
+shopScopeDevice:'All careers',
+shopScopeCareerSub:'Applies to the career you have open; it goes when that career is deleted.',
+shopScopeDeviceSub:'Covers every career on this device.',
+shopCapSec:'Client capacity',
+shopCapDesc:'Raises how many players you can represent at once.',
+shopCapNote:'Capacity is how many players you represent at once — not career save slots.',
+shopCapLeft:'Remaining in this career: +{n}',
+shopCapCeil:'At most +{n} per career',
+shopCapNow:'Current capacity',
+shopCap1:'+1 client capacity',
+shopCap3:'+3 client capacity',
+shopCap5:'+5 client capacity',
+shopCap10:'+10 client capacity',
+shopAdSec:'Ads',
+shopNoAds:'Remove automatic ads',
+shopNoAdsDesc:'Turns off the full-screen ads shown at the mid-season and end-of-season transitions.',
+shopNoAdsKeep:'The optional rewarded ad stays available: you start it yourself and it pays a reward.',
+shopBuy:'Buy',
+shopOff:'Purchasing is unavailable right now',
+shopOwned:'Already owned',
+shopCapFull:'No capacity allowance left in this career',
+shopNeedCareer:'This product applies to an open career — open one first.',
 themeHint:'Same game, four different looks. Switch any time — your progress is untouched.',
 transfersT:'Transfers',noTransfers:'No transfer activity in this league yet.',
 transfersSub:'Recent moves involving clubs in this league.',feeL:'Fee',
@@ -6436,6 +6908,10 @@ const ADS_TESTCFG = null;
 /* Yalnız TERMİNAL olaylar. Ödül olayı bilerek listede yok (korelasyon notu). */
 const ADS_EV = ['onRewardedVideoAdDismissed', 'onRewardedVideoAdFailedToShow',
                 'onRewardedVideoAdFailedToLoad'];
+/* Sezon geçişi reklamının terminal olayları. AYRI bir liste ve AYRI bir işleyici:
+   iki reklam biçiminin kilidi ayrı, biri diğerininkini açmamalı. */
+const ADS_IEV = ['interstitialAdDismissed', 'interstitialAdFailedToShow',
+                 'interstitialAdFailedToLoad'];
 
 const ADS = {
   /* Google'ın yayımladığı ÖRNEK ödüllü reklam birimi (Android). Gerçek birim
@@ -6484,6 +6960,17 @@ const ADS = {
   /* Yaş beyanı sahiplik sayacı — beyan her yazıldığında/silindiğinde artıyor. */
   ageSeq: 0,
 
+  /* ===== SEZON GEÇİŞİ REKLAMI ===== */
+  /* Google'ın yayımladığı ÖRNEK interstitial birimi (Android). Ödüllü birimle
+     aynı gerekçe: gerçek birim bu kapsamda kullanılmıyor.
+     developers.google.com/admob/android/test-ads */
+  iUnit: 'ca-app-pub-3940256099942544/1033173712',
+  /* 'off'   hazır reklam yok
+     'load'  yükleme uçuşta
+     'ready' yüklü ve henüz gösterilmedi — geçiş ancak bu hâlde reklam görür
+     'show'  ekranda */
+  iSt: 'off',
+  iP: null,          // uçuştaki hazırlama sözü; ikinci yüklemeyi engelliyor
   /* Ekrandaki gösterim (att) ya da null. Kayda GİRMEZ — CAM/MKQ/SKTAB gibi
      yalnız görünüm durumu. */
   cur: null,
@@ -6515,6 +7002,14 @@ function adsConsentApi() {
   const P = adsBridge();
   return (P && typeof P.requestConsentInfo === 'function'
     && typeof P.showConsentForm === 'function') ? P : null;
+}
+/* Sezon geçişi yüzeyi de AYRI sorgulanıyor: ödüllü reklam metotları olan bir
+   köprüde interstitial metotları olmayabilir (eski eklenti sürümü). O hâlde
+   geçiş reklamı hiç başlamamalı, ödüllü reklam çalışmaya devam etmeli. */
+function adsInterApi() {
+  const P = adsBridge();
+  return (P && typeof P.prepareInterstitial === 'function'
+    && typeof P.showInterstitial === 'function') ? P : null;
 }
 function adsAvailable() { return !!adsPlugin(); }
 
@@ -6588,11 +7083,17 @@ function adsAgeClear() {
 /* Uygunluk: TEK karar. Güncel ve true olmalı; "doğrulanamadı" true saymaz. */
 function adsEligible() { return !!(ADS.cs && ADS.cs.can === true && !ADS.stale); }
 /* Meşguliyet. 'ad' ADS.cur'dan türüyor, o da prepare'den önce kurulduğu için
-   yükleme beklemesini kapsıyor. */
-function adsBusy() { return ADS.cur ? 'ad' : ADS.busy; }
+   yükleme beklemesini kapsıyor. 'inter' yalnız EKRANDAKİ geçiş reklamı: arka
+   planda süren ön yükleme ('load') meşguliyet değil, kullanıcıdan hiçbir şey
+   kapatmıyor. */
+function adsBusy() { return ADS.cur ? 'ad' : (ADS.iSt === 'show' ? 'inter' : ADS.busy); }
 function adsBound() {
   if (!ADS.bnd) return false;
   return ADS_EV.every(ev => ADS.bnd[ev] === true);
+}
+function adsInterBound() {
+  if (!ADS.bnd) return false;
+  return ADS_IEV.every(ev => ADS.bnd[ev] === true);
 }
 /* REKLAM KAPISI. SDK'nın 'on' olması tek başına yetmez. Yaş kapısı burada da
    ayrı bir terim: rıza uygunluğunun içine karıştırılmıyor. */
@@ -6672,7 +7173,11 @@ function adsRefresh(P, src, op) {
 function adsConsentFlow() {
   const P = adsConsentApi();
   if (!P) return Promise.resolve(false);
-  if (adsBusy() === 'ad') return Promise.resolve(false);   // reklam sürerken izin işlemi başlamaz
+  /* Ekranda bir reklam varken izin işlemi başlamaz — ödüllü de olsa sezon
+     geçişi reklamı da olsa. İkisi de tam ekran ve izin formu onların üstüne
+     açılamaz. Arka plandaki ön yükleme ('load') meşguliyet sayılmıyor. */
+  const b0 = adsBusy();
+  if (b0 === 'ad' || b0 === 'inter') return Promise.resolve(false);
   if (ADS.cp) return ADS.cp;
   const op = ++ADS.op, tok = ADS.ageSeq;
   ADS.busy = 'consent'; ADS.busyOp = op;
@@ -6796,6 +7301,13 @@ function adsBind(P) {
     if (ADS.bnd[ev]) return;
     try { P.addListener(ev, adsTerminal); ADS.bnd[ev] = true; } catch (e) {}
   });
+  /* Sezon geçişi reklamı yüzeyi olmayan bir köprüde bu üç olay hiç bağlanmıyor
+     ve adsInterBound() false kalıyor — ön yükleme de gösterim de başlamıyor. */
+  if (!adsInterApi()) return;
+  ADS_IEV.forEach(ev => {
+    if (ADS.bnd[ev]) return;
+    try { P.addListener(ev, adsInterTerminal); ADS.bnd[ev] = true; } catch (e) {}
+  });
 }
 
 /* Tek seferlik SDK başlatma.
@@ -6818,6 +7330,9 @@ function adsSdkInit() {
     ADS.sdkP = null;
     ADS.sdk = 'on';
     adsBind(P);
+    /* Sezon geçişi reklamı ŞİMDİ yükleniyor, geçiş anında değil: geçişin
+       yükleme beklememesi için tek yol bu (bkz. adsInterPrep). */
+    adsInterPrep();
     adsRepaint();
     return 'on';
   }, () => {
@@ -6841,8 +7356,13 @@ function adsSdkInit() {
                kapatılmaz.
    true→false→true: sdk zaten 'on' olduğu için initialize BİR KEZ kalır. */
 function adsApply() {
-  if (ADS.sdk === 'on') adsBind(adsPlugin());             // eksik kalmış dinleyici varsa tamamla
-  else if (adsEligible() && adsAgeOk() && ADS.sdk !== 'init') adsSdkInit();
+  if (ADS.sdk === 'on') {
+    adsBind(adsPlugin());                                 // eksik kalmış dinleyici varsa tamamla
+    /* Uygunluk yeni kazanıldıysa (izin formu sonrası) geçiş reklamı burada
+       kuruluyor. Kapıların hepsi adsInterPrep()'in içinde; burada karar yok ve
+       zaten yüklü/uçuşta olan bir reklam ikinci kez istenmiyor. */
+    adsInterPrep();
+  } else if (adsEligible() && adsAgeOk() && ADS.sdk !== 'init') adsSdkInit();
   adsRepaint();
 }
 
@@ -7015,6 +7535,100 @@ function adsReward(att) {
   }, e => { ADS.lastRw = 'error'; adsRepaint(); return 'error'; });
 }
 
+/* ================= SEZON GEÇİŞİ REKLAMI =================
+
+   ===== KAPSAM =====
+   Sezon ortası ve sezon sonu geçişlerinde, KARİYER/SEZON BAŞINA EN FAZLA BİRER
+   kez. Hangi anın geçiş olduğuna ve o geçişin hakkının kullanılıp
+   kullanılmadığına bu dosya karar VERMİYOR: ikisi de sezon motorunun bilgisi ve
+   js/sim.js'te (adBreakClaim) duruyor. Burada yalnız "gösterebiliyor muyum"
+   sorusu var.
+
+   ===== NEDEN ÖN YÜKLEME =====
+   Şart şuydu: hazır reklam yoksa geçiş BEKLEMEYECEK, ve o geçişin reklamı daha
+   sonra alakasız bir ekranda AÇILMAYACAK. Gösterim anında yükleme başlatmak
+   ikisini birden ihlal ederdi — ya beklerdik ya da yükleme bitince ekran çoktan
+   değişmiş olurdu. Bu yüzden reklam önceden yükleniyor ve geçiş anında yalnız
+   "yüklü mü" diye bakılıyor; değilse o geçiş sessizce reklamsız geçiyor.
+
+   ===== DÖNGÜ YOK =====
+   Yükleme yalnız üç doğal tetikleyicide deneniyor: SDK başlatıldığında, uygunluk
+   yeni kazanıldığında (adsApply) ve bir geçiş işlendiğinde (gösterildiyse
+   sonrası için, gösterilemediyse bir sonraki için). Zamanlayıcı yok, başarısız
+   bir yüklemeyi tekrarlayan bir sarmal yok.
+
+   ===== İKİ ÖMÜR AYRI =====
+   ADS.cur ödüllü gösterimin kilidi, ADS.iSt geçiş reklamınınki. Terminal
+   olaylar ayrı dinleyicilere bağlı (ADS_IEV) — biri diğerinin kilidini açamaz.
+   showInterstitial() kapanışta değil, gösterim BAŞLAYINCA çözülüyor
+   (AdInterstitialExecutor: adToShow.show() → call.resolve()), bu yüzden kilidi
+   açan şey söz değil terminal olay. */
+
+/* Önceden yükler. Kapılar fonksiyonun BAŞINDA: uygun yaş beyanı ve
+   canRequestAds sağlanmadan hazırlama çağrısı bile yapılmıyor.
+   Dönüş (söz): 'ready' | 'off' | 'noads' | 'fail'. */
+function adsInterPrep() {
+  const P = adsInterApi();
+  if (!P) return Promise.resolve('off');
+  if (typeof iapNoAds === 'function' && iapNoAds()) return Promise.resolve('off');
+  if (ADS.sdk !== 'on' || !adsInterBound()) return Promise.resolve('off');
+  if (!adsEligible()) return Promise.resolve('noads');    // rıza yok ya da doğrulanamadı
+  if (!adsAgeOk()) return Promise.resolve('noads');       // yaş kapısı — rızadan AYRI terim
+  if (ADS.iSt === 'ready' || ADS.iSt === 'show') return Promise.resolve(ADS.iSt);
+  if (ADS.iP) return ADS.iP;                              // uçuştaki yükleme tekilleştiriliyor
+  ADS.iSt = 'load';
+  const tok = ADS.ageSeq;
+  ADS.iP = P.prepareInterstitial({ adId: ADS.iUnit, isTesting: true }).then(() => {
+    ADS.iP = null;
+    /* Yükleme sürerken beyan ya da uygunluk düştüyse reklam yüklü KALIR ama
+       gösterilmez: 8.1.0'da yüklenmiş bir reklamı atma yolu yok (ödüllü
+       reklamda da aynı durum). 'off' kalması adsInterShow()'u hiç başlatmıyor. */
+    if (!adsAgeHolds(tok) || !adsEligible()) { ADS.iSt = 'off'; return 'off'; }
+    ADS.iSt = 'ready';
+    return 'ready';
+  }, () => {
+    /* Eklenti ayrıca interstitialAdFailedToLoad da yayıyor; o olay 'load'
+       hâlinde sahipsiz sayılıp düşürülüyor (bkz. adsInterDone). */
+    ADS.iP = null; ADS.iSt = 'off';
+    return 'fail';
+  });
+  return ADS.iP;
+}
+
+/* Geçiş anı. js/sim.js çağırıyor ve YALNIZ hakkı olan bir geçiş için çağırıyor;
+   bu yüzden burada "gösterilsin mi" sorusu yok, yalnız "gösterilebilir mi".
+   Dönüş: 'shown' | 'none'. */
+function adsInterShow() {
+  const P = adsInterApi();
+  if (!P) return 'none';
+  if (typeof iapNoAds === 'function' && iapNoAds()) return 'none';
+  if (ADS.iSt !== 'ready') {
+    /* Hazır reklam yok → geçiş BEKLEMİYOR. Bir sonraki geçiş için kuruluyor;
+       tek seferlik, çünkü bunu tetikleyen şey bir zamanlayıcı değil geçişin
+       kendisi ve sezon başına en fazla iki geçiş var. */
+    adsInterPrep();
+    return 'none';
+  }
+  if (adsBusy()) return 'none';                 // ödüllü reklam ya da izin işlemi sürüyor
+  if (!adsEligible() || !adsAgeOk()) return 'none';
+  ADS.iSt = 'show';
+  adsRepaint();
+  P.showInterstitial().then(() => {}, () => adsInterDone());
+  return 'shown';
+}
+
+/* Terminal olay: kapandı, gösterilemedi ya da (gösterim isteğinde) yüklü reklam
+   bulunamadı. Kimlik taşımıyorlar — ödüllü taraftaki gerekçenin aynısı: "ekranda
+   ne varsa o". Oyun durumuna HİÇ dokunmuyor; sezon ilerlemesi bu yola hiç
+   uğramadığı için bir kapanış ya da hata onu ikinci kez çalıştıramaz. */
+function adsInterTerminal() { adsInterDone(); }
+function adsInterDone() {
+  if (ADS.iSt !== 'show') return;               // sahipsiz olay: yüklü reklamı düşürmüyoruz
+  ADS.iSt = 'off';
+  adsRepaint();
+  adsInterPrep();                               // bir sonraki geçiş için
+}
+
 /* ===== KAPANIŞ — ARAYÜZ KİLİDİ =====
    Terminal olayların kimliği olmadığı için "ekranda ne varsa o" kabul ediliyor.
    ADS.cur boşken gelen sahipsiz bir terminal olay düşürülüyor. */
@@ -7036,6 +7650,186 @@ function adsClose(att) {
      gereksiz olur. att.rw ödül işlemesini DEĞİL, yalnız bu çağrıyı kapıyor. */
   if (!att.rw) rwAbandon(att.n);
   adsRepaint();
+}
+
+/* js/iap.js — mağazanın ÜRÜN KATALOĞU, KAPSAMI ve satın alma durumu.
+
+   ===== NE OLDUĞU, NE OLMADIĞI =====
+
+   Bu dosya HİÇBİR ŞEY SATMIYOR ve hiçbir hak VERMİYOR. Play Billing köprüsü
+   depoda kurulu değil; dolayısıyla burada ne bir satın alma çağrısı, ne bir
+   makbuz doğrulaması, ne de "satın alındı" diyen bir yol var. Mağaza ekranı
+   ürünleri GÖRÜNÜR kılıyor ve satın almanın neden kullanılamadığını açıkça
+   yazıyor — başarılı bir satın alma taklidi yapmıyor.
+
+   Bir bayrağı true yapmak da ücretli hak VERMEZ: hak yalnız aşağıdaki
+   DEFTERDEN okunuyor ve deftere yalnız doğrulanmış bir satın alma tokenı
+   yazılabilir. Öyle bir yazıcı bugün yok — ne burada, ne başka bir dosyada.
+
+   ===== NEDEN DEFTER, NEDEN SAYAÇ DEĞİL =====
+
+   js/core.js'teki iapCap() yorumu bunu zaten söylüyordu: bir sayı, hangi satın
+   alma tokenlarının işlendiğini yeniden kuramaz. "Kapasite +3" yazan bir alan,
+   satın almaları geri yükleme (restore) geldiğinde aynı tokenı ikinci kez
+   sayıp saymadığını bilemez. Bu yüzden kapasite TÜRETİLİYOR: defterde teslim
+   edilmiş tokenlar duruyor, kapasite onların toplamı. S.known ve rakip
+   ajansların portföyüyle aynı gerekçe — türetilen şey saklanmaz.
+
+   ===== İKİ KAPSAM, İKİ DEFTER =====
+
+   Kapsam ürünün özelliği, sunumun değil; bu yüzden ürün kaydının kendisinde
+   duruyor (sc alanı) ve mağaza ekranı onu okuyup yazıyor.
+
+     'career'  → AÇIK KARİYERE ait. Defter kariyer kaydında (S.iap.t), çünkü
+                 kapasite o kariyerin oyuncu müşteri tavanını büyütüyor ve
+                 kariyer silinince gitmesi gereken şey bu.
+     'device'  → CİHAZDAKİ BÜTÜN KARİYERLERE ait. Defter PREFS.iap.t içinde,
+                 tema/dil/doğum yılı ile aynı yerde: kariyer kaydı açık olmadan
+                 da (ana menü) okunabilmek zorunda.
+
+   ===== KAPASİTE TAVANI =====
+
+   Kariyer başına satın alınabilecek toplam kapasite artışı IAP.capMax (+10).
+   Tavan TEK yerde, iapCapOwned()'ın sonundaki clamp'te: defter bir şekilde
+   fazlasını taşısa bile oyuna giren sayı tavanı aşamaz. Mağaza ekranı aynı
+   tavanı ayrıca ÇİZİYOR (kalan hak), ama karar orada değil burada.
+
+   KAPASİTE = OYUNCU MÜŞTERİ KAPASİTESİ. Üç kariyer kayıt yuvasıyla (js/saves.js,
+   SLOTS) hiçbir ilgisi yok ve olmayacak: yuva sayısı bir depolama biçimi,
+   kapasite bir oyun dengesi terimi (core.js maxClients). */
+
+const IAP = {
+  /* Play Console'da açılacak ürün kimlikleri. Şimdiden sabit ve kodda tek
+     yerde: uygulama planı ile mağaza kaydı aynı dizeyi kullansın, sonradan
+     "hangisiydi" sorusu doğmasın. Yayımlandıktan sonra DEĞİŞTİRİLEMEZ. */
+  sku: {
+    cap1: 'cap_plus_1',
+    cap3: 'cap_plus_3',
+    cap5: 'cap_plus_5',
+    cap10: 'cap_plus_10',
+    noads: 'remove_auto_ads'
+  },
+  /* Kariyer başına satın alınabilecek toplam kapasite artışı. */
+  capMax: 10,
+  /* Play Billing köprüsünün Capacitor eklenti adı. Eklenti henüz SEÇİLMEDİ ve
+     kurulu değil; ad, plan hangi eklentiyi sabitlerse onunla değişecek. */
+  plugin: 'InAppPurchase',
+  /* Satın alma akışı BAĞLI DEĞİL. Bu bayrak yalnızca REDDEDER — hiçbir hakkı
+     açmaz, hiçbir defteri yazmaz. Köprü gerçekten geldiğinde bu satırı
+     değiştirmek TEK BAŞINA yetmez: iapBuy()'ın gövdesi de yazılmak zorunda. */
+  wired: false
+};
+
+/* Ürün kaydı:
+     id    iç kimlik (mağaza ekranı ve defter bunu kullanır)
+     sku   Play ürün kimliği
+     sc    kapsam: 'career' | 'device'
+     cap   kaç müşteri kapasitesi ekler (kapasite ürünleri)
+     noads otomatik (sezon geçişi) reklamları kapatır mı
+     k     başlık çeviri anahtarı (js/i18n.js)
+   Ürünün ne yaptığı BURADA duruyor; hiçbir ekran kendi listesini tutmuyor. */
+const IAP_PRODUCTS = [
+  { id: 'cap1', sku: IAP.sku.cap1, sc: 'career', cap: 1, k: 'shopCap1' },
+  { id: 'cap3', sku: IAP.sku.cap3, sc: 'career', cap: 3, k: 'shopCap3' },
+  { id: 'cap5', sku: IAP.sku.cap5, sc: 'career', cap: 5, k: 'shopCap5' },
+  { id: 'cap10', sku: IAP.sku.cap10, sc: 'career', cap: 10, k: 'shopCap10' },
+  { id: 'noads', sku: IAP.sku.noads, sc: 'device', noads: true, k: 'shopNoAds' }
+];
+function iapById(id) { return IAP_PRODUCTS.find(p => p.id === id) || null; }
+
+/* ================= DEFTER =================
+   Biçim: { t: { <satın alma tokenı>: <ürün id> } }. Anahtar tokenın kendisi,
+   çünkü aynı ürün birden çok kez satın alınabilir ve ikisini ayıran tek şey
+   token. Defter yoksa (bugünkü hâl, ve her eski kayıt) okuma boş küme döner —
+   CLAUDE.md'nin "her yeni alan yokken de çalışmalı" kuralı. */
+function iapTokens(box) {
+  const t = box && box.iap && box.iap.t;
+  return (t && typeof t === 'object') ? t : null;
+}
+/* Defterdeki tokenların gösterdiği ürünler. Tanımadığı bir id sessizce
+   düşüyor: ileride kaldırılmış bir ürünün tokenı kayıtta kalabilir. */
+function iapOwnedOf(box) {
+  const t = iapTokens(box);
+  if (!t) return [];
+  return Object.keys(t).map(k => iapById(t[k])).filter(Boolean);
+}
+
+/* AÇIK KARİYERDE satın alınmış kapasite. core.js iapCap() bunu okuyor ve
+   maxClients() de yalnız oradan geçiyor — kapasitenin oyuna girdiği tek yol.
+   Tavan burada uygulanıyor (yukarıdaki gerekçe). */
+function iapCapOwned() {
+  if (typeof S === 'undefined' || !S) return 0;
+  const n = iapOwnedOf(S).reduce((s, p) => s + (p.cap || 0), 0);
+  return Math.min(n, IAP.capMax);
+}
+/* Bu kariyerde kalan kapasite hakkı — mağaza ekranı bunu yazıyor. */
+function iapCapLeft() { return Math.max(0, IAP.capMax - iapCapOwned()); }
+
+/* CİHAZ kapsamı: otomatik reklamlar kapatılmış mı. Kariyer açık olmasa da
+   okunabiliyor, çünkü PREFS ana menüde de var. */
+function iapNoAdsOwned() {
+  return iapOwnedOf(typeof PREFS === 'undefined' ? null : PREFS).some(p => !!p.noads);
+}
+
+/* Bir ürün bu bağlamda zaten alınmış mı. Kapasite ürünleri tekrar alınabilir
+   (tavan izin verdiği sürece), reklam kaldırma alınmaz. */
+function iapOwned(id) {
+  const p = iapById(id);
+  if (!p) return false;
+  return p.noads ? iapNoAdsOwned() : false;
+}
+
+/* ================= SATIN ALMANIN DURUMU =================
+   Köprü: kurulu bir faturalandırma eklentisi var mı. Bugün yok, bu yüzden
+   null; kontrol yine de gerçek bir sorgu — eklenti geldiğinde burası kendi
+   kendine doğruyu söylemeye başlasın diye. */
+function iapBridge() {
+  try {
+    const C = (typeof Capacitor !== 'undefined' && Capacitor) ? Capacitor
+      : ((typeof window !== 'undefined' && window.Capacitor) ? window.Capacitor : null);
+    const P = (C && C.Plugins && C.Plugins[IAP.plugin]) || null;
+    return (P && typeof P.purchase === 'function') ? P : null;
+  } catch (e) { return null; }
+}
+/* Satın alma yapılabilir mi. İKİ koşul birden: akış bağlanmış olacak VE köprü
+   bulunacak. Birincisi olmadan ikincisi yetmez — bağlanmamış bir akışta köprü
+   bulunsa bile ne doğrulama ne de teslimat kodu var. */
+function iapAvailable() { return IAP.wired && !!iapBridge(); }
+/* Neden kullanılamıyor — mağaza ekranı bunu kullanıcıya YAZIYOR.
+   'nobill'  → faturalandırma bu sürümde bağlı değil (bugünkü hâl)
+   'noplay'  → akış bağlı ama bu cihazda köprü yok (web/PWA/tek dosya)
+   ''        → kullanılabilir */
+function iapWhy() {
+  if (!IAP.wired) return 'nobill';
+  if (!iapBridge()) return 'noplay';
+  return '';
+}
+
+/* Bir ürünün BU BAĞLAMDA satın alınabilirliği. Kapsamı ve tavanı da okuyor,
+   çünkü "satın alma kapalı" ile "bu kariyerde hakkın kalmadı" farklı iki
+   cümle ve kullanıcıya farklı görünmeli.
+   Dönüş: 'go' | 'off' | 'full' | 'owned' | 'nocareer'. */
+function iapState(id) {
+  const p = iapById(id);
+  if (!p) return 'off';
+  if (p.sc === 'career' && (typeof S === 'undefined' || !S || !S.agent)) return 'nocareer';
+  if (iapOwned(id)) return 'owned';
+  if (p.cap && p.cap > iapCapLeft()) return 'full';
+  return iapAvailable() ? 'go' : 'off';
+}
+
+/* Satın alma denemesi. GÖVDESİ BİLEREK BOŞ: akış bağlanmadan bir şey yapmak,
+   yapmadığı bir işi yaptığını söylemek olurdu. Defter burada YAZILMIYOR ve
+   akış bağlandığında da buradan yazılmayacak — yazma yeri, makbuzu doğrulayan
+   teslimat yolu olacak. */
+function iapBuy(id) {
+  const st = iapState(id);
+  if (st === 'go') return false;   // bugün ulaşılamaz: iapAvailable() false
+  if (typeof toast === 'function') {
+    toast(t(st === 'full' ? 'shopCapFull' : st === 'owned' ? 'shopOwned'
+      : st === 'nocareer' ? 'shopNeedCareer' : 'shopOff'));
+  }
+  return false;
 }
 
 /* js/data.js — statik veri: isim havuzları, kıtalar, ülkeler, ligler, takımlar, kupalar */
@@ -9438,17 +10232,21 @@ function weeklyCost(){
   return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
 }
 function weeklyNet(){return Math.round((weeklyIncome()-weeklyCost())*10)/10;}
-/* Satın alınmış ek müşteri kapasitesi — bugün her zaman 0. Mağaza da yok,
-   teslim edilmiş bir satın alma da. Yine de maxClients() içinde tek bir toplama
-   olarak duruyor ki kapasitenin oyuna girdiği yer tek olsun; sonraki aşama
-   yalnız bu fonksiyonun GÖVDESİNİ değiştirecek, formülün geri kalanına
-   dokunmayacak.
+/* Satın alınmış ek müşteri kapasitesi — bugün her zaman 0, çünkü teslim
+   edilmiş bir satın alma yok: js/iap.js'in defteri (S.iap.t) hiçbir yerden
+   yazılmıyor ve faturalandırma akışı bağlı değil. Yine de maxClients() içinde
+   tek bir toplama olarak duruyor ki kapasitenin oyuna girdiği yer tek olsun.
 
-   Burada bir S alanı okunmuyor ve okunmayacak: bir sayı, hangi satın alma
-   tokenlarının işlendiğini yeniden kuramaz — kaybolmuş bir defterden sonra
-   gelen satın alma sessizce karşılıksız kalırdı. Kapasitenin kaynağı kariyer
-   kaydındaki teslim edilmiş token kümesi olacak. */
-function iapCap(){return 0;}
+   Sayının kaynağı bir alan DEĞİL, defterden türetilen toplam: bir sayı, hangi
+   satın alma tokenlarının işlendiğini yeniden kuramaz — kaybolmuş bir defterden
+   sonra gelen satın alma sessizce karşılıksız kalırdı. Türetme ve kariyer başına
+   tavan (IAP.capMax) js/iap.js'te; burası yalnız okuma yeri. */
+function iapCap(){return iapCapOwned();}
+/* Otomatik (sezon geçişi) reklamlarının kapalı olup olmadığının TEK okuma yeri.
+   Cihaz kapsamlı: satın alındığında cihazdaki bütün kariyerleri kapsar, çünkü
+   defteri PREFS'te (js/iap.js). İsteğe bağlı ÖDÜLLÜ reklamı kapatmıyor — onu
+   kullanıcı kendi dokunuşuyla açıyor ve karşılığında ödül alıyor. */
+function iapNoAds(){return iapNoAdsOwned();}
 function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')+iapCap();}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
@@ -9750,6 +10548,28 @@ function simWeek(){
   });
   simCups();
 }
+/* ================= SEZON GEÇİŞİ REKLAM ARASI =================
+   İki gerçek geçiş var ve ikisi de FİKSTÜRDEN türüyor, sabit bir hafta
+   sayısından değil: sezon ortası transfer döneminin açıldığı hafta (core.js
+   midWeek(), yani ceil(totalWeeks()/2)+1) ve sezonun bittiği an (S.week
+   totalWeeks()'i aşınca). Lig uzunluğu değişirse ikisi de kendiliğinden kayar.
+
+   Hak KARİYER/SEZON BAŞINA BİRER. İşaret kariyer kaydında (S.adb) duruyor ve
+   save()'den ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi
+   ya da uygulamanın yeniden açılması aynı geçişi ikinci kez üretemesin.
+
+   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa geçiş beklemiyor ve o
+   geçişin hakkı orada yanıyor — alternatifi, reklamı sonradan alakasız bir
+   ekranda açmaktı ve istenen tam olarak bunun olmaması.
+
+   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor. */
+function adBreakClaim(kind,se){
+  if(!S)return '';
+  const b=(S.adb&&typeof S.adb==='object')?S.adb:(S.adb={});
+  if(b[kind]===se)return '';
+  b[kind]=se;
+  return kind;
+}
 function nextWeek(){
   if(!S.agent){render();return;}
   S.tw=(S.tw||0)+1;
@@ -9865,6 +10685,10 @@ function nextWeek(){
   }
   S.week++;
   const seasonOver=S.week>totalWeeks();
+  /* Reklam arası hakkı endSeason()'dan ÖNCE isteniyor: endSeason() S.season'ı
+     artırıyor, sonra sorulsaydı biten sezonun hakkı yeni sezona yazılırdı. */
+  const brk=seasonOver?adBreakClaim('e',S.season)
+    :(S.week===midWeek()?adBreakClaim('m',S.season):'');
   if(seasonOver)endSeason();
   const newN=S.inbox.filter(m=>!m.read).length-unreadBefore;
   if(newN>0&&cur().v!=='inbox'&&cur().v!=='dash')toast(newN+' '+t('newNotifsT'));
@@ -9882,6 +10706,12 @@ function nextWeek(){
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
+  /* EN SON: sezon ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
+     pencereleri sıraya girdi. Reklamın hiçbir sonucu buraya geri dönmüyor —
+     kapanış ve hata yalnız js/ads.js'teki kilidi açıyor, oyun durumuna hiç
+     dokunmuyor — bu yüzden bir gösterim sezon ilerlemesini ikinci kez
+     çalıştıramaz. Hazır reklam yoksa adsInterShow() sessizce 'none' döner. */
+  if(brk&&typeof adsInterShow==='function')adsInterShow();
 }
 function endSeason(){
   const myLgs=new Set(S.clients.map(id=>teamOf(byId(id)).lg));
@@ -12238,39 +13068,68 @@ function hmBadgeFail(img){
   if(p&&p.classList)p.classList.remove('badge');
   img.remove();
 }
-/* ================= ÖDÜLLÜ REKLAM SATIRI =================
-   Ana ekranda, hızlı erişim kartlarının altında. Durumu js/ads.js veriyor;
-   burada yalnız görünüm var — bu dosya SDK'yı hiç tanımıyor.
+/* ================= ÖDÜLLÜ REKLAM: BAKİYE YANINDAKİ + =================
+   Eskiden ana ekranda hızlı erişim kartlarının altında tam genişlikte bir
+   "Reklam izle" satırı vardı. Yerini bakiyenin yanındaki küçük bir + aldı ve
+   anlatının tamamı (tutar, günlük hak, düğme) açılan pencereye taşındı.
 
-   Native eklenti yoksa (web, PWA, tek dosya sürümü) adsRowState() null döner
-   ve satır HİÇ çizilmez: reklamı kapatmak için ayrı bir bayrak yok.
+   İki şey değişmedi ve değişmemeli:
 
-   Tutar metne gömülmüyor, fmtK(RW.amount) ile basılıyor — ödül miktarı tek
-   yerde (js/reward.js) tanımlı kalsın.
+   - Native eklenti yoksa (web, PWA, tek dosya sürümü) adsRowState() null döner
+     ve + HİÇ çizilmez. Reklamı kapatmak için ayrı bir bayrak yok, tek kaynak o.
+   - Tutar metne gömülmüyor; fmtK(RW.amount) ile basılıyor, yani ödül miktarı
+     hâlâ yalnız js/reward.js'te tanımlı.
 
-   'busy' ve 'used' hâllerinde <button disabled>: yükleme/gösterim sırasında
-   ikinci dokunuş native'e hiç ulaşmıyor, hak kullanılmışken de satır yarın
-   yeniden açılacağını söylüyor. */
-function adsRowHtml(){
+   + her durumda dokunulabilir, çünkü pencerenin işi ANLATMAK: hak kullanılmışsa
+   nedenini, reklam hazırlanıyorsa onu söylüyor. Açılması hiçbir native çağrı
+   yapmıyor — reklamı yalnız pencerenin içindeki düğme başlatıyor. */
+function adsPlusHtml(){
+  if(typeof adsRowState!=='function')return '';
   const st=adsRowState();
   if(!st)return '';
-  /* Yaş kapısı hâllerinde TUTAR YAZILMIYOR. Ödülün miktarını gösterip ardından
-     doğum yılı sormak, doğrudan yüksek yaş beyanına teşvik olurdu; eşiğin
-     altındaki kullanıcıya da yukarı düzeltme daveti çıkarılmıyor. */
-  if(st==='age')return `<button class="hmAg ad gold" onclick="adsAgeOpen()">
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeRowSub')}</i></span>
-    <span class="hmAgC">›</span></button>`;
-  if(st==='noage')return `<button class="hmAg ad gold" disabled>
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${t('adRewardTitle')}</b><i>${t('adAgeUnder')}</i></span></button>`;
-  const on=st==='go';
-  const sub=st==='go'?t('adRewardSub'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
-  const ttl=on?`${t('adRewardTitle')} · +${fmtK(RW.amount)}`:t('adRewardTitle');
-  return `<button class="hmAg ad gold" ${on?'onclick="adsWatch()"':'disabled'}>
-    <span class="hmAgIc">${hmIcon('cash',50)}</span>
-    <span class="hmAgT"><b>${ttl}</b><i>${sub}</i></span>
-    ${on?'<span class="hmAgC">›</span>':''}</button>`;
+  /* Durum düğmenin ÜSTÜNDE görünüyor: bugünün hakkı açıkken vurgulu, kapalıyken
+     sönük. data-ad hem CSS'in okuduğu hem de bir yeniden çizimin gerçekten olup
+     olmadığını dışarıdan görülebilir kılan tek işaret — düğmenin kendisi her
+     durumda aynı metni (+) taşıdığı için başka ayırt edici yok. */
+  return `<button class="hmPlus${st==='go'?' on':''}" data-ad="${st}" onclick="adsRewardOpen()"
+    aria-label="${esc(t('adRewardTitle'))}">+</button>`;
+}
+/* Ödül penceresi. Görünüm burada, karar js/ads.js'te: hangi durumda olduğumuzu
+   adsRowState() söylüyor ve bu fonksiyon ondan başka hiçbir şeye bakmıyor. */
+function adsRewardOpen(){
+  const st=adsRowState();
+  if(!st)return;
+  /* Beyan istenen hâlde doğrudan nötr yaş ekranına gidiliyor. Araya ödülü
+     ANLATAN bir pencere koymak, tutarı gösterip ardından doğum yılı sormak
+     olurdu — tam olarak kaçınılan şey. */
+  if(st==='age'){adsAgeOpen();return;}
+  const close=`<button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('adRewardClose')}</button>`;
+  /* Eşiğin altındaki kullanıcıya da tutar yazılmıyor ve yukarı düzeltme daveti
+     çıkarılmıyor; beyanı düzeltme/silme yolu Ayarlar'da, eşit ağırlıkta. */
+  if(st==='noage'){
+    openModal(`<h2>${t('adRewardTitle')}</h2>
+    <div class="sub" style="margin-top:10px;white-space:normal;line-height:1.5">${t('adAgeUnder')}</div>
+    ${close}`);
+    return;
+  }
+  const amt=fmtK(RW.amount);
+  const stat=st==='go'?t('adRewardReady'):(st==='busy'?t('adRewardBusy'):t('adRewardUsed'));
+  const why=st==='busy'?t('adRewardBusyWhy'):(st==='used'?t('adRewardUsedWhy'):t('adRewardCareer'));
+  openModal(`<h2>${t('adRewardTitle')}</h2>
+  <div class="rwAmt"><span class="rwAmtI">${ICONS.cash}</span><b>+${esc(amt)}</b></div>
+  <div class="sub" style="margin-top:2px;white-space:normal;line-height:1.5">${t('adRewardWhat').replace('{a}',esc(amt))}</div>
+  <div class="rwState${st==='go'?' on':''}">
+    <span>${t('adRewardDaily')}</span><b>${stat}</b></div>
+  <div class="sub" style="margin-top:8px;white-space:normal;line-height:1.5">${why}</div>
+  <button class="btn" style="margin-top:14px" ${st==='go'?'onclick="adsRewardGo()"':'disabled'}>${t('adRewardWatch')}</button>
+  ${close}`);
+}
+/* Pencereden reklamı başlatan TEK yol. Önce pencere kapanıyor: altındaki ekran
+   ADS.cur kurulduğu anda yeniden çiziliyor ve açık bir modalın üstüne çizim
+   yapmak sırayı bozardı. Kapı yine adsWatch()'un kendi girişinde. */
+function adsRewardGo(){
+  closeModal();
+  adsWatch();
 }
 /* ================= GİZLİLİK SEÇENEKLERİ SATIRI =================
    Ayarlar > Hakkında, Gizlilik Politikası satırının yanında. Yalnız UMP
@@ -13922,7 +14781,10 @@ dash(){
     </div>
     <div class="hmBal">
       <span class="hmCoin">${ICONS.cash}</span>
-      <span class="hmBalV${S.cash<0?' neg':''}">${fmtK(S.cash)}</span>
+      <span class="hmBalRow">
+        <span class="hmBalV${S.cash<0?' neg':''}">${fmtK(S.cash)}</span>
+        ${adsPlusHtml()}
+      </span>
       <span class="hmBalL">${t('hmBalance')}</span>
     </div>
   </div>
@@ -13959,8 +14821,6 @@ dash(){
     ${qCard('blue','inbox',t('inbox'),unread,"navTo('inbox')")}
     ${qCard('viol','scout',t('scoutNet'),pctStr,"pushV('atlas')")}
   </div>
-
-  ${adsRowHtml()}
 
   ${riser?`<button class="hmRise" onclick="pushV('player',${riser.p.id})">
     <span class="hmRiseIc${hmHasBadge('trend')?' badge':''}">${hmIcon('trend',48)}</span>
@@ -14398,6 +15258,106 @@ settings(){
   ${adsAgeRowHtml()}
   ${adsPrivacyRowHtml()}`;
 },
+/* ================= MAĞAZA =================
+   Ürünler GÖRÜNÜR, satın alma kapalı ve ekran bunu saklamıyor. Ama "kapalı"
+   ekranın KONUSU değil: durum tek satırda bir kez söyleniyor, geri kalan yer
+   kararı değiştiren şeye ayrılıyor — ürün ne yapıyor, hangi kutuya işleniyor,
+   bu kariyerde ne kadar hak kaldı. Beş düğmenin altında aynı cümleyi altı kez
+   yazmak ürünü değil, derlemeyi anlatmaktı.
+
+   Ürün listesi bu dosyada DEĞİL: IAP_PRODUCTS (js/iap.js) tek kaynak, kapsam da
+   ürünün kendi alanı (sc). Ekran yalnız çiziyor; hiçbir hak buradan verilmiyor
+   ve "şimdilik ücretsiz açıldı" gibi bir yol yok.
+
+   Fiyat hiçbir yerde yazmıyor. Yerelleştirilmiş fiyat, ödeme bağlantısı
+   kurulduğunda Google Play'den gelecek; şimdiden bir sayı basmak tahmin olurdu.
+   "En popüler", indirim ya da avantaj iddiası da yok — hiçbiri kararlaştırılmış
+   değil ve olmayan bir şeyi rozetlemek satmaya çalışmak olurdu.
+
+   ===== EKRANIN İMZASI: ON SEGMENTLİ HAK ÖLÇERİ =====
+   Bu ekranın gerçek kısıtı bir cümle değil, bir sayı: kariyer başına +10
+   (IAP.capMax). Özet kartındaki segmentler onu rakamdan ÖNCE gösteriyor —
+   dolular bu kariyerde kullanılmış hakkı, boşlar kalanı. Segment sayısı
+   IAP.capMax'ten TÜRÜYOR, elle yazılmıyor: tavan değişirse ölçer de değişir.
+
+   Sayfa başlığı YOK. Üst çubukta zaten "Mağaza" yazıyor (hdr() eşlemesi) ve
+   360px'te aynı kelimeyi iki kez yazmak bir satırlık dikey bütçeyi harcamaktı.
+
+   Yeni sınıf ailesi (.shp*) dört temada da temanın KENDİ değişkenlerinden
+   boyanıyor — --acc, --gold, --sur, --line, --txt3. Renk sabiti yok, bu yüzden
+   her tema kendi dilinde konuşuyor ve hiçbirine ikinci bir palet girmiyor. */
+shop(){
+  const off=iapWhy()!=='';
+  const ing=!!(S&&S.agent);
+  const used=ing?iapCapOwned():0;
+  /* Ölçer tavanı IAP.capMax'ten okuyor: on segment "on" yazdığı için değil,
+     tavan on olduğu için on tane. */
+  const pips=Array.from({length:IAP.capMax},(_,i)=>
+    '<i class="'+(i<used?'on':'')+'"></i>').join('');
+  /* Kapasite paketi. Kartın okuduğu ilk şey rakam; ürünün tam adı düğmenin
+     erişilebilir adında duruyor, böylece ekran okuyucu dört düğmeyi birbirinin
+     aynısı "Satın al" diye görmüyor. */
+  const pack=p=>{
+    const st=iapState(p.id);
+    const note=st==='full'?t('shopCapFull'):st==='nocareer'?t('shopNeedCareer'):'';
+    return `<div class="shpCard${p.cap===IAP.capMax?' top':''}${note?' out':''}">
+      <span class="shpIc">${ICONS['shopCap'+p.cap]}</span>
+      <span class="shpN"><i>+</i>${p.cap}</span>
+      <span class="shpL">${t('shopCapSec')}</span>
+      ${note?`<span class="shpNote">${note}</span>`:''}
+      <button class="shpBuy" aria-label="${t('shopBuy')} · ${t(p.k)}"
+        ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
+    </div>`;
+  };
+  /* Reklam kaldırma tam genişlikte ve kendi bölümünde: kapsamı da (cihaz),
+     bıraktığı şey de (isteğe bağlı ödüllü reklam) kapasite paketlerininkinden
+     başka. Aynı ızgaraya sıkıştırmak iki farklı sözleşmeyi tek satır gibi
+     göstermek olurdu. */
+  const adItem=p=>{
+    const st=iapState(p.id);
+    /* Ürüne ÖZGÜ durum burada da yazılıyor: bu ürün alınmışsa düğmenin kapalı
+       olmasının sebebi "satın alma kullanılamıyor" değil, "zaten senin" — ve
+       ikisi kullanıcı için aynı cümle değil. */
+    const note=st==='owned'?t('shopOwned'):'';
+    return `<div class="shpAd">
+      <div class="shpAdH">
+        <span class="shpAdIc">${ICONS.shopNoAds}</span>
+        <span class="shpAdT"><b>${t(p.k)}</b>
+        <span class="tag pos">${t('shopScopeDevice')}</span></span>
+      </div>
+      <div class="shpAdB">
+        <p>${t('shopNoAdsDesc')}</p>
+        <p>${t('shopScopeDeviceSub')}</p>
+        <p class="keep">${t('shopNoAdsKeep')}</p>
+        <button class="shpBuy wide" aria-label="${t('shopBuy')} · ${t(p.k)}"
+          ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
+        ${note?`<p class="shpNote">${note}</p>`:''}
+      </div>
+    </div>`;
+  };
+  return `${!off?'':`<div class="shpOff">${ICONS.alert}<span>${t('shopOff')}</span></div>`}
+
+  <div class="shpSum">
+    <span class="shpSumP"><span class="shpSumV num">${ing?`${S.clients.length}/${maxClients()}`:'—'}</span>
+    <span class="shpSumL">${t('shopCapNow')}</span></span><i></i>
+    <span class="shpSumR">
+      <span class="shpLeft">${t('shopCapLeft').replace('{n}',ing?iapCapLeft():IAP.capMax)}</span>
+      <span class="shpPips" aria-hidden="true">${pips}</span>
+      <span class="shpCeil">${t('shopCapCeil').replace('{n}',IAP.capMax)}</span>
+    </span>
+  </div>
+
+  <div class="sect">${t('shopCapSec')}</div>
+  <p class="shpLead">${t('shopCapDesc')}</p>
+  <div class="shpRules">
+    <p><span class="tag w">${t('shopScopeCareer')}</span>${t('shopScopeCareerSub')}</p>
+    <p>${t('shopCapNote')}</p>
+  </div>
+  <div class="shpGrid">${IAP_PRODUCTS.filter(p=>p.cap).map(pack).join('')}</div>
+
+  <div class="sect">${t('shopAdSec')}</div>
+  ${IAP_PRODUCTS.filter(p=>p.noads).map(adItem).join('')}`;
+},
 player(id){
   if(useSahaPlayerProfile())return pfSahaView(id);
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
@@ -14831,6 +15791,24 @@ gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 16.5 7 12 21.
 skills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M12 7.4v3.2a3 3 0 0 1-1.4 2.5L8 14.8"/><path d="M12 7.4v3.2a3 3 0 0 0 1.4 2.5L16 14.8"/></svg>',
 calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/><path d="M3.2 10h17.6M8 3v4M16 3v4"/><circle cx="8.4" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.4" cy="17.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor" stroke="none"/></svg>',
 trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15 7h5v5"/></svg>',
+/* Mağaza ürünleri. Dördü de "oyuncu kartı" ama BİÇİMLERİ farklı, yalnız
+   rengi değil: tek kart → yelpaze → deste → arşiv kasası. Paket büyüdükçe
+   kompozisyon büyüyor, çünkü aynı çizimin dört rengi ürünü ayırt ettirmez —
+   360px'te 34px'lik bir ikonda renk tek başına okunmaz.
+   Kart yüzü her ikonda aynı: baş + omuz + sözleşme satırı. Ortak öğe ailenin
+   ne olduğunu söylüyor, değişen öğe kaçıncı olduğunu. */
+shopCap1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.8" y="2.8" width="10.4" height="18.4" rx="2.2"/><circle cx="12" cy="8.9" r="2.05"/><path d="M8.9 15.1a3.3 3.3 0 0 1 6.2 0"/><path d="M9.6 18.3h4.8"/></svg>',
+shopCap3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.1 5.9 4.6 7.1a2 2 0 0 0-1.25 2.5l2.9 8.6"/><path d="M15.9 5.9l3.5 1.2a2 2 0 0 1 1.25 2.5l-2.9 8.6"/><rect x="8.1" y="3.1" width="7.8" height="17.4" rx="2"/><circle cx="12" cy="8.7" r="1.85"/><path d="M9.35 14.4a2.85 2.85 0 0 1 5.3 0"/><path d="M9.9 17.5h4.2"/></svg>',
+shopCap5:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="2.6" width="12.2" height="16" rx="2.2"/><circle cx="9" cy="8" r="1.9"/><path d="M6.2 13.7a2.9 2.9 0 0 1 5.6 0"/><path d="M17.6 5.7v12.6a2.2 2.2 0 0 1-2.2 2.2H5.9"/><path d="M20.7 8.6v9.7a2.2 2.2 0 0 1-2.2 2.2h-2.6"/></svg>',
+shopCap10:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.9" y="2.3" width="10.2" height="10.6" rx="2"/><circle cx="12" cy="6.2" r="1.75"/><path d="M9.45 10.5a2.7 2.7 0 0 1 5.1 0"/><path d="M2.9 15.1h18.2v4.4a2.2 2.2 0 0 1-2.2 2.2H5.1a2.2 2.2 0 0 1-2.2-2.2z"/><path d="M9.7 15.1v1.9h4.6v-1.9"/></svg>',
+/* Reklam kaldırma: tam ekran reklam + üzerinden geçen tek iptal çizgisi.
+   Çizgi kutunun İÇİNDEN geçiyor (köşeden köşeye değil) — "bu ekran artık
+   çıkmıyor" demek istiyor, "ekran bozuk" değil. */
+shopNoAds:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 6.1v8a2.2 2.2 0 0 1-2.2 2.2H5"/><path d="M2.8 13.3V6.1a2.2 2.2 0 0 1 2.2-2.2h11.4"/><path d="M8.2 20.1h7.6"/><path d="M12 16.3v3.8"/><path d="M7.1 8.4h5.1"/><path d="M4.4 19.2 19.6 4"/></svg>',
+/* Mağaza: ayar dişlisiyle aynı çizim dili (24'lük kutu, 1.8 kalınlık, yuvarlak
+   uçlar, currentColor). Sepetin iki tekerleği dolu daire değil çünkü diğer
+   ikonların hiçbiri dolu değil — burada da çizgi kalıyor. */
+cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3.6h2.4l2.2 10.2a1.9 1.9 0 0 0 1.9 1.5h7.6a1.9 1.9 0 0 0 1.9-1.45L21.2 7H6"/><circle cx="10" cy="19.6" r="1.5"/><circle cx="17.4" cy="19.6" r="1.5"/></svg>',
 settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
 };
 /* boş ekranlar: ikon + başlık + alt metin */
@@ -15042,6 +16020,8 @@ function render(){
     document.getElementById('hBack').classList.toggle('show',stack.length>1);
     const b0=document.getElementById('btnSet');
     if(b0)b0.classList.remove('show');   // ayarlara menüden giriliyor
+    const s0=document.getElementById('btnShop');
+    if(s0)s0.classList.remove('show');   // mağaza kariyerin içinden açılıyor
     showChrome(false);
     document.getElementById('hT1').textContent=c.v==='settings'?t('settings'):'Menajer';
     /* Menü ekranı kendi başlığını taşıyor (KARİYERLERİM); üst çubukta ikinci
@@ -15064,6 +16044,7 @@ function render(){
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
+  else if(c.v==='shop')t1=t('shop');
   else if(c.v==='skills')t1=t('skills');
   else if(c.v==='atlas')t1=t('scoutNet');
   else if(c.v==='rival')t1=rivalName(rivalById(c.id))||t('rivals');
@@ -15078,6 +16059,16 @@ function render(){
   if(bs){
     bs.classList.add('show');
     if(!bs.firstChild){bs.innerHTML=ICONS.settings;const sv=bs.querySelector('svg');if(sv){sv.style.width='17px';sv.style.height='17px';}}
+  }
+  /* Sepet YALNIZ ana ekranda. Diğer kariyer ekranlarında üst çubuk zaten geri +
+     başlık + kasa + itibar + ayarlar + Devam taşıyor; 360px'te başlığa kalan
+     yer sıfıra iniyordu. Ana ekranda ise çubuk bilerek boşaltılmış (dört temada
+     da .hstat ve #btnNext gizli), yani sepetin yanına konduğu tek düğme
+     gerçekten ayarlar. */
+  const bsh=document.getElementById('btnShop');
+  if(bsh){
+    bsh.classList.toggle('show',c.v==='dash');
+    if(!bsh.firstChild){bsh.innerHTML=ICONS.cart;const cv=bsh.querySelector('svg');if(cv){cv.style.width='18px';cv.style.height='18px';}}
   }
   document.getElementById('btnNext').textContent=t('next');
   const unread=S.inbox.filter(m=>!m.read).length;
