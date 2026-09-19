@@ -1,0 +1,88 @@
+diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
+index d8bfea2..2f5f850 100644
+--- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
++++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
+@@ -302,7 +302,8 @@ public class NativePurchasesPlugin extends Plugin {
+             // given to them. You can also choose to remind the user to complete the
+             // purchase if you detect that it is still pending.
+             if (purchaseCall != null) {
+-                purchaseCall.reject("Purchase is pending");
++                // PATCH: PENDING BELIRSIZ DEGIL, bilinen bir asamadir.
++                purchaseCall.reject("Purchase is pending", npxCode("state", Purchase.PurchaseState.PENDING, purchaseCall));
+             } else {
+                 Log.d(TAG, "purchaseCall is null for pending purchase");
+             }
+@@ -310,13 +311,42 @@ public class NativePurchasesPlugin extends Plugin {
+             Log.d(TAG, "Purchase state is OTHER: " + purchase.getPurchaseState());
+             // Handle any other error codes.
+             if (purchaseCall != null) {
+-                purchaseCall.reject("Purchase is not purchased");
++                purchaseCall.reject(
++                    "Purchase is not purchased",
++                    npxCode("state", purchase.getPurchaseState(), purchaseCall)
++                );
+             } else {
+                 Log.d(TAG, "purchaseCall is null for failed purchase");
+             }
+         }
+     }
+ 
++    /**
++     * PATCH (FootballAgent_Mobile).
++     *
++     * Eklenti, USER_CANCELED dahil OK olmayan HER sonucu tek bir
++     * "Purchase is not purchased" metnine indiriyordu; BillingResponseCode
++     * yalnizca logleniyordu. Cagiran taraf bu yuzden "kullanici vazgecti" ile
++     * "baglanti koptu / odeme belirsiz" arasini ayiramiyor, belirsiz sayip
++     * ayrilan kapasiteyi serbest birakamiyordu.
++     *
++     * Bicim: npx:&lt;asama&gt;:&lt;kod&gt;:&lt;appAccountToken&gt;
++     *   asama  launch  = launchBillingFlow OK donmedi (akis HIC baslamadi)
++     *          updated = onPurchasesUpdated OK disi bir sonuc verdi
++     *          state   = satin alma geldi ama PURCHASED degil
++     *   kod    BillingResponseCode (updated/launch) ya da PurchaseState (state)
++     *   token  bu cagriya verilen appAccountToken - hangi DENEME oldugu.
++     *          Gec gelen bir callback'in baska bir denemenin rezervasyonunu
++     *          dusurmesini engelleyen tek alan budur.
++     */
++    private static String npxCode(String stage, int code, PluginCall call) {
++        String tag = call != null ? call.getString("appAccountToken") : null;
++        if (tag == null) {
++            tag = "";
++        }
++        return "npx:" + stage + ":" + code + ":" + tag;
++    }
++
+     private void acknowledgePurchase(String purchaseToken) {
+         Log.d(TAG, "acknowledgePurchase() called with token: " + purchaseToken);
+         AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+@@ -429,7 +459,12 @@ public class NativePurchasesPlugin extends Plugin {
+                                 Log.d(TAG, "Purchase update failed or purchases is null");
+                                 Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
+                                 if (purchaseCall != null) {
+-                                    purchaseCall.reject("Purchase is not purchased");
++                                    // PATCH: BillingResponseCode ve denemenin kimligi JS'e kayipsiz
++                                    // tasiniyor. Capacitor reject(msg, code) -> JS tarafinda err.code.
++                                    purchaseCall.reject(
++                                        "Purchase is not purchased",
++                                        npxCode("updated", billingResult.getResponseCode(), purchaseCall)
++                                    );
+                                 }
+                             }
+                             closeBillingClient();
+@@ -698,6 +733,15 @@ public class NativePurchasesPlugin extends Plugin {
+                             "Billing flow launch result: " + billingResult2.getResponseCode() + " - " + billingResult2.getDebugMessage()
+                         );
+                         Log.i(NativePurchasesPlugin.TAG, "onProductDetailsResponse2" + billingResult2);
++                        // PATCH: akis hic baslamadiysa onPurchasesUpdated tetiklenmiyor ve
++                        // cagri sonsuza kadar askida kaliyordu. Simdi asamasiyla birlikte
++                        // reddediliyor: "odeme ekrani acilmadi" KESIN bir sonuctur.
++                        if (billingResult2.getResponseCode() != BillingClient.BillingResponseCode.OK) {
++                            call.reject(
++                                "Billing flow did not start",
++                                npxCode("launch", billingResult2.getResponseCode(), call)
++                            );
++                        }
+                     }
+                 }
+             );

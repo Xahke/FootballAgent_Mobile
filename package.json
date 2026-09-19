@@ -14,12 +14,15 @@
     "android:sync": "npm run www && npx cap sync android",
     "android:open": "npm run android:sync && npx cap open android",
     "android:apk": "npm run android:sync && node tools/android.js apk",
-    "android:aab": "npm run android:sync && node tools/android.js aab"
+    "android:aab": "npm run android:sync && node tools/android.js aab",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@capacitor-community/admob": "8.1.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
-    "@capacitor/core": "^8.5.0"
+    "@capacitor/core": "^8.5.0",
+    "@capgo/native-purchases": "8.7.0",
+    "patch-package": "8.0.1"
   }
 }

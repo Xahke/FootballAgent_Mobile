@@ -92,11 +92,11 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (498 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (513 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
-| `js/iap.js` | Store catalogue: `IAP`, `IAP_PRODUCTS` (four capacity packs + remove-auto-ads), the two purchase ledgers and the entitlement readers. **Sells nothing** — see *The store lists what it cannot sell* below |
+| `js/iap.js` | Store catalogue, the two purchase ledgers, reservations, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -745,125 +745,189 @@ Two things this measurement settles, because both had been claimed wrongly befor
   timeout on the strength of it: a timer that released the lock would let a second form
   open behind the first.
 
-### The store lists what it cannot sell, and says so
+### The store sells, and the order of operations is the design
 
-`js/iap.js` is a **catalogue and two ledgers**. It contains no purchase call, no receipt
-check and no path that grants anything. `VIEWS.shop` draws the five products and leaves
-every Buy button disabled.
+`js/iap.js` is the catalogue, the two ledgers **and** the Play Billing flow. The
+bridge is `@capgo/native-purchases`, pinned to exactly `8.7.0`, which ships
+**Play Billing 8.3.0** (`android/build.gradle` in the published tarball — not the
+`9.1.0` that `main` carries; read the tag you pin, never the README).
 
-**The screen says one thing about purchasing: "not available right now."** It does not
-explain *why* — no "billing is not connected", no "nothing is granted", no price. Those
-sentences described the build to a developer, not the product to a player, and a player
-who cannot buy anything does not need the reason enumerated six times. The status line
-appears **once**, above the products; only genuinely product-specific states (`full`,
-`owned`, `nocareer`) print under a button. What stays visible is what changes a decision:
-what each product does, which scope it lands in, the +10 per-career ceiling, and that
-career-scoped capacity goes when that career is deleted.
-There is no "unlocked for now" flag and no fake success — that was the explicit
-requirement, and blocks **23** (1)–(3) and (6) of `tools/savetest.js` keep it true,
-including a source scan proving no file in `js/` ever writes either ledger.
+**There is no server and no user account, and two consequences are stated rather
+than hidden.** The only check available locally is `purchaseState == PURCHASED`
+plus token uniqueness in our own ledger. That is **not** receipt verification and
+it does not protect against a modified client; no comment, string or doc calls it
+"verified", and no secret key lives in the client. And because Play drops a
+refunded purchase out of `getPurchases()` — a consumed one was never there — a
+refund on a consumed capacity pack **cannot be detected**. Those two limits are
+accepted; **neither of them licenses a partial delivery or a lost payment record**,
+which is what most of the file exists to prevent.
 
-**The screen is drawn once and themed four times.** There is no `useSahaShop()` gate —
-unlike `market`/`league`/`skills`/`inbox`/`transfer`, the store emits one `.shp*` markup
-for every theme and each of the four stylesheets carries its own block for it, written in
-that theme's own variables (`--acc`, `--gold`, `--sur`, `--line`, `--txt3`). No colour
-literal appears in any of them, which is what lets saha answer in emerald with a measured
-gold accent on the +10 card while gazete answers in ink on paper. Product icons live in
-`ICONS` (`shopCap1/3/5/10`, `shopNoAds`) in the same 24-box / 1.8-stroke / `currentColor`
-language as the rest, and the four capacity icons differ in **composition**, not colour —
-one card, a fan, a stack, an archive box — because at 34px on a 360px screen colour alone
-does not tell four products apart.
+**The order, and why:**
 
-**The signature element is the ten-segment allowance meter**, and its length is derived:
-`Array.from({length: IAP.capMax})`, filled to `iapCapOwned()`. Raising the ceiling moves
-the meter with it and touches no CSS. It is a row of segments rather than a progress bar
-precisely because it has to read correctly at zero, which is where every career starts.
+```
+reserve → (confirm on disk) → purchaseProduct → PURCHASED? →
+resolve target career → WRITE the entitlement → (confirm by re-read) →
+consume / acknowledge → close
+```
 
-**The layout rules that are decisions, not styling:** no `<h2>` page title (the header bar
-already says Mağaza, and 360px has no line to spare); the closed-purchase line is a small
-status row, never a card; the shared scope and ceiling rules sit **once** above the grid
-rather than repeated under four cards; and the ad-removal product is full width in its own
-section because its scope (device) and what it leaves running (the rewarded ad) are not
-the capacity packs' contract. Measured at 360px and at 320px, where the grid drops to one
-column and the card turns horizontal: no horizontal overflow, and 80px clear between the
-last button and the floating nav at the bottom of the scroll.
+Acknowledging last is the whole point: Play treats an acknowledged purchase as
+delivered, so a crash between the two would leave Play satisfied and the ledger
+empty. **The reverse exposure is not eliminated, only relocated:** once the
+entitlement is written and `consume`/`acknowledge` then fails, the entitlement and
+the payment can diverge. Play may refund an unacknowledged purchase under its own
+rules, which would leave a delivered entitlement next to a refunded payment — and
+serverless we cannot detect that (a consumed token is not returned by
+`getPurchases()` either way). Retrying the close narrows the window; nothing closes
+it.
 
-**Entitlement is derived from delivered purchase tokens, never from a counter.** That was
-already the intent of the `iapCap()` comment in core.js: a number cannot reconstruct which
-tokens it has already counted, so a restore would have no way to avoid double-counting.
+**Three of the plugin's paths behave differently and the difference is load-bearing**
+(verified in the published 8.7.0 Java, not the README):
 
-| Ledger | Lives in | Shape | Read by |
-|---|---|---|---|
-| career | `S.iap.t` | `{<purchase token>: <product id>}` | `iapCapOwned()` → `iapCap()` → `maxClients()` |
-| device | `PREFS.iap.t` | same | `iapNoAdsOwned()` → `iapNoAds()` → `adsInterPrep`/`adsInterShow` |
+| Path | Finishes anything by itself? |
+|---|---|
+| `purchaseProduct({isConsumable:false, autoAcknowledgePurchases:false})` | No — we finish it |
+| `getPurchases()` | No. Pure query. This is the reconcile/restore path |
+| `restorePurchases()` | **Yes — acknowledges without consulting `autoAcknowledgePurchases`** (`processUnfinishedPurchases` → `handlePurchases` → `decide(false, purchase)`) |
 
-Both are absent today and absent on every old save; both reads fall to empty. Each has
-exactly **one** read site in the game, which is what keeps the scopes honest: a capacity
-token in `PREFS` grants nothing and a no-ads token in `S` grants nothing.
+So `restorePurchases()` is **never called**, and block 24 (15) plus block 23 (6)
+both assert that. `isConsumable: true` is equally unusable: it consumes *before*
+`call.resolve()`, which would close the purchase before delivery. Capacity packs
+are consumed by our own `consumePurchase()` call, after delivery.
 
-**Scope is a field on the product (`sc`), not a decision in the view.** `'career'` products
-apply to the open career and go with it when that career is deleted; `'device'` products
-cover every career on the device. The screen prints both the chip and the sentence, in both
-languages, from that one field.
+**Three persistent structures:**
 
-**The capacity ceiling is `IAP.capMax` (+10) per career and it binds in one place** — the
-clamp at the end of `iapCapOwned()`. The store also *prints* the remaining allowance, but
-that is presentation; a ledger that somehow carried more could still not push more than +10
-into `maxClients()`.
+| | |
+|---|---|
+| `S.iap.t` | `{<purchase token>: <product id>}` — delivered tokens. The source of capacity |
+| `S.iap.r` | `{<att>: {cap, at}}` — **reservations**, written before payment starts and removed *in the same write* as the delivery, so the same capacity is never counted twice |
+| `iapq` | device-wide record of paid-but-unclosed transactions. Its own key in `js/store.js` (in `ST_META`, so `recSlotKeys()` still only counts slots) |
 
-**Capacity means player clients. It is not the three career save slots** (`SLOTS`,
-js/saves.js) and must never be conflated with them; the store says so on screen and block
-23 (7) asserts that buying capacity leaves `SLOTS` at 3.
+`iapq` lives in the durable store rather than `PREFS` because `PREFS` is
+localStorage-only: a quota failure there would silently lose a **paid** record.
 
-**No price is printed anywhere.** Google Play returns the localised price once billing is
-connected; writing a number now would be a guess. `shopPrice` says exactly that.
+**An absent `purchaseState` is not a purchase.** The field is optional in the
+plugin's TypeScript (`purchaseState?: string`) and arrives on Android as
+`String.valueOf(int)` — `"0"` UNSPECIFIED, `"1"` PURCHASED, `"2"` PENDING. Only an
+explicit `"1"` grants anything; the earlier code defaulted a missing value to `"1"`,
+which treated a response that never stated its state as purchased.
 
-**What is still missing for a real purchase** — none of it exists yet, and the order of
-the steps is not a preference:
+**The queue states are the recovery map.** `pending` (Play says PENDING — no
+entitlement), `ready`, `granted` (entitlement persisted and re-read), `finishing`
+(consume/ack issued, outcome unknown), `done`, `orphan` (target career gone),
+`unbound` (no target identity came back), `undeliverable` (ceiling or quantity),
+`unverified` (entitlement written, close not provable).
+The last three grant nothing **and finish nothing**, and their records are never
+deleted — `deleteSlot()` marks them `orphan` instead of dropping them, which is the
+deliberate opposite of what it does to a reward record. A free reward belongs to its
+career; a paid record is the user's only trace.
 
-1. **A Play Billing bridge.** `IAP.plugin` names the Capacitor plugin and `IAP.wired` is
-   the switch; `iapAvailable()` requires **both**, so flipping the flag alone still sells
-   nothing.
-2. **The five product ids in Play Console**, matching `IAP.sku` byte for byte — four
-   **consumable** capacity packs and one **non-consumable** ad removal. Permanent once
-   published.
-3. **Verify → grant → acknowledge/consume, in that order.** Play's flow is
-   `launchBillingFlow` → `onPurchasesUpdated` → check `purchaseState == PURCHASED` →
-   verify → **deliver the entitlement** → *then* `acknowledgePurchase` (non-consumable) or
-   `consumeAsync` (consumable; consuming acknowledges implicitly). Acknowledging before
-   delivering is the wrong way round: a crash in between would leave Play believing the
-   purchase was honoured while the ledger is empty. There is a hard deadline on the other
-   side — a purchase not acknowledged or consumed **within three days is automatically
-   refunded and revoked** — so delivery must not be able to stall behind a user action.
-   The ledger key is the purchase token precisely so verify-and-deliver is idempotent, and
-   the writer must be the verifying code, never the UI.
-4. **Pending transactions, and the career they belong to.** Play can hold a purchase in
-   `PENDING` (cash, family approval) and deliver it hours later, on a launch that may not
-   even have a career open. Nothing is written to a ledger until the state is `PURCHASED`;
-   a purchase that expires in `PENDING` was never granted and needs no refund of ours.
-   **Unresolved design question:** a capacity pack is career-scoped, so the target career
-   has to be pinned at purchase time (the same move `rwRequest()` makes with `S.cid`) —
-   and nothing decides yet what happens when a pending purchase lands after that career
-   was deleted. Pay it to another career, hold it until one is chosen, convert it to
-   device scope, or refund it: all four are defensible and none is chosen. Whoever wires
-   billing has to answer this before the first consumable ships.
-5. **Restore, and what restore cannot reach.** `queryPurchasesAsync` returns only
-   purchases that are still *owned* — non-consumables, and consumables that have not been
-   consumed yet. **Once a capacity pack is consumed it stops being returned**, so a
-   reinstall cannot recover already-consumed capacity by querying the account: that needs
-   a server-side record of delivered tokens (Play Developer API), which this project does
-   not have and is not planned. Ad removal, being non-consumable, *is* fully restorable.
-   Replaying a restored token through the delivery path is safe by construction — a token
-   already in the ledger is a no-op.
-6. **The device cache is not the restore source.** `PREFS.iap` is a local copy so the game
-   behaves correctly offline and before the first Play query returns; the authority is
-   Play, on the signed-in Google account. That means the cache has to be refreshed from a
-   query (a refunded or revoked purchase should eventually clear it), it does not follow
-   the user to a different Google account on the same device, and it is not what makes the
-   entitlement survive a reinstall — Play is. Treating the cache as the source of truth
-   would turn "I paid on my other phone" into "you did not".
+**`finishing` is what makes a lost consume response recoverable.** It is written
+*before* the call, so a process death between call and response is visible on the
+next launch.
 
-Until all of it lands, `iapBuy()` stays a function whose only job is to explain itself.
+**A token missing from a later successful query is not proof the close succeeded.** It
+has at least three possible causes the client cannot tell apart: the consume really did
+land and only the response was lost; the purchase was refunded or revoked; or Play is
+not listing it for some other reason. So the record moves to **`unverified`**, not
+`done` — the entitlement stays and is never granted twice, but nothing is reported as
+"completed" or as "refunded". `iapUnverifiedN()` counts it separately from
+`iapStuckN()` (the user has what they paid for) and the store says exactly that much
+(`shopTxUnverified`). If the token ever reappears in a query, the purchase is still
+open and the close is retried.
+
+**The target career comes back from Play, not from a local guess.**
+`appAccountToken` (Play's `obfuscatedAccountId`) carries `"<cid>.<att>"` — 41
+characters, no PII, both halves random. It survives process death and a PENDING
+payment that completes days later. When it is missing the record goes `unbound`;
+**the open career is never assumed**.
+
+**Delivery does not wait for the user to open the target career** — the three-day
+acknowledgement deadline forbids it. An entitlement that cannot be persisted is **rolled back in memory**, reservation
+included: capacity that is not on disk is not capacity, and leaving it in `S` let a
+later ordinary `save()` turn a failed delivery into a silent one. The rollback targets
+**the object the mutation was made on**, captured by `iapMark()` — never "whatever `S`
+holds now". The chain is asynchronous and `S` can be a different career by the time it
+settles; re-targeting would delete another career's token and inject this one's
+reservation into it. Value checks cannot catch that (two careers can hold the same
+token id with the same product), so the protection is structural and block 24 (23b)
+scans the source to keep it: `iapRollback` is only ever called with the captured mark.
+A per-token in-flight lock (`IAPS.flight`) keeps a second delivery from landing while a
+rollback is pending. If the target is not the open career,
+`iapDeliverCareer()` reads the slot record, re-checks `curSlot` *at flush time*
+inside `queueRec`'s build function (if the user opened it meanwhile, the live `S` is
+what gets written, so live state is never clobbered), and then **re-reads the record**
+before finishing. The witness only proves "my content reached storage"; only a fresh
+read proves nothing overwrote it. Slot reuse is caught by comparing `cid` in the
+payload, not in `META`.
+
+**The ceiling binds before payment, not after.** `iapCapLeft()` subtracts owned *and*
+reserved. A purchase that cannot be delivered **in full** is marked `undeliverable`
+and is **not** consumed — granting +2 of a +5 pack would be a partial delivery. Quantity
+is checked too, even though Play only ever returns 1 for these products.
+
+**A reservation is released only by proof, never by time or by counting queries.**
+Two earlier attempts were wrong in the same way: "age + one empty query", then "age +
+three consecutive empty queries". Counting only *delays* the defect — a slow card can
+sit unreturned by Play for arbitrarily long and then come back `PURCHASED`. Whatever
+the threshold, an empty query is a guess, and the guess costs a paid transaction its
+place under the ceiling. There is no `resTtl`/`resMiss` any more.
+
+`iapReapRes()` now releases a reservation on exactly one proof: **the attempt's token
+is in that career's ledger.** Everything else keeps it, including `orphan`, `unbound`
+and `undeliverable` — those are conclusions about *delivery*, not about the *payment*,
+and a record can still come back (`iapOnCareerOpen()` promotes `orphan` → `ready`).
+
+`iapRelease()` drops one immediately on exactly two proven outcomes: **this attempt's
+explicit `USER_CANCELED`**, or a result showing the billing flow never started.
+
+Getting the first one needed a patch. Published 8.7.0 collapses every non-OK
+`onPurchasesUpdated` result — `USER_CANCELED`, `SERVICE_DISCONNECTED`, a declined
+payment — into one `call.reject("Purchase is not purchased")` and only *logs* the
+response code, and a failed `launchBillingFlow` was logged and never settled the call
+at all. A user who opened the +10 sheet and backed out therefore looked identical to a
+lost connection, and their capacity stayed reserved indefinitely. That is a defect, not
+a product decision.
+
+**`patches/@capgo+native-purchases+8.7.0.patch`** (patch-package, applied by the
+`postinstall` script, so plain `npm ci` — including CI — gets it) carries the missing
+information losslessly: rejections now put `npx:<stage>:<code>:<appAccountToken>` in
+`err.code`. One file, four hunks, +48/-4; no behaviour is changed beyond what a
+rejection reports, and `launchBillingFlow` failing now rejects instead of hanging.
+
+`iapIsCancel()` requires all three of stage `updated`, code `USER_CANCELED`, **and**
+the attempt tag matching ours — the tag is what stops a late callback from releasing a
+newer attempt's reservation. **Nothing is inferred from the message text.** Without the
+patch `err.code` is absent, every rejection reads as ambiguous, and the reservation is
+kept — the unpatched behaviour is the safe one.
+
+An attempt whose outcome is genuinely never learned still keeps holding capacity; that
+is chosen over silently selling the same headroom twice, and the store says so
+(`iapHeldN()` → `shopTxHeld`).
+
+**PENDING is a rejection too**, not a resolve: the plugin rejects with
+`"Purchase is pending"`, so `purchaseProduct()` never hands us a PENDING transaction.
+`iapIsPending()` recognises it, keeps the reservation and kicks one reconcile so the
+pending payment is visible immediately rather than after the next launch.
+
+**A failed query is never read as "no purchases".** `iapReconcile()`'s rejection path
+removes nothing. Ad removal is dropped only after `IAP.missMax` (3) consecutive
+*successful* queries that omit it. Multi-account behaviour is **not assumed** — it is
+in the test plan, not in the code's beliefs.
+
+**Prices come from Play, localised, and nothing is hardcoded.** If `getProducts()`
+fails, `iapAvailable()` stays false and the store stays closed: selling a product
+whose price we cannot show is not an option.
+
+`tools/savetest.js` block **24** holds this contract — duplicate tokens, persistent
+write failure, reservation and ceiling, quantity, PENDING → PURCHASED, career switch,
+career deletion, slot reuse, missing identity, a lost consume response, a failed
+entitlement query, ad-removal reconciliation, the shape of the purchase call, and old
+saves with no `S.iap`/`iapq` at all.
+
+**What is still unproven:** everything above is measured against a mock of the
+plugin's JS surface. **No real purchase has been made** — no Play Console products,
+no license testers, no internal-test track. See *Play Console steps* in
+`docs/DEVELOPMENT.md`.
 
 ### The world runs without the player
 
@@ -1009,6 +1073,10 @@ The three fields this branch added follow the same rule and are all absent by de
 ledger) and `PREFS.iap` (the device one). Every reader falls to a default —
 `adBreakClaim()` builds `S.adb` on first use, `iapTokens()` returns `null`.
 
+`iapq` (js/store.js) is a fourth key alongside the three slots and the meta summary,
+and it is absent until the first paid transaction. It lives in the `ST_META` object
+store so `recSlotKeys()` keeps counting only slots.
+
 `validSave()` accepts any save whose `S.fx` length matches `LEAGUES.length`; a slot whose
 summary exists but whose payload is broken is dropped from the meta so the menu doesn't
 lie. There is no migration step beyond that, so **every new state field must work when
@@ -1119,7 +1187,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 498 today, but count them rather than trusting this line; it has
+  counts must match — 513 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
@@ -1131,7 +1199,10 @@ janky on a phone. Any future view with live listeners needs the same moves.
   is still no `fetch`, `XMLHttpRequest` or `WebSocket` anywhere in `js/`, and that has to
   stay true. What changed is underneath it: `adsInit()` runs at every launch — *after* the
   first paint, never blocking it — and `requestConsentInfo()` reaches Google's UMP servers,
-  then `MobileAds.initialize()` reaches AdMob's. **The store listing's
+  then `MobileAds.initialize()` reaches AdMob's. `iapInit()` joins it on the same terms:
+  after the first paint, never awaited, and it talks to Play Billing (product prices and
+  the entitlement query). Still no `fetch` of ours — the traffic belongs to the Play
+  Services client, not to `js/`. **The store listing's
   privacy claim can no longer be "the app never goes online" for the Android build**, and
   `xahke.github.io/privacy/pro-football-agent/*.html` still says the opposite — it states
   no ad SDK and no UMP are integrated. That page has to be rewritten before any release,
@@ -1213,7 +1284,7 @@ close-out for a gameplay change:
    legacy path: a `menajerSaveV9` payload must land in slot 1 with its theme/language
    carried into `PREFS`.
 7. **Ads and purchases**, if `js/ads.js`, `js/iap.js`, `js/sim.js`'s transition points or
-   the store screen changed — `node tools/savetest.js` blocks **18–23** cover the rewarded
+   the store screen changed — `node tools/savetest.js` blocks **18–24** cover the rewarded
    adapter, the consent flow, the age gate, the privacy feedback, the season-transition
    contract and the store's scope/ceiling rules. They prove what the JS asked the bridge to
    do and nothing more; whether an ad really appeared is only measurable on a device, and

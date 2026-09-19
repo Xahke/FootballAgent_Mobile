@@ -29,6 +29,13 @@ storeInit().then(()=>{render();},()=>{render();});
    (web/PWA/tek dosya) sessizce 'off' dönüyor ve hiçbir şey çizilmiyor. */
 adsInit();
 
+/* Play Billing (js/iap.js). Aynı gerekçeyle BEKLENMİYOR: ürün ve hak sorgusu
+   ağ üzerinden gidiyor, menü onu bekleyemez. Açılışta yaptığı iş üç şey —
+   faturalandırma destekleniyor mu, ürünlerin YERELLEŞTİRİLMİŞ fiyatları, ve
+   ödenmiş ama kapanmamış işlemlerin uzlaştırılması. Sorgu başarısız olursa
+   hiçbir hak düşmüyor ve satın alma kapalı kalıyor. */
+iapInit();
+
 /* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta
    tamamlanma sözü vermiyor, ama yazmayı başlatmak hiç başlatmamaktan iyi. */
 function flushOnHide(){if(curSlot&&S)saveToSlot(curSlot);}

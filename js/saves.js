@@ -166,6 +166,10 @@ function loadSlot(n){
     if(ensureCid(S))saveToSlot(n);
     /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
     L=PREFS.lang||S.lang||'tr';
+    /* Bekleyen bir satın alma bu kariyeri hedefliyor olabilir: hedefi artık
+       bulunabilir durumda. Beklenmiyor — teslimat kullanıcının bu ekranı
+       görmesine bağlanamaz, yalnız burada bir fırsat daha doğuyor. */
+    if(typeof iapOnCareerOpen==='function')iapOnCareerOpen();
     return {ok:true};
   },()=>({ok:false,reason:'error'}));
 }
@@ -181,6 +185,11 @@ function deleteSlot(n){
      zaten farklı olacağı için ona da geçemez. */
   const meta=META['s'+n];
   if(meta&&meta.cid)rwDropCid(meta.cid);
+  /* Ücretli işlem kaydı SİLİNMİYOR — ödülün tersine. Ödül bedava bir haktı ve
+     kariyeriyle birlikte gitmesi doğru; para ödenmiş bir satın almanın kaydını
+     silmek, kullanıcının elindeki tek izi yok etmek olurdu. Kayıt "hedefi yok"
+     diye işaretleniyor ve hak başka bir kariyere OTOMATİK TAŞINMIYOR. */
+  if(meta&&meta.cid&&typeof iapOrphanCid==='function')iapOrphanCid(meta.cid);
   delete META['s'+n];
   queueDel('s'+n);
   metaDirty();

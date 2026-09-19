@@ -170,8 +170,17 @@ function dbTx(store,mode,fn){
    nesne; IndexedDB onu yapısal kopyayla saklıyor (JSON.stringify yok — 7 MB'lık
    bir dizeyi kurmak "Devam"a basmanın maliyetinin %42'siydi), localStorage'a
    düşüldüğünde ise JSON'a çevriliyor. */
-const LSKEY={meta:'menajerMetaV1',s1:'menajerSaveV9s1',s2:'menajerSaveV9s2',s3:'menajerSaveV9s3'};
-function storeName(key){return key==='meta'?ST_META:ST_SAVE;}
+const LSKEY={meta:'menajerMetaV1',s1:'menajerSaveV9s1',s2:'menajerSaveV9s2',s3:'menajerSaveV9s3',
+  iapq:'menajerIapQV1'};
+/* iapq: ödenmiş ama henüz kapanmamış satın almaların defteri (js/iap.js).
+   PREFS'te DEĞİL, burada: PREFS yalnız localStorage'da yaşıyor ve kota dolduğunda
+   sessizce yazılamıyor — ücretli bir işlem kaydının kaybolabileceği tek yer orasıydı.
+   Buraya konunca kariyer kayıtlarıyla aynı arka ucu, aynı kuyruğu ve aynı sağlık
+   raporlamasını (SAVEH) kullanıyor.
+
+   ST_SAVE değil ST_META: recSlotKeys() ST_SAVE'in bütün anahtarlarını "yuva var mı"
+   diye okuyor ve buraya konan dördüncü bir anahtar o sayımı kirletirdi. */
+function storeName(key){return (key==='meta'||key==='iapq')?ST_META:ST_SAVE;}
 
 function recGet(key){
   if(SAVEH.backend==='ls')return Promise.resolve(jparse(lsGet(LSKEY[key])));

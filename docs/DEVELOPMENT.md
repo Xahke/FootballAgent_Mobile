@@ -343,3 +343,109 @@ Oyundaki hiçbir lig, kulüp, kupa veya turnuva adı gerçek bir markaya ait de�
 
 Kulüp renkleri görsel çeşitlilik içindir ve bir kulübü temsil etmez. Yeni ad
 eklerken gerçek kulüp adlarından ve kısaltmalarından kaçının.
+
+## Play Billing: panel adımları ve elle inceleme
+
+Kod tarafı hazır (`js/iap.js`, eklenti `@capgo/native-purchases` 8.7.0 / Play
+Billing 8.3.0). **Hiçbir gerçek satın alma yapılmadı** — aşağıdaki panel adımları
+tamamlanmadan ürünler sorgulanamaz ve mağaza kapalı kalır (`iapAvailable()` false).
+
+### Sırayla
+
+1. **Paketi bir test kanalına yükle.** Ürünler ancak yüklenmiş bir paketle
+   sorgulanabilir. Bugün `versionCode 1` ve uygulama hiç yayımlanmadı; yükleme
+   imzalı AAB ister (`android/keystore.properties`, yalnız yerelde).
+2. **Beş ürünü aç.** Kimlikler `js/iap.js`'teki `IAP.sku` ile BİREBİR aynı olmalı
+   ve yayımlandıktan sonra değiştirilemez:
+
+   | Ürün kimliği | Tür |
+   |---|---|
+   | `cap_plus_1` | tüketilebilir (consumable) |
+   | `cap_plus_3` | tüketilebilir |
+   | `cap_plus_5` | tüketilebilir |
+   | `cap_plus_10` | tüketilebilir |
+   | `remove_auto_ads` | tüketilemez (non-consumable) |
+
+   **Çoklu miktar (multi-quantity) AÇILMAYACAK.** Desteklemiyoruz; gelen miktar
+   yine de kontrol ediliyor ve 1 değilse hak verilmiyor (`iapIngest`).
+3. **Lisans test kullanıcılarını ekle** ve test ödeme araçlarını kullan: onaylayan
+   kart, reddeden kart ve **yavaş kart** (PENDING → PURCHASED yolunu açan tek yol).
+4. **Dahili test kanalına dağıt**, test hesabıyla kur, `logcat`'te `NativePurchases`
+   etiketini izle.
+5. Gizlilik metni ve Play Data Safety: faturalandırma trafiği ve saklanan satın alma
+   tokenı eklenmeli. `xahke.github.io/privacy/pro-football-agent/*.html` hâlâ
+   "reklam SDK'sı ve UMP yok" diyor; bu sayfa yayından önce yeniden yazılmalı.
+
+### Lisans testinde dikkat
+
+Onaylanmayan satın alma, lisans test hesaplarında **3 gün değil ~3 dakika** sonra
+otomatik iade edilir. Bu, "hak yazıldı ama consume/ack tutmadı" aşamasını hızlı
+sınamanın en pratik yolu — Play Console → **Siparişler** sekmesinden görülebilir.
+
+### Elle inceleme ve iade
+
+Teslim edilemeyen bir işlemi (`orphan`, `unbound`, `undeliverable`) uygulama
+**onaylamaz ve tüketmez**; Play kendi kurallarına göre iade edebilir. Uygulama bunu
+**doğrulayamaz** — sunucu yok — ve bu yüzden ekranda asla "iade edildi" yazmaz;
+yalnız hak verilmediğini ve işlemin onaylanmadığını söyler.
+
+**Ayrı ve daha sinsi bir durum:** hak YAZILDIKTAN sonra consume/ack başarısız olursa
+hak ile ödemenin durumu ayrışabilir. Play o satın almayı iade ederse kullanıcıda
+teslim edilmiş bir hak ile iade edilmiş bir ödeme aynı anda bulunur ve sunucusuz
+mimaride bu fark edilemez (tüketilmiş token `getPurchases()`'ta zaten dönmüyor).
+Kapanışın ısrarla yeniden denenmesi pencereyi daraltıyor; kapatan bir şey yok. Şüpheli
+bir sipariş için tek yol yine **Play Console → Siparişler** üzerinden elle inceleme.
+
+Kullanıcı bir işlemle ilgili destek isterse yol şudur: **Play Console → Siparişler**
+üzerinden sipariş aranır, durumu incelenir ve gerekirse **elle iade** verilir. Mağaza
+ekranındaki `shopTxHelp` metni kullanıcıyı Play sipariş geçmişine ve Google Play
+desteğine yönlendiriyor; geliştirici tarafındaki karşılığı bu adımdır.
+
+### Eklenti yaması (patch-package)
+
+`patches/@capgo+native-purchases+8.7.0.patch` depoda ve `postinstall` ile
+uygulanıyor — `npm ci` yeter, CI dahil. Elle bir adım yok, `node_modules` içinde
+kalıcı olmayan düzenleme yok.
+
+Ne düzeltiyor: yayımlanan 8.7.0, `USER_CANCELED` dahil OK olmayan her sonucu tek bir
+`"Purchase is not purchased"` metnine indiriyor ve `BillingResponseCode`'u yalnız
+logluyordu; `launchBillingFlow` OK dönmediğinde ise çağrı hiç sonuçlanmıyordu. Yama
+retlere `npx:<aşama>:<kod>:<appAccountToken>` biçiminde bir `code` ekliyor ve
+başlamayan akışı reddediyor. Tek dosya, dört hunk, +48/-4.
+
+**Eklenti sürümü yükseltilirse** yama dosya adındaki sürümle eşleşmediği için
+uygulanmaz ve `npm ci` uyarı verir. O durumda yeni sürümün kaynağı yeniden okunup
+yama yeniden üretilmeli (`npx patch-package @capgo/native-purchases`); `js/iap.js`
+içindeki `IAP_NOT_STARTED` dizeleri de aynı kaynaktan doğrulanmalı. Yama hiç
+uygulanmazsa davranış güvenli tarafta kalır: `err.code` gelmez, her ret belirsiz
+sayılır, rezervasyon korunur — yalnız iptal eden kullanıcının kapasitesi ayrılı kalır.
+
+**Not:** Gradle, derleme çıktısını `node_modules/@capgo/native-purchases/android/build/`
+altına bırakıyor. Yamayı yeniden üretmeden önce o klasör silinmeli, yoksa
+`patch-package` uzun dosya adlarında hata veriyor.
+
+### Belirsiz işlemler kullanıcı açısından nasıl çözülür
+
+Üç farklı "belirsiz" var ve ekranda üçü ayrı cümle:
+
+| Durum | Kullanıcı ne görür | Nasıl çözülür |
+|---|---|---|
+| `pending` | ödeme onay bekliyor | Play ödemeyi tamamlayınca hak kendiliğinden veriliyor; kullanıcı bir şey yapmıyor |
+| rezervasyon tutulu (`iapHeldN`) | "şu kadar paket için kapasite ayrılmış" | Ödeme sonuçlanınca ayrılan kapasite kendiliğinden serbest kalıyor. Hiç sonuçlanmazsa kapasite ayrılı kalır — bu bilerek seçildi; alternatifi aynı kapasiteyi ikinci kez satmaktı. Kullanıcı durumu Play sipariş geçmişinden görebilir |
+| `unverified` | "tamamlandığı doğrulanamadı" | Hak kullanıcıda ve ikinci kez verilmiyor. Ödemenin Play tarafında kapandığı da iade edildiği de İDDİA EDİLMİYOR |
+| `orphan` / `unbound` / `undeliverable` | "teslim edilemedi, hak verilmedi, onaylamadık" | Onaylamadığımız için Play kendi iade yolunu işletebilir; kesinleşmezse Play desteği, geliştirici tarafında **Play Console → Siparişler → elle inceleme/iade** |
+
+Hiçbir durumda uygulama kendiliğinden "iade edildi" ya da "başarıyla tamamlandı"
+yazmıyor; yalnız doğrulayabildiği olguları yazıyor.
+
+### Sunucusuz olmanın iki kabul edilmiş sınırı
+
+- **Doğrulama kriptografik değil.** Yalnız `purchaseState == PURCHASED` ve kendi
+  defterimizde token tekilliği kontrol ediliyor. Değiştirilmiş bir istemciye karşı
+  koruma sağlamaz. Bir gün sunucu eklenirse ekleneceği yer tektir: teslimat yolunun
+  başı (`iapIngest` → `iapAdvance` arası).
+- **Tüketilmiş ürünün iadesi görülemez.** Play iade edileni `getPurchases()`
+  sonucundan düşürüyor; tüketilmiş bir paket zaten orada değil. Bu yüzden kapasite
+  paketlerinin yeniden kurulumda geri yükleneceği **garanti edilmiyor** ve mağaza
+  ekranı bunu satın almadan önce yazıyor (`shopNoRestoreCap`). `remove_auto_ads`
+  tüketilemez olduğu için aynı Play hesabında geri yüklenir (`shopRestoreAds`).

@@ -2236,6 +2236,15 @@ html[data-theme="saha"] .shpL{margin:0;flex:1 1 0}
 html[data-theme="saha"] .shpNote{display:none}
 html[data-theme="saha"] .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch}
 html[data-theme="saha"] .shpBuy.wide{flex:none;width:100%}}
+html[data-theme="saha"] .shpPrice{display:block;font-size:12px;line-height:1.3;color:var(--txt2);
+  margin:0 0 8px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+html[data-theme="saha"] .shpAdB .shpPrice{margin:10px 0 8px}
+html[data-theme="saha"] .shpTx{display:flex;flex-direction:column;gap:7px;padding:10px 11px;margin-bottom:18px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+html[data-theme="saha"] .shpTx p{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+html[data-theme="saha"] .shpTxP{color:var(--txt2)}
+html[data-theme="saha"] .shpTxS{color:var(--warn)}
+html[data-theme="saha"] .shpTxH{color:var(--txt3);font-size:11px;line-height:1.5}
 
 /* ===== tema: gazete ===== */
 html[data-theme="gazete"]{
@@ -3189,6 +3198,15 @@ html[data-theme="gazete"] .shpNote{display:none}
 html[data-theme="gazete"] .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch;
     border-top:none;border-left:1px solid var(--line2)}
 html[data-theme="gazete"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--n8)}}
+html[data-theme="gazete"] .shpPrice{display:block;font-size:12px;line-height:1.3;color:var(--txt2);
+  margin:0 0 8px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpAdB .shpPrice{margin:10px 0 8px}
+html[data-theme="gazete"] .shpTx{display:flex;flex-direction:column;gap:7px;padding:10px 11px;margin-bottom:18px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+html[data-theme="gazete"] .shpTx p{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+html[data-theme="gazete"] .shpTxP{color:var(--txt2)}
+html[data-theme="gazete"] .shpTxS{color:var(--warn)}
+html[data-theme="gazete"] .shpTxH{color:var(--txt3);font-size:11px;line-height:1.5}
 
 /* ===== tema: terminal ===== */
 html[data-theme="terminal"]{
@@ -4146,6 +4164,15 @@ html[data-theme="terminal"] .shpNote{display:none}
 html[data-theme="terminal"] .shpBuy{margin:0;width:auto;flex:0 0 94px;min-height:60px;align-self:stretch;
     border-top:none;border-left:1px solid var(--line2)}
 html[data-theme="terminal"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--line2)}}
+html[data-theme="terminal"] .shpPrice{display:block;font-size:12px;line-height:1.3;color:var(--txt2);
+  margin:0 0 8px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpAdB .shpPrice{margin:10px 0 8px}
+html[data-theme="terminal"] .shpTx{display:flex;flex-direction:column;gap:7px;padding:10px 11px;margin-bottom:18px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+html[data-theme="terminal"] .shpTx p{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+html[data-theme="terminal"] .shpTxP{color:var(--txt2)}
+html[data-theme="terminal"] .shpTxS{color:var(--warn)}
+html[data-theme="terminal"] .shpTxH{color:var(--txt3);font-size:11px;line-height:1.5}
 
 /* ===== tema: dosya ===== */
 html[data-theme="dosya"]{
@@ -5083,3 +5110,12 @@ html[data-theme="dosya"] .shpNote{display:none}
 html[data-theme="dosya"] .shpBuy{margin:0;width:auto;flex:0 0 98px;min-height:64px;align-self:stretch;
     border-top:none;border-left:1px solid var(--line)}
 html[data-theme="dosya"] .shpBuy.wide{flex:none;width:100%;border:1px solid var(--line2)}}
+html[data-theme="dosya"] .shpPrice{display:block;font-size:12px;line-height:1.3;color:var(--txt2);
+  margin:0 0 8px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpAdB .shpPrice{margin:10px 0 8px}
+html[data-theme="dosya"] .shpTx{display:flex;flex-direction:column;gap:7px;padding:10px 11px;margin-bottom:18px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+html[data-theme="dosya"] .shpTx p{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+html[data-theme="dosya"] .shpTxP{color:var(--txt2)}
+html[data-theme="dosya"] .shpTxS{color:var(--warn)}
+html[data-theme="dosya"] .shpTxH{color:var(--txt3);font-size:11px;line-height:1.5}

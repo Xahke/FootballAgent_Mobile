@@ -326,6 +326,29 @@ function hmBadgeFail(img){
    + her durumda dokunulabilir, çünkü pencerenin işi ANLATMAK: hak kullanılmışsa
    nedenini, reklam hazırlanıyorsa onu söylüyor. Açılması hiçbir native çağrı
    yapmıyor — reklamı yalnız pencerenin içindeki düğme başlatıyor. */
+/* Mağazanın İŞLEMLER bölümü. Yalnız kullanıcıyı ilgilendiren iki durum
+   çiziliyor: onay bekleyen ödeme ve teslim edilemeyen satın alma. 'granted' ve
+   'finishing' çizilmiyor — onlar bizim iç kapanış adımlarımız ve kullanıcının
+   yapabileceği bir şey yok; hak zaten verilmiş durumda.
+
+   Teslim edilemeyen işlem için ASLA "iade edildi" YAZILMIYOR: satın almayı
+   onaylamadığımız için Play'in kendi iade yolunu işletmesi BEKLENİR, ama bunu
+   doğrulayamayız — sunucu yok. Yazılan şey doğrulayabildiğimiz iki olgu:
+   hak verilmedi ve işlem bizim tarafımızdan onaylanmadı. */
+function shopTxHtml(){
+  if(typeof iapPendingN!=='function')return '';
+  const pend=iapPendingN(),stuck=iapStuckN();
+  const unver=iapUnverifiedN(),held=iapHeldN();
+  if(!pend&&!stuck&&!unver&&!held)return '';
+  return `<div class="sect">${t('shopTxT')}</div>
+  <div class="shpTx">
+    ${pend?`<p class="shpTxP">${t('shopTxPending').replace('{n}',pend)}</p>`:''}
+    ${held?`<p class="shpTxP">${t('shopTxHeld').replace('{n}',held)}</p>`:''}
+    ${unver?`<p class="shpTxP">${t('shopTxUnverified').replace('{n}',unver)}</p>`:''}
+    ${stuck?`<p class="shpTxS">${t('shopTxStuck').replace('{n}',stuck)}</p>`:''}
+    ${stuck?`<p class="shpTxH">${t('shopTxHelp')}</p>`:''}
+  </div>`;
+}
 function adsPlusHtml(){
   if(typeof adsRowState!=='function')return '';
   const st=adsRowState();
@@ -2548,6 +2571,7 @@ shop(){
       <span class="shpN"><i>+</i>${p.cap}</span>
       <span class="shpL">${t('shopCapSec')}</span>
       ${note?`<span class="shpNote">${note}</span>`:''}
+      <span class="shpPrice">${iapPrice(p.id)||t('shopPriceWait')}</span>
       <button class="shpBuy" aria-label="${t('shopBuy')} · ${t(p.k)}"
         ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
     </div>`;
@@ -2572,6 +2596,8 @@ shop(){
         <p>${t('shopNoAdsDesc')}</p>
         <p>${t('shopScopeDeviceSub')}</p>
         <p class="keep">${t('shopNoAdsKeep')}</p>
+        <p class="keep">${t('shopRestoreAds')}</p>
+        <span class="shpPrice">${iapPrice(p.id)||t('shopPriceWait')}</span>
         <button class="shpBuy wide" aria-label="${t('shopBuy')} · ${t(p.k)}"
           ${st==='go'?`onclick="iapBuy('${p.id}')"`:'disabled'}>${t('shopBuy')}</button>
         ${note?`<p class="shpNote">${note}</p>`:''}
@@ -2595,11 +2621,13 @@ shop(){
   <div class="shpRules">
     <p><span class="tag w">${t('shopScopeCareer')}</span>${t('shopScopeCareerSub')}</p>
     <p>${t('shopCapNote')}</p>
+    <p>${t('shopNoRestoreCap')}</p>
   </div>
   <div class="shpGrid">${IAP_PRODUCTS.filter(p=>p.cap).map(pack).join('')}</div>
 
   <div class="sect">${t('shopAdSec')}</div>
-  ${IAP_PRODUCTS.filter(p=>p.noads).map(adItem).join('')}`;
+  ${IAP_PRODUCTS.filter(p=>p.noads).map(adItem).join('')}
+  ${shopTxHtml()}`;
 },
 player(id){
   if(useSahaPlayerProfile())return pfSahaView(id);

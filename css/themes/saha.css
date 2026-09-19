@@ -3233,3 +3233,18 @@ body[data-view="setup"] main{padding-bottom:0}
   .shpBuy{margin:0;width:auto;flex:0 0 96px;min-height:62px;align-self:stretch}
   .shpBuy.wide{flex:none;width:100%}
 }
+
+/* Fiyat Play'den YERELLEŞTİRİLMİŞ olarak geliyor; burada hiçbir para birimi ya
+   da sayı biçimi varsayılmıyor. Düğmenin hemen üstünde duruyor, çünkü ödenecek
+   tutarın "Satın al"dan önce okunması gerekiyor. */
+.shpPrice{display:block;font-size:12px;line-height:1.3;color:var(--txt2);
+  margin:0 0 8px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.shpAdB .shpPrice{margin:10px 0 8px}
+/* İşlem durumu. Ayrı bir kutu: ürün kartlarının içine karışsaydı "bu üründe
+   sorun var" gibi okunurdu, oysa bekleyen ödeme bütün mağazayı ilgilendiriyor. */
+.shpTx{display:flex;flex-direction:column;gap:7px;padding:10px 11px;margin-bottom:18px;
+  border-radius:var(--r-s);background:var(--sur2);border:1px solid var(--line)}
+.shpTx p{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.shpTxP{color:var(--txt2)}
+.shpTxS{color:var(--warn)}
+.shpTxH{color:var(--txt3);font-size:11px;line-height:1.5}
