@@ -92,8 +92,8 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (513 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
-| `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration |
+| `js/i18n.js` | `L`, `STR{tr,en}` (544 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, reservations, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
@@ -1042,6 +1042,164 @@ The four themes live in `css/themes/*.css`, each a complete standalone styleshee
 `tools/build-geo.js` downloads its source once into `tools/.geocache/` (gitignored).
 It is a dev tool and never ships — see the network rule under *Conventions*.
 
+### A temporary storage failure is not proof that a save is gone
+
+IndexedDB can fail to open on one launch — a damaged profile, a full disk, another tab
+holding an older version, some private-tab modes. `storeBackendInit()` then falls back to
+`localStorage`, where the careers are **not**. Two things used to follow from that, and
+both destroyed careers:
+
+1. **The fallback ate the save it had just written.** In `ls` mode the migration's source
+   key and its destination key are *the same key* (`LSKEY.s1 === SLOTKEY(1)`).
+   `moveOneSlot()` copied the record onto itself, verified it — of course it matched —
+   and then deleted the source. On a device where IndexedDB never opens, a career
+   disappeared on its second launch. `migrateLsSlots()` now returns immediately when the
+   backend is `ls`: there is nowhere to migrate to.
+2. **The migration overwrote whatever was in the destination.** It never read the
+   destination at all. So a career created on the fallback path landed on top of the
+   IndexedDB career sitting in that slot the next time the database opened.
+
+The rule is now one sentence: **the source is deleted only when the destination is proven
+to already carry it**, and the only proof the record format offers is **full equivalence**
+— the whole payload (`v`, `S`, `PID`) byte for byte. `moveVerdict()` decides what happens
+to an occupied destination, and every answer it cannot prove preserves both records:
+
+| Verdict | Condition | What happens |
+|---|---|---|
+| `done` | some slot already holds this exact record | the transfer already happened; delete the source |
+| `fork` | the source's `cid` is live in some slot, and the record is not identical | **quarantine** — both kept, user decides |
+| `move` | destination empty, or holds something `validSave()` rejects | normal migration, unchanged |
+| `conflict` | a *different* career occupies the destination (or a future schema version) | **rescue** into a free slot — both kept |
+
+**There is no ordering comparison anywhere, and its absence is the point.** An earlier pass
+treated "same `cid` and the destination at an equal or later `(season, week)`" as proof that
+the destination contained the source, and deleted the source on it. It is not proof:
+
+- Two copies that diverged inside the same week have *equal* season and week and different
+  contents; ordering cannot separate them.
+- A copy that is further along may never have seen a purchase token (`S.iap.t`) that the
+  copy left behind is carrying. **Progress is not containment.**
+
+The save format carries no version or ancestry chain, so there is no "this copy descends
+from that one" evidence to lean on. Full equivalence is the whole of it.
+
+A `conflict` is resolved by **rescuing** the incoming record into a free slot, where it
+appears in the career menu as an ordinary career — not as a hidden copy. Three properties
+hold that together:
+
+- **A read error is its own answer.** `moveOneSlot()` reads the destination first, and a
+  rejected read returns `'readFailed'`: nothing is written, nothing is deleted, and the
+  migration waits for the next launch. Folding "I could not read it" into "there is
+  nothing there" is exactly what overwrote the career.
+- **A rescue cannot multiply.** `findSameRec()` asks whether some slot already holds this
+  exact record before copying it, so a session that wrote the rescue and died before
+  deleting the source completes on the next launch instead of making a second copy. It
+  filters on the meta summary first, so the normal conflict path does no full read at all.
+- **No room means no deletion.** With every slot taken the source stays in localStorage,
+  `rescuePending()` reports it, and the menu draws a row saying a career is waiting for
+  space. `deleteSlot()` kicks `retryRescue()`, which drains the write queue and finishes
+  the move — so the user reaches the preserved career by freeing a slot, which is the only
+  honest thing the screen can ask for when three slots hold three careers.
+
+### Two copies of one career are quarantined, not activated
+
+A second copy carrying a `cid` that is **live in some slot** never becomes a second slot,
+even when a slot is free. `cid` is what career-bound delivery resolves against, so two live
+copies would break three separate things at once:
+
+- `iapSlotOfCid()` scans `META` and returns the **first** matching slot — a purchase could
+  be delivered to whichever copy happened to sort first.
+- `deleteSlot()` calls `rwDropCid()` and `iapOrphanCid()` on the slot's `cid` — deleting one
+  copy would orphan the *other* copy's pending paid transaction.
+- Both copies would carry the same `S.iap.t` token, so **one purchase would grant capacity
+  in two careers**.
+
+Auto-assigning a fresh `cid` to rescue the copy is not a way out either: `cid` is the target
+a pending purchase was reserved against, and silently changing it cuts that target loose.
+
+So `parkFork()` puts the second copy in **quarantine** — the `f1`..`f3` key family in
+`js/store.js`, indexed by `META.fk`. It is permanent, it is visible in the career menu, and
+it is not a career. Four things make that safe:
+
+- **Its own key family, in both backends.** The localStorage name is `menajerForkV1s*`, not
+  `menajerSaveV9s*`, so later writes to the migration's source keys cannot reach it. On the
+  IndexedDB side it lives in `ST_META` for the same reason `iapq` does: `recSlotKeys()`
+  counts every key in `ST_SAVE` as a slot.
+- **The index is written before the source is dropped.** `noteFork()` goes through
+  `metaDirtyC()` with a witness, so the source leaves localStorage only once a summary that
+  actually contains the entry has been stored. A quarantined record with no index entry
+  would be invisible to the user, which is the same as lost.
+- **It cannot multiply.** Re-running against an identical quarantined record just finishes
+  the delete step. A quarantine key that holds something *different* and **is** indexed is a
+  real pending decision: nothing is touched and the source waits in localStorage
+  (`why: 'forkBusy'`). A key holding something different with **no** index entry is
+  unreachable bytes, and it can only get that way after the data is already safe somewhere
+  else — so it may be overwritten.
+- **The user decides, and the screen says what each choice costs.** `cmForkHelp()` prints
+  both copies from their summaries (season/week, balance, clients, last played) and offers
+  two actions. `forkRestore()` writes the quarantined record into a free slot **byte for
+  byte** — same `cid`, same `S.iap`, same everything — and only then deletes the quarantine
+  copy. `forkDiscard()` deletes, behind a confirmation. Doing nothing keeps the copy
+  indefinitely.
+
+**Restoring is byte-exact, and that is what makes it a restore.** An earlier pass had
+`forkRestore()` assign a fresh `cid` and drop `S.iap` so the copy could be set up *beside*
+its twin. Both halves were wrong:
+
+- A paid token can live **only** in the quarantined copy — the copy in play may never have
+  seen that purchase. Dropping it deleted a paid record under the name "restore", and the
+  quarantine copy was deleted immediately afterwards, so it could not be recovered. The
+  modal even said "purchased capacity stays with the copy in play", which in that case was
+  false: it was in neither.
+- `cid` is the target a pending purchase was reserved against. Rewriting it silently cuts
+  that link.
+
+Merging the two ledgers is not the way out either: the `IAP.capMax` ceiling, the `S.iap.r`
+reservations and token uniqueness would each need their own answer, and a wrong answer
+there grants or destroys paid entitlement.
+
+So restore carries a **precondition** instead of a cost: the record's `cid` must not be
+live in any slot, because one `cid` cannot be live twice. While the twin is in play,
+`forkRestore()` returns `'live'`, writes nothing, and the modal says why — naming the slot
+the twin is in and stating plainly that nothing has been removed from the copy on hold.
+Delete the twin and the same copy goes in **unchanged**, which also reconnects
+`iapSlotOfCid()` to it. Two original copies, no lossy third. The proof is read from the
+record itself rather than the index, since the index can be stale, and `saveDrain()` runs
+first because a slot delete travels through the write queue while `recPut()` does not — an
+in-flight delete could otherwise erase the record just written.
+
+**A new career can never land on an occupied or unreadable slot.** `startCareer()` used
+`pendSlot||1`, so a setup screen reached with no slot chosen wrote straight over slot 1.
+That is the one silent overwrite path left, and it matters most for a record that is
+*waiting*: when quarantine is occupied, a second same-`cid` source stays in its localStorage
+slot key (`why: 'forkBusy'`), and on a launch that falls back to localStorage that key **is**
+that slot's save — `reconcileMeta()` surfaces it as a normal, playable career, which is the
+honest presentation. It must not be possible to write over it without deleting it first, so
+the check now lives in the writer as well as in the menu: `startCareer()` refuses a slot
+that `slotUsed()` or `slotShadow()` reports, and says so.
+
+`reconcileMeta()` now runs **before** the migration as well as after it. The conflict
+check answers "is the destination occupied?" and "is this `cid` live?" from `META`, and a
+summary that had not been written yet would answer both wrongly.
+
+**The menu no longer draws an unreadable slot as empty.** An empty slot means "deleted"
+and invites the player to start a career on top of one — that invitation is where the
+damage started. `PREFS.idbs` remembers which slots held a record while IndexedDB was
+genuinely available. It is a **hint, never a copy**: it says only "there was a save here",
+carries nothing about the contents, and is never read as a data source. When the backend
+is `ls` and a slot is in that list, `slotShadow(n)` is true, the row says *"cannot be
+opened right now"* instead of *"empty slot"*, and `newCareerSlot()` explains rather than
+starting a career there. Slots that are genuinely free still work normally.
+
+`tools/savetest.js` blocks **25** and **26** hold this contract. The mock gained
+`ctl.failOpen` (the database is there, this session cannot open it — unlike `noIDB`, the
+data is still there next session) and `ctl.failGet` (one read fails while `getAllKeys`
+keeps working, which is what separates "could not read" from "nothing there"). Block 26
+specifically measures the two things ordering got wrong — a same-week divergence and a
+paid token on the copy left behind — plus that no `cid` is ever live in two slots, that
+quarantine survives later localStorage writes, and that a restored copy carries no
+purchased capacity across.
+
 ### Saves must degrade gracefully
 
 There are three slots plus device preferences, all in `localStorage`:
@@ -1052,6 +1210,7 @@ There are three slots plus device preferences, all in `localStorage`:
 | `menajerMetaV1` | a small per-slot summary so the main menu never parses a full save |
 | `menajerPrefsV1` | `PREFS` — theme, language, sound, the ad birth year, the device purchase ledger. Device-level, outside any career |
 | `menajerSaveV9` | the old single-save key; `migrateLegacy()` moves it into slot 1 on boot |
+| `menajerForkV1s1..3` | quarantined same-`cid` second copies, absent until one appears; indexed by `META.fk`. Deliberately *not* a slot key, so writing a slot can never reach one |
 
 The rival layer is a worked example of degrading gracefully: `S.rivals`, `S.chase`,
 `S.poach` and every `p.ra`/`p.sa` can be absent. `ensureRivals()` — called from
@@ -1075,7 +1234,11 @@ ledger) and `PREFS.iap` (the device one). Every reader falls to a default —
 
 `iapq` (js/store.js) is a fourth key alongside the three slots and the meta summary,
 and it is absent until the first paid transaction. It lives in the `ST_META` object
-store so `recSlotKeys()` keeps counting only slots.
+store so `recSlotKeys()` keeps counting only slots, and the `f1`..`f3` quarantine keys
+are there for the same reason.
+
+`META.fk` is the quarantine index and is absent on every old save; `forkList()` returns
+an empty list when it is missing, so nothing downstream has to know it can be absent.
 
 `validSave()` accepts any save whose `S.fx` length matches `LEAGUES.length`; a slot whose
 summary exists but whose payload is broken is dropped from the meta so the menu doesn't
@@ -1289,7 +1452,17 @@ close-out for a gameplay change:
    contract and the store's scope/ceiling rules. They prove what the JS asked the bridge to
    do and nothing more; whether an ad really appeared is only measurable on a device, and
    the EEA debug variant is not the build to measure it on (see *Test geography*).
-8. `npm run themes && npm run dist`, and bump `sw.js` `CACHE` if any cached file changed.
+8. **Storage fallback and migration**, if `js/store.js` or the migration paths in
+   `js/saves.js` changed — blocks **25** and **26** cover the localStorage fallback, the
+   conflict rescue, the destination read error, an interrupted rescue, the no-room path,
+   the same-`cid` quarantine and the user's two ways out of it. Use `ctl.failOpen` for a
+   temporary open failure and `ctl.failGet` for a single failed read; neither is `noIDB`,
+   which removes the database entirely. Any change here must keep two invariants
+   measurable: no `cid` is live in two slots, nothing is deleted without full-payload
+   equivalence, and a restore is byte-exact. Block **27** drives the real writers —
+   `startCareer()` through the setup form, not `curSlot=` shortcuts — because the one
+   silent overwrite left was in the writer, not the menu.
+9. `npm run themes && npm run dist`, and bump `sw.js` `CACHE` if any cached file changed.
    A new JS file also needs `index.html`, the `order` array in `build.js` and the `SHELL`
    array in `sw.js`.
 

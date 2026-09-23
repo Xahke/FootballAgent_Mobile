@@ -46,7 +46,14 @@ function openSlot(n){
     if(S.evCur&&S.agent)showEvent(S.evCur);
   },()=>{slotOpening=0;toast(t('slotBroken'));render();});
 }
-function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
+/* Gölge yuvaya yeni kariyer kurulmuyor. Kayıt orada duruyor, yalnız bu
+   açılışta okunamıyor; üstüne kurulan kariyer depo açıldığında aynı yuvayı
+   isteyen ikinci bir kayıt olurdu. Göç ikisini de koruyor (js/saves.js,
+   rescueOneSlot) ama çakışmayı hiç yaratmamak daha iyi. */
+function newCareerSlot(n){
+  if(slotShadow(n)){cmLockedHelp(n);return;}
+  pendSlot=n;setupCon='eu';pushV('setup');
+}
 function askDeleteSlot(n){
   if(!confirm(t('slotDeleteQ').replace('{n}',n)))return;
   deleteSlot(n);toast(t('slotDeleted'));render();
@@ -217,6 +224,134 @@ function cmNewMainHtml(n){
     <span class="cmNewT">${t('slotNew')}</span>
     <span class="cmNewS">${t('slotN').replace('{n}',n)} · ${t('slotEmptyHint')}</span>
   </button>`;
+}
+/* ================= OKUNAMAYAN YUVA =================
+   Kayıt deposu açılamadığında (js/saves.js, slotShadow) yuva BOŞ DEĞİL, yalnız
+   okunamıyor. İkisini aynı satırla göstermek kullanıcıya kaydının silindiğini
+   söylerdi — ve boş yuva satırı onu üstüne yeni kariyer kurmaya davet ederdi.
+   Satır bu yüzden "yeni kariyer" değil, "neden açılamıyor" anlatıyor. */
+function cmShadowRowHtml(n){
+  return `<button class="cmRow cmNewRow" onclick="cmLockedHelp(${n})">
+    <span class="cmRowI">
+      <span class="cmRowN">${esc(t('slotLocked'))}</span>
+      <span class="cmRowM">${esc(t('slotLockedM').replace('{n}',n))}</span>
+    </span>
+    <span class="cmRowC">›</span>
+  </button>`;
+}
+function cmShadowRows(skip){
+  let h='';
+  for(let n=1;n<=SLOTS;n++)if(n!==skip&&slotShadow(n))h+=cmShadowRowHtml(n);
+  return h;
+}
+/* Gerçekten boş yuva: özeti de yok, gölgesi de. */
+function cmFirstFree(){for(let n=1;n<=SLOTS;n++)if(!slotMeta(n)&&!slotShadow(n))return n;return 0;}
+/* ================= YER BEKLEYEN KURTARMA =================
+   Çakışan iki kayıt da korundu ama kurtarılanı koyacak boş yuva yok. Satır
+   olmasaydı kayıt localStorage'da sessizce beklerdi — kullanıcı açısından
+   kaybolmakla aynı şey. Yuva boşalınca kurtarma kendiliğinden tamamlanıyor
+   (js/saves.js, retryRescue). */
+function cmRescueHtml(){
+  const r=(typeof rescuePending==='function')?rescuePending():[];
+  if(!r.length)return '';
+  const m=r[0].meta||{};
+  const who=m.agency||m.agent||t('slotNew');
+  return `<button class="cmRow cmNewRow" onclick="cmRescueHelp()">
+    <span class="cmRowI">
+      <span class="cmRowN">${esc(t('rescueRow'))}</span>
+      <span class="cmRowM">${esc(t('rescueRowM').replace('{a}',who))}</span>
+    </span>
+    <span class="cmRowC">›</span>
+  </button>`;
+}
+function cmRescueHelp(){
+  const r=(typeof rescuePending==='function')?rescuePending():[];
+  const busy=r.length&&r[0].why==='forkBusy';
+  openModal(`<h2>${t('rescueTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('rescueWhat')}</span></div>
+    <div class="sub" style="margin-top:12px">${busy?t('rescueBusy'):t('rescueFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
+}
+/* ================= AYNI KİMLİKLİ ÇATAL =================
+   Karantinadaki kopya (js/saves.js) canlı bir kariyer DEĞİL, bu yüzden yuva
+   satırı olarak çizilmiyor: onu yuva gibi göstermek "iki kariyerim var" derdi
+   ve cid'ye bağlı her şey (ödeme, ödül) hangi kopyayı kastettiğimizi
+   bilemezdi. Satır bir karar davetidir; kararı kullanıcı veriyor. */
+function cmForkHtml(){
+  const f=(typeof forkList==='function')?forkList():[];
+  return f.map(e=>{
+    const m=e.meta||{};
+    const who=m.agency||m.agent||t('slotNew');
+    return `<button class="cmRow cmNewRow" onclick="cmForkHelp('${esc(e.key)}')">
+      <span class="cmRowI">
+        <span class="cmRowN">${esc(t('forkRow'))}</span>
+        <span class="cmRowM">${esc(t('forkRowM').replace('{a}',who))}</span>
+      </span>
+      <span class="cmRowC">›</span>
+    </button>`;
+  }).join('');
+}
+/* İki kopyayı yan yana tanıtan satır: sezon/hafta, bakiye, müşteri, son oynanma.
+   Özette olmayan hiçbir şey yazılmıyor (metaOf) ve eksik alan hiç çizilmiyor. */
+function cmForkLine(lbl,m){
+  if(!m)return '';
+  const bits=[];
+  if(typeof m.season==='number'&&typeof m.week==='number')
+    bits.push(`${t('season')} ${m.season} · ${t('week')} ${m.week}`);
+  if(typeof m.cash==='number')bits.push(fmtK(m.cash));
+  if(typeof m.clients==='number')bits.push(`${m.clients} ${t('clientCount')}`);
+  if(typeof m.ts==='number')bits.push(cmAgo(m.ts));
+  return `<div class="kv"><span class="k">${esc(lbl)}</span>
+    <span class="v">${esc(bits.join(' · '))}</span></div>`;
+}
+function cmForkHelp(key){
+  const e=(typeof forkOf==='function')?forkOf(key):null;
+  if(!e){toast(t('forkGone'));render();return;}
+  /* Kurtarmanın iki ön koşulu var ve ikisi de AYRI şeyler söylüyor:
+     canlı ikiz (aynı kimlik hâlâ bir yuvada) ve boş yuva. Hangisi engelliyorsa
+     onun metni çiziliyor; ikisi de yoksa kurma düğmesi var. Karar yazıcıda da
+     yeniden okunuyor (forkRestore) — bu yalnız sunum. */
+  const live=(typeof cidSlot==='function'&&e.meta)?cidSlot(e.meta.cid):0;
+  const room=(typeof freeSlotFor==='function')?freeSlotFor():0;
+  const note=live?t('forkLiveBlock').replace('{n}',live):(room?t('forkRestoreNote'):t('forkNoRoom'));
+  openModal(`<h2>${t('forkTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('forkWhat')}</span></div>
+    <div style="margin-top:12px">
+      ${cmForkLine(t('forkLive'),live?slotMeta(live):null)}
+      ${cmForkLine(t('forkKept'),e.meta)}
+    </div>
+    <div class="sub" style="margin-top:12px">${note}</div>
+    ${(!live&&room)?`<button class="btn" style="margin-top:14px" onclick="cmForkRestore('${esc(key)}')">${t('forkRestore')}</button>`:''}
+    <button class="btn d" style="margin-top:10px" onclick="cmForkDiscard('${esc(key)}')">${t('forkDiscard')}</button>`);
+}
+/* Kurtarma ve silme birer SÖZ döndürüyor; ekran sonucu bekleyip ona göre
+   çiziyor — "oldu" demeden önce gerçekten olduğunu görmek için. */
+function cmForkRestore(key){
+  closeModal();
+  forkRestore(key).then(r=>{
+    if(r==='restored'){toast(t('forkDone'));render();return;}
+    if(r==='gone'){toast(t('forkGone'));render();return;}
+    /* 'live' / 'noRoom': durum pencere açıldıktan sonra değişmiş. Kısa bir
+       toast yerine pencere yeniden açılıyor — kısıt orada tam olarak yazıyor. */
+    if(r==='live'||r==='noRoom'){render();cmForkHelp(key);return;}
+    toast(t('forkFail'));render();
+  },()=>{toast(t('forkFail'));render();});
+}
+function cmForkDiscard(key){
+  if(!confirm(t('forkDiscardQ')))return;
+  closeModal();
+  forkDiscard(key).then(okv=>{toast(t(okv?'forkGone':'forkFail'));render();},
+                         ()=>{toast(t('forkFail'));render();});
+}
+/* Depo neden açılamadı — showSaveHelp() ile aynı kalıp, çünkü aynı sorunun iki
+   yüzü: orada yazılamıyor, burada okunamıyor. */
+function cmLockedHelp(n){
+  openModal(`<h2>${t('slotLockedTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('slotLockedWhat')}</span></div>
+    <div class="kv" style="margin-top:12px"><span class="k">${t('slotN').replace('{n}',n)}</span>
+      <span class="v">${saveBackend()==='idb'?'IndexedDB':'localStorage'}</span></div>
+    <div class="sub" style="margin-top:12px">${t('slotLockedFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
 }
 /* Kariyer işlemleri. Silme kartın yüzünde kırmızı bir düğme değil: parmağın
    "devam et"e giderken geçtiği yerde durmuyor. Silmenin kendisi değişmedi —
@@ -1948,14 +2083,21 @@ menu(){
      ayrıca listelemek aynı eylemi SLOTS kez tekrarlamak olurdu — yuvalar hâlâ
      üç, ama boşken aralarında seçim diye bir şey yok. Kart yine 1. yuvayı
      hedefliyor; ilk kayıt düştüğü anda liste kendiliğinden geri geliyor. */
-  if(!head)return cmTopHtml()+cmNewMainHtml(1);
+  if(!head){
+    /* Gölge yuva varken "hiç kayıt yok" demek yanlış olurdu: kayıt var, bu
+       açılışta okunamıyor. Davet yalnız gerçekten boş bir yuvaya gidiyor. */
+    const free=cmFirstFree(),sh=cmShadowRows(0);
+    return cmTopHtml()+(free?cmNewMainHtml(free):'')
+      +(sh?`<div class="sect cmSect">${t('slotsLbl')}</div>`+sh:'')+cmForkHtml()+cmRescueHtml();
+  }
   const rest=[];
   for(let n=1;n<=SLOTS;n++){
     if(n===head.n)continue;
     const c=cmSlot(n);
-    rest.push(c?cmRowHtml(c):cmEmptyRowHtml(n));
+    rest.push(c?cmRowHtml(c):(slotShadow(n)?cmShadowRowHtml(n):cmEmptyRowHtml(n)));
   }
-  return cmTopHtml()+cmMainHtml(head)+`<div class="sect cmSect">${t('slotsLbl')}</div>`+rest.join('');
+  return cmTopHtml()+cmMainHtml(head)+`<div class="sect cmSect">${t('slotsLbl')}</div>`
+    +rest.join('')+cmForkHtml()+cmRescueHtml();
 },
 setup(){return setupHtml();},
 dash(){

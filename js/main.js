@@ -15,7 +15,12 @@ function save(){if(curSlot&&S)saveToSlot(curSlot);}
    "yükleniyor" satırı gösteriyor ve göç bitince yeniden çiziliyor. */
 stack=[{v:'menu'}];
 render();
-storeInit().then(()=>{render();},()=>{render();});
+storeInit().then(()=>{
+  render();
+  /* Çakışan bir kayıt başka bir yuvaya kurtarıldıysa kullanıcı bunu bilmeli:
+     menüde beklemediği bir kariyer belirdi ve nedeni görünmüyor. */
+  if(rescuedCount())toast(t('rescueDone'));
+},()=>{render();});
 
 /* Ödüllü reklam adaptörü (js/ads.js). Açılışta bir kez ve şu sırayla: izin
    bilgisi tazeleniyor, gerekiyorsa UMP formu gösteriliyor, canRequestAds

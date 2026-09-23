@@ -443,9 +443,16 @@ function startCareer(){
   const nat=document.getElementById('sel_nat').value;
   const ag=(document.getElementById('inp_ag').value||'').trim();
   if(!fn||!ln){toast(t('fillName'));return;}
+  /* Yeni kariyer ASLA dolu ya da okunamayan bir yuvanın üstüne yazılmaz. Menü
+     zaten buna izin vermiyor, ama karar YAZICIDA da duruyor: eski kod pendSlot
+     sıfırken sessizce 1. yuvaya yazıyordu ve orada duran şey okunamayan bir
+     kayıt ya da göçün park edilmeyi bekleyen kaynağı olabilir. Menüye güvenip
+     burada kontrol etmemek, üstüne yazmanın tek sessiz yolunu açık bırakmaktı. */
+  const slot=pendSlot||0;
+  if(!slot||slotUsed(slot)||slotShadow(slot)){toast(t('slotBusy'));render();return;}
   /* Dünya ancak burada kuruluyor: yuva seçilip ad girilene kadar ~7000 oyuncu
      üretmenin anlamı yok, kurulumdan geri dönmek de bedelsiz olsun. */
-  curSlot=pendSlot||1;
+  curSlot=slot;
   newGame();
   /* Yığın createAgent'tan önce ayarlanıyor — o kendi içinde render() çağırıyor ve
      aksi halde kurulum formu bir kare boyunca oyun çerçevesiyle çizilirdi. */
