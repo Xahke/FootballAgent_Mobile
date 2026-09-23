@@ -794,6 +794,46 @@ both assert that. `isConsumable: true` is equally unusable: it consumes *before*
 `call.resolve()`, which would close the purchase before delivery. Capacity packs
 are consumed by our own `consumePurchase()` call, after delivery.
 
+**"The transaction closed" and "the entitlement is on this device" are two
+different questions, and one early return used to answer both.** `remove_auto_ads`
+is not consumed, so its token keeps coming back from `getPurchases()` — and
+`iapReapNoAds()` deliberately drops the local entitlement after `IAP.missMax`
+consecutive *successful* queries that do not list it, on the stated grounds that
+the drop is recoverable. It was not: `iapIngest()` returned `'done'` on the first
+line for a closed record, so the returning token re-wrote nothing and the paid
+entitlement was gone for good.
+
+`iapRestoreDevice()` is the recovery, and every part of it is a refusal to guess:
+
+- **A fresh purchase response decides, never the queue record.** The path is
+  reachable only from `iapIngest()`, i.e. only with a `Transaction` in hand, and
+  it runs the same gates as normal delivery — `iapTxPs(tx) === '1'` and
+  `iapTxQty(tx) === 1`, so PENDING, a response that reports no state, and an
+  unsupported quantity grant nothing. The record's `pid` must match the product
+  the response carries. A `done` record on its own resurrects nothing.
+- **Device scope only.** A consumed capacity token never appears in a query, and
+  the career ledger is not touched from here.
+- **No new payment, no consume, no extra acknowledge.** The close already
+  happened; the record stays `done`.
+- **`'disputed'` is untouched**, like everywhere else — it is not one of the
+  states this path reads.
+- The same split applies to `granted`/`finishing`/`unverified`, which also claim
+  delivery: `iapIngest()` sends a device record back to `ready` when
+  `iapDevicePersisted()` says the disk does not carry it. Those records were
+  going to be closed anyway, so no extra `acknowledge` is produced.
+
+`iapDevicePersisted()` reads the **disk**, not `PREFS` in memory: a delivery whose
+write did not stick leaves the entitlement in memory, and a retry that trusted
+memory would never run. A failed write is therefore reported as `'restorefail'`,
+never as a restore, and the next successful query tries the same path again.
+
+`tools/savetest.js` block 24 scenarios (25)–(30) hold this: the loss and recovery
+inside one session and across a new session on the same disk, with no career open;
+that PENDING, a stateless response, `UNSPECIFIED`, a mismatched product, a failed
+query and a disputed record all grant nothing; that a repeated identical response
+produces no further calls; and that a failed local write is retried rather than
+reported as success.
+
 **Three persistent structures:**
 
 | | |

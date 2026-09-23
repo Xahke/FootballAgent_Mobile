@@ -3776,6 +3776,224 @@ async function tPlayBilling() {
     /* Kilit bırakılmış olmalı: sonraki deneme "inflight" takılmıyor. */
     ok(a.R("Object.keys(IAPS.flight).length") === 0, '(24) uçuş kilidi bırakıldı');
   }
+
+  /* (25) DÜŞEN CİHAZ HAKKI, GEÇERLİ SATIN ALMA GERİ GELİNCE YENİDEN KURULUYOR.
+         iapReapNoAds art arda missMax boş-ama-başarılı sorgudan sonra reklam
+         kaldırma hakkını düşürüyor (bkz. (12)) — ve bu bilerek geri
+         alınabilir sayılmıştı. Ama kuyruk kaydı 'done' olduğu için iapIngest
+         tokenı geri geldiğinde ERKEN ÇIKIYORDU: hak bir daha yazılmıyordu.
+         "İŞLEM KAPANDI" ile "HAK BU CİHAZDA DURUYOR" AYRI İKİ ŞEY. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    a.R("iapBuy('noads');");
+    await waitFor(() => st.acks > 0, 3000); await a.R('saveDrain()');
+    const tok = Object.keys(a.R('PREFS.iap.t'))[0];
+    ok(a.R('iapNoAds()') === true, '(25) hak teslim edildi');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'done', '(25) işlem kapandı');
+
+    /* Play tokenı bir süre döndürmüyor (hesap değişimi, geçici durum). */
+    const P = a.ctx.Capacitor.Plugins.NativePurchases;
+    const realQ = P.getPurchases;
+    P.getPurchases = () => Promise.resolve({ purchases: [] });
+    for (let i = 0; i < a.R('IAP.missMax'); i++) await a.R('iapReconcile()');
+    ok(a.R('iapNoAds()') === false, '(25) hak missMax sonrası düştü');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'done', '(25) işlem hâlâ kapalı');
+
+    /* Ve aynı satın alma YİNE PURCHASED dönüyor. */
+    P.getPurchases = realQ;
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === true, '(25) geçerli satın alma görülünce hak GERİ GELDİ');
+    ok(a.R('PREFS.iap.t["' + tok + '"]') === 'noads', '(25) defterde aynı token');
+    ok((a.R('PREFS.iap.miss') || 0) === 0, '(25) yokluk sayacı sıfırlandı');
+    ok(st.buys === 1, '(25) yeni ödeme YOK');
+    ok(st.acks === 1, '(25) gereksiz acknowledge YOK');
+    ok(st.consumes === 0, '(25) consume YOK');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'done', '(25) kayıt "done" kaldı');
+    ok(Object.keys(a.R('PREFS.iap.t')).length === 1, '(25) defterde tek token');
+  }
+
+  /* (26) GERİ YÜKLEMENİN KAPILARI — neyin hak VERMEDİĞİ.
+         (25) iyi hâli ölçüyor; asıl risk bu yolun gevşek olması. Hepsi AYNI
+         düşmüş hak üzerinde, tek tek: yalnız GÜNCEL, PURCHASED, doğru ürünü
+         taşıyan bir yanıt hak veriyor. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    a.R("iapBuy('noads');");
+    await waitFor(() => st.acks > 0, 3000); await a.R('saveDrain()');
+    const tok = Object.keys(a.R('PREFS.iap.t'))[0];
+    const P = a.ctx.Capacitor.Plugins.NativePurchases;
+    const q = txCode => { P.getPurchases = () => Promise.resolve({ purchases: [a.R(txCode)] }); };
+    P.getPurchases = () => Promise.resolve({ purchases: [] });
+    for (let i = 0; i < a.R('IAP.missMax'); i++) await a.R('iapReconcile()');
+    await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(26) hak düştü');
+
+    /* PENDING: ödeme tamamlanmış değil. */
+    q("__tx('" + tok + "','remove_auto_ads','2',null,1)");
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(26) PENDING hak vermedi');
+
+    /* Durumu bildirilmeyen yanıt: PURCHASED VARSAYILMIYOR. */
+    P.getPurchases = () => Promise.resolve({ purchases: [{
+      transactionId: tok, productIdentifier: 'remove_auto_ads',
+      purchaseToken: tok, quantity: 1, appAccountToken: null }] });
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(26) durumu bilinmeyen yanıt hak vermedi');
+
+    /* UNSPECIFIED ("0") da vermiyor. */
+    q("__tx('" + tok + "','remove_auto_ads','0',null,1)");
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(26) UNSPECIFIED hak vermedi');
+
+    /* Token doğru, ÜRÜN başka: kaydın ürünüyle eşleşmeyen yanıt hak vermez. */
+    q("__tx('" + tok + "','cap_plus_3','1',null,1)");
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(26) ürün eşleşmeyince hak vermedi');
+    ok(a.R('iapCapOwned()') === 0, '(26) kariyer defterine de yazılmadı');
+
+    /* Başarısız sorgu hiçbir şey kanıtlamıyor. */
+    P.getPurchases = () => Promise.reject(new Error('net'));
+    ok(await a.R('iapReconcile()') === 'queryfail', '(26) sorgu başarısız');
+    ok(a.R('iapNoAds()') === false, '(26) başarısız sorgu hak YAZMADI');
+
+    /* Ve sonunda GEÇERLİ yanıt: hak geri geliyor. */
+    q("__tx('" + tok + "','remove_auto_ads','1',null,1)");
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === true, '(26) yalnız geçerli yanıt hakkı geri verdi');
+    ok(st.buys === 1 && st.acks === 1 && st.consumes === 0,
+      '(26) hiçbir kapıda yeni ödeme/consume/ack doğmadı');
+  }
+
+  /* (27) ÇELİŞKİLİ KAYIT BU YOLLA ÇÖZÜLMÜYOR.
+         'disputed' bir DURAK: sürümlerden biri teslimatın olduğunu söylüyor
+         olabilir, biri olmadığını. Geri yükleme yolu onu kendiliğinden teslim
+         etmemeli — kayıt eylemsiz kalmalı. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    a.R("IAPQ.q.DSP={tok:'DSP',sku:'remove_auto_ads',pid:'noads',sc:'device',"
+      + "cid:null,att:null,st:'disputed',at:1};");
+    await a.R('iapqSave()');
+    a.R("Capacitor.Plugins.NativePurchases.getPurchases=function(){return Promise.resolve({purchases:["
+      + "__tx('DSP','remove_auto_ads','1',null,1)]});};");
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('IAPQ.q.DSP.st') === 'disputed', '(27) çelişkili kayıt durumunu korudu');
+    ok(a.R('iapNoAds()') === false, '(27) çelişkili kayıt hak vermedi');
+    ok(st.acks === 0 && st.consumes === 0, '(27) kapanış çağrısı yapılmadı');
+  }
+
+  /* (28) AYNI DİSKTE YENİ OTURUM, AÇIK KARİYER YOK.
+         remove_auto_ads CİHAZ kapsamlı: geri yüklemesi ne açık bir kariyer ne
+         de eski kariyerin cid'i istemeli. Toparlanma diskten gelen kuyrukla
+         çalışmak zorunda — aynı oturumun belleğiyle değil. */
+  {
+    const disk = newDisk(), ls = {};
+    const s1 = session(disk, ls, {});
+    await s1.booted;
+    const st1 = fakeBilling(s1.ctx, {});
+    await careerIn(s1, 1); await billBoot(s1);
+    s1.R("iapBuy('noads');");
+    await waitFor(() => st1.acks > 0, 3000); await s1.R('saveDrain()');
+    const tok = Object.keys(s1.R('PREFS.iap.t'))[0];
+    s1.ctx.Capacitor.Plugins.NativePurchases.getPurchases = () => Promise.resolve({ purchases: [] });
+    for (let i = 0; i < s1.R('IAP.missMax'); i++) await s1.R('iapReconcile()');
+    await s1.R('saveDrain()');
+    ok(s1.R('iapNoAds()') === false, '(28) hak düştü');
+
+    /* Süreç kapanıyor; yeni oturum AYNI diski ve AYNI localStorage'ı açıyor.
+       loadSlot YOK: ana menüdeyiz, S null. */
+    const s2 = session(disk, ls, {});
+    await s2.booted;
+    const st2 = fakeBilling(s2.ctx, {});
+    s2.ctx.Capacitor.Plugins.NativePurchases.getPurchases =
+      () => Promise.resolve({ purchases: [s2.R("__tx('" + tok + "','remove_auto_ads','1',null,1)")] });
+    ok(s2.R('S') === null, '(28) açık kariyer yok');
+    await billBoot(s2); await s2.R('saveDrain()');
+    ok(s2.R('iapNoAds()') === true, '(28) cihaz hakkı kariyersiz geri geldi');
+    ok(s2.R('IAPQ.q["' + tok + '"].st') === 'done', '(28) kayıt "done" kaldı');
+    ok(st2.buys === 0, '(28) yeni ödeme yok');
+    ok(st2.acks === 0, '(28) yeniden acknowledge yok');
+    ok(st2.consumes === 0, '(28) consume yok');
+    /* Aynı yanıt tekrar gelse de hiçbir çağrı doğmuyor. */
+    await s2.R('iapReconcile()'); await s2.R('iapReconcile()'); await s2.R('saveDrain()');
+    ok(st2.acks === 0 && st2.consumes === 0 && st2.buys === 0,
+      '(28) tekrarlanan yanıt yeni çağrı üretmedi');
+    ok(s2.R('iapNoAds()') === true, '(28) hak yerinde kaldı');
+  }
+
+  /* (29) YEREL YAZMA TUTMAZSA BU BİR GERİ YÜKLEME DEĞİLDİR.
+         Kalıcılık sözleşmesi aynı: yazma diskten doğrulanamadıysa başarı
+         raporlanmıyor ve kayıt yerinde kalıyor, yani yeniden denenebiliyor. */
+  {
+    const disk = newDisk(), ls = {}, ctl = {};
+    const a = session(disk, ls, ctl);
+    await a.booted;
+    const st = fakeBilling(a.ctx, {});
+    await careerIn(a, 1); await billBoot(a);
+    a.R("iapBuy('noads');");
+    await waitFor(() => st.acks > 0, 3000); await a.R('saveDrain()');
+    const tok = Object.keys(a.R('PREFS.iap.t'))[0];
+    const P = a.ctx.Capacitor.Plugins.NativePurchases;
+    P.getPurchases = () => Promise.resolve({ purchases: [] });
+    for (let i = 0; i < a.R('IAP.missMax'); i++) await a.R('iapReconcile()');
+    await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === false, '(29) hak düştü');
+
+    /* PREFS yazması artık tutmuyor (kota). */
+    ctl.lsQuota = 1;
+    const r = await a.R("iapIngest(__tx('" + tok + "','remove_auto_ads','1',null,1),'test')");
+    ok(r === 'restorefail', '(29) yazma tutmayınca geri yükleme RAPORLANMADI');
+    ok(a.R("!(((jparse(lsGet(PREFKEY))||{}).iap||{}).t||{})['" + tok + "']") === true,
+      '(29) diskteki deftere yazılmadı');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'done', '(29) kayıt yerinde kaldı');
+    ok(st.acks === 1 && st.consumes === 0, '(29) kapanış çağrısı tekrarlanmadı');
+
+    /* Depolama düzeliyor: aynı yol yeniden denendiğinde hak geri geliyor. */
+    delete ctl.lsQuota;
+    P.getPurchases = () => Promise.resolve({ purchases: [a.R("__tx('" + tok + "','remove_auto_ads','1',null,1)")] });
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === true, '(29) düzelince yeniden deneme hakkı geri verdi');
+    ok(a.R("jparse(lsGet(PREFKEY)).iap.t['" + tok + "']") === 'noads', '(29) defter diskte');
+    ok(st.acks === 1 && st.consumes === 0 && st.buys === 1,
+      '(29) yeni ödeme/consume/ack YOK');
+  }
+
+  /* (30) AYNI AYRIM, 'done' OLMAYAN KAYITLARDA.
+         'granted'/'finishing'/'unverified' üçü de "teslim edildi" diyor; hak
+         yine de düşmüş olabilir ve iapAdvance bu durumlarda doğrudan kapanışa
+         gidiyor, teslimata değil. Burada kapanış hiç tutmamış bir reklam
+         kaldırma satın alması ölçülüyor: token geri geldiğinde ÖNCE hak
+         yeniden yazılmalı, kapanış zaten yapılacaktı. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, { ackFail: true });
+    await careerIn(a, 1); await billBoot(a);
+    a.R("iapBuy('noads');");
+    await waitFor(() => st.acks > 0, 3000); await a.R('saveDrain()');
+    const tok = Object.keys(a.R('PREFS.iap.t'))[0];
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'finishing', '(30) kapanış yarım kaldı');
+    ok(a.R('iapNoAds()') === true, '(30) hak yazılmıştı');
+
+    /* Play tokenı bir süre döndürmüyor: kayıt 'unverified'e, hak da düşüyor. */
+    const P = a.ctx.Capacitor.Plugins.NativePurchases;
+    P.getPurchases = () => Promise.resolve({ purchases: [] });
+    for (let i = 0; i < a.R('IAP.missMax'); i++) await a.R('iapReconcile()');
+    await a.R('saveDrain()');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'unverified', '(30) kapanış doğrulanamadı');
+    ok(a.R('iapNoAds()') === false, '(30) hak düştü');
+
+    /* Token geri geliyor ve bu kez acknowledge de tutuyor. */
+    const acks0 = st.acks;
+    P.acknowledgePurchase = o => { st.acks++; return Promise.resolve(); };
+    P.getPurchases = () => Promise.resolve({ purchases: [a.R("__tx('" + tok + "','remove_auto_ads','1',null,1)")] });
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapNoAds()') === true, '(30) hak yeniden yazıldı');
+    ok(a.R('IAPQ.q["' + tok + '"].st') === 'done', '(30) kapanış da tamamlandı');
+    ok(st.acks === acks0 + 1, '(30) kapanış için TEK acknowledge');
+    ok(st.consumes === 0, '(30) consume yok');
+    ok(st.buys === 1, '(30) yeni ödeme yok');
+  }
 }
 
 /* ================= [25] depo geri dönüşü ve göç =================

@@ -8971,9 +8971,15 @@ function iapDeliverDevice(rec) {
   PREFS.iap.t[rec.tok] = rec.pid;
   PREFS.iap.miss = 0;
   savePrefs();
+  return Promise.resolve(iapDevicePersisted(rec.tok, rec.pid)
+    ? (again ? 'again' : 'ok') : 'writefail');
+}
+/* Cihaz defterinin DİSKTEKİ hâli bu tokenı taşıyor mu. Bellekteki PREFS bu
+   soruyu cevaplayamaz: yazması tutmamış bir teslimat hakkı bellekte bırakıyor
+   ve ona bakan bir yeniden deneme hiç koşmazdı. */
+function iapDevicePersisted(tok, pid) {
   const back = jparse(lsGet(PREFKEY));
-  const ok = !!(back && back.iap && back.iap.t && back.iap.t[rec.tok] === rec.pid);
-  return Promise.resolve(ok ? (again ? 'again' : 'ok') : 'writefail');
+  return !!(back && back.iap && back.iap.t && back.iap.t[tok] === pid);
 }
 
 /* ================= İŞLEMİ İŞLEME =================
@@ -8997,35 +9003,81 @@ function iapIngest(tx, src) {
     rec = q[tok] = { tok: tok, sku: tx.productIdentifier, pid: pid,
       sc: iapById(pid).sc, cid: null, att: null, st: 'pending', at: Date.now(), src: src };
   }
-  if (rec.st === 'done') return Promise.resolve('done');
+  /* KAPANMIŞ KAYIT. 'İşlem kapandı' ile 'hak bu cihazda duruyor' AYRI iki
+     şey ve buradaki tek satırlık çıkış ikisini birbirine bağlıyordu: cihaz
+     kapsamlı hak iapReapNoAds tarafından düşürülmüş olabilir ve token geri
+     geldiğinde bir daha yazılmazdı. Kararı veren PLAY'in bu taze yanıtı. */
+  if (rec.st === 'done') return iapRestoreDevice(rec, tx, pid);
 
   /* Hedef kimliği: satın almanın KENDİSİNDEN. Yerel bir tahmin yok. */
   const tag = iapParseTag(tx.appAccountToken);
   if (tag) { rec.cid = rec.cid || tag.cid; rec.att = rec.att || tag.att; }
 
-  /* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
-     ve Android'de `String.valueOf(int)` ile geliyor: "0" UNSPECIFIED, "1"
-     PURCHASED, "2" PENDING. Eksikse PURCHASED VARSAYILMIYOR — eskiden burada
-     `undefined → '1'` vardı ve bu, durumu bildirmeyen bir yanıtı satın alınmış
-     saymak demekti. Yalnız açıkça "1" hak veriyor. */
-  const ps = (tx.purchaseState === undefined || tx.purchaseState === null)
-    ? '' : String(tx.purchaseState);
+  /* Yalnız açıkça "1" hak veriyor; eksik durum PURCHASED VARSAYILMIYOR
+     (iapTxPs). Eskiden burada `undefined → '1'` vardı ve bu, durumu
+     bildirmeyen bir yanıtı satın alınmış saymak demekti. */
+  const ps = iapTxPs(tx);
   if (ps === '2') { rec.st = 'pending'; return iapqSave(tok).then(() => 'pending'); }
   if (ps !== '1') { rec.st = 'pending'; return iapqSave(tok).then(() => 'unknownstate'); }
 
-  /* Miktar: Play tek adetten fazlasını bu üründe vermiyor ve biz de
-     desteklemiyoruz. Yine de KONTROL ediliyor — desteklenmeyen bir miktarı
-     sessizce tek adet gibi teslim etmek eksik teslimat olurdu. */
-  const qty = (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+  /* Miktar yine de KONTROL ediliyor (iapTxQty). */
+  const qty = iapTxQty(tx);
   if (qty !== 1) {
     rec.st = 'undeliverable'; rec.note = 'qty';
     return iapqSave(tok).then(() => 'undeliverable');
   }
+  /* KAYIT NE DERSE DESİN, HAK YERİNDE Mİ. 'granted'/'finishing'/'unverified'
+     hepsi 'teslim edildi' diyor; cihaz defterinden hak düşmüş olabilir. O
+     zaman teslimata geri dönülüyor — kapanış zaten yapılacaktı, yani
+     fazladan bir acknowledge doğmuyor. */
+  if (rec.sc === 'device' && !iapDevicePersisted(tok, rec.pid)
+    && (rec.st === 'granted' || rec.st === 'finishing' || rec.st === 'unverified')) rec.st = 'ready';
   if (rec.st === 'pending' || rec.st === 'orphan' || rec.st === 'unbound') rec.st = 'ready';
   /* Doğrulanamamış bir kapanışın tokenı GERİ GELDİYSE satın alma hâlâ açıktır:
      hak zaten yazılı, yalnız kapanış yeniden denenmeli. */
   else if (rec.st === 'unverified') rec.st = 'granted';
   return iapqSave(tok).then(() => iapAdvance(rec));
+}
+/* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
+   ve Android'de `String.valueOf(int)` ile geliyor: '0' UNSPECIFIED, '1'
+   PURCHASED, '2' PENDING. Eksikse PURCHASED VARSAYILMIYOR; okuma tek yerde
+   duruyor ki geri yükleme yolu da AYNI kapıdan geçsin. */
+function iapTxPs(tx) {
+  return (tx.purchaseState === undefined || tx.purchaseState === null)
+    ? '' : String(tx.purchaseState);
+}
+/* Play tek adetten fazlasını vermiyor ve biz desteklemiyoruz; yine de
+   okunuyor — desteklenmeyen bir miktarı sessizce tek adet saymak eksik
+   teslimat olurdu. */
+function iapTxQty(tx) {
+  return (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+}
+
+/* KAPANMIŞ BİR CİHAZ İŞLEMİNİN YEREL HAKKINI YENİDEN YAZAR.
+
+   iapReapNoAds, art arda IAP.missMax başarılı-ama-boş sorgudan sonra reklam
+   kaldırma hakkını düşürüyor. Bu bilerek kabul edildi ÇÜNKÜ geri alınabilir
+   sayılmıştı (IAP.missMax'in yorumu); geri almanın gerçekten olduğu yer burası.
+
+   KARARI VEREN PLAY'İN BU TAZE YANITI, eski 'done' kaydı DEĞİL. Bu yola yalnız
+   iapIngest'ten, yani elde bir Transaction varken geliniyor: kayıt tek başına
+   hiçbir hakkı diriltmiyor.
+
+   YENİ ÖDEME, CONSUME YA DA ACKNOWLEDGE YOK: kapanış zaten olmuştu ve kayıt
+   'done' kalıyor. Yazma tutmazsa 'restored' RAPORLANMIYOR; kayıt da yerinde
+   kaldığı için bir sonraki başarılı sorgu aynı yolu yeniden deniyor. */
+function iapRestoreDevice(rec, tx, pid) {
+  /* YALNIZ TÜKETİLMEYEN CİHAZ HAKKI. Kapasite paketi tüketiliyor; tüketilmiş
+     token zaten sorguda görünmüyor ve kariyer defterine bu yoldan
+     dokunulmuyor. Ürün eşleşmiyorsa da hak yok: token bizim kaydımızın
+     ürününü taşımak zorunda. */
+  if (rec.sc !== 'device' || rec.pid !== pid) return Promise.resolve('done');
+  /* Normal teslimat yolundaki AYNI kapılar: PENDING, durumu bildirilmeyen
+     yanıt ve desteklenmeyen miktar hak vermiyor. */
+  if (iapTxPs(tx) !== '1' || iapTxQty(tx) !== 1) return Promise.resolve('done');
+  if (iapDevicePersisted(rec.tok, rec.pid)) return Promise.resolve('done');
+  return iapDeliverDevice(rec).then(r =>
+    (r === 'ok' || r === 'again') ? 'restored' : 'restorefail');
 }
 function iapPidOfSku(sku) {
   const p = IAP_PRODUCTS.find(x => x.sku === sku);
@@ -9379,7 +9431,7 @@ function iapAfterBuy(r, att) {
   if (r === 'pending') return iapToast('shopPending');
   if (r === 'orphan' || r === 'unbound') return iapToast('shopStuck');
   if (r === 'undeliverable') return iapToast('shopUndeliver');
-  if (r === 'finishfail' || r === 'writefail') return iapToast('shopLater');
+  if (r === 'finishfail' || r === 'writefail' || r === 'restorefail') return iapToast('shopLater');
   return iapToast('shopThanks');
 }
 function iapToast(k) { if (typeof toast === 'function' && typeof t === 'function') toast(t(k)); }
