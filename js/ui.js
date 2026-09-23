@@ -3,7 +3,15 @@
 /* ================= NAVIGATION ================= */
 function cur(){return stack[stack.length-1];}
 function navTo(v){stack=[{v}];render();}
-function pushV(v,id){stack.push({v,id});render();}
+/* Mağaza açılırken ödeme kuyruğu yüklenememişse tek bir kontrollü yeniden
+   deneme. Zamanlayıcı yok: denemeyi kullanıcının eylemi başlatıyor, iapRetry()
+   kendi içinde tekilleşiyor ve başarısızlık sessizce bırakılıyor — ekran zaten
+   satın almayı kapalı gösteriyor (iapWhy → 'noq'). */
+function pushV(v,id){
+  stack.push({v,id});
+  if(v==='shop'&&typeof iapRetry==='function')iapRetry();
+  render();
+}
 function back(){if(stack.length>1){stack.pop();render();}}
 /* ================= ANA MENÜ =================
    Kabuk (menü / yeni kariyer / menüden açılan ayarlar) ile oyun arasındaki tek
@@ -474,12 +482,17 @@ function shopTxHtml(){
   if(typeof iapPendingN!=='function')return '';
   const pend=iapPendingN(),stuck=iapStuckN();
   const unver=iapUnverifiedN(),held=iapHeldN();
-  if(!pend&&!stuck&&!unver&&!held)return '';
+  /* Durumu netleştirilemeyen işlem AYRI yazılıyor: "teslim edilemedi" cümlesi
+     onun için yanlış olurdu, çünkü çelişen sürümlerden biri hakkın verildiğini
+     söylüyor olabilir. Ne verildiğini ne verilmediğini iddia etmiyoruz. */
+  const uncl=typeof iapUnclearN==='function'?iapUnclearN():0;
+  if(!pend&&!stuck&&!unver&&!held&&!uncl)return '';
   return `<div class="sect">${t('shopTxT')}</div>
   <div class="shpTx">
     ${pend?`<p class="shpTxP">${t('shopTxPending').replace('{n}',pend)}</p>`:''}
     ${held?`<p class="shpTxP">${t('shopTxHeld').replace('{n}',held)}</p>`:''}
     ${unver?`<p class="shpTxP">${t('shopTxUnverified').replace('{n}',unver)}</p>`:''}
+    ${uncl?`<p class="shpTxP">${t('shopTxUnclear').replace('{n}',uncl)}</p>`:''}
     ${stuck?`<p class="shpTxS">${t('shopTxStuck').replace('{n}',stuck)}</p>`:''}
     ${stuck?`<p class="shpTxH">${t('shopTxHelp')}</p>`:''}
   </div>`;

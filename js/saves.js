@@ -38,6 +38,11 @@ let curSlot=0;
 /* Açılış tamamlanana kadar menü "yükleniyor" gösteriyor; boş yuva göstermek
    kaydı silinmiş gibi görünürdü. */
 let storeReady=false;
+/* storeInit()'in sözü, tek örnek. Depolamaya bağlı başlangıçlar (js/iap.js'in
+   ödeme kuyruğu) bunu BEKLEMEK zorunda: SAVEH.backend açılışta 'ls' değerinden
+   başlıyor ve storeBackendInit() bitene kadar öyle kalıyor — daha erken yapılan
+   her recGet() YANLIŞ arka uçtan okur ve "orada bir şey yok" der. */
+let STOREP=null;
 
 /* ================= CİHAZ TERCİHLERİ ================= */
 let PREFS=jparse(lsGet(PREFKEY))||{};
@@ -247,7 +252,8 @@ function deleteSlot(n){
    Her adım kendi başına yeniden çalıştırılabilir; yarıda kesilen göç bir sonraki
    açılışta kaldığı yerden devam eder. */
 function storeInit(){
-  return storeBackendInit()
+  if(STOREP)return STOREP;
+  STOREP=storeBackendInit()
     .then(()=>recGet('meta'))
     .then(m=>{META=m||{};},()=>{META={};})
     .then(reconcileMeta)
@@ -255,7 +261,14 @@ function storeInit(){
     .then(migrateLegacy)
     .then(reconcileMeta)
     .then(()=>{storeReady=true;rememberIdbSlots();},e=>{storeReady=true;noteSaveFail('init',e);});
+  return STOREP;
 }
+/* "Depolama hazır" kapısı. Henüz başlamadıysa BAŞLATIYOR — bu kapıyı bekleyen
+   bir çağrı storeInit()'in daha önce çağrılmış olmasına bağlı kalmamalı; yükleme
+   sırası değişirse sessizce sonsuza kadar beklerdi. storeInit() kendi hatasını
+   yuttuğu için kapı hiçbir zaman REDDETMİYOR: "depolama açıldı mı" ile "açılış
+   sorunsuz muydu" ayrı sorular, ikincisini SAVEH cevaplıyor. */
+function storeReadyP(){return storeInit();}
 
 /* ================= localStorage DÖNEMİNİN DEVRİ =================
    Kayıpsız olmasının tek yolu sırayı bozmamak: yaz → geri oku → aynı mı diye

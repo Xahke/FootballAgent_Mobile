@@ -41,6 +41,10 @@ function makeIDB(disk, ctl) {
       // ölçmek için gerekiyor; ikisi aynı sayılırsa göç mevcut kaydı ezer.
       get(key) { const r = req(); r.__work = () => { const e = ctl.failGet && ctl.failGet(key); if (e) throw e; r.result = structuredClone(data[key]); }; return r; },
       getAllKeys() { const r = req(); r.__work = () => { r.result = Object.keys(data); }; return r; },
+      // ctl.failPut(key)/ctl.onPut(key,val): TEK BİR yazmayı patlatır ya da
+      // sayar. failWrite işlemin tamamını düşürüyor ve iapq ile meta AYNI
+      // depoda (ST_META) olduğu için onunla "yalnız kuyruğun yazması düşsün"
+      // denemiyor; göç yazmasını ayrı ölçmenin yolu bu.
       put(val, key) {
         const r = req();
         // Kopya PUT ÇAĞRISI SIRASINDA alınıyor — gerçek IndexedDB de değeri o
@@ -49,7 +53,12 @@ function makeIDB(disk, ctl) {
         // sızmasına yol açıyordu: testler yazılmamış veriyi yazılmış sanıyordu.
         // Başarısız işlemde __work hiç çalışmadığı için disk değişmiyor.
         const snap = structuredClone(val);
-        r.__work = () => { data[key] = snap; r.result = key; };
+        r.__work = () => {
+          const e = ctl.failPut && ctl.failPut(key);
+          if (e) throw e;
+          if (ctl.onPut) ctl.onPut(key, snap);
+          data[key] = snap; r.result = key;
+        };
         return r;
       },
       delete(key) { const r = req(); r.__work = () => { delete data[key]; }; return r; }
@@ -81,7 +90,11 @@ function makeIDB(disk, ctl) {
   return {
     open(name, ver) {
       const r = { result: null, onsuccess: null, onerror: null, onupgradeneeded: null, onblocked: null };
-      setTimeout(() => {
+      // ctl.openGate: açılışı KONTROLLÜ olarak geciktirir (söz çözülene kadar
+      // bekler). Gerçek cihazda IndexedDB'nin açılması milisaniyeler sürüyor ve
+      // o pencerede SAVEH.backend hâlâ 'ls'; kapı o pencereyi belirlenimci
+      // kılıyor, süre bekleyerek değil.
+      const fire = () => {
         // ctl.failOpen: IndexedDB VAR ama bu oturumda açılamıyor (bozuk profil,
         // dolu disk, onblocked). noIDB'den farkı geçici olması: disk yerinde
         // duruyor ve bir sonraki oturum onu yeniden görüyor.
@@ -97,7 +110,9 @@ function makeIDB(disk, ctl) {
           if (r.onupgradeneeded) r.onupgradeneeded({ target: { result: db } });
         }
         if (r.onsuccess) r.onsuccess({ target: { result: db } });
-      }, 0);
+      };
+      if (ctl.openGate) Promise.resolve(ctl.openGate()).then(() => setTimeout(fire, 0));
+      else setTimeout(fire, 0);
       return r;
     }
   };
@@ -133,7 +148,14 @@ function makeEl() {
 function makeLS(store, ctl) {
   const used = () => Object.keys(store).reduce((n, k) => n + (k.length + store[k].length) * 2, 0);
   return {
-    getItem: k => (Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null),
+    // ctl.lsFail(k): localStorage ERİŞİMİ atıyor. "Anahtar yok" ile aynı şey
+    // değil ve ödeme kuyruğu için farkı ölçmek zorundayız: lsGet()/jparse()
+    // ikisini de null'a çeviriyor, recReadLs() ise ayırıyor.
+    getItem(k) {
+      const e = ctl.lsFail && ctl.lsFail(k);
+      if (e) throw e;
+      return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null;
+    },
     setItem(k, v) {
       v = String(v);
       const old = store[k];
@@ -184,6 +206,10 @@ function session(disk, lsStore, ctl) {
   };
   ctx.window = ctx; ctx.self = ctx; ctx.globalThis = ctx; ctx.webkitAudioContext = ctx.AudioContext;
   vm.createContext(ctx);
+  // ctl.pre: dosyalar YÜKLENMEDEN önce bağlama bir şey koymak için. Gerçek
+  // Android'de Capacitor köprüsü main.js çalıştığında zaten oradadır; billSession
+  // köprüyü açılıştan SONRA kuruyor, o yüzden açılış yarışı oradan görünmüyor.
+  if (ctl.pre) ctl.pre(ctx);
   FILES.forEach(f => vm.runInContext(fs.readFileSync(path.join(ROOT, 'js', f + '.js'), 'utf8'),
     ctx, { filename: 'js/' + f + '.js' }));
   const R = code => vm.runInContext(code, ctx);
@@ -4680,6 +4706,768 @@ async function tForkRestoreCost() {
 module.exports = { session, newDisk, makeEl, waitFor, tick };
 if (require.main !== module) return;
 
+
+/* ================= [28] ödeme kuyruğunun yüklenmesi =================
+   Tek cümleyle ölçülen sözleşme: KUYRUK YA GERÇEKTEN OKUNUR YA DA HİÇ
+   OKUNMAMIŞ SAYILIR — arada "boş yüklendi" diye bir hâl yok.
+
+   İki ayrı hata aynı sonuca çıkıyordu ve ikisi de burada yeniden üretiliyor:
+
+   1) ERKEN OKUMA. SAVEH.backend 'ls' değeriyle başlıyor; storeBackendInit()
+      bitene kadar recGet() localStorage'a bakıyor. main.js iapInit()'i
+      storeInit() BEKLENMEDEN çağırdığı için kuyruk IndexedDB'li bir cihazda
+      yanlış arka uçtan okunuyordu. Senaryo (1) bunu ayırt edilebilir kılıyor:
+      localStorage'a AYRI bir kuyruk konuyor, IndexedDB'de bir başkası duruyor.
+      Erken okuma YALNIZ localStorage'dakini görürdü; doğru sıra ikisini de görür.
+      IndexedDB'dekinin yüklenmiş olması, okumanın arka uç seçildikten SONRA
+      yapıldığının doğrudan kanıtı. (İkisinin birleştirilmesi blok 29'un konusu;
+      burada ölçülen tek şey sıra.)
+
+   2) OKUMA HATASININ BOŞ KUYRUK SAYILMASI. js/saves.js'teki göçün aynı ayrımı:
+      "okuyamadım" ile "orada bir şey yok" aynı cevap değil. Yanlış taraf pahalı
+      — boş bir ayna diske yazılınca ödenmiş işlem kayıtları siliniyor.
+
+   Ölçüm süre bekleyerek değil, kapıyla: ctl.openGate IndexedDB'nin açılmasını
+   testin istediği ana kadar tutuyor, ctl.pre ise köprüyü dosyalar yüklenmeden
+   önce kuruyor — gerçek Android'de Capacitor main.js koştuğunda zaten orada. */
+function gate() {
+  let open;
+  const p = new Promise(r => { open = r; });
+  return { p: () => p, open: () => open() };
+}
+async function ticks(n) { for (let i = 0; i < n; i++) await tick(); }
+/* Köprüsü AÇILIŞTAN ÖNCE kurulmuş oturum. billSession() köprüyü storeReady'den
+   SONRA kuruyor ve iapInit()'i elle çağırıyor; bu yüzden açılış yarışı oradan
+   hiç görünmüyordu. */
+function bootBillSession(disk, ls, ctl, opt) {
+  let st = null;
+  ctl = ctl || {};
+  ctl.pre = ctx => { st = fakeBilling(ctx, opt || {}); };
+  const a = session(disk, ls, ctl);
+  return { a, st: () => st };
+}
+/* Açılışın tamamlandığı an: iapInit() ürün sorgusunu bitirdiğinde IAPS.prod
+   yazılıyor. Kuyruğun yüklenip yüklenmediğinden bağımsız — ikisi paralel. */
+function iapBooted(a) { return waitFor(() => a.R('IAPS.prod') !== null, 'iapInit', 3000); }
+/* Kuyruk yüklemesinin YERLEŞTİĞİ an — yüklendi ya da bir sebeple yüklenemedi.
+   iapBooted() ile aynı şey DEĞİL ve olmaması da tasarımın kendisi: ürün sorgusu
+   depolamayı beklemiyor, bu yüzden IAPS.prod kuyruktan çok önce yazılıyor. */
+function qSettled(a) {
+  return waitFor(() => a.R('IAPQ!==null||iapqErr()!==""'), 'kuyruk yüklemesi', 3000);
+}
+
+async function tIapQueueLoad() {
+  console.log('\n[28] ödeme kuyruğu: depolama hazır olmadan okunmuyor, hata boş sayılmıyor');
+
+  const disk = newDisk(), ls = {};
+
+  /* (0) DİSKE AYIRT EDİLEBİLİR BİR KUYRUK. consume başarısız, yani kayıt
+         'finishing' olarak kalıyor: kapanmamış, ödenmiş bir işlem. */
+  {
+    const { a, st } = await billSession(disk, ls, { fixedTok: 'OLDTOK', consumeFail: true });
+    await careerIn(a, 1);
+    await billBoot(a);
+    a.R("iapBuy('cap3');");
+    await waitFor(() => a.R('IAPS.busy') === '' && st.consumes > 0, '(0) satın alma', 3000);
+    await a.R('saveDrain()');
+    ok(a.R("IAPQ.q.OLDTOK.st") === 'finishing', '(0) kapanmamış işlem kuyrukta');
+    ok(!!(disk.meta.iapq && disk.meta.iapq.q && disk.meta.iapq.q.OLDTOK) === true,
+      '(0) işlem IndexedDB depolamasına yazıldı');
+    ok(a.R('iapCapOwned()') === 3, '(0) hak teslim edilmişti');
+  }
+
+  /* (1) AÇILIŞ YARIŞI. IndexedDB'nin açılması tutuluyor; köprü yerinde olduğu
+         için main.js iapInit()'i o pencerede çalıştırıyor. localStorage'da
+         BAŞKA bir kuyruk var: erken okuma onu, doğru okuma IndexedDB'dekini
+         getirir — hangisinin geldiği soruyu tek başına cevaplıyor. */
+  {
+    ls['menajerIapQV1'] = JSON.stringify({ v: 1, q: { LSTOK: {
+      tok: 'LSTOK', sku: 'cap_plus_1', pid: 'cap1', sc: 'career',
+      cid: 'yanlis', att: null, st: 'ready', at: 1 } } });
+    const g = gate();
+    const ctl = { openGate: g.p };
+    const { a, st } = bootBillSession(disk, ls, ctl, { fixedTok: 'NEWTOK', queryFail: true });
+
+    await ticks(8);
+    ok(a.R('storeReady') === false, '(1) depolama açılışı sürüyor');
+    ok(a.R('saveBackend()') === 'ls', '(1) arka uç HENÜZ seçilmedi');
+    ok(a.R('IAPQ') === null, '(1) kuyruk arka uç seçilmeden OKUNMADI');
+    ok(a.R('IAPS.boot') === true, '(1) açılış yine de başlamış durumda');
+    ok(a.R('IAPS.prod') !== null, '(1) ÜRÜN SORGUSU depolamayı beklemedi');
+
+    g.open();
+    await a.booted;
+    await waitFor(() => a.R('IAPQ') !== null, '(1) kuyruk', 3000);
+    ok(a.R('saveBackend()') === 'idb', '(1) arka uç IndexedDB seçildi');
+    ok(a.R('!!IAPQ.q.OLDTOK') === true, '(1) IndexedDB kaydı yüklendi');
+    ok(a.R('!!IAPQ.q.LSTOK') === true, '(1) localStorage kaynağı da devralındı');
+
+    /* Kuyruk doğru yüklendiğine göre kapanmamış işlem kariyer açılınca
+       toparlanıyor — ve asıl ölçüm bundan sonraki YAZMA. */
+    await a.R('loadSlot(1)');
+    await waitFor(() => a.R("Object.keys(IAPS.flight).length") === 0, '(1) uçuş', 3000);
+    await a.R('saveDrain()');
+    ok(a.R("IAPQ.q.OLDTOK.st") === 'done', '(1) kapanmamış işlem tamamlandı');
+
+    a.R("iapBuy('cap3');");
+    await waitFor(() => a.R("!!(IAPQ.q.NEWTOK&&IAPQ.q.NEWTOK.st==='done')") === true,
+      '(1) yeni satın alma', 3000);
+    await a.R('saveDrain()');
+    const dq = disk.meta.iapq.q;
+    ok(!!dq.OLDTOK === true, '(1) SONRAKİ YAZMA diskteki eski kaydı EZMEDİ');
+    ok(!!dq.NEWTOK === true, '(1) yeni kayıt da yazıldı');
+    ok(!!dq.LSTOK === true, '(1) devralınan kayıt da diskte');
+    ok(st().consumes === 2, '(1) iki işlem de tam birer kez kapandı');
+  }
+
+  /* (2) OKUMA HATASI BOŞ KUYRUK DEĞİLDİR. Depo açılıyor, yalnız 'iapq'
+         okuması patlıyor — ctl.failGet'in ayırt etmek için var olduğu hâl. */
+  {
+    const ctl = { boom: true };
+    ctl.failGet = k => (k === 'iapq' && ctl.boom) ? new Error('ReadFail') : null;
+    const { a, st } = bootBillSession(disk, ls, ctl, { fixedTok: 'T2' });
+    await a.booted;
+    await iapBooted(a);
+    await qSettled(a);
+
+    /* Kariyer AÇILIYOR: yoksa iapState() 'nocareer' der ve aşağıdaki satın alma
+       reddi kuyruktan değil, kariyersizlikten geçerdi — ölçüm boşa çıkardı.
+       Kariyer açılışı aynı zamanda bir yeniden deneme noktası: o da yüklemiyor
+       ve hiçbir teslimat denemiyor. */
+    await a.R('loadSlot(1)');
+    await ticks(12);
+    ok(a.R('IAPQ') === null, '(2) okuma hatası BOŞ KUYRUK sayılmadı');
+    ok(a.R('iapqErr()') === 'read', '(2) hata türü okunabiliyor');
+    ok(a.R('iapAvailable()') === false, '(2) satın alma kapalı');
+    ok(a.R('iapWhy()') === 'noq', '(2) sebep: kuyruk yok');
+    ok(a.R("iapState('cap3')") === 'off', '(2) ürün kapalı — kariyer AÇIK olduğu hâlde');
+    ok(a.R('IAPS.busy') === '', '(2) kalıcı bir busy kilidi bırakılmadı');
+
+    const before = JSON.stringify(disk.meta.iapq);
+    const cap0 = a.R('iapCapOwned()');
+    ok(cap0 === 6, '(2) kariyerin mevcut kapasitesi okunuyor');
+    ok(a.R("iapBuy('cap3')") === false, '(2) satın alma BAŞLATILMADI');
+    ok(await a.R('iapReconcile()') === 'noq', '(2) uzlaştırma da yapılmıyor');
+    await ticks(8); await a.R('saveDrain()');
+    ok(st().buys === 0, '(2) Play satın alma çağrısı yapılmadı');
+    ok(st().consumes === 0 && st().acks === 0, '(2) hiçbir kapanış çağrılmadı');
+    ok(st().queries === 0, '(2) Play sorgusu kuyruğun YERİNE geçmedi');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(2) diskteki kuyruk el değmeden kaldı');
+
+    /* Teslimat yolu da kapalı: kuyruğa yazılamayacak bir hak verilmemeli. */
+    const ing = await a.R("iapIngest(__tx('T2','cap_plus_3','1',S.cid+'.aabbccdd',1),'test')");
+    ok(ing === 'noq', '(2) işlem kuyruğa alınmadı');
+    ok(a.R('iapCapOwned()') === cap0, '(2) hiçbir hak yazılmadı');
+
+    /* KURTARMA: depolama düzelince kontrollü yeniden deneme gerçek kuyruğu
+       getiriyor. Zamanlayıcı yok — bu çağrı kullanıcının eyleminden geliyor. */
+    ctl.boom = false;
+    const r = await a.R('iapRetry()');
+    await a.R('saveDrain()');
+    ok(r !== 'noq', '(2) yeniden deneme tamamlandı');
+    ok(a.R('!!IAPQ') === true, '(2) kuyruk nihayet yüklendi');
+    ok(a.R('!!IAPQ.q.OLDTOK') === true, '(2) diskteki kayıtlar geri geldi');
+    ok(a.R('!!IAPQ.q.NEWTOK') === true, '(2) ikinci kayıt da geri geldi');
+    ok(a.R('iapqErr()') === '', '(2) hata durumu temizlendi');
+    ok(st().queries === 1, '(2) yeniden deneme TEK uzlaştırma yaptı');
+    ok(a.R('iapAvailable()') === true, '(2) satın alma yeniden açıldı');
+    ok(a.R("iapState('cap3')") === 'go', '(2) ürün yeniden satın alınabilir');
+    ok(!!disk.meta.iapq.q.OLDTOK === true, '(2) disk hâlâ eksiksiz');
+  }
+
+  /* (3) TANINMAYAN YÜK de boş kuyruk değildir. Okuyamadığımız bir kaydın
+         üstüne boş bir ayna yazmak, ödenmiş kayıtları silmek olurdu. */
+  {
+    const disk3 = newDisk(), ls3 = {};
+    disk3.meta.iapq = { v: 1, q: 'bozuk' };
+    const { a } = bootBillSession(disk3, ls3, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(3) bozuk kayıt boş kuyruk sayılmadı');
+    ok(a.R('iapqErr()') === 'bad', '(3) okuma hatasından AYRI bir tür');
+    ok(a.R('iapAvailable()') === false, '(3) satın alma kapalı');
+    await ticks(6); await a.R('saveDrain()');
+    ok(disk3.meta.iapq.q === 'bozuk', '(3) okunamayan kayıt EZİLMEDİ');
+  }
+
+  /* (4) GERÇEKTEN YOK olan kuyruk boş kuyruktur — ilk kurulumun normal hâli. */
+  {
+    const disk4 = newDisk(), ls4 = {};
+    const { a } = bootBillSession(disk4, ls4, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('!!IAPQ') === true, '(4) kaydı hiç olmayan kuyruk boş olarak yüklendi');
+    ok(a.R('Object.keys(IAPQ.q).length') === 0, '(4) içi boş');
+    ok(a.R('iapqErr()') === '', '(4) hata yok');
+    ok(a.R('iapAvailable()') === true, '(4) satın alma açık');
+  }
+
+  /* (5) EŞZAMANLILIK. Ne ikinci bir boş yükleme, ne ikinci bir okuma, ne de
+         ikinci bir uzlaştırma. */
+  {
+    const disk5 = newDisk(), ls5 = {};
+    let reads = 0;
+    const ctl = { boom: true };
+    ctl.failGet = k => { if (k !== 'iapq') return null; reads++; return ctl.boom ? new Error('ReadFail') : null; };
+    const { a, st } = bootBillSession(disk5, ls5, ctl, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(reads === 1, '(5) açılışta tek okuma denendi');
+    ok(a.R('IAPQ') === null, '(5) yüklenmedi');
+
+    await a.R('Promise.all([iapRetry(),iapRetry(),iapRetry()])');
+    ok(reads === 2, '(5) üç eşzamanlı deneme TEK okuma açtı');
+    ok(a.R('IAPQ') === null, '(5) ikinci bir boş yükleme olmadı');
+    ok(st().queries === 0, '(5) kuyruk yokken uzlaştırma da yok');
+
+    ctl.boom = false;
+    await a.R('Promise.all([iapRetry(),iapRetry(),iapRetry()])');
+    await a.R('saveDrain()');
+    ok(reads === 3, '(5) düzelince yine TEK okuma');
+    ok(a.R('!!IAPQ') === true, '(5) kuyruk yüklendi');
+    ok(st().queries === 1, '(5) tam bir uzlaştırma koştu');
+    ok(await a.R('iapRetry()') === 'again', '(5) yüklüyken yeniden deneme iş yapmıyor');
+  }
+
+  /* (6) localStorage ARKA UCU bozulmuyor: IndexedDB hiç yokken kuyruk oraya
+         yazılıyor ve yeniden açılışta oradan geri geliyor. */
+  {
+    const disk6 = newDisk(), ls6 = {};
+    {
+      const { a, st } = bootBillSession(disk6, ls6, { noIDB: true }, { fixedTok: 'LSBUY' });
+      await a.booted; await iapBooted(a); await qSettled(a);
+      ok(a.R('saveBackend()') === 'ls', '(6) localStorage arka ucu seçildi');
+      ok(a.R('!!IAPQ') === true, '(6) kuyruk yüklendi');
+      await careerIn(a, 1);
+      a.R("iapBuy('cap1');");
+      await waitFor(() => a.R('IAPS.busy') === '' && st().consumes > 0, '(6) satın alma', 3000);
+      await a.R('saveDrain()');
+      ok(!!ls6['menajerIapQV1'] === true, '(6) kuyruk localStorage depolamasına yazıldı');
+      ok(a.R('iapCapOwned()') === 1, '(6) hak teslim edildi');
+    }
+    {
+      const { a } = bootBillSession(disk6, ls6, { noIDB: true }, {});
+      await a.booted; await iapBooted(a); await qSettled(a);
+      ok(a.R('!!(IAPQ&&IAPQ.q.LSBUY)') === true, '(6) yeniden açılışta kuyruk geri geldi');
+    }
+  }
+
+  /* (7) KÖPRÜSÜZ sürüm (web/PWA/tek dosya) değişmedi: kuyruk hiç okunmuyor,
+         yeniden deneme de bir şey açmıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    ok(a.R('IAPQ') === null, '(7) köprüsüz sürümde kuyruk okunmuyor');
+    ok(await a.R('iapRetry()') === 'nobridge', '(7) yeniden deneme köprü yokken iş yapmıyor');
+    ok(a.R('iapWhy()') === 'noplay', '(7) sebep köprünün yokluğu');
+    await careerIn(a, 1);
+    ok(await a.R('iapOnCareerOpen()') === 'noq', '(7) kariyer açılışı sessizce geçiyor');
+  }
+}
+
+
+/* ================= [29] iki depodaki ödeme kuyruğunun sürekliliği =================
+   Blok 28 kuyruğun NE ZAMAN okunacağını ölçüyor. Bu blok, okunduğunda NEREYE
+   bakıldığını ve iki depo birden dolu olduğunda ne yapıldığını ölçüyor.
+
+   Boşluk şuydu: IndexedDB bir açılışta açılamazsa katman localStorage'a
+   düşüyor ve o oturumda ÖDENEN işlemler 'menajerIapQV1' anahtarına yazılıyor.
+   Bir sonraki açılışta IndexedDB açılınca recGet('iapq') yalnız oraya bakıyor,
+   localStorage'daki kayıt görünmez kalıyordu. Kaybolmuyordu — ama görünmeyen
+   bir ödeme kaydı, kullanıcı için kayıp olandan farksız.
+
+   KARAR KURALLARI (js/iap.js iapqMergeRec):
+     - bir tarafta olan token her zaman korunur;
+     - iki taraf birebir aynıysa çelişki yoktur;
+     - KİMLİK (pid/sku/sc/cid/att) iki tarafta da doluysa ve farklıysa çelişki
+       ÇÖZÜLEMEZ: kayıt 'disputed' olur, iki özgün kayıt IAPQ.cf'te olduğu gibi
+       saklanır, teslimat da consume/ack de BAŞLAMAZ;
+     - bir tarafta eksik olan kimlik alanı diğerinden doldurulur (çelişki değil);
+     - kimlikler uyuşup durumlar uyuşmuyorsa: 'done' mutlak kazanır (tek başına
+       "Play'e söyledik" diyen ve hiçbir şey YAPMAYAN durum), yoksa yeniden
+       türetmesi en çok olan durum seçilir. Sıra "sonra yazılan doğrudur" değil:
+       teslimat DEFTERLE korunuyor, yani erken bir durumdan başlamak ikinci kez
+       hak veremez; ileri bir durumu seçmek ise hiç yapılmamış bir teslimatı
+       atlayabilir.
+
+   Kaynak ancak hedefteki birleşik kayıt yazılıp TAZE BİR OKUMAYLA doğrulandıktan
+   sonra siliniyor — s1..s3 göçüyle aynı disiplin, ona hiç dokunmadan. */
+
+/* Kuyruk kaydı taklidi: gerçek iapIngest'in ürettiği alanların aynısı. */
+function qrec(tok, o) {
+  o = o || {};
+  return { tok: tok, sku: o.sku || 'cap_plus_3', pid: o.pid || 'cap3',
+    sc: o.sc || 'career', cid: o.cid === undefined ? null : o.cid,
+    att: o.att === undefined ? null : o.att, st: o.st || 'ready',
+    at: o.at || 1000, src: o.src || 'test' };
+}
+function putLsQ(ls, q) { ls['menajerIapQV1'] = JSON.stringify({ v: 1, q: q }); }
+function putIdbQ(disk, q) { disk.meta.iapq = { v: 1, q: q }; }
+
+async function tIapQueueMerge() {
+  console.log('\n[29] ödeme kuyruğu: localStorage → IndexedDB sürekliliği ve çelişki kuralları');
+
+  /* (1) ÖNCEKİ OTURUMUN ÖDEMESİ GÖRÜNÜR KALIYOR. Birinci oturum IndexedDB'siz
+         (kayıt localStorage'a gidiyor), ikincisi IndexedDB'li. */
+  {
+    const disk = newDisk(), ls = {};
+    {
+      const { a, st } = bootBillSession(disk, ls, { noIDB: true },
+        { fixedTok: 'LSPAID', consumeFail: true });
+      await a.booted; await iapBooted(a); await qSettled(a);
+      ok(a.R('saveBackend()') === 'ls', '(1) ilk oturum localStorage arka ucunda');
+      await careerIn(a, 1);
+      a.R("iapBuy('cap3');");
+      await waitFor(() => a.R('IAPS.busy') === '' && st().consumes > 0, '(1) satın alma', 3000);
+      await a.R('saveDrain()');
+      ok(a.R("IAPQ.q.LSPAID.st") === 'finishing', '(1) kapanmamış ödeme kuyrukta');
+      ok(!!ls['menajerIapQV1'] === true, '(1) kuyruk localStorage anahtarında');
+      ok(!!(disk.meta && disk.meta.iapq) === false, '(1) IndexedDB tarafı boş');
+    }
+    {
+      const { a, st } = bootBillSession(disk, ls, {}, { fixedTok: 'NEW2' });
+      await a.booted; await iapBooted(a); await qSettled(a);
+      ok(a.R('saveBackend()') === 'idb', '(1) ikinci oturum IndexedDB arka ucunda');
+      ok(a.R('!!(IAPQ&&IAPQ.q.LSPAID)') === true, '(1) ÖNCEKİ oturumun ödemesi yüklendi');
+      ok(!!(disk.meta.iapq && disk.meta.iapq.q.LSPAID) === true, '(1) IndexedDB tarafına yazıldı');
+      ok(ls['menajerIapQV1'] === undefined, '(1) kaynak ANCAK doğrulandıktan sonra silindi');
+      /* Önceki turun s1..s3 göçü de bozulmamış olmalı: kariyer taşınmış ve
+         açılabiliyor. */
+      const r = await a.R('loadSlot(1)');
+      ok(r === true || r === 'ok' || !!a.R('S'), '(1) kariyer de devralındı');
+      await waitFor(() => a.R("Object.keys(IAPS.flight).length") === 0, '(1) uçuş', 3000);
+      await a.R('saveDrain()');
+      /* Sonraki yazma devralınan kaydı ezmemeli. */
+      a.R("iapBuy('cap3');");
+      await waitFor(() => a.R("!!(IAPQ.q.NEW2&&IAPQ.q.NEW2.st==='done')") === true, '(1) yeni satın alma', 3000);
+      await a.R('saveDrain()');
+      ok(!!disk.meta.iapq.q.LSPAID === true, '(1) sonraki yazma devralınan kaydı EZMEDİ');
+      ok(!!disk.meta.iapq.q.NEW2 === true, '(1) yeni kayıt da yazıldı');
+    }
+    {
+      const { a } = bootBillSession(disk, ls, {}, {});
+      await a.booted; await iapBooted(a); await qSettled(a);
+      ok(a.R('!!(IAPQ&&IAPQ.q.LSPAID)') === true, '(1) yeniden açılışta hâlâ orada');
+      ok(a.R('!!(IAPQ&&IAPQ.q.NEW2)') === true, '(1) ikinci kayıt da orada');
+    }
+  }
+
+  /* (2) İKİ DEPODA FARKLI TOKENLAR — ikisi de korunuyor. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { IDBT: qrec('IDBT', { st: 'done' }) });
+    putLsQ(ls, { LST: qrec('LST', { st: 'done', pid: 'cap1', sku: 'cap_plus_1' }) });
+    const { a } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('!!IAPQ.q.IDBT') === true, '(2) IndexedDB tokenı korundu');
+    ok(a.R('!!IAPQ.q.LST') === true, '(2) localStorage tokenı korundu');
+    ok(a.R('Object.keys(IAPQ.q).length') === 2, '(2) tam iki kayıt');
+    await a.R('saveDrain()');
+    ok(!!disk.meta.iapq.q.IDBT && !!disk.meta.iapq.q.LST, '(2) ikisi de diskte');
+    ok(ls['menajerIapQV1'] === undefined, '(2) kaynak temizlendi');
+  }
+
+  /* (3) AYNI TOKEN, BİREBİR AYNI KAYIT — çelişki yok, tekrar hak yok. */
+  {
+    const disk = newDisk(), ls = {};
+    const rec = qrec('SAME', { st: 'done', cid: 'abcd', att: 'aaaaaaaa' });
+    putIdbQ(disk, { SAME: rec });
+    putLsQ(ls, { SAME: rec });
+    const { a, st } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('Object.keys(IAPQ.q).length') === 1, '(3) tek kayıt');
+    ok(a.R("IAPQ.q.SAME.st") === 'done', '(3) durum korundu');
+    ok(a.R('!!(IAPQ.cf&&IAPQ.cf.SAME)') === false, '(3) çelişki kaydı yok');
+    await ticks(10); await a.R('saveDrain()');
+    ok(st().consumes === 0 && st().acks === 0, '(3) kapanış çağrısı yok');
+  }
+
+  /* (4) AYNI TOKEN, KİMLİK ÇELİŞKİSİ — iki özgün kayıt korunuyor, hiçbir şey
+         teslim edilmiyor ve hiçbir şey onaylanmıyor. */
+  {
+    const disk = newDisk(), ls = {};
+    const A = qrec('CLASH', { cid: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', att: 'aaaaaaaa', st: 'granted' });
+    const B = qrec('CLASH', { cid: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', att: 'bbbbbbbb', st: 'ready' });
+    putIdbQ(disk, { CLASH: A });
+    putLsQ(ls, { CLASH: B });
+    const { a, st } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R("IAPQ.q.CLASH.st") === 'disputed', '(4) çelişki çözülmedi, işaretlendi');
+    ok(a.R("IAPQ.q.CLASH.cid") === null, '(4) çelişen cid seçilmedi');
+    ok(a.R("IAPQ.q.CLASH.att") === null, '(4) çelişen att seçilmedi — rezervasyon düşmez');
+    ok(a.R('!!(IAPQ.cf&&IAPQ.cf.CLASH)') === true, '(4) çelişme kaydı tutuldu');
+    ok(a.R('((IAPQ.cf&&IAPQ.cf.CLASH)||[]).length') === 2, '(4) İKİ özgün kayıt saklandı');
+    ok(a.R("(((IAPQ.cf&&IAPQ.cf.CLASH)||[]).map(function(r){return r.cid;})).sort().join(',')")
+      === 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      '(4) iki kayıt da OLDUĞU GİBİ duruyor');
+    ok(a.R("typeof iapUnclearN==='function'?iapUnclearN():-1") === 1,
+      '(4) kullanıcıya "durumu netleştirilemedi" diye görünüyor');
+    ok(a.R('iapStuckN()') === 0, '(4) "teslim edilemedi" diye SAYILMIYOR');
+    /* Kariyer açılışı ve uzlaştırma da onu ilerletmemeli. */
+    await careerIn(a, 1);
+    await a.R('iapOnCareerOpen()');
+    await a.R('iapReconcile()');
+    await ticks(12); await a.R('saveDrain()');
+    ok(a.R("IAPQ.q.CLASH.st") === 'disputed', '(4) hiçbir yol onu ilerletmedi');
+    ok(st().consumes === 0 && st().acks === 0, '(4) consume/ack YOK');
+    ok(a.R('iapCapOwned()') === 0, '(4) hiçbir hak verilmedi');
+    ok(!!(disk.meta.iapq.cf && disk.meta.iapq.cf.CLASH) === true, '(4) çelişme kaydı diskte');
+    ok(ls['menajerIapQV1'] === undefined, '(4) kaynak yalnız doğrulandıktan sonra silindi');
+  }
+
+  /* (4b) ÜRÜN ÇELİŞKİSİ de aynı yoldan — aynı token iki farklı ürün diyorsa
+          hangi hakkın verileceği bilinemez. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { PC: qrec('PC', { pid: 'cap3', sku: 'cap_plus_3', cid: 'cccc', st: 'ready' }) });
+    putLsQ(ls, { PC: qrec('PC', { pid: 'cap10', sku: 'cap_plus_10', cid: 'cccc', st: 'ready' }) });
+    const { a, st } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R("IAPQ.q.PC.st") === 'disputed', '(4b) ürün çelişkisi de çözülmedi');
+    ok(a.R("IAPQ.q.PC.pid") === null, '(4b) ürün seçilmedi');
+    ok(a.R('((IAPQ.cf&&IAPQ.cf.PC)||[]).length') === 2, '(4b) iki kayıt korundu');
+    ok(st().consumes === 0, '(4b) consume yok');
+  }
+
+  /* (5a) A — AYNI KİMLİK, ÇELİŞEN TESLİMAT/KAPANIŞ BİLGİSİ.
+         Bir depo 'done' (kapandı) diyor, diğeri 'granted' (teslim edildi, henüz
+         kapanmadı) ve kapanış zaman damgaları da farklı. Erişilen defter
+         kapanışı DOĞRULAMIYOR — defter yalnız hakkın yazıldığını gösteriyor,
+         consume/ack'in olup olmadığını değil ve sunucusuz da gösteremez.
+         Dolayısıyla 'done' etiketi diğer özgün kaydı atmak için kanıt değil. */
+  {
+    const disk = newDisk(), ls = {};
+    let cid;
+    {
+      const { a } = bootBillSession(disk, ls, {}, {});
+      await a.booted; await iapBooted(a); await qSettled(a);
+      cid = await careerIn(a, 1);
+      /* Hak defterde: "teslimat yapıldı" bilgisi doğrulanabilir olan tek şey. */
+      a.R("S.iap={t:{AX:'cap3'},r:{}};save();");
+      await a.R('saveDrain()');
+    }
+    const A1 = qrec('AX', { cid: cid, att: 'aaaa1111', st: 'done' });
+    A1.gt = 100; A1.ft = 110; A1.dt = 120;
+    const A2 = qrec('AX', { cid: cid, att: 'aaaa1111', st: 'granted' });
+    A2.gt = 200;
+    putIdbQ(disk, { AX: A1 });
+    putLsQ(ls, { AX: A2 });
+    const { a, st } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R("IAPQ.q.AX.st") === 'disputed', '(5a-A) done ETİKETİ diğer kaydı atmadı');
+    ok(a.R('((IAPQ.cf&&IAPQ.cf.AX)||[]).length') === 2, '(5a-A) iki özgün sürüm korundu');
+    ok(a.R("(((IAPQ.cf&&IAPQ.cf.AX)||[]).map(function(r){return r.st;})).sort().join(',')")
+      === 'done,granted', '(5a-A) iki sürüm de OLDUĞU GİBİ');
+    ok(a.R("(((IAPQ.cf&&IAPQ.cf.AX)||[]).map(function(r){return r.gt;})).sort().join(',')")
+      === '100,200', '(5a-A) çelişen kapanış bilgisi de saklandı');
+    ok(a.R("IAPQ.q.AX.cid") === cid, '(5a-A) hemfikir oldukları kimlik korundu');
+    /* Kariyer açılışı, uzlaştırma ve mağaza yolu — hiçbiri onu ilerletmemeli. */
+    await a.R('loadSlot(1)');
+    await a.R('iapOnCareerOpen()'); await a.R('iapReconcile()');
+    await ticks(14); await a.R('saveDrain()');
+    ok(a.R("IAPQ.q.AX.st") === 'disputed', '(5a-A) hiçbir yol ilerletmedi');
+    ok(st().consumes === 0 && st().acks === 0, '(5a-A) consume/ack YOK');
+    ok(a.R('Object.keys(S.iap.t).length') === 1, '(5a-A) deftere ikinci token yazılmadı');
+    ok(a.R('iapCapOwned()') === 3, '(5a-A) mevcut hak değişmedi');
+    ok(a.R("typeof iapUnclearN==='function'?iapUnclearN():-1") === 1, '(5a-A) kullanıcıya "netleştirilemedi" diye sayılıyor');
+    ok(a.R('iapStuckN()') === 0, '(5a-A) "teslim edilemedi" diye SAYILMIYOR');
+    /* KAYNAK TEMİZLENDİKTEN ve UYGULAMA YENİDEN AÇILDIKTAN sonra da duruyor. */
+    ok(ls['menajerIapQV1'] === undefined, '(5a-A) kaynak temizlendi');
+    {
+      const { a: b2 } = bootBillSession(disk, ls, {}, {});
+      await b2.booted; await iapBooted(b2); await qSettled(b2);
+      ok(b2.R('((IAPQ.cf&&IAPQ.cf.AX)||[]).length') === 2,
+        '(5a-A) yeniden açılışta iki sürüm hâlâ orada');
+      ok(b2.R("IAPQ.q.AX.st") === 'disputed', '(5a-A) hâlâ eylemsiz');
+    }
+  }
+
+  /* (5b) B — AYNI KİMLİK, 'pending' ile 'finishing' çelişiyor ve GÜNCEL PLAY
+         SORGUSU YARDIM ETMİYOR: sorgu hata veriyor. Tüketilmiş bir token zaten
+         sorguda görünmediği için "listede yok" da kanıt değil. */
+  {
+    const disk = newDisk(), ls = {};
+    const B1 = qrec('BX', { cid: 'bbbb', att: 'bbbb2222', st: 'finishing' });
+    B1.gt = 300; B1.ft = 310;
+    const B2 = qrec('BX', { cid: 'bbbb', att: 'bbbb2222', st: 'pending' });
+    putIdbQ(disk, { BX: B1 });
+    putLsQ(ls, { BX: B2 });
+    const { a, st } = bootBillSession(disk, ls, { }, { queryFail: true });
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R("IAPQ.q.BX.st") === 'disputed', '(5b-B) çelişki çözülmedi');
+    ok(a.R('((IAPQ.cf&&IAPQ.cf.BX)||[]).length') === 2, '(5b-B) iki özgün sürüm korundu');
+    ok(a.R("(((IAPQ.cf&&IAPQ.cf.BX)||[]).map(function(r){return r.st;})).sort().join(',')")
+      === 'finishing,pending', '(5b-B) sürümler olduğu gibi');
+    await careerIn(a, 1);
+    await a.R('iapOnCareerOpen()');
+    const rc = await a.R('iapReconcile()');
+    await ticks(14); await a.R('saveDrain()');
+    ok(rc === 'queryfail', '(5b-B) Play sorgusu hata verdi');
+    ok(a.R("IAPQ.q.BX.st") === 'disputed', '(5b-B) sorgu hatası kararı değiştirmedi');
+    ok(st().consumes === 0 && st().acks === 0, '(5b-B) consume/ack YOK');
+    ok(a.R('iapCapOwned()') === 0, '(5b-B) kanıtsız hak verilmedi');
+    /* Şimdi sorgu ÇALIŞIYOR ama tokenı göstermiyor — bu da kanıt değil. */
+    const { a: c2, st: st2 } = bootBillSession(disk, ls, {}, {});
+    await c2.booted; await iapBooted(c2); await qSettled(c2);
+    await c2.R('iapReconcile()');
+    await ticks(14); await c2.R('saveDrain()');
+    ok(st2().queries > 0, '(5b-B) ikinci oturumda sorgu çalıştı');
+    ok(c2.R("IAPQ.q.BX.st") === 'disputed', '(5b-B) "listede yok" da kanıt sayılmadı');
+    ok(c2.R('((IAPQ.cf&&IAPQ.cf.BX)||[]).length') === 2, '(5b-B) iki sürüm hâlâ orada');
+    ok(st2().consumes === 0 && st2().acks === 0, '(5b-B) hâlâ kapanış çağrısı yok');
+  }
+
+  /* (5c) YENİDEN BENİMSEME BÜYÜTMÜYOR. Aynı kaynak tekrar tekrar ortaya çıkarsa
+         (kesinti, kullanıcı geri yüklemesi) sürüm listesi aynı kalmalı. */
+  {
+    const disk = newDisk(), ls = {};
+    const V1 = qrec('GX', { cid: 'gggg', att: 'gggg3333', st: 'granted' });
+    V1.gt = 400;
+    const V2 = qrec('GX', { cid: 'gggg', att: 'gggg3333', st: 'ready' });
+    putIdbQ(disk, { GX: V1 });
+    putLsQ(ls, { GX: V2 });
+    for (let i = 0; i < 3; i++) {
+      const { a } = bootBillSession(disk, ls, {}, {});
+      await a.booted; await iapBooted(a); await qSettled(a); await a.R('saveDrain()');
+      ok(a.R('((IAPQ.cf&&IAPQ.cf.GX)||[]).length') === 2,
+        '(5c) ' + (i + 1) + '. benimsemeden sonra hâlâ iki sürüm');
+      ok(a.R('Object.keys(IAPQ.q).length') === 1, '(5c) tek token');
+      if (i < 2) putLsQ(ls, { GX: V2 });      // kaynak yeniden beliriyor
+    }
+    ok(!!(disk.meta.iapq.cf && disk.meta.iapq.cf.GX.length === 2) === true,
+      '(5c) diskteki sürüm listesi de büyümedi');
+  }
+
+  /* (5d) EKSİK ALAN ÇELİŞKİ DEĞİL — indirgenebilen tek hâl. Kimlik ve durum
+         aynı, bir tarafta cid yok: tamamlanıyor, çelişki kaydı açılmıyor. */
+  {
+    const disk = newDisk(), ls = {};
+    const F1 = qrec('HX', { cid: null, att: 'hhhh4444', st: 'ready' });
+    const F2 = qrec('HX', { cid: 'hhhh', att: 'hhhh4444', st: 'ready' });
+    putIdbQ(disk, { HX: F1 });
+    putLsQ(ls, { HX: F2 });
+    const { a } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    /* Kayıt birleştikten SONRA açılıştaki uzlaştırma onu normal yolundan
+       ilerletiyor (cid'i olan kariyer yok → 'orphan'), ki olması gereken bu.
+       Ölçülen şey birleşmenin kendisi: çelişki AÇILMADI ve eksik alan tamamlandı. */
+    ok(a.R("IAPQ.q.HX.st") !== 'disputed', '(5d) eksik alan çelişki sayılmadı');
+    ok(a.R("IAPQ.q.HX.cid") === 'hhhh', '(5d) eksik kimlik tamamlandı');
+    ok(a.R('!!(IAPQ.cf&&IAPQ.cf.HX)') === false, '(5d) çelişki kaydı açılmadı');
+  }
+
+  /* (5e) KULLANICI METNİ. "Teslim edilemedi / hiçbir hak verilmedi" cümlesi
+         netleştirilemeyen bir işlem için YANLIŞ olurdu: çelişen sürümlerden
+         biri hakkın verildiğini söylüyor olabilir. Ayrı ve tarafsız bir metin
+         çiziliyor, iki dilde de. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { UX: qrec('UX', { cid: 'uuuu', att: 'uuuu5555', st: 'granted' }) });
+    putLsQ(ls, { UX: qrec('UX', { cid: 'uuuu', att: 'uuuu5555', st: 'ready' }) });
+    const { a } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R("typeof iapUnclearN==='function'?iapUnclearN():-1") === 1, '(5e) bir işlem netleştirilemedi');
+    ok(a.R('iapStuckN()') === 0, '(5e) "teslim edilemedi" sayacına girmiyor');
+    ['tr', 'en'].forEach(lang => {
+      a.R("L='" + lang + "';");
+      const html = String(a.R('shopTxHtml()'));
+      const sU = a.R("(STR." + lang + ".shopTxUnclear)||''");
+      ok(!!sU && html.indexOf(sU.replace('{n}', '1')) >= 0,
+        '(5e) ' + lang + ': netleştirilemedi metni çiziliyor');
+      ok(html.indexOf(a.R("STR." + lang + ".shopTxStuck").replace('{n}', '1')) < 0,
+        '(5e) ' + lang + ': "teslim edilemedi" metni ÇİZİLMİYOR');
+      ok(html.indexOf('disputed') < 0 && html.indexOf('iapq') < 0 && html.indexOf('IAPQ') < 0,
+        '(5e) ' + lang + ': iç ayrıntı sızmıyor');
+    });
+    ['tr', 'en'].forEach(lang => {
+      const s = a.R("STR." + lang + ".shopTxUnclear");
+      ok(typeof s === 'string' && s.indexOf('{n}') >= 0, '(5e) ' + lang + ': metin tanımlı');
+    });
+    a.R("L='tr';");
+  }
+
+  /* (6a) HEDEF OKUMA HATASI — iki kuyruktan hiçbiri kaybolmuyor. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D1: qrec('D1', { st: 'done' }) });
+    putLsQ(ls, { L1: qrec('L1', { st: 'done', pid: 'cap1', sku: 'cap_plus_1' }) });
+    const before = JSON.stringify(disk.meta.iapq), lsBefore = ls['menajerIapQV1'];
+    const ctl = { boom: true };
+    ctl.failGet = k => (k === 'iapq' && ctl.boom) ? new Error('ReadFail') : null;
+    const { a, st } = bootBillSession(disk, ls, ctl, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(6a) kuyruk yüklenmedi');
+    ok(a.R('iapqErr()') === 'read', '(6a) okuma hatası');
+    ok(ls['menajerIapQV1'] === lsBefore, '(6a) KAYNAK yerinde');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(6a) HEDEF değişmedi');
+    ok(a.R('iapAvailable()') === false, '(6a) satın alma kapalı');
+    ctl.boom = false;
+    await a.R('iapRetry()');
+    await a.R('saveDrain()');
+    ok(a.R('!!(IAPQ&&IAPQ.q.D1&&IAPQ.q.L1)') === true, '(6a) düzelince ikisi de geldi');
+    ok(ls['menajerIapQV1'] === undefined, '(6a) kaynak ancak şimdi silindi');
+  }
+
+  /* (6b) HEDEF YAZMA HATASI — birleşik kayıt yazılamıyorsa kaynak DURUYOR. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D2: qrec('D2', { st: 'done' }) });
+    putLsQ(ls, { L2: qrec('L2', { st: 'done', pid: 'cap1', sku: 'cap_plus_1' }) });
+    const before = JSON.stringify(disk.meta.iapq), lsBefore = ls['menajerIapQV1'];
+    const ctl = { boom: true };
+    ctl.failPut = k => (k === 'iapq' && ctl.boom) ? new Error('WriteFail') : null;
+    const { a } = bootBillSession(disk, ls, ctl, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(6b) göç tamamlanamadı, kuyruk yüklenmedi');
+    ok(a.R('iapqErr()') === 'merge', '(6b) hata türü ayrı');
+    ok(ls['menajerIapQV1'] === lsBefore, '(6b) KAYNAK yerinde');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(6b) HEDEF eski hâlinde');
+    ok(a.R('iapAvailable()') === false, '(6b) satın alma kapalı');
+    ctl.boom = false;
+    await a.R('iapRetry()');
+    await a.R('saveDrain()');
+    ok(a.R('!!(IAPQ&&IAPQ.q.D2&&IAPQ.q.L2)') === true, '(6b) düzelince göç tamamlandı');
+    ok(!!(disk.meta.iapq.q.D2 && disk.meta.iapq.q.L2) === true, '(6b) ikisi de diskte');
+    ok(ls['menajerIapQV1'] === undefined, '(6b) kaynak ancak şimdi silindi');
+  }
+
+  /* (6c) KAYNAK ERİŞİM HATASI — localStorage'ın kendisi atıyor. "Anahtar yok"
+          ile aynı şey değil: bilmediğimiz bir kaynağın üstüne yazmıyoruz. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D3: qrec('D3', { st: 'done' }) });
+    const before = JSON.stringify(disk.meta.iapq);
+    const ctl = { boom: true };
+    ctl.lsFail = k => (k === 'menajerIapQV1' && ctl.boom) ? new Error('SecurityError') : null;
+    const { a } = bootBillSession(disk, ls, ctl, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(6c) erişim hatası boş kaynak sayılmadı');
+    ok(a.R('iapqErr()') === 'read', '(6c) okuma hatası');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(6c) hedef değişmedi');
+    ctl.boom = false;
+    await a.R('iapRetry()');
+    ok(a.R('!!(IAPQ&&IAPQ.q.D3)') === true, '(6c) düzelince yüklendi');
+  }
+
+  /* (6d) YAZILDI AMA KAYNAK SİLİNEMEDİ — süreç orada kesilirse bir sonraki
+          açılış aynı göçü tekrar koşar ve kayıt ÇOĞALMAZ. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D4: qrec('D4', { st: 'done' }) });
+    const srcQ = { L4: qrec('L4', { st: 'done', pid: 'cap1', sku: 'cap_plus_1' }) };
+    putLsQ(ls, srcQ);
+    {
+      const { a } = bootBillSession(disk, ls, {}, {});
+      await a.booted; await iapBooted(a); await qSettled(a); await a.R('saveDrain()');
+      ok(!!(disk.meta.iapq.q.D4 && disk.meta.iapq.q.L4) === true, '(6d) göç tamamlandı');
+    }
+    putLsQ(ls, srcQ);          // kesinti taklidi: kaynak silinmemiş
+    {
+      const { a } = bootBillSession(disk, ls, {}, {});
+      await a.booted; await iapBooted(a); await qSettled(a); await a.R('saveDrain()');
+      ok(a.R('Object.keys(IAPQ.q).length') === 2, '(6d) tekrar koşmak kaydı ÇOĞALTMADI');
+      ok(a.R('!!(IAPQ.cf&&IAPQ.cf.L4)') === false, '(6d) kendisiyle çelişmedi');
+      ok(ls['menajerIapQV1'] === undefined, '(6d) kaynak temizlendi');
+    }
+  }
+
+  /* (7a) BOZUK localStorage JSON'u — IndexedDB arka ucunda. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D5: qrec('D5', { st: 'done' }) });
+    ls['menajerIapQV1'] = '{bozuk';
+    const before = JSON.stringify(disk.meta.iapq);
+    const { a, st } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(7a) bozuk kaynak boş sayılmadı');
+    ok(a.R('iapqErr()') === 'bad', '(7a) hata türü: bozuk');
+    ok(a.R("iapBuy('cap3')") === false, '(7a) satın alma başlamadı');
+    await careerIn(a, 1);
+    ok(await a.R("iapIngest(__tx('X7','cap_plus_3','1',S.cid+'.aabbccdd',1),'test')") === 'noq',
+      '(7a) teslimat başlamadı');
+    await ticks(10); await a.R('saveDrain()');
+    ok(st().buys === 0 && st().consumes === 0 && st().acks === 0, '(7a) hiçbir çağrı yapılmadı');
+    ok(ls['menajerIapQV1'] === '{bozuk', '(7a) bozuk kaynak OLDUĞU GİBİ duruyor');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(7a) hedef değişmedi');
+  }
+
+  /* (7b) BOZUK localStorage JSON'u — arka ucun KENDİSİ localStorage iken.
+          jparse() burada null döndürüyor ve "kayıt yok" ile ayırt edilemiyordu;
+          boş kuyruk yazmak, bozuk ama ÖDENMİŞ bir kaydı silmek olurdu. */
+  {
+    const disk = newDisk(), ls = {};
+    ls['menajerIapQV1'] = '{"v":1,"q":{"T":';
+    const { a, st } = bootBillSession(disk, ls, { noIDB: true }, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('saveBackend()') === 'ls', '(7b) localStorage arka ucu');
+    ok(a.R('IAPQ') === null, '(7b) bozuk kayıt boş kuyruk sayılmadı');
+    ok(a.R('iapqErr()') === 'bad', '(7b) hata türü: bozuk');
+    await ticks(10); await a.R('saveDrain()');
+    ok(ls['menajerIapQV1'] === '{"v":1,"q":{"T":', '(7b) baytlar değişmedi');
+    ok(st().buys === 0, '(7b) satın alma yok');
+  }
+
+  /* (7c) GEÇERLİ JSON, GEÇERSİZ KUYRUK YAPISI — ayrıştırılabilmesi tanındığı
+          anlamına gelmiyor. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D6: qrec('D6', { st: 'done' }) });
+    ls['menajerIapQV1'] = JSON.stringify({ v: 1, q: { T: 5 } });
+    const before = JSON.stringify(disk.meta.iapq), lsBefore = ls['menajerIapQV1'];
+    const { a } = bootBillSession(disk, ls, {}, {});
+    await a.booted; await iapBooted(a); await qSettled(a);
+    ok(a.R('IAPQ') === null, '(7c) tanınmayan yapı kabul edilmedi');
+    ok(a.R('iapqErr()') === 'bad', '(7c) hata türü: bozuk');
+    await ticks(8); await a.R('saveDrain()');
+    ok(ls['menajerIapQV1'] === lsBefore, '(7c) kaynak değişmedi');
+    ok(JSON.stringify(disk.meta.iapq) === before, '(7c) hedef değişmedi');
+  }
+
+  /* (8) EŞZAMANLILIK — açılış, kariyer açma ve mağaza açma aynı anda istese de
+         göç BİR KEZ yazılıyor ve uzlaştırma BİR KEZ koşuyor. */
+  {
+    const disk = newDisk(), ls = {};
+    putIdbQ(disk, { D7: qrec('D7', { st: 'done' }) });
+    putLsQ(ls, { L7: qrec('L7', { st: 'done', pid: 'cap1', sku: 'cap_plus_1' }) });
+    let puts = 0, reads = 0;
+    const g = gate();
+    const ctl = { openGate: g.p };
+    ctl.onPut = k => { if (k === 'iapq') puts++; };
+    ctl.failGet = k => { if (k === 'iapq') reads++; return null; };
+    const { a, st } = bootBillSession(disk, ls, ctl, {});
+    await ticks(6);
+    ok(a.R('IAPQ') === null, '(8) depolama hazır değilken kuyruk yok');
+    /* Açılış zaten bir hazırlık başlattı; üstüne üç istek daha. */
+    const p = a.R('Promise.all([iapqLoad(),iapRetry(),iapRetry(),iapOnCareerOpen()])');
+    g.open();
+    await a.booted; await qSettled(a); await p; await a.R('saveDrain()');
+    ok(a.R('!!(IAPQ.q.D7&&IAPQ.q.L7)') === true, '(8) göç tamamlandı');
+    ok(puts === 1, '(8) göç TEK KEZ yazıldı');
+    ok(reads === 2, '(8) tek okuma + tek doğrulama okuması');
+    ok(st().queries === 1, '(8) uzlaştırma TEK KEZ koştu');
+    ok(ls['menajerIapQV1'] === undefined, '(8) kaynak temizlendi');
+  }
+
+  /* (9) AYNI TOKENIN KAPANIŞI TEKİL. (5a) bunu uçtan uca yakaladı: açılıştaki
+         uzlaştırma 'finishing' iken kullanıcının kariyeri açması ikinci bir
+         consume gönderiyordu. IAPS.flight yalnız TESLİMATI tekilleştiriyor;
+         kapanışın kendi kilidi var. Burada doğrudan ve belirlenimci. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    a.R("IAPQ.q.FZ={tok:'FZ',sku:'cap_plus_3',pid:'cap3',sc:'career',cid:S.cid,att:'ffffffff',st:'granted',at:1};");
+    await a.R('iapqSave()');
+    const p1 = a.R('iapFinish(IAPQ.q.FZ)');
+    const p2 = a.R('iapFinish(IAPQ.q.FZ)');
+    const r2 = await p2, r1 = await p1;
+    await a.R('saveDrain()');
+    ok(r2 === 'inflight', '(9) ikinci kapanış başlamadı');
+    ok(r1 === 'done', '(9) ilk kapanış tamamlandı');
+    ok(st.consumes === 1, '(9) Play\'e TEK consume gitti');
+    ok(a.R("Object.keys(IAPS.fin||{}).length") === 0, '(9) kapanış kilidi bırakıldı');
+    /* Kilit kalıcı değil: sonraki bir deneme takılmıyor. */
+    ok(await a.R('iapFinish(IAPQ.q.FZ)') === 'done', '(9) kapanmış kayıt yeniden kapatılmıyor');
+    ok(st.consumes === 1, '(9) ikinci consume yine yok');
+  }
+}
+
 /* ================= koşu ================= */
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
@@ -4689,7 +5477,8 @@ if (require.main !== module) return;
                  tRewardPendingAndWriteFail, tRewardClockAndOldSaves, tRewardRegressions,
                  tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
                  tSeasonBreakAds, tShopAndIap, tPlayBilling,
-                 tStorageFallback, tSameCidFork, tForkRestoreCost];
+                 tStorageFallback, tSameCidFork, tForkRestoreCost, tIapQueueLoad,
+                 tIapQueueMerge];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

@@ -221,6 +221,36 @@ function recDel(key){
   if(SAVEH.backend==='ls'){lsDel(LSKEY[key]);return Promise.resolve(true);}
   return dbTx(storeName(key),'readwrite',st=>st.delete(key)).then(()=>true);
 }
+/* ===== HAM localStorage OKUMASI — yalnız iapq için =====
+   lsGet(), jparse() ve recGet() zincirinin ÜÇÜ DE hatayı null'a çeviriyor:
+   anahtar yok, erişim attı, JSON bozuk — üç ayrı olgu, tek cevap. Kariyer
+   kayıtları için bu doğru davranış ve DEĞİŞMİYOR: bozuk bir kaydı meta'dan
+   düşürmek menünün yalan söylemesini engelliyor ve o yol kendi sözleşmesine
+   sahip (validSave, moveVerdict).
+
+   Ödenmiş bir işlem kaydı için doğru değil. "Okuyamadım"ı "orada bir şey yok"
+   sanıp üstüne boş kuyruk yazmak, parayı silmek olur. Bu yüzden ayrı bir
+   okuyucu ve dört ayrı cevap:
+     none  anahtar yok            → gerçekten boş, yazılabilir
+     err   erişim attı            → BİLMİYORUZ, hiçbir şey yazılmamalı
+     bad   JSON ayrıştırılamadı   → BİLMİYORUZ, hiçbir şey yazılmamalı
+     ok    ayrıştırıldı           → yapı denetimi çağırana ait */
+function lsRead(k){
+  let s;
+  try{s=localStorage.getItem(k);}
+  catch(e){return {st:'err'};}
+  if(s===null||s===undefined)return {st:'none'};
+  let v;
+  try{v=JSON.parse(s);}
+  catch(e){return {st:'bad'};}
+  return {st:'ok',v:v};
+}
+/* Kayıt anahtarının localStorage'daki karşılığını HAM okur — arka uç ne olursa
+   olsun. Yalnız iapq göçü kullanıyor: IndexedDB açıldığında önceki oturumun
+   localStorage kuyruğu hâlâ orada duruyor olabilir. */
+function recReadLs(key){return lsRead(LSKEY[key]);}
+function recDelLs(key){lsDel(LSKEY[key]);}
+
 /* Hangi yuvalarda kayıt var — yalnız anahtarlar. Açılışta özet ile gerçeğin
    tutup tutmadığı buradan bakılıyor; üç kaydı okumak 20 MB ayrıştırmak olurdu. */
 function recSlotKeys(){

@@ -805,124 +805,131 @@ are consumed by our own `consumePurchase()` call, after delivery.
 `iapq` lives in the durable store rather than `PREFS` because `PREFS` is
 localStorage-only: a quota failure there would silently lose a **paid** record.
 
-**An absent `purchaseState` is not a purchase.** The field is optional in the
-plugin's TypeScript (`purchaseState?: string`) and arrives on Android as
-`String.valueOf(int)` — `"0"` UNSPECIFIED, `"1"` PURCHASED, `"2"` PENDING. Only an
-explicit `"1"` grants anything; the earlier code defaulted a missing value to `"1"`,
-which treated a response that never stated its state as purchased.
+**The queue is read only after storage has picked a backend, and a failed read is not
+an empty queue.** `SAVEH.backend` starts as `'ls'` and stays there until
+`storeBackendInit()` resolves, so every `recGet()` before that answers out of
+localStorage. `main.js` fires `iapInit()` without awaiting `storeInit()` — deliberately,
+because the product query must not wait on the local disk — and `iapqLoad()` used to read
+`iapq` right there. On a device where IndexedDB opens, that read went to the **wrong
+backend**, found nothing, and marked the queue *loaded and empty*; the next `iapqSave()`
+then wrote that empty mirror over the real one, **deleting paid-transaction records**.
+`iapqLoad()` now waits on `storeReadyP()` — the memoised `storeInit()` promise, which
+starts the init itself if nothing else has, so the gate cannot depend on load order.
+The two halves of `iapInit()` stay separate: `isBillingSupported`/`getProducts` run
+alongside the queue load and only `iapReconcile()` waits for it, so prices are never
+delayed by the disk.
 
-**The queue states are the recovery map.** `pending` (Play says PENDING — no
-entitlement), `ready`, `granted` (entitlement persisted and re-read), `finishing`
-(consume/ack issued, outcome unknown), `done`, `orphan` (target career gone),
-`unbound` (no target identity came back), `undeliverable` (ceiling or quantity),
-`unverified` (entitlement written, close not provable).
-The last three grant nothing **and finish nothing**, and their records are never
-deleted — `deleteSlot()` marks them `orphan` instead of dropping them, which is the
-deliberate opposite of what it does to a reward record. A free reward belongs to its
-career; a paid record is the user's only trace.
+The read then has **three** outcomes, not two. A record that is genuinely absent
+(`null`/`undefined`) is a blank queue and is written on the first transaction. A **read
+error** or a **payload we cannot recognise** leaves `IAPQ` null and `iapqErr()` at
+`'read'`/`'bad'`: nothing is written over what is there, `iapAvailable()` is false
+(`iapWhy()` → `'noq'`), and `iapIngest`, `iapAdvance`, `iapFinish` and `iapReconcile`
+each refuse on their first line — so no purchase starts, no entitlement is delivered and
+no consume/acknowledge is issued against a queue we could not read. The guard on
+`iapIngest` is the load-bearing one: `iapqAll()` answers `{}` for a null queue, so a
+record written into that throwaway object would have travelled all the way to delivery
+and consume with **no local trace of a paid transaction**.
 
-**`finishing` is what makes a lost consume response recoverable.** It is written
-*before* the call, so a process death between call and response is visible on the
-next launch.
+**A Play query is not a substitute for the queue.** A consumed token never appears in
+`getPurchases()`, so reconciling without the local record would decide on a partial
+world — which is why `iapReconcile()` refuses rather than standing in for the read.
 
-**A token missing from a later successful query is not proof the close succeeded.** It
-has at least three possible causes the client cannot tell apart: the consume really did
-land and only the response was lost; the purchase was refunded or revoked; or Play is
-not listing it for some other reason. So the record moves to **`unverified`**, not
-`done` — the entitlement stays and is never granted twice, but nothing is reported as
-"completed" or as "refunded". `iapUnverifiedN()` counts it separately from
-`iapStuckN()` (the user has what they paid for) and the store says exactly that much
-(`shopTxUnverified`). If the token ever reappears in a query, the purchase is still
-open and the close is retried.
+Failure leaves **no permanent lock**. `IAPS.boot` stays true and `IAPS.busy` stays
+empty; recovery is `iapRetry()`, called from `pushV('shop')` and from
+`iapOnCareerOpen()` — user actions, never a timer, and never a retry loop. It is
+singular in both directions: `iapqLoad()` hands every waiting caller the same in-flight
+read, and `IAPS.qrp` keeps three taps from opening three reconciles.
 
-**The target career comes back from Play, not from a local guess.**
-`appAccountToken` (Play's `obfuscatedAccountId`) carries `"<cid>.<att>"` — 41
-characters, no PII, both halves random. It survives process death and a PENDING
-payment that completes days later. When it is missing the record goes `unbound`;
-**the open career is never assumed**.
+**A queue written on the localStorage fallback is adopted, not ignored.** IndexedDB can
+fail to open on one launch; the layer falls back to localStorage and any transaction paid
+in that session is written to `menajerIapQV1`. On the next launch `recGet('iapq')` reads
+IndexedDB only, so that record was invisible — not deleted, but a payment record nobody
+can see is indistinguishable from a lost one. `iapqAdopt()` now reads the localStorage
+source whenever the backend is `idb` and merges it into the IndexedDB record. When the
+backend *is* `ls` there is no adoption at all: source and destination are the same key,
+which is the trap `migrateLsSlots()` already answers the same way.
 
-**Delivery does not wait for the user to open the target career** — the three-day
-acknowledgement deadline forbids it. An entitlement that cannot be persisted is **rolled back in memory**, reservation
-included: capacity that is not on disk is not capacity, and leaving it in `S` let a
-later ordinary `save()` turn a failed delivery into a silent one. The rollback targets
-**the object the mutation was made on**, captured by `iapMark()` — never "whatever `S`
-holds now". The chain is asynchronous and `S` can be a different career by the time it
-settles; re-targeting would delete another career's token and inject this one's
-reservation into it. Value checks cannot catch that (two careers can hold the same
-token id with the same product), so the protection is structural and block 24 (23b)
-scans the source to keep it: `iapRollback` is only ever called with the captured mark.
-A per-token in-flight lock (`IAPS.flight`) keeps a second delivery from landing while a
-rollback is pending. If the target is not the open career,
-`iapDeliverCareer()` reads the slot record, re-checks `curSlot` *at flush time*
-inside `queueRec`'s build function (if the user opened it meanwhile, the live `S` is
-what gets written, so live state is never clobbered), and then **re-reads the record**
-before finishing. The witness only proves "my content reached storage"; only a fresh
-read proves nothing overwrote it. Slot reuse is caught by comparing `cid` in the
-payload, not in `META`.
+**The merge rules, and what each one refuses to guess.** The merge is not a resolver.
+Its whole job is to avoid loss: put both stores' records side by side, de-duplicate what
+can be de-duplicated safely, and keep everything else **verbatim** while holding that
+token inert.
 
-**The ceiling binds before payment, not after.** `iapCapLeft()` subtracts owned *and*
-reserved. A purchase that cannot be delivered **in full** is marked `undeliverable`
-and is **not** consumed — granting +2 of a +5 pack would be a partial delivery. Quantity
-is checked too, even though Play only ever returns 1 for these products.
+- A token present on one side only is always kept.
+- Two byte-identical records collapse to one.
+- A field missing on one side is filled from the other — absence is not a contradiction.
+- `at` and `src` are provenance: they say when and by which local path the record was
+  created and nothing about delivery, so a difference there is not a contradiction
+  (earliest `at` is kept).
+- **Any other difference — identity (`pid`/`sku`/`sc`/`cid`/`att`), state, or delivery and
+  closure information (`st`, `gt`, `ft`, `dt`, `ut`, `note`) — is left unresolved.** The
+  record becomes `st:'disputed'` and every original version is kept in `IAPQ.cf[tok]`.
 
-**A reservation is released only by proof, never by time or by counting queries.**
-Two earlier attempts were wrong in the same way: "age + one empty query", then "age +
-three consecutive empty queries". Counting only *delays* the defect — a slow card can
-sit unreturned by Play for arbitrarily long and then come back `PURCHASED`. Whatever
-the threshold, an empty query is a guess, and the guess costs a paid transaction its
-place under the ceiling. There is no `resTtl`/`resMiss` any more.
+**There is no ranking and no winning label, deliberately.** Matching identity does not
+prove that two records' delivery and closure information are equivalent. A copy saying
+`done` does not prove to us that the close happened — there is no server, and
+`getPurchases()` does not list a consumed token either way — and a copy saying `ready`
+does not prove that delivery did not. The ledger refusing a second grant (`iapApplyTo()`
+returns `'again'`) is a separate and real guarantee, but it does not bring back the
+information in a record we threw away. So neither an enum order nor a `done` label is
+grounds for discarding the other original.
 
-`iapReapRes()` now releases a reservation on exactly one proof: **the attempt's token
-is in that career's ledger.** Everything else keeps it, including `orphan`, `unbound`
-and `undeliverable` — those are conclusions about *delivery*, not about the *payment*,
-and a record can still come back (`iapOnCareerOpen()` promotes `orphan` → `ready`).
+`'disputed'` is a stop marker, not a new resolution path: it matches none of
+`iapAdvance()`'s known states and `iapIngest()` never promotes it, so no delivery and no
+consume/acknowledge can start from it. It carries only the identity fields every version
+agrees on; anything contradictory is nulled — `att` especially, since a wrong `att` would
+release another attempt's reservation in `iapReapRes()`. Nothing here resolves the
+conflict automatically, and this branch does not try to: preserving safely and stopping is
+the whole contract.
 
-`iapRelease()` drops one immediately on exactly two proven outcomes: **this attempt's
-explicit `USER_CANCELED`**, or a result showing the billing flow never started.
+**Re-adoption does not grow the record.** Versions are always the *originals*: if a side
+already carries `IAPQ.cf[tok]`, those are its versions and the disputed record is only
+their placeholder. Versions are then de-duplicated by content, so the same source
+reappearing — an interrupted run, a restored backup — folds into the same two versions
+rather than stacking. The preserved versions survive the source being cleared and the app
+being reopened, because they live in the IndexedDB record like any other queue content.
 
-Getting the first one needed a patch. Published 8.7.0 collapses every non-OK
-`onPurchasesUpdated` result — `USER_CANCELED`, `SERVICE_DISCONNECTED`, a declined
-payment — into one `call.reject("Purchase is not purchased")` and only *logs* the
-response code, and a failed `launchBillingFlow` was logged and never settled the call
-at all. A user who opened the +10 sheet and backed out therefore looked identical to a
-lost connection, and their capacity stayed reserved indefinitely. That is a defect, not
-a product decision.
+**The source is deleted only against proof.** Same discipline as the `s1`..`s3`
+migration, built separately so that one is untouched: write the merged record → witness →
+**re-read and compare full equivalence** → only then `recDelLs('iapq')`. Any step that
+cannot be proven leaves the queue **unloaded** (`iapqErr()` → `'merge'`), so purchases
+stay closed and the next `iapRetry()` resumes.
 
-**`patches/@capgo+native-purchases+8.7.0.patch`** (patch-package, applied by the
-`postinstall` script, so plain `npm ci` — including CI — gets it) carries the missing
-information losslessly: rejections now put `npx:<stage>:<code>:<appAccountToken>` in
-`err.code`. One file, four hunks, +48/-4; no behaviour is changed beyond what a
-rejection reports, and `launchBillingFlow` failing now rejects instead of hanging.
+What that guarantees precisely — and it is narrower than "nothing changed": **the
+localStorage source is never deleted**, so no version is lost on any failing path. The
+IndexedDB target is a different matter. If the write itself failed, the target still holds
+what it held. If the write landed and only the *re-read* could not confirm it, the target
+**may already carry the merged record** — which is why the verdict is "unloaded, retry"
+rather than "nothing happened". Neither outcome loses anything, because the merge is
+idempotent and the source is still there: the next `iapRetry()` reads whatever the target
+actually holds and merges the same source into it again.
 
-`iapIsCancel()` requires all three of stage `updated`, code `USER_CANCELED`, **and**
-the attempt tag matching ours — the tag is what stops a late callback from releasing a
-newer attempt's reservation. **Nothing is inferred from the message text.** Without the
-patch `err.code` is absent, every rejection reads as ambiguous, and the reservation is
-kept — the unpatched behaviour is the safe one.
+**An unresolved transaction gets its own sentence.** `shopTxStuck` says *nothing was
+granted*, which is false for a disputed record — one of the conflicting versions may say
+the entitlement was delivered. So `iapUnclearN()` counts separately from `iapStuckN()` and
+the store prints `shopTxUnclear`, which claims only what we can stand behind: the status
+could not be determined, the record is kept as it is, no further step is taken on it, and
+the entitlements the player already has are unchanged. It names no state, no store and no
+internal field.
 
-An attempt whose outcome is genuinely never learned still keeps holding capacity; that
-is chosen over silently selling the same headroom twice, and the store says so
-(`iapHeldN()` → `shopTxHeld`).
+**On localStorage, "unreadable" and "not there" are now different answers.**
+`lsGet()`, `jparse()` and `recGet()` all collapse errors to `null` — correct for career
+saves, whose own contract (`validSave`, `moveVerdict`) handles it, and left alone. For a
+paid record it is not: `recReadLs()` (js/store.js) returns `none` / `err` / `bad` / `ok`
+separately, and `iapqShape()` then decides whether a parsed payload is a queue we
+recognise. Only `none` is an empty queue. `err` and `bad` leave `IAPQ` null and write
+nothing — the localStorage bytes stay exactly as they were.
 
-**PENDING is a rejection too**, not a resolve: the plugin rejects with
-`"Purchase is pending"`, so `purchaseProduct()` never hands us a PENDING transaction.
-`iapIsPending()` recognises it, keeps the reservation and kicks one reconcile so the
-pending payment is visible immediately rather than after the next launch.
+**One close per token.** `IAPS.flight` only ever de-duplicated *delivery*. Measured while
+building this: with the boot reconcile sitting in `finishing`, opening a career
+(`iapOnCareerOpen`) issued a **second** `consume` for the same token. `IAPS.fin` is the
+matching lock for the closing step, and `iapFinish()` also refuses a record already
+`done` — the precondition belongs next to the call that tells Play, not in every caller.
 
-**A failed query is never read as "no purchases".** `iapReconcile()`'s rejection path
-removes nothing. Ad removal is dropped only after `IAP.missMax` (3) consecutive
-*successful* queries that omit it. Multi-account behaviour is **not assumed** — it is
-in the test plan, not in the code's beliefs.
-
-**Prices come from Play, localised, and nothing is hardcoded.** If `getProducts()`
-fails, `iapAvailable()` stays false and the store stays closed: selling a product
-whose price we cannot show is not an option.
-
-`tools/savetest.js` block **24** holds this contract — duplicate tokens, persistent
-write failure, reservation and ceiling, quantity, PENDING → PURCHASED, career switch,
-career deletion, slot reuse, missing identity, a lost consume response, a failed
-entitlement query, ad-removal reconciliation, the shape of the purchase call, and old
-saves with no `S.iap`/`iapq` at all.
+**One preparation, one reconcile.** Boot, career-open and shop-open can all ask for the
+same work. `iapqLoad()` already de-duplicates the read and the adoption; `iapqPrepare()`
+covers the reconcile that follows it, so three requests produce one `getPurchases()` and
+one ingest chain. The post-purchase reconcile on the PENDING path deliberately does *not*
+go through it — that one needs a fresh query and must not join an older round.
 
 **What is still unproven:** everything above is measured against a mock of the
 plugin's JS surface. **No real purchase has been made** — no Play Console products,
@@ -1449,7 +1456,24 @@ close-out for a gameplay change:
 7. **Ads and purchases**, if `js/ads.js`, `js/iap.js`, `js/sim.js`'s transition points or
    the store screen changed — `node tools/savetest.js` blocks **18–24** cover the rewarded
    adapter, the consent flow, the age gate, the privacy feedback, the season-transition
-   contract and the store's scope/ceiling rules. They prove what the JS asked the bridge to
+   contract and the store's scope/ceiling rules, and block **28** covers when the purchase
+   queue may be read: it holds the boot gate (`ctl.openGate` stalls the IndexedDB open while
+   `ctl.pre` installs the bridge before the scripts run, which is the only way the real boot
+   race is visible), that a read error or an unrecognised payload is not an empty queue, and
+   that nothing is bought, delivered or closed until a trustworthy queue is in hand.
+   Block **29** covers the other half — a queue written on the localStorage fallback being
+   adopted when IndexedDB next opens: the merge rules (both stores keep their own tokens;
+   only byte-identical records collapse and only a missing field is filled; any identity,
+   state or delivery difference is left unresolved with every original kept in `IAPQ.cf`
+   and the token held inert), that re-adopting the same source does not grow that list,
+   that the preserved versions outlive the source being cleared and the app being
+   reopened, that the source is deleted only against a re-read, that a failed read or
+   write on either side loses neither queue, and that one token gets one close. It also
+   checks the store's wording: an unresolved transaction is counted and phrased separately
+   from an undelivered one, in both languages, with no internal detail on screen. It adds `ctl.failPut`/`ctl.onPut` (one write fails or is
+   counted — `failWrite` cannot single out `iapq`, which shares `ST_META` with the menu
+   summary) and `ctl.lsFail` (localStorage access throws, which is not "the key is
+   absent"). They prove what the JS asked the bridge to
    do and nothing more; whether an ad really appeared is only measurable on a device, and
    the EEA debug variant is not the build to measure it on (see *Test geography*).
 8. **Storage fallback and migration**, if `js/store.js` or the migration paths in

@@ -38,7 +38,13 @@ adsInit();
    ağ üzerinden gidiyor, menü onu bekleyemez. Açılışta yaptığı iş üç şey —
    faturalandırma destekleniyor mu, ürünlerin YERELLEŞTİRİLMİŞ fiyatları, ve
    ödenmiş ama kapanmamış işlemlerin uzlaştırılması. Sorgu başarısız olursa
-   hiçbir hak düşmüyor ve satın alma kapalı kalıyor. */
+   hiçbir hak düşmüyor ve satın alma kapalı kalıyor.
+
+   BURADA storeInit() BEKLENMİYOR ve beklenmemeli — ama iapInit()'in içindeki
+   ödeme kuyruğu okuması onu kendisi bekliyor (iapqLoad → storeReadyP). İkisi
+   ayrı: fiyat sorgusu yerel diskin açılmasına takılmıyor, kuyruk ise arka uç
+   seçilmeden okunmuyor. Yukarıdaki satırın storeInit()'i başlatmış olması da
+   şart değil; kapı gerekirse kendisi başlatıyor. */
 iapInit();
 
 /* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta
