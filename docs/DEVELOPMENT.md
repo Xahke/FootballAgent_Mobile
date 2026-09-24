@@ -407,11 +407,76 @@ desteğine yönlendiriyor; geliştirici tarafındaki karşılığı bu adımdır
 uygulanıyor — `npm ci` yeter, CI dahil. Elle bir adım yok, `node_modules` içinde
 kalıcı olmayan düzenleme yok.
 
-Ne düzeltiyor: yayımlanan 8.7.0, `USER_CANCELED` dahil OK olmayan her sonucu tek bir
-`"Purchase is not purchased"` metnine indiriyor ve `BillingResponseCode`'u yalnız
-logluyordu; `launchBillingFlow` OK dönmediğinde ise çağrı hiç sonuçlanmıyordu. Yama
-retlere `npx:<aşama>:<kod>:<appAccountToken>` biçiminde bir `code` ekliyor ve
-başlamayan akışı reddediyor. Tek dosya, dört hunk, +48/-4.
+Ne düzeltiyor — **iki ayrı şey, ikisi de aynı dosyada**:
+
+1. **Hata kodu taşıma.** Yayımlanan 8.7.0, `USER_CANCELED` dahil OK olmayan her
+   sonucu tek bir `"Purchase is not purchased"` metnine indiriyor ve
+   `BillingResponseCode`'u yalnız logluyordu; `launchBillingFlow` OK dönmediğinde
+   ise çağrı hiç sonuçlanmıyordu. Yama retlere
+   `npx:<aşama>:<kod>:<appAccountToken>` biçiminde bir `code` ekliyor ve
+   başlamayan akışı reddediyor.
+
+2. **Logdan işlem içeriği çıkarma.** Aynı dosya satın alma tokenini, `orderId`'yi
+   ve `Purchase` nesnesinin kendisini logcat'e yazıyordu — `Purchase.toString()`
+   satın almanın **orijinal JSON**'unu döker, yani token, sipariş numarası ve
+   hesap tanımlayıcısı tek satırda. Logcat cihazda başka bileşenlerce okunabilir
+   ve hata raporu/ekran görüntüsü yoluyla dışarı çıkar; token ise sunucusuz
+   mimaride bir ödemenin **tek kimliği**. Yama **on üç log ifadesine** dokunuyor:
+   on ikisi olay adı + sonuç koduyla yerinde kalıyor, biri (`"Purchase details: "
+   + purchase.toString()`) tümden siliniyor — değeri çıkarılınca geriye taşıdığı
+   bir bilgi kalmıyordu. Bu yüzden yamada `-` tarafında on üç, `+` tarafında on
+   iki `Log.` satırı var. Tokenin bir kısmı değil, tamamı çıkıyor — kısaltılmış
+   bir token hâlâ ilintilendirilebilir.
+   Eklentinin kendi `"[REDACTED]"` biçimi korunuyor; yukarı akış bunu
+   `accountIdentifier` için zaten kullanıyordu.
+
+**Bilerek kapsam dışı:** JS'e giden veri (`transactionId`, `purchaseToken`
+alanları), ret kodları, promise sonuçları, acknowledge/consume davranışı ve ürün
+sorguları değişmedi. `productId`/`offerToken` logları da duruyor — bunlar
+kullanıcıya değil ürüne ait.
+
+Tek dosya, on iki hunk, +65/-16.
+
+**Yamanın pakete girdiği derleme çıktısından doğrulandı**, kaynaktan değil:
+`npm run android:apk` ile üretilen debug APK'sında `javap` sabit havuzu ve dex
+dizgi havuzu tarandı. Sekiz log önekinin hiçbiri `[REDACTED]` olmadan geçmiyor,
+`"Purchase details: "` hiç yok, ve dört `npx:` hunk'ı da derlenmiş durumda
+(`npxCode` + `Billing flow did not start`). Eklentinin sınıfları tek bir dex'te
+ve tamamı yamalı — pakette yamasız bir ikinci kopya yok.
+
+**Bu, "artık hiçbir yerde token loglanamaz" demek DEĞİL — ama "release'de
+loglanıyor" da demek değil.** Debug APK'sının dex'inde aynı cümlenin bir kopyası
+daha çıktı ve sahibi bizim eklentimiz değil: **Google'ın kendi Play Billing
+8.3.0** kütüphanesi. Yamalanabilir bir şey olmadığı için burada yalnız
+*kaydediliyor*: kaynağı yok, `patch-package` npm paketlerine uygulanır, ikili bir
+Maven artefaktını yamalamak bu dalın işi değil.
+
+Çağrı yolu `javap` ile izlendi (billing 8.3.0 artefaktı, yeni sürüm kurulmadı):
+
+| Adım | Bulgu |
+|---|---|
+| `BillingClientImpl.zzaO(ConsumeParams, ConsumeResponseListener)` | `"Consuming purchase with token:" + ConsumeParams.getPurchaseToken()` **koşulsuz** kuruluyor |
+| → `play_billing.zzc.zzn("BillingClient", msg)` | önce `Log.isLoggable(tag, 2)` — **2 = VERBOSE** |
+| `isLoggable` false | `return`, **hiçbir şey yazılmıyor** |
+| `isLoggable` true | `Log.v(tag, …)`, 4000 karakterlik parçalar hâlinde |
+
+Ayrımı net tutmak gerekiyor: **tokenlı diziyi oluşturmak** koşulsuz — o `String`
+her consume çağrısında bellekte var. **Logcat'e çıktı üretmek** koşullu, tek
+kapısı `"BillingClient"` etiketi için VERBOSE'un açık olması. Android'in
+belgelenmiş varsayılan etiket eşiği `INFO`, yani VERBOSE normalde kapalı ve
+cihaz tarafında açılıyor (örn. `setprop log.tag.BillingClient VERBOSE`). Bu,
+belgelenmiş varsayılan — **bu depoda ölçülmedi**, ve bir cihaz imajının ya da
+başka bir bileşenin o eşiği açmadığı iddia edilmiyor.
+
+Aynı metodun hata dalı karıştırılmamalı: `zzaS` → `zzc.zzp` `Log.isLoggable(tag,
+5 = WARN)` üstünden `Log.w` ile yazıyor, yani varsayılanda **açık** — ama taşıdığı
+metin `"Error consuming purchase with token. Response code: " + responseCode`;
+token oraya değil, yalnız `onConsumeResponse` dinleyicisine gidiyor. Cümlede
+"token" geçmesi tokenin yazıldığı anlamına gelmiyor.
+
+**Cihazda logcat gözlemi yapılmadı.** Yukarıdakilerin tamamı bytecode okuması;
+gerçek bir satın alma sırasında bu satırın çıkıp çıkmadığı ölçülmedi. Bir sonraki
+denetim bunu "düzeltildi" sanmasın diye kaydediliyor.
 
 **Eklenti sürümü yükseltilirse** yama dosya adındaki sürümle eşleşmediği için
 uygulanmaz ve `npm ci` uyarı verir. O durumda yeni sürümün kaynağı yeniden okunup
