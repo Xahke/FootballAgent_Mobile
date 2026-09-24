@@ -65,7 +65,46 @@ Android Studio kurmak istemiyorsan APK'yı GitHub derlesin:
    `menajer-apk` dosyasını indir (zip içinde `app-debug.apk` çıkar).
 4. APK'yı telefona gönder, dokun, kur.
 
-Her `main` push'unda da otomatik çalışır. Tanım: `.github/workflows/android.yml`
+**Ne zaman kendiliğinden çalışır.** `main`, `upgrade/**`, `chore/**`, `feat/**` ve
+`fix/**` dallarına push'ta — ve **her pull request'te**. `feat/**`/`fix/**` ile PR
+kapsamı sonradan eklendi: ödeme ve düzeltme dalları hiçbir otomatik kontrolden
+geçmiyordu, oysa native tarafa ve satın alma akışına dokunan çalışma tam olarak
+orada yapılıyor. `concurrency` eski koşuları iptal ediyor, ama yalnız **kendi
+kapsamında**: aynı PR'ın yeni koşusu o PR'ın önceki koşusunu, aynı dalın yeni
+push'u o dalın önceki push koşusunu iptal eder. Push ve PR birbirini iptal
+**etmez** — push kaynak commit'ini, PR'ın varsayılan checkout'u ise hedef dalla
+oluşturulan merge ref'ini derler; farklı ağaçlar. PR tarafında anahtar dal adı
+değil PR numarası olduğu için farklı fork'lardaki aynı adlı dallar da
+çakışmıyor. Bunun kabul edilen sonucu: bir dal hem push hem PR olayı
+ürettiğinde iki ayrı doğrulama koşar.
+
+**Sır istemiyor.** İş `pull_request` ile çalışır, `pull_request_target` ile
+**değil**; `GITHUB_TOKEN` yetkisi `contents: read`'e indirilmiştir ve akışta
+imzalama anahtarı, upload keystore ya da yayın yetkisi kullanılmaz. Fork'tan gelen
+bir PR de bu yüzden güvenle derlenebiliyor.
+
+**Ne kontrol ediliyor.** Var olanlara (npm ci, `cap sync` farkı, SDK sürümleri,
+debug APK + paket kimliği/etiket/SDK/native .so doğrulamaları, `savetest`) iki
+kontrol eklendi:
+
+| Adım | Ne soruyor |
+|---|---|
+| `Native yama kontrolü` (`tools/check-native-patch.js`) | eklenti tam 8.7.0 mı, `npx:` hata kodu değişikliği kurulu kaynakta duruyor mu, kaldırdığımız hassas log ifadeleri geri gelmiş mi |
+| `release-1-gradle-gorevleri` + `release-2-yapilandirma` (`tools/check-release-config.js`) | release Java derleniyor mu, release manifest/varlık birleştirme üretilebiliyor mu, release `ads-testcfg.js` null mı |
+
+Release kontrolü **tam paket derlemesi değil**, üç belirli Gradle görevi:
+`:app:compileReleaseJavaWithJavac`, `:app:mergeReleaseAssets`,
+`:app:processReleaseMainManifest`. Sebebi kasıtlı —
+`assemble`/`bundle`/`package`Release, `android/app/build.gradle` içindeki taskGraph
+kapısını tetikler ve `keystore.properties` yoksa düşer. O kapı doğru ve bu kontrol
+uğruna zayıflatılmadı; yukarıdaki üç görev kapının desenine girmediği için sırsız
+çalışıyor. Yani CI "release kodu derleniyor ve release varlıkları doğru" diyor,
+"imzalı bir AAB üretilebiliyor" DEMİYOR.
+
+`isTesting: true` bir hata sayılmıyor: paket hâlâ bilerek test reklam birimleriyle
+çalışıyor. Sorulan tek şey debug'ın AEA test coğrafyasının release'e taşınmadığı.
+
+Tanım: `.github/workflows/android.yml`
 
 ### Seçenek B — kendi bilgisayarında
 Gereken: [Android Studio](https://developer.android.com/studio) (Android SDK ve
@@ -286,6 +325,8 @@ node tools/build-themes.js && node build.js   # → dist/menajer.html
 | tools/build-themes.js | Temaları kapsamlayıp css/style.css'i üretir |
 | tools/build-www.js | Capacitor'ın paketleyeceği www/ klasörünü hazırlar |
 | tools/android.js | APK/AAB üretir, dosyanın yerini yazar |
+| tools/check-native-patch.js | patch-package yamasının KURULU kaynağa uygulandığını doğrular (CI) |
+| tools/check-release-config.js | Release derleme/varlık çıktılarını doğrular, imza sırrı istemez (CI) |
 | .github/workflows/android.yml | APK'yı GitHub'da derler, indirilebilir çıktı bırakır |
 | android/ | Native Android projesi — kaynak denetiminde. `cap sync` tazeler, `cap add` yeniden üretir (kullanma) |
 | capacitor.config.json | Android paketleme ayarları (appId, uygulama adı) |
@@ -400,6 +441,33 @@ Kullanıcı bir işlemle ilgili destek isterse yol şudur: **Play Console → Si
 üzerinden sipariş aranır, durumu incelenir ve gerekirse **elle iade** verilir. Mağaza
 ekranındaki `shopTxHelp` metni kullanıcıyı Play sipariş geçmişine ve Google Play
 desteğine yönlendiriyor; geliştirici tarafındaki karşılığı bu adımdır.
+
+### Yayın öncesi cihaz kontrolü — CI bunu YAPMAZ
+
+CI'ın ölçtüğü şeyin sınırı net: paket derleniyor, yapılandırma doğru, JS tarafı
+kendi mock'una karşı doğru davranıyor. **Gerçek bir Play işlemi hiç çalışmıyor** —
+otomatik akışta ödeme başlatılmıyor, başlatılmamalı da. `tools/savetest.js`
+blokları 18–24 ve 28–29 eklentinin JS yüzeyinin *mock*'una karşı koşuyor; bu
+"satın alma çalışıyor" demek değil, "JS köprüye şunu söyledi" demek.
+
+Bu yüzden aşağıdakiler **yayından önce, elle, gerçek cihazda** yapılmak zorunda ve
+hiçbiri CI'da yeşil görünmez:
+
+| Kontrol | Nasıl | Neyi kanıtlar |
+|---|---|---|
+| Satın alma | Lisans test hesabıyla kapasite paketi ve reklam kaldırma satın al | `purchaseProduct` → `PURCHASED` → hak yazımı → consume/acknowledge sırası gerçekten işliyor |
+| İptal / vazgeçme | Ödeme ekranını kapat | `npx:updated:<kod>` geliyor mu, ayrılan rezervasyon serbest bırakılıyor mu |
+| Geri yükleme | Uygulamayı sil, yeniden kur, mağazayı aç | `getPurchases()` ile `remove_auto_ads` hakkı cihaza geri geliyor mu (`iapRestoreDevice`) |
+| Beklemede (PENDING) | Yavaş ödeme yöntemi | Hak YAZILMIYOR ve işlem kuyrukta kalıyor mu |
+| Otomatik iade | Onaylanmayan satın alma ~3 dk sonra iade edilir (bkz. *Lisans testinde dikkat*) | "hak yazıldı ama kapanış tutmadı" aşaması |
+
+Reklam tarafı da aynı durumda: rewarded ve sezon geçişi reklamlarının gerçekten
+çizildiği yalnız cihazda/emülatörde ölçülebilir. Kaynak taraması ve mock testleri
+bunun yerine geçmez.
+
+**Bu tabloyu CI'a taşımak bir hedef değil.** Gerçek ödeme başlatan bir otomatik iş,
+test hesabı kimlik bilgisi ve yayın yetkisi ister; ikisi de bu akışın bilerek
+dışında tutuldu.
 
 ### Eklenti yaması (patch-package)
 
