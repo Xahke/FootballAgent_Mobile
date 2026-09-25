@@ -1,8 +1,38 @@
 diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-index d8bfea2..2f5f850 100644
+index d8bfea2..075a15a 100644
 --- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
 +++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-@@ -302,7 +302,8 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -219,11 +219,17 @@ public class NativePurchasesPlugin extends Plugin {
+ 
+     private void handlePurchase(Purchase purchase, PluginCall purchaseCall) {
+         Log.d(TAG, "handlePurchase() called");
+-        Log.d(TAG, "Purchase details: " + purchase.toString());
+-        Log.i(NativePurchasesPlugin.TAG, "handlePurchase" + purchase);
++        // PATCH (FootballAgent_Mobile): satin alma tokeni, orderId ve Purchase
++        // nesnesinin kendisi (toString() -> getOriginalJson()) logcat'e yaziliyordu.
++        // Logcat cihazda baska bilesenlerce okunabilir ve hata raporu/ekran
++        // goruntusu yoluyla disari cikar; token ise bir odemenin tek kimligidir.
++        // Olay isaretleri ve sonuc kodlari kalir, islem icerigi yazilmaz.
++        // Upstream'in kendi "[REDACTED]" bicimi korunur; JS'e giden veri, hata
++        // kodlari ve acknowledge/consume davranisi degismez.
++        Log.i(NativePurchasesPlugin.TAG, "handlePurchase");
+         Log.i(NativePurchasesPlugin.TAG, "getPurchaseState" + purchase.getPurchaseState());
+         Log.d(TAG, "Purchase state: " + purchase.getPurchaseState());
+-        Log.d(TAG, "Purchase token: " + purchase.getPurchaseToken());
++        Log.d(TAG, "Purchase token: [REDACTED]");
+         Log.d(TAG, "Is acknowledged: " + purchase.isAcknowledged());
+ 
+         if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+@@ -289,7 +295,7 @@ public class NativePurchasesPlugin extends Plugin {
+                 // This would require additional Google Play API calls to get subscription details
+             }
+ 
+-            Log.d(TAG, "Resolving purchase call with transactionId: " + purchase.getPurchaseToken());
++            Log.d(TAG, "Resolving purchase call with transactionId: [REDACTED]");
+             if (purchaseCall != null) {
+                 purchaseCall.resolve(ret);
+             } else {
+@@ -302,7 +308,8 @@ public class NativePurchasesPlugin extends Plugin {
              // given to them. You can also choose to remind the user to complete the
              // purchase if you detect that it is still pending.
              if (purchaseCall != null) {
@@ -12,7 +42,7 @@ index d8bfea2..2f5f850 100644
              } else {
                  Log.d(TAG, "purchaseCall is null for pending purchase");
              }
-@@ -310,13 +311,42 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -310,15 +317,44 @@ public class NativePurchasesPlugin extends Plugin {
              Log.d(TAG, "Purchase state is OTHER: " + purchase.getPurchaseState());
              // Handle any other error codes.
              if (purchaseCall != null) {
@@ -54,9 +84,12 @@ index d8bfea2..2f5f850 100644
 +    }
 +
      private void acknowledgePurchase(String purchaseToken) {
-         Log.d(TAG, "acknowledgePurchase() called with token: " + purchaseToken);
+-        Log.d(TAG, "acknowledgePurchase() called with token: " + purchaseToken);
++        Log.d(TAG, "acknowledgePurchase() called with token: [REDACTED]");
          AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
-@@ -429,7 +459,12 @@ public class NativePurchasesPlugin extends Plugin {
+             .setPurchaseToken(purchaseToken)
+             .build();
+@@ -429,7 +465,12 @@ public class NativePurchasesPlugin extends Plugin {
                                  Log.d(TAG, "Purchase update failed or purchases is null");
                                  Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
                                  if (purchaseCall != null) {
@@ -70,7 +103,7 @@ index d8bfea2..2f5f850 100644
                                  }
                              }
                              closeBillingClient();
-@@ -698,6 +733,15 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -698,6 +739,15 @@ public class NativePurchasesPlugin extends Plugin {
                              "Billing flow launch result: " + billingResult2.getResponseCode() + " - " + billingResult2.getDebugMessage()
                          );
                          Log.i(NativePurchasesPlugin.TAG, "onProductDetailsResponse2" + billingResult2);
@@ -86,3 +119,69 @@ index d8bfea2..2f5f850 100644
                      }
                  }
              );
+@@ -727,7 +777,7 @@ public class NativePurchasesPlugin extends Plugin {
+         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+             assert purchases != null;
+             for (Purchase purchase : purchases) {
+-                Log.d(TAG, "Processing purchase: " + purchase.getOrderId());
++                Log.d(TAG, "Processing purchase: [REDACTED]");
+                 Log.d(TAG, "Purchase state: " + purchase.getPurchaseState());
+                 if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                     PurchaseAction action = PurchaseActionDecider.decide(false, purchase);
+@@ -747,17 +797,17 @@ public class NativePurchasesPlugin extends Plugin {
+     private void onConsumeResponse(BillingResult billingResult, String purchaseToken) {
+         Log.d(TAG, "onConsumeResponse() called");
+         Log.d(TAG, "Consume result: " + billingResult.getResponseCode() + " - " + billingResult.getDebugMessage());
+-        Log.d(TAG, "Purchase token: " + purchaseToken);
++        Log.d(TAG, "Purchase token: [REDACTED]");
+ 
+         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+             // Handle the success of the consume operation.
+             // For example, you can update the UI to reflect that the item has been consumed.
+             Log.d(TAG, "Consume operation successful");
+-            Log.i(NativePurchasesPlugin.TAG, "onConsumeResponse OK " + billingResult + purchaseToken);
++            Log.i(NativePurchasesPlugin.TAG, "onConsumeResponse OK " + billingResult);
+         } else {
+             // Handle error responses.
+             Log.d(TAG, "Consume operation failed");
+-            Log.i(NativePurchasesPlugin.TAG, "onConsumeResponse OTHER " + billingResult + purchaseToken);
++            Log.i(NativePurchasesPlugin.TAG, "onConsumeResponse OTHER " + billingResult);
+         }
+     }
+ 
+@@ -1127,7 +1177,7 @@ public class NativePurchasesPlugin extends Plugin {
+                         Log.d(TAG, "In-app purchases query result: " + billingResult.getResponseCode());
+                         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+                             for (Purchase purchase : purchases) {
+-                                Log.d(TAG, "Processing in-app purchase: " + purchase.getOrderId());
++                                Log.d(TAG, "Processing in-app purchase: [REDACTED]");
+                                 AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
+                                 String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
+                                 if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
+@@ -1180,7 +1230,7 @@ public class NativePurchasesPlugin extends Plugin {
+                         Log.d(TAG, "Subscription purchases query result: " + billingResult.getResponseCode());
+                         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+                             for (Purchase purchase : purchases) {
+-                                Log.d(TAG, "Processing subscription purchase: " + purchase.getOrderId());
++                                Log.d(TAG, "Processing subscription purchase: [REDACTED]");
+                                 AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
+                                 String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
+                                 if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
+@@ -1262,7 +1312,7 @@ public class NativePurchasesPlugin extends Plugin {
+             return;
+         }
+ 
+-        Log.d(TAG, "Manually acknowledging purchase with token: " + purchaseToken);
++        Log.d(TAG, "Manually acknowledging purchase with token: [REDACTED]");
+         withBillingClient(call, () -> {
+             AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                 .setPurchaseToken(purchaseToken)
+@@ -1302,7 +1352,7 @@ public class NativePurchasesPlugin extends Plugin {
+             return;
+         }
+ 
+-        Log.d(TAG, "Consuming purchase with token: " + purchaseToken);
++        Log.d(TAG, "Consuming purchase with token: [REDACTED]");
+         withBillingClient(call, () -> {
+             ConsumeParams consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchaseToken).build();
+ 

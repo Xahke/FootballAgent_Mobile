@@ -5403,6 +5403,7 @@ shopUndeliver:'Bu satın alma tam olarak teslim edilemedi.',
 shopTxT:'İşlemler',
 shopTxPending:'{n} ödeme onay bekliyor. Hak, ödeme tamamlanınca veriliyor.',
 shopTxStuck:'{n} satın alma teslim edilemedi. Hiçbir hak verilmedi ve işlem tarafımızdan onaylanmadı.',
+shopTxUnclear:'{n} satın almanın durumu netleştirilemedi. Kaydı olduğu gibi saklıyoruz ve bu işlem üzerinde başka bir adım atmıyoruz. Halihazırdaki hakların olduğu gibi duruyor. Siparişin durumunu Google Play sipariş geçmişinden takip edebilirsin.',
 shopTxUnverified:'{n} işlemin tamamlandığı doğrulanamadı. Aldığın hak duruyor ve ikinci kez verilmeyecek; ancak ödemenin Play tarafında kapandığını da iade edildiğini de söyleyemiyoruz.',
 shopTxHeld:'{n} tamamlanmamış satın alma için kapasite ayrılmış durumda. Ödeme sonuçlanınca ayrılan kapasite kendiliğinden serbest kalır; sonuçlanmazsa Play’deki sipariş geçmişinden durumu görebilirsin.',
 shopTxHelp:'Onaylanmayan bir satın almayı Google Play kendi kurallarına göre iade edebilir. Durumu Play’deki sipariş geçmişinden görebilir, sonuçlanmazsa Google Play desteğine başvurabilirsin.',
@@ -5415,8 +5416,35 @@ transfersSub:'Bu ligin kulüplerini ilgilendiren son transferler.',feeL:'Bonserv
 mainMenu:'Ana Menü',slotsLbl:'Kayıt Yuvaları',slotN:'Yuva {n}',slotEmpty:'Boş yuva',
 slotEmptyHint:'Yeni kariyer başlat',slotNew:'Yeni Kariyer',slotContinue:'Devam Et',
 slotDelete:'Sil',slotDeleteQ:'{n} yuvasındaki kariyer silinecek. Bu geri alınamaz. Emin misin?',
+slotBusy:'Bu yuva dolu ya da şu anda okunamıyor. Önce oradaki kaydı çöz.',
 slotDeleted:'Yuva silindi.',slotBroken:'Kayıt okunamadı.',slotLast:'Son oynanan',
 slotLoading:'Yükleniyor…',slotNewer:'Bu kayıt oyunun daha yeni bir sürümüyle yazılmış.',
+/* Depo geçici olarak açılamadığında: yuvada kayıt VAR ama okunamıyor. Boş
+   göstermek "silindi" demekle aynı şey olurdu. */
+slotLocked:'Şu anda açılamıyor',slotLockedM:'Yuva {n} · Kayıt deposu yanıt vermedi',
+slotLockedTtl:'Kayıt deposu açılamadı',
+slotLockedWhat:'Bu yuvadaki kariyer silinmedi. Cihazın kayıt deposu bu açılışta yanıt vermediği için okunamıyor.',
+slotLockedFix:'Uygulamayı tamamen kapatıp yeniden açmayı dene. Tarayıcıda oynuyorsan gizli sekme ya da kapatılmış site verisi de bu hataya yol açar. Bu yuvaya şimdi yeni bir kariyer kurulmuyor: kurulsaydı iki kayıt aynı yuvayı isterdi.',
+/* Çakışan iki kayıt da korundu ama kurtarılana yer bulunamadı. */
+rescueTtl:'Kurtarılan kariyer bekliyor',
+rescueRow:'Bir kariyer yer bekliyor',rescueRowM:'{a} · boş yuva gerekiyor',
+rescueWhat:'Kayıt deposu geçici olarak açılamadığı sırada kurulmuş bir kariyer var. Yuvası şimdi başka bir kariyerde olduğu için ikisi de korundu.',
+rescueFix:'Bir yuva boşalt; bu kariyer oraya kendiliğinden taşınır. O zamana kadar silinmiyor.',
+rescueDone:'Bir kariyer boş yuvaya kurtarıldı.',
+rescueBusy:'Bu kayıt için ayrılmış saklama yeri, karar bekleyen başka bir kopya tarafından kullanılıyor. Önce onu çöz.',
+/* Aynı kariyerin ikinci kopyası: canlı kariyer DEĞİL, karar bekliyor. */
+forkRow:'Bu kariyerin ikinci bir kopyası var',forkRowM:'{a} · karar bekliyor',
+forkTtl:'Aynı kariyerin iki kopyası',
+forkWhat:'Bu kariyerin ikinci bir kopyası bulundu. İkisi de saklandı, ama aynı kariyer aynı anda iki yuvada oynanamaz — satın alma ve ödül teslimatı kariyeri kimliğinden buluyor.',
+forkLive:'Oynanan kopya',forkKept:'Saklanan kopya',
+forkRestore:'Ayrı kariyer olarak kur',
+forkRestoreNote:'Saklanan kopya boş bir yuvaya OLDUĞU GİBİ kurulur: kimliği, içeriği ve varsa satın alma kaydı değişmeden gelir.',
+forkLiveBlock:'Bu kariyerin bir kopyası {n}. yuvada oynanıyor. Aynı kariyer iki yuvada birden oynanamaz — satın alma ve ödül teslimatı kariyeri kimliğinden buluyor. Saklanan kopya olduğu gibi duruyor, içeriğinden ve satın alma kaydından hiçbir şey silinmedi. Oynanan kopyayı silersen bu kopya olduğu gibi kurulabilir.',
+forkDiscard:'Saklanan kopyayı sil',
+forkDiscardQ:'Saklanan kopya kalıcı olarak silinecek. Bu geri alınamaz. Emin misin?',
+forkNoRoom:'Kurmak için önce bir yuva boşalt. O zamana kadar kopya silinmiyor.',
+forkDone:'Kopya ayrı kariyer olarak kuruldu.',forkGone:'Kopya artık yok.',
+forkFail:'Kopya şu anda kurulamadı, kayıt yerinde duruyor.',
 /* kariyer menüsü — açılış ekranı. Göreli zaman yalnız özetin ts alanından
    türetiliyor; ts yoksa satır hiç çizilmiyor. */
 cmTitle:'Kariyerlerim',cmSub:'Menajerlik yolculuğuna devam et',
@@ -5670,6 +5698,7 @@ shopUndeliver:'This purchase could not be delivered in full.',
 shopTxT:'Transactions',
 shopTxPending:'{n} payment awaiting approval. The item is granted once the payment completes.',
 shopTxStuck:'{n} purchase could not be delivered. Nothing was granted and we did not acknowledge the transaction.',
+shopTxUnclear:'{n} purchase could not be resolved with certainty. We are keeping the record as it is and taking no further step on this transaction. The entitlements you already have are unchanged. You can follow the order in your Google Play order history.',
 shopTxUnverified:'{n} transaction could not be confirmed as completed. What you bought is yours and will not be granted twice; but we cannot say the payment was closed on Play’s side, nor that it was refunded.',
 shopTxHeld:'Capacity is reserved for {n} unfinished purchase. It is released on its own once the payment resolves; if it never does, you can check its status in your Play order history.',
 shopTxHelp:'Google Play may refund a purchase we never acknowledged, under its own rules. You can follow it in your Play order history, and contact Google Play support if it is not resolved.',
@@ -5682,8 +5711,31 @@ transfersSub:'Recent moves involving clubs in this league.',feeL:'Fee',
 mainMenu:'Main Menu',slotsLbl:'Save Slots',slotN:'Slot {n}',slotEmpty:'Empty slot',
 slotEmptyHint:'Start a new career',slotNew:'New Career',slotContinue:'Continue',
 slotDelete:'Delete',slotDeleteQ:'The career in slot {n} will be deleted. This cannot be undone. Are you sure?',
+slotBusy:'That slot is taken or cannot be read right now. Deal with what is there first.',
 slotDeleted:'Slot deleted.',slotBroken:'Save could not be read.',slotLast:'Last played',
 slotLoading:'Loading…',slotNewer:'This save was written by a newer version of the game.',
+slotLocked:'Cannot be opened right now',slotLockedM:'Slot {n} · Save storage did not respond',
+slotLockedTtl:'Save storage unavailable',
+slotLockedWhat:'The career in this slot has not been deleted. The save storage on this device did not respond on this launch, so it cannot be read.',
+slotLockedFix:'Close the app completely and open it again. In a browser, a private tab or blocked site data causes the same error. No new career is started in this slot for now: it would leave two saves wanting the same slot.',
+rescueTtl:'A recovered career is waiting',
+rescueRow:'A career is waiting for room',rescueRowM:'{a} · needs an empty slot',
+rescueWhat:'A career was created while save storage was temporarily unavailable. Its slot now holds another career, so both were kept.',
+rescueFix:'Free up a slot and this career moves there on its own. Until then it is not deleted.',
+rescueDone:'A career was recovered into an empty slot.',
+rescueBusy:'The holding place for this save is taken by another copy that is still waiting for your decision. Resolve that one first.',
+forkRow:'This career has a second copy',forkRowM:'{a} · waiting for a decision',
+forkTtl:'Two copies of one career',
+forkWhat:'A second copy of this career was found. Both were kept, but one career cannot be played in two slots at once: purchases and reward delivery find a career by its identity.',
+forkLive:'Copy in play',forkKept:'Copy on hold',
+forkRestore:'Set up as a separate career',
+forkRestoreNote:'The copy on hold is placed in an empty slot EXACTLY as it is: its identity, its contents and any purchase record come across unchanged.',
+forkLiveBlock:'A copy of this career is in play in slot {n}. One career cannot be played in two slots at once — purchases and reward delivery find a career by its identity. The copy on hold is untouched; nothing has been removed from its contents or its purchase record. Delete the copy in play and this one can be set up exactly as it is.',
+forkDiscard:'Delete the copy on hold',
+forkDiscardQ:'The copy on hold will be deleted permanently. This cannot be undone. Are you sure?',
+forkNoRoom:'Free up a slot first. Until then the copy is not deleted.',
+forkDone:'The copy was set up as a separate career.',forkGone:'The copy is gone.',
+forkFail:'The copy could not be set up right now; it is still there.',
 /* career menu — opening screen */
 cmTitle:'My careers',cmSub:'Continue your journey',
 cmNow:'just now',cmMinAgo:'{n} min ago',cmHourAgo:'{n} hr ago',cmDayAgo:'{n}d ago',
@@ -5990,16 +6042,27 @@ function dbTx(store,mode,fn){
    bir dizeyi kurmak "Devam"a basmanın maliyetinin %42'siydi), localStorage'a
    düşüldüğünde ise JSON'a çevriliyor. */
 const LSKEY={meta:'menajerMetaV1',s1:'menajerSaveV9s1',s2:'menajerSaveV9s2',s3:'menajerSaveV9s3',
-  iapq:'menajerIapQV1'};
+  iapq:'menajerIapQV1',
+  f1:'menajerForkV1s1',f2:'menajerForkV1s2',f3:'menajerForkV1s3'};
 /* iapq: ödenmiş ama henüz kapanmamış satın almaların defteri (js/iap.js).
    PREFS'te DEĞİL, burada: PREFS yalnız localStorage'da yaşıyor ve kota dolduğunda
    sessizce yazılamıyor — ücretli bir işlem kaydının kaybolabileceği tek yer orasıydı.
    Buraya konunca kariyer kayıtlarıyla aynı arka ucu, aynı kuyruğu ve aynı sağlık
    raporlamasını (SAVEH) kullanıyor.
 
+   f1..f3: KARANTİNA. Aynı kariyer kimliğini taşıyan ikinci bir kopya buraya
+   konuyor (js/saves.js, parkFork). Neden ayrı bir anahtar ailesi:
+
+   - Yuva DEĞİL. Aynı cid'li iki kayıt iki normal yuvaya konamaz: cid ödeme ve
+     ödül teslimatının hedefi, iki hedef olursa hangisine teslim edildiği
+     belirsizleşir.
+   - localStorage'da da AYRI bir ad taşıyor ('menajerForkV1s*'). Göç kaynağı
+     olan 'menajerSaveV9s*' anahtarlarına sonradan yazılması karantinadaki
+     kopyayı ezemez; iki aile hiçbir arka uçta çakışmıyor.
+
    ST_SAVE değil ST_META: recSlotKeys() ST_SAVE'in bütün anahtarlarını "yuva var mı"
-   diye okuyor ve buraya konan dördüncü bir anahtar o sayımı kirletirdi. */
-function storeName(key){return (key==='meta'||key==='iapq')?ST_META:ST_SAVE;}
+   diye okuyor ve buraya konan fazladan bir anahtar o sayımı kirletirdi. */
+function storeName(key){return (key==='meta'||key==='iapq'||key.charAt(0)==='f')?ST_META:ST_SAVE;}
 
 function recGet(key){
   if(SAVEH.backend==='ls')return Promise.resolve(jparse(lsGet(LSKEY[key])));
@@ -6029,6 +6092,36 @@ function recDel(key){
   if(SAVEH.backend==='ls'){lsDel(LSKEY[key]);return Promise.resolve(true);}
   return dbTx(storeName(key),'readwrite',st=>st.delete(key)).then(()=>true);
 }
+/* ===== HAM localStorage OKUMASI — yalnız iapq için =====
+   lsGet(), jparse() ve recGet() zincirinin ÜÇÜ DE hatayı null'a çeviriyor:
+   anahtar yok, erişim attı, JSON bozuk — üç ayrı olgu, tek cevap. Kariyer
+   kayıtları için bu doğru davranış ve DEĞİŞMİYOR: bozuk bir kaydı meta'dan
+   düşürmek menünün yalan söylemesini engelliyor ve o yol kendi sözleşmesine
+   sahip (validSave, moveVerdict).
+
+   Ödenmiş bir işlem kaydı için doğru değil. "Okuyamadım"ı "orada bir şey yok"
+   sanıp üstüne boş kuyruk yazmak, parayı silmek olur. Bu yüzden ayrı bir
+   okuyucu ve dört ayrı cevap:
+     none  anahtar yok            → gerçekten boş, yazılabilir
+     err   erişim attı            → BİLMİYORUZ, hiçbir şey yazılmamalı
+     bad   JSON ayrıştırılamadı   → BİLMİYORUZ, hiçbir şey yazılmamalı
+     ok    ayrıştırıldı           → yapı denetimi çağırana ait */
+function lsRead(k){
+  let s;
+  try{s=localStorage.getItem(k);}
+  catch(e){return {st:'err'};}
+  if(s===null||s===undefined)return {st:'none'};
+  let v;
+  try{v=JSON.parse(s);}
+  catch(e){return {st:'bad'};}
+  return {st:'ok',v:v};
+}
+/* Kayıt anahtarının localStorage'daki karşılığını HAM okur — arka uç ne olursa
+   olsun. Yalnız iapq göçü kullanıyor: IndexedDB açıldığında önceki oturumun
+   localStorage kuyruğu hâlâ orada duruyor olabilir. */
+function recReadLs(key){return lsRead(LSKEY[key]);}
+function recDelLs(key){lsDel(LSKEY[key]);}
+
 /* Hangi yuvalarda kayıt var — yalnız anahtarlar. Açılışta özet ile gerçeğin
    tutup tutmadığı buradan bakılıyor; üç kaydı okumak 20 MB ayrıştırmak olurdu. */
 function recSlotKeys(){
@@ -6175,6 +6268,11 @@ let curSlot=0;
 /* Açılış tamamlanana kadar menü "yükleniyor" gösteriyor; boş yuva göstermek
    kaydı silinmiş gibi görünürdü. */
 let storeReady=false;
+/* storeInit()'in sözü, tek örnek. Depolamaya bağlı başlangıçlar (js/iap.js'in
+   ödeme kuyruğu) bunu BEKLEMEK zorunda: SAVEH.backend açılışta 'ls' değerinden
+   başlıyor ve storeBackendInit() bitene kadar öyle kalıyor — daha erken yapılan
+   her recGet() YANLIŞ arka uçtan okur ve "orada bir şey yok" der. */
+let STOREP=null;
 
 /* ================= CİHAZ TERCİHLERİ ================= */
 let PREFS=jparse(lsGet(PREFKEY))||{};
@@ -6228,7 +6326,42 @@ function allMeta(){return META;}
 function slotMeta(n){return META['s'+n]||null;}
 function slotUsed(n){return !!slotMeta(n);}
 function anySlot(){for(let n=1;n<=SLOTS;n++)if(META['s'+n])return true;return false;}
-function metaDirty(){queueRec('meta',()=>META);}
+/* Özeti diske bırakır. metaDirtyC(), aynı işi yapıp "yazdığım özet gerçekten
+   şunu taşıyordu" sorusunu cevaplayan söz döndürüyor — kuyruk anahtar başına
+   birleştiği için tanık, depolamaya VERİLEN özet üzerinde çalışıyor. */
+function metaDirtyC(witness){const p=queueRec('meta',()=>META,witness);rememberIdbSlots();return p;}
+function metaDirty(){metaDirtyC();}
+
+/* ================= ARKA UÇ GÖLGESİ =================
+   IndexedDB bir açılışta açılamayabilir: bozuk profil, dolu disk, başka bir
+   sekmenin tuttuğu eski sürüm, bazı gizli sekme kipleri. Katman o zaman
+   localStorage'a düşüyor — ve kariyerlerin kaydı orada YOK. Menü üç boş yuva
+   çiziyordu.
+
+   Boş yuva "kaydın silindi" demektir ve kullanıcıyı üstüne yeni bir kariyer
+   kurmaya davet eder. Oysa kayıt yerli yerinde duruyor, yalnız bu açılışta
+   okunamıyor: GEÇİCİ BİR ERİŞİM HATASI, KAYDIN YOKLUĞUNUN KANITI DEĞİLDİR.
+
+   Bu yüzden IndexedDB gerçekten kullanılabilirken hangi yuvalarda kayıt olduğu
+   cihaz tercihlerine yazılıyor. Bu bir KOPYA değil, bir İPUCU: yalnız "orada
+   bir kayıt vardı" der, içeriği hakkında hiçbir şey söylemez ve hiçbir zaman
+   veri kaynağı olarak okunmaz. Tek işi, okuyamadığımız bir yuvayı menünün boş
+   göstermemesi. Eskimiş olabilir; eskimiş olması da zararsız, çünkü gölge yuva
+   yalnızca "şimdi kurma, önce depoyu düzelt" der. */
+function rememberIdbSlots(){
+  if(SAVEH.backend!=='idb')return;
+  const a=[];
+  for(let n=1;n<=SLOTS;n++)if(META['s'+n])a.push(n);
+  const s=a.join(',');
+  if(pref('idbs',null)!==s){PREFS.idbs=s;savePrefs();}
+}
+/* "Burada bir kariyer var ama şu anda okuyamıyoruz." Yalnız localStorage'a
+   düşülmüşken anlamlı; IndexedDB açıkken gerçeğin kendisi elimizde. */
+function slotShadow(n){
+  if(SAVEH.backend!=='ls'||META['s'+n])return false;
+  return (','+pref('idbs','')+',').indexOf(','+n+',')>=0;
+}
+function anyShadow(){for(let n=1;n<=SLOTS;n++)if(slotShadow(n))return true;return false;}
 /* Özet menüde gösterilen her şeyi taşır; tam kaydı açmaya gerek kalmaz.
    totalWeeks() global S'yi okuduğu için burada fikstürden yeniden hesaplanıyor —
    bu fonksiyon her zaman kendisine verilen duruma bakmalı.
@@ -6331,32 +6464,292 @@ function deleteSlot(n){
   queueDel('s'+n);
   metaDirty();
   if(curSlot===n){curSlot=0;S=null;}
+  /* Yer açıldı: yer olmadığı için localStorage'da bekleyen bir kurtarma varsa
+     şimdi tamamlanabilir. Beklenmiyor — menü kurtarma bitince kendini çiziyor. */
+  if(RESCUE.length)RESCUEP=retryRescue();
 }
 
 /* ================= AÇILIŞ VE GÖÇ =================
    Sıra önemli:
    1) arka uç seçilir (IndexedDB var mı),
-   2) özet okunur — hangi yuvaların dolu sayıldığını bilmeden göç yapılamaz,
-   3) localStorage yuvaları taşınır,
-   4) tek kayıtlı sürümün anahtarı taşınır,
-   5) özet gerçekle karşılaştırılır.
+   2) özet okunur,
+   3) özet GERÇEKLE uzlaştırılır — göç "hedef yuvada kayıt var mı" sorusunu
+      özet üzerinden ucuza cevaplıyor ve eksik bir özet o soruyu YANLIŞ
+      cevaplardı ("yok" deyip mevcut kariyerin üstüne yazdırırdı),
+   4) localStorage yuvaları taşınır,
+   5) tek kayıtlı sürümün anahtarı taşınır,
+   6) özet bir kez daha uzlaştırılır (göç yeni kayıtlar yazmış olabilir).
    Her adım kendi başına yeniden çalıştırılabilir; yarıda kesilen göç bir sonraki
    açılışta kaldığı yerden devam eder. */
 function storeInit(){
-  return storeBackendInit()
+  if(STOREP)return STOREP;
+  STOREP=storeBackendInit()
     .then(()=>recGet('meta'))
     .then(m=>{META=m||{};},()=>{META={};})
+    .then(reconcileMeta)
     .then(migrateLsSlots)
     .then(migrateLegacy)
     .then(reconcileMeta)
-    .then(()=>{storeReady=true;},e=>{storeReady=true;noteSaveFail('init',e);});
+    .then(()=>{storeReady=true;rememberIdbSlots();},e=>{storeReady=true;noteSaveFail('init',e);});
+  return STOREP;
+}
+/* "Depolama hazır" kapısı. Henüz başlamadıysa BAŞLATIYOR — bu kapıyı bekleyen
+   bir çağrı storeInit()'in daha önce çağrılmış olmasına bağlı kalmamalı; yükleme
+   sırası değişirse sessizce sonsuza kadar beklerdi. storeInit() kendi hatasını
+   yuttuğu için kapı hiçbir zaman REDDETMİYOR: "depolama açıldı mı" ile "açılış
+   sorunsuz muydu" ayrı sorular, ikincisini SAVEH cevaplıyor. */
+function storeReadyP(){return storeInit();}
+
+/* ================= localStorage DÖNEMİNİN DEVRİ =================
+   Kayıpsız olmasının tek yolu sırayı bozmamak: yaz → geri oku → aynı mı diye
+   bak → ANCAK O ZAMAN sil. Karşılaştırma tam serileştirme üzerinden; pahalı ama
+   kayıt başına ömürde bir kez çalışıyor ve "taşıdım sandım" ihtimalini
+   bırakmıyor.
+
+   Eksik olan şey HEDEFE BAKMAKTI. Eski sürüm kaynağı doğrudan 's<n>' üzerine
+   yazıyordu; hedefte ne olduğunu hiç sormuyordu. İki ayrı yoldan kariyer
+   kaybettiriyordu:
+
+   1) Arka uç zaten localStorage iken kaynak ile hedef AYNI anahtardır. Kayıt
+      kendi üstüne yazılıyor, doğrulama tabii ki geçiyor, ardından kaynak
+      siliniyordu — IndexedDB açılamayan bir cihazda kariyer ikinci açılışta
+      yok oluyordu.
+   2) IndexedDB bir açılışta açılamayıp kullanıcı localStorage yolunda aynı
+      yuvada yeni bir kariyer kurduğunda, sonraki başarılı açılış o yeni kaydı
+      IndexedDB'deki eski kariyerin üstüne yazıyordu.
+
+   Bugünkü kural tek cümle: KAYNAK ANCAK HEDEFİN ONU ZATEN TAŞIDIĞI
+   KANITLANIRSA SİLİNİR. Kanıtlanamayan her durumda iki kayıt da kalır. */
+
+/* Kariyer kimliği — yoksa boş dize. Kimliksiz eski kayıtlar hiçbir kimlikle
+   eşleşmez, bu yüzden hiçbir zaman çatal sayılmazlar. */
+function recCid(rec){
+  const c=rec&&rec.S&&rec.S.cid;
+  return (typeof c==='string'&&c)?c:'';
+}
+/* Kaynağın hedefe ne yapacağı. Dönüş:
+   'done'     kaynağın BİREBİR aynısı zaten bir yuvada duruyor — kaynak silinebilir
+   'fork'     aynı kariyer kimliği, farklı içerik — karantinaya (bkz. parkFork)
+   'move'     hedef boş, ya da oyunun hiç açamayacağı bir kalıntı — normal göç
+   'conflict' başka bir kariyer aynı yuvayı istiyor — boş yuvaya kurtarma
+
+   BURADA SIRALAMA YOK, ve olmaması bilinçli. Önceki sürüm "aynı cid + hedef eşit
+   ya da ileri (season, week)" durumunu kaynağın hedefte KAPSANDIĞI kanıtı sayıp
+   kaynağı siliyordu. Değildi:
+
+   - Aynı hafta içinde ayrışmış iki kopyanın (season, week)'i eşittir ve
+     içerikleri farklıdır; sıralama onları ayıramaz.
+   - İleri haftadaki bir kopya, geride kalan kopyaya teslim edilmiş bir satın
+     alma tokenını (S.iap.t) taşımıyor olabilir. İlerleme kapsama demek değil.
+
+   Kayıt biçimi bir sürüm/soy zinciri taşımıyor, yani "şu kopya şunun torunudur"
+   diye bir kanıt yok. Elimizdeki tek gerçek kanıt TAM EŞDEĞERLİK: korunması
+   gereken bütün yük (v, S, PID) bit bit aynı. Kaynak yalnız o zaman siliniyor. */
+function moveVerdict(dst){
+  if(dst===undefined||dst===null)return 'move';
+  /* İleri sürümlü kayıt bozuk değil, daha yeni bir sürümün yazdığı kayıttır;
+     loadSlot() ile aynı kural, asla üstüne yazılmaz. */
+  if(schemaOf(dst)>SAVE_SCHEMA)return 'conflict';
+  /* Oyunun açamadığı bir kalıntı gerçek bir kariyerin önünü kesmiyor. */
+  if(!validSave(migrateSave(dst)))return 'move';
+  return 'conflict';
+}
+/* Bu kimliği taşıyan CANLI yuva. Karantinadakiler canlı değil, burada yoklar. */
+function cidSlot(cid){
+  if(!cid)return 0;
+  for(let n=1;n<=SLOTS;n++){const m=META['s'+n];if(m&&m.cid===cid)return n;}
+  return 0;
+}
+/* Özet karşılaştırması — ts hariç, çünkü kurtarılan kopyanın özeti kurtarma
+   anında üretiliyor ve saati farklı olur. Ucuz ön eleme; kararı tam
+   karşılaştırma veriyor. */
+function metaLike(a,b){
+  return !!(a&&b&&a.cid===b.cid&&a.agent===b.agent&&a.agency===b.agency&&
+            a.season===b.season&&a.week===b.week&&a.cash===b.cash&&
+            a.rep===b.rep&&a.clients===b.clients);
+}
+/* Bu kaydın BİREBİR aynısı zaten bir yuvada duruyor mu? Kurtarma ya da park
+   yazıldıktan SONRA, kaynak silinmeden kesilen bir açılış aksi halde her
+   seferinde bir kopya daha üretirdi. Önce özetten eleniyor: çakışma yolunda
+   normalde hiçbir tam okuma yapılmıyor. */
+function findSameRec(want,mo){
+  let p=Promise.resolve(0);
+  for(let m=1;m<=SLOTS;m++)p=p.then(((k)=>hit=>{
+    if(hit||!metaLike(META['s'+k],mo))return hit;
+    return recGet('s'+k).then(r=>(r&&JSON.stringify(r)===want)?k:0,()=>0);
+  })(m));
+  return p;
+}
+/* Kurtarma için boş yuva. "Boş" üç kaynağa birden bakıyor: özet, arka ucun
+   gerçek anahtarları ve localStorage'da bekleyen başka bir göç kaynağı. */
+function freeSlotFor(busy){
+  busy=busy||{};
+  for(let m=1;m<=SLOTS;m++){
+    if(META['s'+m]||busy['s'+m])continue;
+    if(lsGet(SLOTKEY(m))!==null)continue;
+    return m;
+  }
+  return 0;
+}
+/* Yer bulunamadığı için localStorage'da bekleyen kayıtlar. Menü bunu gösteriyor
+   (js/ui.js, cmRescueHtml): sessizce beklemesi, kullanıcı açısından kaybolmakla
+   aynı şey olurdu. why: 'noRoom' boş yuva yok, 'forkBusy' karantina dolu. */
+let RESCUE=[];
+let RESCUED=0;
+/* Yuva boşalınca başlatılan kurtarmanın sözü. Oyun beklemiyor (menü kurtarma
+   bitince kendini çiziyor); testlerin belirlenimci olması için duruyor. */
+let RESCUEP=null;
+function rescuePending(){return RESCUE;}
+function rescuedCount(){return RESCUED;}
+function rescueTask(){return RESCUEP||Promise.resolve();}
+
+/* ================= KARANTİNA (AYNI KİMLİKLİ ÇATAL) =================
+   Aynı cid'yi taşıyan ikinci bir kopya boş bir yuvaya KONMUYOR. Konsaydı
+   kimlik iki canlı kariyeri birden gösterirdi ve cid'ye bağlı her şey bozulurdu:
+
+   - iapSlotOfCid() META'yı tarayıp İLK eşleşen yuvayı döner; ödeme yanlış
+     kopyaya teslim edilebilirdi.
+   - deleteSlot() cid'ye bakıp rwDropCid()/iapOrphanCid() çağırıyor; bir kopyayı
+     silmek diğerinin bekleyen ücretli işlemini hedefsiz bırakırdı.
+   - İki kopya da aynı S.iap.t tokenını taşırsa bir satın alma iki kariyerde
+     birden kapasite verirdi.
+
+   Kopyayı kurtarmak için cid'yi kendiliğinden değiştirmek de çözüm değil: cid
+   ödemenin hedefi, ve onu sessizce değiştirmek bekleyen bir işlemin hedefini
+   koparır. Bu yüzden ikinci kopya karantinada duruyor — kalıcı, menüde görünür,
+   ama canlı bir kariyer değil. Ne yapılacağına KULLANICI karar veriyor. */
+const FORKKEY=n=>'f'+n;
+function forkList(){
+  const fk=(META&&META.fk)||{};
+  return Object.keys(fk).filter(k=>fk[k]&&fk[k].meta)
+    .map(k=>({key:k,slot:fk[k].slot,meta:fk[k].meta}));
+}
+function forkOf(key){const fk=(META&&META.fk)||{};return fk[key]||null;}
+/* Özet ve kayıt ayrı yazılıyor, bu yüzden dizin KALICI olmadan kaynak silinmiyor:
+   yazılmış ama dizine girmemiş bir kopya kullanıcı için görünmez olurdu. Tanık
+   (js/store.js — seal) depolamaya verilen özetin gerçekten girdiyi taşıdığını
+   söylüyor, canlı META'yı sonradan okumuyor. */
+function noteFork(k,n,mo){
+  if(!META.fk||typeof META.fk!=='object')META.fk={};
+  META.fk[k]={slot:n,meta:mo};
+  return metaDirtyC(m=>!!(m&&m.fk&&m.fk[k]));
+}
+function dropFork(k){
+  if(META.fk)delete META.fk[k];
+  return metaDirtyC(m=>!(m&&m.fk&&m.fk[k]));
+}
+function parkFork(n,rec,want,mo){
+  const k=FORKKEY(n);
+  return recGet(k).then(cur=>{
+    if(cur&&JSON.stringify(cur)===want){
+      /* Zaten park edilmiş; dizin ya da kaynak silme adımı yarıda kalmış. */
+      return noteFork(k,n,mo).then(okw=>{
+        if(okw)lsDel(SLOTKEY(n));
+        return okw?'parked':'verifyFailed';
+      });
+    }
+    /* Dolu ve BAŞKA bir kayıt. Dizinde karşılığı varsa kullanıcının kararını
+       bekleyen gerçek bir çatal demektir: dokunmuyoruz, kaynak da yerinde kalıyor.
+       Dizinde karşılığı YOKSA o baytlara hiçbir yoldan ulaşılamıyor ve oraya
+       ancak iki yoldan düşülür — park dizini yazamadı (kaynak hâlâ ls'te) ya da
+       kurtarma kaydı yuvaya yazıp silmeye gelemedi (kayıt yuvada). İki durumda
+       da veri başka bir yerde duruyor, yani üstüne yazmak kayıp değil. */
+    if(cur&&forkOf(k)){RESCUE.push({from:n,meta:mo,why:'forkBusy'});return 'forkBusy';}
+    return recPut(k,rec)
+      .then(()=>recGet(k))
+      .then(back=>{
+        if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+        return noteFork(k,n,mo).then(okw=>{
+          if(okw)lsDel(SLOTKEY(n));
+          return okw?'parked':'verifyFailed';
+        });
+      });
+  }).catch(e=>{noteSaveFail(k,e);return 'writeFailed';});
+}
+/* Kullanıcının kararı 1: saklanan kopyayı kur.
+   Kurtarma BİREBİR: kayıt olduğu gibi yazılıyor — kimlik de, ödeme defteri de,
+   rezervasyonlar da değişmiyor. Bir önceki sürüm burada yeni bir cid atayıp
+   S.iap'ı düşürüyordu; ikisi de yanlıştı:
+
+   - Ödenmiş bir token YALNIZ saklanan kopyada duruyor olabilir (oynanan kopya o
+     satın almayı hiç görmemiş olabilir). Onu düşürmek, "kurtarma" adı altında
+     para ödenmiş bir kaydı silmekti — üstelik karantina kaydı da hemen ardından
+     siliniyordu, yani geri getirilemiyordu.
+   - cid bekleyen bir satın almanın hedefi (iapSlotOfCid). Sessizce değiştirmek
+     o bağı koparır.
+
+   Bunun bedeli, kurtarmanın bir ÖN KOŞULU olması: bu kimlik hiçbir yuvada canlı
+   olmamalı, çünkü aynı cid iki canlı yuvada duramaz. Canlı ikiz yerindeyken
+   kurtarma yapılmıyor ve ekran nedenini yazıyor — kayıplı bir kopya üretmek
+   yerine iki özgün kayıt da olduğu gibi korunuyor. İki defteri birleştirmek de
+   çözüm değil: tavan, rezervasyon ve token tekilliği ayrı ayrı bozulurdu.
+
+   Kuyruk önce boşaltılıyor: yuva silme kuyruktan geçiyor, recPut ise geçmiyor —
+   uçuştaki bir silme, az önce yazdığımız kaydı silebilirdi. */
+function forkRestore(key){
+  if(!forkOf(key))return Promise.resolve('gone');
+  return saveDrain().then(()=>recGet(key)).then(rec=>{
+    if(!forkOf(key))return 'gone';
+    const d=migrateSave(rec);
+    if(!validSave(d))return 'broken';
+    /* Kanıt kaydın KENDİSİNDEN okunuyor, dizinden değil: dizin eskimiş olabilir. */
+    if(cidSlot(recCid(rec)))return 'live';
+    const m=freeSlotFor();
+    if(!m)return 'noRoom';
+    const want=JSON.stringify(rec);
+    return recPut('s'+m,rec)
+      .then(()=>recGet('s'+m))
+      .then(back=>{
+        if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+        META['s'+m]=metaOf(d.S);
+        if(META.fk)delete META.fk[key];
+        return metaDirtyC(mm=>!!(mm&&mm['s'+m])&&!(mm.fk&&mm.fk[key])).then(okw=>{
+          if(!okw)return 'verifyFailed';
+          /* Geçiş BİREBİR tamamlandı ve doğrulandı; ancak o zaman karantina
+             kopyası silinebilir. Silinemese bile veri kaybı yok — dizinsiz kalan
+             baytların üstüne bir sonraki park yazabilir (bkz. parkFork). */
+          return recDel(key).then(()=>{forkFreed();return 'restored';},()=>'restored');
+        });
+      });
+  }).catch(err=>{noteSaveFail(key,err);return 'writeFailed';});
+}
+/* Kullanıcının kararı 2: kopyayı sil. Sessiz bir kayıp değil — ekran soruyor. */
+function forkDiscard(key){
+  if(!forkOf(key))return Promise.resolve(false);
+  return recDel(key).then(()=>dropFork(key).then(()=>{forkFreed();return true;}),
+                          e=>{noteSaveFail(key,e);return false;});
+}
+/* Karantina yeri boşaldı: yalnız orası dolu olduğu için localStorage'da bekleyen
+   bir kaynak varsa şimdi park edilebilir. Beklenmiyor — menü kendini çiziyor. */
+function forkFreed(){
+  if(RESCUE.some(r=>r.why==='forkBusy'))RESCUEP=retryRescue();
 }
 
-/* localStorage'daki bir kaydı arka uca taşır. Kayıpsız olmasının tek yolu
-   sırayı bozmamak: yaz → geri oku → aynı mı diye bak → ancak o zaman sil.
-   Karşılaştırma tam serileştirme üzerinden; pahalı ama kayıt başına ömürde bir
-   kez çalışıyor ve "taşıdım sandım" ihtimalini bırakmıyor. */
-function moveOneSlot(n){
+/* Çakışma: BAŞKA bir kariyer aynı yuvayı istiyor. İkisi de kalıyor —
+   localStorage'dan gelen BOŞ BİR YUVAYA kurtarılıyor ve menüde normal bir
+   kariyer olarak görünüyor. Boş yuva yoksa hiçbir şey silinmiyor: kaynak yerinde
+   bekliyor, menü kullanıcıya bir yuva boşaltmasını söylüyor ve yuva boşalınca
+   kurtarma kendiliğinden tamamlanıyor. */
+function rescueOneSlot(n,rec,want,mo,busy){
+  /* Oyunun açamayacağı bir kalıntı için yuva harcamıyoruz. Silmiyoruz da. */
+  if(!mo)return Promise.resolve('invalid');
+  const m=freeSlotFor(busy);
+  if(!m){RESCUE.push({from:n,meta:mo,why:'noRoom'});return Promise.resolve('noRoom');}
+  return recPut('s'+m,rec)
+    .then(()=>recGet('s'+m))
+    .then(back=>{
+      if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+      busy['s'+m]=true;
+      META['s'+m]=mo;metaDirty();
+      lsDel(SLOTKEY(n));
+      RESCUED++;
+      return 'rescued';
+    })
+    .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+}
+
+function moveOneSlot(n,busy){
+  busy=busy||{};
   const raw=lsGet(SLOTKEY(n));
   if(raw===null)return Promise.resolve('none');
   const d=jparse(raw);
@@ -6365,20 +6758,58 @@ function moveOneSlot(n){
   if(!d||typeof d!=='object')return Promise.resolve('unparsable');
   const rec={v:SAVE_SCHEMA,S:d.S,PID:d.PID};
   const want=JSON.stringify(rec);
-  return recPut('s'+n,rec)
-    .then(()=>recGet('s'+n))
-    .then(back=>{
-      if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
-      lsDel(SLOTKEY(n));
-      if(!META['s'+n]&&validSave(rec)){META['s'+n]=metaOf(rec.S);metaDirty();}
-      return 'moved';
-    })
-    .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+  const mo=validSave(rec)?metaOf(rec.S):null;
+  /* Önce hedef okunuyor. Okuma hatasının AYRI bir cevap olması bu düzeltmenin
+     özü: "okuyamadım" ile "orada bir şey yok" aynı sayılırsa geçici bir hata
+     mevcut kariyerin üstüne yazdırır. Hata durumunda hiçbir şey yazılmıyor,
+     kaynak yerinde duruyor, göç bir sonraki açılışa kalıyor. */
+  return recGet('s'+n).then(dst=>{
+    if(dst&&JSON.stringify(dst)===want){lsDel(SLOTKEY(n));return 'done';}
+    /* Aynı kayıt başka bir yuvaya daha önce taşınmış olabilir. */
+    return findSameRec(want,mo).then(hit=>{
+      if(hit){lsDel(SLOTKEY(n));return 'done';}
+      /* Kimlik CANLI bir yuvada zaten varsa bu kayıt o kariyerin ikinci
+         kopyasıdır — hedef yuva boş olsa bile karantinaya gidiyor, çünkü
+         yazılsaydı aynı cid iki canlı yuvada görünürdü. */
+      const cs=recCid(rec);
+      if(cs&&cidSlot(cs))return parkFork(n,rec,want,mo);
+      const v=moveVerdict(dst);
+      if(v==='conflict')return rescueOneSlot(n,rec,want,mo,busy);
+      return recPut('s'+n,rec)
+        .then(()=>recGet('s'+n))
+        .then(back=>{
+          if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+          busy['s'+n]=true;
+          lsDel(SLOTKEY(n));
+          if(!META['s'+n]&&mo){META['s'+n]=mo;metaDirty();}
+          return 'moved';
+        })
+        .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+    });
+  },e=>{noteSaveFail('s'+n,e);return 'readFailed';});
 }
 function migrateLsSlots(){
-  let p=Promise.resolve();
-  for(let n=1;n<=SLOTS;n++)p=p.then(((k)=>()=>moveOneSlot(k))(n));
-  return p;
+  RESCUE=[];
+  /* Arka uç zaten localStorage ise taşınacak bir YER yok: kaynak anahtarı ile
+     hedef anahtarı aynı. Eski sürüm bunu fark etmiyordu (yukarıdaki 1. yol). */
+  if(SAVEH.backend==='ls')return Promise.resolve();
+  return recSlotKeys().then(keys=>{
+    const busy={};keys.forEach(k=>{busy[k]=true;});
+    let p=Promise.resolve();
+    for(let n=1;n<=SLOTS;n++)p=p.then(((k)=>()=>moveOneSlot(k,busy))(n));
+    return p;
+  },e=>{
+    /* Hedefin durumunu okuyamadık. Okuyamamak "kayıt yok" demek değil: hiçbir
+       şey yazılmıyor, kaynaklar yerinde kalıyor, göç bir sonraki açılışa. */
+    noteSaveFail('init',e);
+  });
+}
+/* Yuva boşalınca bekleyen kurtarmayı tamamlar. Kuyruk boşalmadan bakmak yuvayı
+   hâlâ dolu görürdü — silme de aynı kuyruktan geçiyor. */
+function retryRescue(){
+  return saveDrain().then(migrateLsSlots).then(()=>{
+    if(!curSlot&&typeof render==='function')render();
+  });
 }
 
 /* ================= ESKİ KAYDIN DEVRİ =================
@@ -7973,18 +8404,274 @@ function iapOwned(id) {
    orphan/unbound/undeliverable kayıtları hiçbir yolda silinmiyor; consume/ack
    de yapılmıyor. Onaylanmayan satın almayı Play kendisi iade ediyor — ama biz
    onu "iade edildi" diye YAZMIYORUZ, çünkü doğrulayamıyoruz. */
-let IAPQ = null;                      // {v, q:{tok:rec}} — diskteki kaydın aynası
+let IAPQ = null;                      // {v, q:{tok:rec}, cf?} — diskteki kaydın aynası
 let IAPQL = null;                     // yükleme sözü (tekilleştirme)
+let IAPQE = '';                       // '' | 'read' | 'bad' | 'merge' — yükleme neden tutmadı
 
+/* ================= KUYRUĞUN YÜKLENMESİ =================
+   Üç ayrı hata, ve üçü de bir zamanlar "kuyruk boş" diye okunuyordu:
+
+   1) DEPOLAMA HENÜZ HAZIR DEĞİLKEN OKUMAK. SAVEH.backend 'ls' değeriyle
+      başlıyor ve storeBackendInit() bitene kadar öyle kalıyor. iapInit() ilk
+      çizimden hemen sonra, storeInit() BEKLENMEDEN çağrılıyor — o anda yapılan
+      recGet('iapq') IndexedDB'li bir cihazda localStorage'a bakar, orayı boş
+      bulur ve kuyruğu "yüklendi, boş" diye işaretlerdi. Sonraki her iapqSave()
+      o boş aynayı IndexedDB'ye yazar, yani diskteki ÖDENMİŞ işlem kayıtlarını
+      silerdi. Bu yüzden okuma storeReadyP()'nin arkasında: arka uç seçilmeden
+      kuyruğa bakılmıyor.
+
+   2) OKUMA HATASI ve BOZUK KAYIT. "Okuyamadım" ile "orada bir şey yok" aynı
+      cevap değil — js/saves.js'teki göç aynı ayrımı aynı sebeple yapıyor.
+      Gerçekten bulunmayan kayıt boş kuyruktur ve ilk işlemde yazılır; okuma
+      hatası ya da tanınmayan bir yük ise KUYRUK YOK demektir: IAPQ null kalıyor,
+      hiçbir şey yazılmıyor ve satın alma kapalı kalıyor (iapAvailable).
+      localStorage tarafında bu ayrım recReadLs() ile yapılıyor, çünkü
+      lsGet/jparse/recGet zincirinin üçü de hatayı null'a çeviriyor.
+
+   3) ÖNCEKİ OTURUMUN localStorage KUYRUĞUNU GÖRMEMEK. IndexedDB bir açılışta
+      açılamazsa katman localStorage'a düşüyor ve o oturumda ödenen işlemler
+      'menajerIapQV1' anahtarına yazılıyor. Bir sonraki açılışta IndexedDB
+      açılınca recGet() yalnız oraya bakıyordu: önceki oturumun ücretli kayıtları
+      görünmez kalıyordu. Artık IndexedDB açılışında localStorage kaynağı da
+      okunuyor ve BİRLEŞTİRİLİYOR (iapqAdopt).
+
+   Sonuç null dönüyor, REDDETMİYOR: çağıranların yarısı açılış yolunda ve
+   yakalanmamış bir ret orada hiçbir şey kazandırmaz. */
 function iapqBlank() { return { v: 1, q: {} }; }
+function iapqReady() { return !!IAPQ; }
+function iapqErr() { return IAPQE; }
+
+/* Alan sırasından bağımsız karşılaştırma anahtarı. "İki kayıt aynı mı" sorusu
+   göçte tam eşdeğerlikle cevaplanıyor (js/saves.js moveVerdict ile aynı kural);
+   JSON.stringify'ın anahtar sırası kaynağa göre değiştiği için kendi başına
+   yetmiyor. */
+function iapqKey(o) {
+  if (o === null || typeof o !== 'object') return JSON.stringify(o === undefined ? null : o);
+  if (Array.isArray(o)) return '[' + o.map(iapqKey).join(',') + ']';
+  return '{' + Object.keys(o).sort().map(k => JSON.stringify(k) + ':' + iapqKey(o[k])).join(',') + '}';
+}
+/* Tanıdığımız bir kuyruk mu. Tanımadığımız her yük 'bad': üstüne yazmak yerine
+   olduğu yerde bırakılıyor. */
+function iapqShape(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  if (!v.q || typeof v.q !== 'object' || Array.isArray(v.q)) return null;
+  if (v.cf !== undefined && (!v.cf || typeof v.cf !== 'object' || Array.isArray(v.cf))) return null;
+  const bad = Object.keys(v.q).some(k => {
+    const r = v.q[k];
+    return !r || typeof r !== 'object' || Array.isArray(r) || typeof r.st !== 'string';
+  });
+  return bad ? null : v;
+}
+
+/* ================= İKİ DEPODAKİ KUYRUĞUN BİRLEŞTİRİLMESİ =================
+   Bu birleştirme bir UZLAŞTIRICI DEĞİL. Yaptığı tek şey kaybı önlemek: iki
+   depodaki kayıtları yan yana getirmek, güvenle tekilleştirilebilenleri
+   tekilleştirmek ve geri kalanı OLDUĞU GİBİ saklayıp o tokenı eylemsiz
+   bırakmak.
+
+   Neden bir sıralama YOK. Aynı tokenın kimlik alanlarının uyuşması, iki kaydın
+   TESLİMAT ve KAPANIŞ bilgisinin eşdeğer olduğunu kanıtlamaz: 'done' diyen
+   kopya o kapanışın gerçekten olduğunu bize kanıtlamıyor (sunucu yok,
+   getPurchases tüketilmiş tokenı zaten göstermiyor) ve 'ready' diyen kopya da
+   teslimatın yapılmadığını kanıtlamıyor. Yerel defterin ikinci bir hak
+   yazmaması ayrı bir güvence ve iyi bir şey — ama atılan kaydın taşıdığı
+   bilgiyi geri getirmiyor. Bu yüzden bir enum sırası ya da 'done' etiketi
+   yüzünden diğer özgün kayıt ATILMIYOR.
+
+   Alan sınıfları:
+     KİMLİK    bu tokenın hangi satın alma olduğu
+     DURUM     teslimat ve kapanış bilgisi — çelişirse UZLAŞTIRILMIYOR
+     KÖKEN     kaydın yerelde ne zaman ve hangi yolla oluştuğu; teslimat
+               hakkında hiçbir şey söylemiyor, bu yüzden farkı çelişki değil */
+const IAPQ_IDF = ['pid', 'sku', 'sc', 'cid', 'att'];
+const IAPQ_PROV = { at: 1, src: 1 };
+
+/* Bir tarafın bu token için taşıdığı SÜRÜMLER. Çelişki daha önce kaydedildiyse
+   özgün sürümler onlardır — kaydın kendisi yalnızca onların yerini tutan
+   eylemsiz bir işaret. Bu, yeniden benimsemenin kaydı büyütmemesinin de sebebi:
+   sürümler her zaman ÖZGÜN kayıtlar, türetilmiş olan değil. */
+function iapqVers(side, tok) {
+  const cf = side && side.cf && side.cf[tok];
+  if (cf && cf.length) return cf.slice();
+  const r = side && side.q && side.q[tok];
+  return r ? [r] : [];
+}
+/* Aynı sürümü iki kez saklamıyoruz: aynı kaynak tekrar tekrar benimsenirse
+   liste büyümemeli. */
+function iapqUniq(list) {
+  const seen = {}, out = [];
+  list.forEach(r => { const k = iapqKey(r); if (!seen[k]) { seen[k] = 1; out.push(r); } });
+  return out;
+}
+/* İki sürüm TEK bir kayda indirgenebilir mi. Yalnız iki şey yapılıyor:
+     - eksik bir alan diğer taraftan tamamlanıyor (yokluk çelişki değil),
+     - köken alanlarının farkı yok sayılıyor (at'ta en erken olan kalıyor;
+       src yalnız tanı amaçlı ve ikisinden biri yeterli).
+   BAŞKA hiçbir farkı çözmüyor. Dönüş null ise indirgenemez. */
+function iapqFold2(a, b) {
+  const out = {};
+  const keys = {};
+  Object.keys(a).forEach(k => { keys[k] = 1; });
+  Object.keys(b).forEach(k => { keys[k] = 1; });
+  let clash = false;
+  Object.keys(keys).forEach(k => {
+    const x = a[k], y = b[k];
+    const hx = (x !== undefined && x !== null), hy = (y !== undefined && y !== null);
+    if (!hx) { out[k] = y; return; }
+    if (!hy) { out[k] = x; return; }
+    if (x === y) { out[k] = x; return; }
+    if (IAPQ_PROV[k]) { out[k] = (k === 'at') ? Math.min(x, y) : x; return; }
+    clash = true;                       // durum/teslimat ya da tanımadığımız bir alan
+  });
+  return clash ? null : out;
+}
+/* Çelişkinin yerini tutan EYLEMSİZ kayıt. Kendisi bir sürüm değil: özgün
+   sürümler cf'te duruyor. Yalnız BÜTÜN sürümlerin hemfikir olduğu kimlik
+   alanlarını taşıyor; çelişen her alan null — özellikle att, çünkü yanlış bir
+   att başka bir denemenin rezervasyonunu düşürürdü (iapReapRes). */
+function iapqDisputedRec(tok, vers) {
+  const rec = { tok: tok };
+  IAPQ_IDF.forEach(f => {
+    let v = null, seen = false, clash = false;
+    vers.forEach(r => {
+      const x = r[f];
+      if (x === undefined || x === null) return;
+      if (!seen) { v = x; seen = true; } else if (x !== v) clash = true;
+    });
+    rec[f] = (clash || !seen) ? null : v;
+  });
+  /* 'disputed' YENİ BİR ÇÖZÜM YOLU DEĞİL, bir durdurma işareti: iapAdvance'ın
+     bilinen dallarının hiçbirine uymuyor ve iapIngest onu ilerletmiyor, yani
+     teslimat da consume/ack de BAŞLAMIYOR. */
+  rec.st = 'disputed';
+  rec.at = Math.min.apply(null, vers.map(r => r.at || 0).filter(n => n > 0).concat([Date.now()]));
+  rec.note = 'merge';
+  return rec;
+}
+/* Bir tokenın bütün sürümlerinden tek kayıt + (gerekiyorsa) çelişki listesi. */
+function iapqFold(tok, vers) {
+  vers = iapqUniq(vers);
+  if (!vers.length) return null;
+  if (vers.length === 1) return { rec: vers[0], cf: null };
+  if (vers.length === 2) {
+    const one = iapqFold2(vers[0], vers[1]);
+    if (one) return { rec: one, cf: null };
+  }
+  return { rec: iapqDisputedRec(tok, vers), cf: vers };
+}
+/* İki kuyruğun birleşimi. Bir tarafta olan token her zaman korunuyor; iki
+   tarafta olan token indirgenebiliyorsa indirgeniyor, indirgenemiyorsa
+   sürümleriyle birlikte saklanıyor. */
+function iapqMergeAll(dst, src) {
+  const out = { v: 1, q: {} };
+  const cf = {};
+  const toks = {};
+  [dst, src].forEach(s => {
+    Object.keys((s && s.q) || {}).forEach(k => { toks[k] = 1; });
+    Object.keys((s && s.cf) || {}).forEach(k => { toks[k] = 1; });
+  });
+  Object.keys(toks).forEach(tok => {
+    const f = iapqFold(tok, iapqVers(dst, tok).concat(iapqVers(src, tok)));
+    if (!f) return;
+    out.q[tok] = f.rec;
+    if (f.cf) cf[tok] = f.cf;
+  });
+  if (Object.keys(cf).length) out.cf = cf;
+  return out;
+}
+
+/* localStorage kaynağını IndexedDB hedefine devralır.
+   Sıra, s1..s3 göçününkiyle aynı ve aynı sebeple: YAZ → TANIK → GERİ OKU →
+   ANCAK O ZAMAN KAYNAĞI SİL. Tanık "içeriğim depolamaya verildi" diyor; yalnız
+   taze bir okuma "araya kimse yazmadı" diyor. Her doğrulanamayan adımda kaynak
+   yerinde kalıyor ve kuyruk YÜKLENMEMİŞ sayılıyor — bir sonraki iapRetry()
+   kaldığı yerden devam ediyor. */
+function iapqAdopt(dst) {
+  const r = recReadLs('iapq');
+  if (r.st === 'err') return Promise.resolve({ ok: false, err: 'read' });
+  if (r.st === 'bad') return Promise.resolve({ ok: false, err: 'bad' });
+  if (r.st === 'none') return Promise.resolve({ ok: true, q: dst });
+  const src = iapqShape(r.v);
+  if (!src) return Promise.resolve({ ok: false, err: 'bad' });
+  /* Kaynak boşsa taşınacak bir şey yok: hedefte hiç kayıt olmayabilir ve
+     olmayan bir kaydı "geri okuyup doğrulamak" mümkün değil. */
+  if (!Object.keys(src.q).length && !Object.keys(src.cf || {}).length) {
+    recDelLs('iapq');
+    return Promise.resolve({ ok: true, q: dst });
+  }
+  const merged = iapqMergeAll(dst, src);
+  const done = () => { recDelLs('iapq'); return { ok: true, q: merged }; };
+  const prove = () => recGet('iapq').then(
+    back => (back && iapqKey(back) === iapqKey(merged)) ? done() : { ok: false, err: 'merge' },
+    () => ({ ok: false, err: 'merge' }));
+  if (iapqKey(merged) === iapqKey(dst)) return prove();   // hedef zaten kapsıyor
+  return queueRec('iapq', () => merged, w => iapqKey(w) === iapqKey(merged))
+    .then(ok => ok ? prove() : { ok: false, err: 'merge' });
+}
+
+/* Arka uca göre okuma. Arka uç zaten localStorage ise KAYNAK İLE HEDEF AYNI
+   ANAHTAR olur ve göç diye bir şey yoktur — js/saves.js'in migrateLsSlots()'u
+   aynı tuzağa aynı cevabı veriyor. */
+function iapqRead() {
+  if (saveBackend() === 'ls') {
+    const r = recReadLs('iapq');
+    if (r.st === 'err') return Promise.resolve({ ok: false, err: 'read' });
+    if (r.st === 'bad') return Promise.resolve({ ok: false, err: 'bad' });
+    if (r.st === 'none') return Promise.resolve({ ok: true, q: iapqBlank() });
+    const q = iapqShape(r.v);
+    return Promise.resolve(q ? { ok: true, q: q } : { ok: false, err: 'bad' });
+  }
+  return recGet('iapq').then(rec => {
+    let dst;
+    if (rec === null || rec === undefined) dst = iapqBlank();
+    else { dst = iapqShape(rec); if (!dst) return { ok: false, err: 'bad' }; }
+    return iapqAdopt(dst);
+  }, () => ({ ok: false, err: 'read' }));
+}
+
 function iapqLoad() {
   if (IAPQ) return Promise.resolve(IAPQ);
-  if (IAPQL) return IAPQL;
-  IAPQL = recGet('iapq').then(rec => {
-    IAPQ = (rec && rec.q && typeof rec.q === 'object') ? rec : iapqBlank();
-    return IAPQ;
-  }, () => { IAPQ = iapqBlank(); return IAPQ; });
+  if (IAPQL) return IAPQL;                  // uçuştaki okuma: ikinci bir okuma DA, ikinci bir göç DE açılmıyor
+  IAPQL = storeReadyP().then(iapqRead).then(r => {
+    if (r.ok) { IAPQ = r.q; IAPQE = ''; return IAPQ; }
+    IAPQL = null; IAPQE = r.err; return null;
+  }, () => { IAPQL = null; IAPQE = 'read'; return null; });
   return IAPQL;
+}
+
+/* ================= HAZIRLIK: YÜKLEME + İLK UZLAŞTIRMA, TEK SEFER =================
+   Üç yol aynı işi isteyebiliyor: açılış (iapInit), kariyer açma
+   (iapOnCareerOpen) ve mağaza açma (js/ui.js pushV → iapRetry). iapqLoad()
+   okumayı ve göçü zaten tekilleştiriyor, ama ONDAN SONRAKİ uzlaştırma ayrı bir
+   iş: üç yol da kendi turunu açsaydı aynı anda üç getPurchases() ve üç ingest
+   zinciri koşardı. Uçuş kilidi (IAPS.flight) yalnız AYNI TOKENIN teslimatını
+   tekilleştiriyor — bütün uzlaştırmayı değil, ve ona öyleymiş gibi
+   güvenilemez. Bu yüzden ikisi tek bir söze bağlı.
+
+   Başarısızlıkta söz siliniyor, yani bir sonraki kullanıcı eylemi yeniden
+   deneyebiliyor. Başarıda kalıyor: ikinci bir açılış uzlaştırması yok. Satın
+   alma sonrasındaki uzlaştırma (iapBuy'ın PENDING yolu) bilerek buradan
+   GEÇMİYOR — o taze bir sorgu istiyor ve uçuştaki eski bir tura bağlanmamalı. */
+let IAPQP = null;
+function iapqPrepare() {
+  if (IAPQP) return IAPQP;
+  IAPQP = iapqLoad().then(q => {
+    if (!q) { IAPQP = null; return null; }
+    return iapReconcile().then(() => q, () => q);
+  }, () => { IAPQP = null; return null; });
+  return IAPQP;
+}
+/* Kontrollü yeniden deneme. Kuyruk yüklenemediyse tek giriş noktası bu:
+   mağaza açılırken (js/ui.js pushV) ve kariyer açılırken çağrılıyor, zamanlayıcı
+   YOK. Tekilleştirme iapqPrepare()'de: aynı anda gelen çağrılar aynı sözü alır,
+   ikinci bir okuma da, ikinci bir göç de, ikinci bir uzlaştırma da açılmaz. */
+function iapRetry() {
+  if (IAPQ) return Promise.resolve('again');
+  /* Köprü yokken (web/PWA/tek dosya) yüklenecek bir şey de yok: kuyruk yalnız
+     Play işlemleri için var ve o sürümlerde hiç yazılmıyor. */
+  if (!iapBridge()) return Promise.resolve('nobridge');
+  return iapqPrepare().then(q => { iapRepaint(); return q ? 'ok' : 'noq'; },
+    () => { iapRepaint(); return 'noq'; });
 }
 /* Kuyruğu diske verir ve GERÇEKTEN yazıldığını tanıkla doğrular. Ücretli bir
    kaydın "yazıldı sanılıp" kaybolduğu yol kapalı olsun diye söz döndürüyor. */
@@ -8006,6 +8693,12 @@ function iapPendingN() { return iapqCount('pending'); }
 function iapStuckN() {
   return iapqCount('orphan') + iapqCount('unbound') + iapqCount('undeliverable');
 }
+/* Durumu NETLEŞTİRİLEMEYEN işlemler. 'stuck' ile bilerek AYRI sayılıyor:
+   shopTxStuck "hiçbir hak verilmedi" diyor ve bu, çelişen sürümlerden biri
+   teslimatın yapıldığını söylüyorken DOĞRU DEĞİL. shopTxUnclear yalnız
+   kanıtlayabildiğimizi söylüyor — durumu netleştiremedik, kaydı saklıyoruz,
+   başka adım atmıyoruz ve kullanıcının halihazırdaki hakları değişmiyor. */
+function iapUnclearN() { return iapqCount('disputed'); }
 /* Hak verilmiş ama kapanışı DOĞRULANAMAMIŞ işlemler. 'stuck' değil — kullanıcı
    aldığını aldı; ama "tamamlandı" da değil, çünkü tamamlandığını kanıtlayamıyoruz. */
 function iapUnverifiedN() { return iapqCount('unverified'); }
@@ -8083,19 +8776,24 @@ const IAPS = {
   price: {},        // ürün id → Play'in YERELLEŞTİRİLMİŞ fiyat dizesi
   prod: null,       // 'ok' | 'fail' | null — ürün sorgusunun sonucu
   busy: '',         // '' | ürün id — akış açıkken
-  flight: {},       // token → 1: aynı token için uçuştaki teslimat (geri almayı güvenli kılar)
+  flight: {},       // token → 1: aynı token için uçuştaki TESLİMAT (geri almayı güvenli kılar)
+  fin: {},          // token → 1: aynı token için uçuştaki KAPANIŞ (consume/ack)
   qErr: false,      // son hak sorgusu başarısız mı
   boot: false
 };
 /* Satın alma yapılabilir mi. Fiyat sorgusu tutmadıysa da KAPALI: fiyatı
    bilinmeyen bir ürünü satmak, kullanıcıya ne ödeyeceğini söylememek olurdu. */
 function iapAvailable() {
-  return !!(IAP.wired && iapBridge() && IAPS.sup === true && IAPS.prod === 'ok');
+  /* IAPQ olmadan satın alma YOK. Kuyruk, ödenmiş işlemin tek yerel izi; onu
+     okuyamamışken yeni bir ödeme başlatmak, kaydedilemeyecek bir işlem
+     başlatmak olurdu. */
+  return !!(IAP.wired && iapBridge() && IAPS.sup === true && IAPS.prod === 'ok' && IAPQ);
 }
 function iapWhy() {
   if (!IAP.wired) return 'nobill';
   if (!iapBridge()) return 'noplay';
   if (IAPS.sup === false) return 'nostore';
+  if (!IAPQ) return 'noq';
   if (!iapAvailable()) return 'noprod';
   return '';
 }
@@ -8273,9 +8971,15 @@ function iapDeliverDevice(rec) {
   PREFS.iap.t[rec.tok] = rec.pid;
   PREFS.iap.miss = 0;
   savePrefs();
+  return Promise.resolve(iapDevicePersisted(rec.tok, rec.pid)
+    ? (again ? 'again' : 'ok') : 'writefail');
+}
+/* Cihaz defterinin DİSKTEKİ hâli bu tokenı taşıyor mu. Bellekteki PREFS bu
+   soruyu cevaplayamaz: yazması tutmamış bir teslimat hakkı bellekte bırakıyor
+   ve ona bakan bir yeniden deneme hiç koşmazdı. */
+function iapDevicePersisted(tok, pid) {
   const back = jparse(lsGet(PREFKEY));
-  const ok = !!(back && back.iap && back.iap.t && back.iap.t[rec.tok] === rec.pid);
-  return Promise.resolve(ok ? (again ? 'again' : 'ok') : 'writefail');
+  return !!(back && back.iap && back.iap.t && back.iap.t[tok] === pid);
 }
 
 /* ================= İŞLEMİ İŞLEME =================
@@ -8285,6 +8989,10 @@ function iapDeliverDevice(rec) {
 
    Android'de purchaseState dizesi: "1" = PURCHASED, "2" = PENDING. */
 function iapIngest(tx, src) {
+  /* KUYRUK YOKSA HİÇBİR ŞEY İŞLENMİYOR. iapqAll() null kuyrukta boş bir nesne
+     döndürüyor, yani buradaki kayıt hiçbir yere yazılmadan teslimata ve
+     consume'a kadar gidebilirdi: para ödenmiş, hak verilmiş, yerel iz YOK. */
+  if (!IAPQ) return Promise.resolve('noq');
   const tok = tx && (tx.purchaseToken || tx.transactionId);
   if (!tok) return Promise.resolve('notoken');
   const pid = iapPidOfSku(tx.productIdentifier);
@@ -8295,35 +9003,81 @@ function iapIngest(tx, src) {
     rec = q[tok] = { tok: tok, sku: tx.productIdentifier, pid: pid,
       sc: iapById(pid).sc, cid: null, att: null, st: 'pending', at: Date.now(), src: src };
   }
-  if (rec.st === 'done') return Promise.resolve('done');
+  /* KAPANMIŞ KAYIT. 'İşlem kapandı' ile 'hak bu cihazda duruyor' AYRI iki
+     şey ve buradaki tek satırlık çıkış ikisini birbirine bağlıyordu: cihaz
+     kapsamlı hak iapReapNoAds tarafından düşürülmüş olabilir ve token geri
+     geldiğinde bir daha yazılmazdı. Kararı veren PLAY'in bu taze yanıtı. */
+  if (rec.st === 'done') return iapRestoreDevice(rec, tx, pid);
 
   /* Hedef kimliği: satın almanın KENDİSİNDEN. Yerel bir tahmin yok. */
   const tag = iapParseTag(tx.appAccountToken);
   if (tag) { rec.cid = rec.cid || tag.cid; rec.att = rec.att || tag.att; }
 
-  /* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
-     ve Android'de `String.valueOf(int)` ile geliyor: "0" UNSPECIFIED, "1"
-     PURCHASED, "2" PENDING. Eksikse PURCHASED VARSAYILMIYOR — eskiden burada
-     `undefined → '1'` vardı ve bu, durumu bildirmeyen bir yanıtı satın alınmış
-     saymak demekti. Yalnız açıkça "1" hak veriyor. */
-  const ps = (tx.purchaseState === undefined || tx.purchaseState === null)
-    ? '' : String(tx.purchaseState);
+  /* Yalnız açıkça "1" hak veriyor; eksik durum PURCHASED VARSAYILMIYOR
+     (iapTxPs). Eskiden burada `undefined → '1'` vardı ve bu, durumu
+     bildirmeyen bir yanıtı satın alınmış saymak demekti. */
+  const ps = iapTxPs(tx);
   if (ps === '2') { rec.st = 'pending'; return iapqSave(tok).then(() => 'pending'); }
   if (ps !== '1') { rec.st = 'pending'; return iapqSave(tok).then(() => 'unknownstate'); }
 
-  /* Miktar: Play tek adetten fazlasını bu üründe vermiyor ve biz de
-     desteklemiyoruz. Yine de KONTROL ediliyor — desteklenmeyen bir miktarı
-     sessizce tek adet gibi teslim etmek eksik teslimat olurdu. */
-  const qty = (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+  /* Miktar yine de KONTROL ediliyor (iapTxQty). */
+  const qty = iapTxQty(tx);
   if (qty !== 1) {
     rec.st = 'undeliverable'; rec.note = 'qty';
     return iapqSave(tok).then(() => 'undeliverable');
   }
+  /* KAYIT NE DERSE DESİN, HAK YERİNDE Mİ. 'granted'/'finishing'/'unverified'
+     hepsi 'teslim edildi' diyor; cihaz defterinden hak düşmüş olabilir. O
+     zaman teslimata geri dönülüyor — kapanış zaten yapılacaktı, yani
+     fazladan bir acknowledge doğmuyor. */
+  if (rec.sc === 'device' && !iapDevicePersisted(tok, rec.pid)
+    && (rec.st === 'granted' || rec.st === 'finishing' || rec.st === 'unverified')) rec.st = 'ready';
   if (rec.st === 'pending' || rec.st === 'orphan' || rec.st === 'unbound') rec.st = 'ready';
   /* Doğrulanamamış bir kapanışın tokenı GERİ GELDİYSE satın alma hâlâ açıktır:
      hak zaten yazılı, yalnız kapanış yeniden denenmeli. */
   else if (rec.st === 'unverified') rec.st = 'granted';
   return iapqSave(tok).then(() => iapAdvance(rec));
+}
+/* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
+   ve Android'de `String.valueOf(int)` ile geliyor: '0' UNSPECIFIED, '1'
+   PURCHASED, '2' PENDING. Eksikse PURCHASED VARSAYILMIYOR; okuma tek yerde
+   duruyor ki geri yükleme yolu da AYNI kapıdan geçsin. */
+function iapTxPs(tx) {
+  return (tx.purchaseState === undefined || tx.purchaseState === null)
+    ? '' : String(tx.purchaseState);
+}
+/* Play tek adetten fazlasını vermiyor ve biz desteklemiyoruz; yine de
+   okunuyor — desteklenmeyen bir miktarı sessizce tek adet saymak eksik
+   teslimat olurdu. */
+function iapTxQty(tx) {
+  return (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+}
+
+/* KAPANMIŞ BİR CİHAZ İŞLEMİNİN YEREL HAKKINI YENİDEN YAZAR.
+
+   iapReapNoAds, art arda IAP.missMax başarılı-ama-boş sorgudan sonra reklam
+   kaldırma hakkını düşürüyor. Bu bilerek kabul edildi ÇÜNKÜ geri alınabilir
+   sayılmıştı (IAP.missMax'in yorumu); geri almanın gerçekten olduğu yer burası.
+
+   KARARI VEREN PLAY'İN BU TAZE YANITI, eski 'done' kaydı DEĞİL. Bu yola yalnız
+   iapIngest'ten, yani elde bir Transaction varken geliniyor: kayıt tek başına
+   hiçbir hakkı diriltmiyor.
+
+   YENİ ÖDEME, CONSUME YA DA ACKNOWLEDGE YOK: kapanış zaten olmuştu ve kayıt
+   'done' kalıyor. Yazma tutmazsa 'restored' RAPORLANMIYOR; kayıt da yerinde
+   kaldığı için bir sonraki başarılı sorgu aynı yolu yeniden deniyor. */
+function iapRestoreDevice(rec, tx, pid) {
+  /* YALNIZ TÜKETİLMEYEN CİHAZ HAKKI. Kapasite paketi tüketiliyor; tüketilmiş
+     token zaten sorguda görünmüyor ve kariyer defterine bu yoldan
+     dokunulmuyor. Ürün eşleşmiyorsa da hak yok: token bizim kaydımızın
+     ürününü taşımak zorunda. */
+  if (rec.sc !== 'device' || rec.pid !== pid) return Promise.resolve('done');
+  /* Normal teslimat yolundaki AYNI kapılar: PENDING, durumu bildirilmeyen
+     yanıt ve desteklenmeyen miktar hak vermiyor. */
+  if (iapTxPs(tx) !== '1' || iapTxQty(tx) !== 1) return Promise.resolve('done');
+  if (iapDevicePersisted(rec.tok, rec.pid)) return Promise.resolve('done');
+  return iapDeliverDevice(rec).then(r =>
+    (r === 'ok' || r === 'again') ? 'restored' : 'restorefail');
 }
 function iapPidOfSku(sku) {
   const p = IAP_PRODUCTS.find(x => x.sku === sku);
@@ -8333,6 +9087,7 @@ function iapPidOfSku(sku) {
 /* Kaydı bulunduğu durumdan bir adım ileri götürür. Yeniden çağrılabilir:
    her adım kendi ön koşulunu okuyor. */
 function iapAdvance(rec) {
+  if (!IAPQ) return Promise.resolve('noq');          // kaydı yazacak yer yok
   if (rec.st === 'done') return Promise.resolve('done');
   if (rec.st === 'undeliverable') return Promise.resolve('undeliverable');
   /* Token artık sorguda yok: consume'u yeniden denemenin anlamı yok ve
@@ -8371,11 +9126,28 @@ function iapAfterDeliver(rec, r) {
    yeniden açılışta bu kaydı görüp Play'e tekrar soruyoruz; kuyruk kaydı
    olmasaydı yalnız Play sorgusuna kalırdık ve tüketilmiş token orada yok. */
 function iapFinish(rec) {
+  /* 'finishing' KAYDEDİLEMEDEN consume/ack çağrılmamalı: yanıt kaybolursa
+     toparlanmanın tek dayanağı o kayıt. */
+  if (!IAPQ) return Promise.resolve('noq');
+  /* KAPANMIŞ KAYIT YENİDEN KAPATILMAZ. Bugün buraya yalnız iapAdvance'tan
+     geliniyor ve o zaten 'done'u eliyor — ama consume/ack'i GÖNDEREN yer burası,
+     yani koşulu burada tutmak doğrusu: her çağıranın önce kontrol etmesine
+     güvenmek, bir gün etmeyen bir çağıran demek. */
+  if (rec.st === 'done') return Promise.resolve('done');
   const P = iapBridge();
   if (!P) return Promise.resolve('nobridge');
   const consume = rec.sc === 'career';                 // kapasite tüketilebilir
   if (consume && typeof P.consumePurchase !== 'function') return Promise.resolve('nobridge');
   if (!consume && typeof P.acknowledgePurchase !== 'function') return Promise.resolve('nobridge');
+  /* AYNI TOKENIN KAPANIŞI İKİ KEZ UÇMAZ. IAPS.flight yalnız TESLİMATI
+     tekilleştiriyor; kapanışın kendi kilidi olmadan iki zincir aynı tokena iki
+     consume gönderebiliyordu — ölçüldü: açılıştaki uzlaştırma 'finishing'te
+     iken kullanıcının kariyeri açması (iapOnCareerOpen) ikinci bir çağrı
+     açıyor. İkincisi Play'de zaten tüketilmiş bir token üzerinde koşar, yani
+     hata döner ve kaydı gereksiz yere 'finishing'te bırakır. */
+  if (IAPS.fin[rec.tok]) return Promise.resolve('inflight');
+  IAPS.fin[rec.tok] = 1;
+  const free = r => { delete IAPS.fin[rec.tok]; return r; };
   rec.st = 'finishing'; rec.ft = Date.now();
   return iapqSave(rec.tok).then(() => {
     const call = consume ? P.consumePurchase({ purchaseToken: rec.tok })
@@ -8384,13 +9156,17 @@ function iapFinish(rec) {
       rec.st = 'done'; rec.dt = Date.now();
       return iapqSave(rec.tok).then(() => 'done');
     }, () => 'finishfail');                            // 'finishing' kalıyor, yeniden denenecek
-  });
+  }).then(free, e => { free(); throw e; });
 }
 
 /* ================= UZLAŞTIRMA =================
    Açılışta ve her satın almadan sonra. Play'in BAŞARILI bir yanıtı olmadan
    hiçbir hak düşürülmüyor ve hiçbir rezervasyon iptal edilmiyor. */
 function iapReconcile() {
+  /* Play sorgusu yerel kuyruğun YEDEĞİ DEĞİL: tüketilmiş bir token
+     getPurchases()'ta hiç görünmüyor, dolayısıyla kuyruk okunmadan yapılan bir
+     uzlaştırma eksik bir dünya görüntüsü üzerinde karar verirdi. */
+  if (!IAPQ) return Promise.resolve('noq');
   const P = iapBridge();
   if (!P) return Promise.resolve('nobridge');
   return P.getPurchases({ productType: 'inapp' }).then(res => {
@@ -8655,7 +9431,7 @@ function iapAfterBuy(r, att) {
   if (r === 'pending') return iapToast('shopPending');
   if (r === 'orphan' || r === 'unbound') return iapToast('shopStuck');
   if (r === 'undeliverable') return iapToast('shopUndeliver');
-  if (r === 'finishfail' || r === 'writefail') return iapToast('shopLater');
+  if (r === 'finishfail' || r === 'writefail' || r === 'restorefail') return iapToast('shopLater');
   return iapToast('shopThanks');
 }
 function iapToast(k) { if (typeof toast === 'function' && typeof t === 'function') toast(t(k)); }
@@ -8677,10 +9453,20 @@ function iapInit() {
      gelmiyor ve bu yol her seferinde aynı ucuz cevabı veriyor. */
   if (!P) return Promise.resolve('nobridge');
   IAPS.boot = true;
-  return iapqLoad().then(() => P.isBillingSupported()).then(res => {
+  /* Kuyruk yüklemesi depolamanın hazır olmasını bekliyor (iapqLoad), ama ÜRÜN
+     SORGUSU onu beklemiyor: ikisi paralel gidiyor ve yalnız UZLAŞTIRMA kuyruğa
+     bağlı. Fiyatların gelmesi yerel diskin açılmasına takılmamalı.
+
+     Kuyruk gelmezse uzlaştırma da YAPILMIYOR ve satın alma kapalı kalıyor;
+     kurtarma yolu bir zamanlayıcı değil, iapRetry(). */
+  const ql = iapqLoad();
+  return P.isBillingSupported().then(res => {
     IAPS.sup = !!(res && res.isBillingSupported);
     if (!IAPS.sup) return 'nostore';
-    return iapProducts().then(() => iapReconcile());
+    /* Uzlaştırma iapqPrepare() üzerinden, yani mağaza ya da kariyer açılışıyla
+       aynı tek turdan. ql yalnız "hazırlık zaten başladı" demek için erken
+       çağrılıyor; ürün sorgusu onu beklemiyor. */
+    return iapProducts().then(() => ql).then(q => q ? iapqPrepare().then(() => 'ok') : 'noq');
   }, () => { IAPS.sup = false; return 'nostore'; }).then(r => { iapRepaint(); return r; });
 }
 /* Fiyatlar Play'den, YERELLEŞTİRİLMİŞ olarak. Kodda hiçbir fiyat yok ve
@@ -8702,7 +9488,10 @@ function iapProducts() {
 }
 /* Kariyer açıldığında: bekleyen bir teslimat varsa hedefi artık bulunabilir. */
 function iapOnCareerOpen() {
-  if (!IAPQ) return Promise.resolve('noq');
+  /* Kuyruk yüklenememişse burası sessizce geçilmiyor: kariyeri açmak
+     kullanıcının bir eylemi ve kontrollü bir yeniden deneme için doğru an.
+     Yükleme yine tutmazsa hiçbir teslimat denenmiyor. */
+  if (!IAPQ) return iapRetry().then(() => IAPQ ? iapOnCareerOpen() : 'noq');
   const q = iapqAll();
   let p = Promise.resolve();
   Object.keys(q).forEach(tok => {
@@ -11200,9 +11989,16 @@ function startCareer(){
   const nat=document.getElementById('sel_nat').value;
   const ag=(document.getElementById('inp_ag').value||'').trim();
   if(!fn||!ln){toast(t('fillName'));return;}
+  /* Yeni kariyer ASLA dolu ya da okunamayan bir yuvanın üstüne yazılmaz. Menü
+     zaten buna izin vermiyor, ama karar YAZICIDA da duruyor: eski kod pendSlot
+     sıfırken sessizce 1. yuvaya yazıyordu ve orada duran şey okunamayan bir
+     kayıt ya da göçün park edilmeyi bekleyen kaynağı olabilir. Menüye güvenip
+     burada kontrol etmemek, üstüne yazmanın tek sessiz yolunu açık bırakmaktı. */
+  const slot=pendSlot||0;
+  if(!slot||slotUsed(slot)||slotShadow(slot)){toast(t('slotBusy'));render();return;}
   /* Dünya ancak burada kuruluyor: yuva seçilip ad girilene kadar ~7000 oyuncu
      üretmenin anlamı yok, kurulumdan geri dönmek de bedelsiz olsun. */
-  curSlot=pendSlot||1;
+  curSlot=slot;
   newGame();
   /* Yığın createAgent'tan önce ayarlanıyor — o kendi içinde render() çağırıyor ve
      aksi halde kurulum formu bir kare boyunca oyun çerçevesiyle çizilirdi. */
@@ -13643,7 +14439,15 @@ function inboxAction(i,yes){
 /* ================= NAVIGATION ================= */
 function cur(){return stack[stack.length-1];}
 function navTo(v){stack=[{v}];render();}
-function pushV(v,id){stack.push({v,id});render();}
+/* Mağaza açılırken ödeme kuyruğu yüklenememişse tek bir kontrollü yeniden
+   deneme. Zamanlayıcı yok: denemeyi kullanıcının eylemi başlatıyor, iapRetry()
+   kendi içinde tekilleşiyor ve başarısızlık sessizce bırakılıyor — ekran zaten
+   satın almayı kapalı gösteriyor (iapWhy → 'noq'). */
+function pushV(v,id){
+  stack.push({v,id});
+  if(v==='shop'&&typeof iapRetry==='function')iapRetry();
+  render();
+}
 function back(){if(stack.length>1){stack.pop();render();}}
 /* ================= ANA MENÜ =================
    Kabuk (menü / yeni kariyer / menüden açılan ayarlar) ile oyun arasındaki tek
@@ -13686,7 +14490,14 @@ function openSlot(n){
     if(S.evCur&&S.agent)showEvent(S.evCur);
   },()=>{slotOpening=0;toast(t('slotBroken'));render();});
 }
-function newCareerSlot(n){pendSlot=n;setupCon='eu';pushV('setup');}
+/* Gölge yuvaya yeni kariyer kurulmuyor. Kayıt orada duruyor, yalnız bu
+   açılışta okunamıyor; üstüne kurulan kariyer depo açıldığında aynı yuvayı
+   isteyen ikinci bir kayıt olurdu. Göç ikisini de koruyor (js/saves.js,
+   rescueOneSlot) ama çakışmayı hiç yaratmamak daha iyi. */
+function newCareerSlot(n){
+  if(slotShadow(n)){cmLockedHelp(n);return;}
+  pendSlot=n;setupCon='eu';pushV('setup');
+}
 function askDeleteSlot(n){
   if(!confirm(t('slotDeleteQ').replace('{n}',n)))return;
   deleteSlot(n);toast(t('slotDeleted'));render();
@@ -13858,6 +14669,134 @@ function cmNewMainHtml(n){
     <span class="cmNewS">${t('slotN').replace('{n}',n)} · ${t('slotEmptyHint')}</span>
   </button>`;
 }
+/* ================= OKUNAMAYAN YUVA =================
+   Kayıt deposu açılamadığında (js/saves.js, slotShadow) yuva BOŞ DEĞİL, yalnız
+   okunamıyor. İkisini aynı satırla göstermek kullanıcıya kaydının silindiğini
+   söylerdi — ve boş yuva satırı onu üstüne yeni kariyer kurmaya davet ederdi.
+   Satır bu yüzden "yeni kariyer" değil, "neden açılamıyor" anlatıyor. */
+function cmShadowRowHtml(n){
+  return `<button class="cmRow cmNewRow" onclick="cmLockedHelp(${n})">
+    <span class="cmRowI">
+      <span class="cmRowN">${esc(t('slotLocked'))}</span>
+      <span class="cmRowM">${esc(t('slotLockedM').replace('{n}',n))}</span>
+    </span>
+    <span class="cmRowC">›</span>
+  </button>`;
+}
+function cmShadowRows(skip){
+  let h='';
+  for(let n=1;n<=SLOTS;n++)if(n!==skip&&slotShadow(n))h+=cmShadowRowHtml(n);
+  return h;
+}
+/* Gerçekten boş yuva: özeti de yok, gölgesi de. */
+function cmFirstFree(){for(let n=1;n<=SLOTS;n++)if(!slotMeta(n)&&!slotShadow(n))return n;return 0;}
+/* ================= YER BEKLEYEN KURTARMA =================
+   Çakışan iki kayıt da korundu ama kurtarılanı koyacak boş yuva yok. Satır
+   olmasaydı kayıt localStorage'da sessizce beklerdi — kullanıcı açısından
+   kaybolmakla aynı şey. Yuva boşalınca kurtarma kendiliğinden tamamlanıyor
+   (js/saves.js, retryRescue). */
+function cmRescueHtml(){
+  const r=(typeof rescuePending==='function')?rescuePending():[];
+  if(!r.length)return '';
+  const m=r[0].meta||{};
+  const who=m.agency||m.agent||t('slotNew');
+  return `<button class="cmRow cmNewRow" onclick="cmRescueHelp()">
+    <span class="cmRowI">
+      <span class="cmRowN">${esc(t('rescueRow'))}</span>
+      <span class="cmRowM">${esc(t('rescueRowM').replace('{a}',who))}</span>
+    </span>
+    <span class="cmRowC">›</span>
+  </button>`;
+}
+function cmRescueHelp(){
+  const r=(typeof rescuePending==='function')?rescuePending():[];
+  const busy=r.length&&r[0].why==='forkBusy';
+  openModal(`<h2>${t('rescueTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('rescueWhat')}</span></div>
+    <div class="sub" style="margin-top:12px">${busy?t('rescueBusy'):t('rescueFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
+}
+/* ================= AYNI KİMLİKLİ ÇATAL =================
+   Karantinadaki kopya (js/saves.js) canlı bir kariyer DEĞİL, bu yüzden yuva
+   satırı olarak çizilmiyor: onu yuva gibi göstermek "iki kariyerim var" derdi
+   ve cid'ye bağlı her şey (ödeme, ödül) hangi kopyayı kastettiğimizi
+   bilemezdi. Satır bir karar davetidir; kararı kullanıcı veriyor. */
+function cmForkHtml(){
+  const f=(typeof forkList==='function')?forkList():[];
+  return f.map(e=>{
+    const m=e.meta||{};
+    const who=m.agency||m.agent||t('slotNew');
+    return `<button class="cmRow cmNewRow" onclick="cmForkHelp('${esc(e.key)}')">
+      <span class="cmRowI">
+        <span class="cmRowN">${esc(t('forkRow'))}</span>
+        <span class="cmRowM">${esc(t('forkRowM').replace('{a}',who))}</span>
+      </span>
+      <span class="cmRowC">›</span>
+    </button>`;
+  }).join('');
+}
+/* İki kopyayı yan yana tanıtan satır: sezon/hafta, bakiye, müşteri, son oynanma.
+   Özette olmayan hiçbir şey yazılmıyor (metaOf) ve eksik alan hiç çizilmiyor. */
+function cmForkLine(lbl,m){
+  if(!m)return '';
+  const bits=[];
+  if(typeof m.season==='number'&&typeof m.week==='number')
+    bits.push(`${t('season')} ${m.season} · ${t('week')} ${m.week}`);
+  if(typeof m.cash==='number')bits.push(fmtK(m.cash));
+  if(typeof m.clients==='number')bits.push(`${m.clients} ${t('clientCount')}`);
+  if(typeof m.ts==='number')bits.push(cmAgo(m.ts));
+  return `<div class="kv"><span class="k">${esc(lbl)}</span>
+    <span class="v">${esc(bits.join(' · '))}</span></div>`;
+}
+function cmForkHelp(key){
+  const e=(typeof forkOf==='function')?forkOf(key):null;
+  if(!e){toast(t('forkGone'));render();return;}
+  /* Kurtarmanın iki ön koşulu var ve ikisi de AYRI şeyler söylüyor:
+     canlı ikiz (aynı kimlik hâlâ bir yuvada) ve boş yuva. Hangisi engelliyorsa
+     onun metni çiziliyor; ikisi de yoksa kurma düğmesi var. Karar yazıcıda da
+     yeniden okunuyor (forkRestore) — bu yalnız sunum. */
+  const live=(typeof cidSlot==='function'&&e.meta)?cidSlot(e.meta.cid):0;
+  const room=(typeof freeSlotFor==='function')?freeSlotFor():0;
+  const note=live?t('forkLiveBlock').replace('{n}',live):(room?t('forkRestoreNote'):t('forkNoRoom'));
+  openModal(`<h2>${t('forkTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('forkWhat')}</span></div>
+    <div style="margin-top:12px">
+      ${cmForkLine(t('forkLive'),live?slotMeta(live):null)}
+      ${cmForkLine(t('forkKept'),e.meta)}
+    </div>
+    <div class="sub" style="margin-top:12px">${note}</div>
+    ${(!live&&room)?`<button class="btn" style="margin-top:14px" onclick="cmForkRestore('${esc(key)}')">${t('forkRestore')}</button>`:''}
+    <button class="btn d" style="margin-top:10px" onclick="cmForkDiscard('${esc(key)}')">${t('forkDiscard')}</button>`);
+}
+/* Kurtarma ve silme birer SÖZ döndürüyor; ekran sonucu bekleyip ona göre
+   çiziyor — "oldu" demeden önce gerçekten olduğunu görmek için. */
+function cmForkRestore(key){
+  closeModal();
+  forkRestore(key).then(r=>{
+    if(r==='restored'){toast(t('forkDone'));render();return;}
+    if(r==='gone'){toast(t('forkGone'));render();return;}
+    /* 'live' / 'noRoom': durum pencere açıldıktan sonra değişmiş. Kısa bir
+       toast yerine pencere yeniden açılıyor — kısıt orada tam olarak yazıyor. */
+    if(r==='live'||r==='noRoom'){render();cmForkHelp(key);return;}
+    toast(t('forkFail'));render();
+  },()=>{toast(t('forkFail'));render();});
+}
+function cmForkDiscard(key){
+  if(!confirm(t('forkDiscardQ')))return;
+  closeModal();
+  forkDiscard(key).then(okv=>{toast(t(okv?'forkGone':'forkFail'));render();},
+                         ()=>{toast(t('forkFail'));render();});
+}
+/* Depo neden açılamadı — showSaveHelp() ile aynı kalıp, çünkü aynı sorunun iki
+   yüzü: orada yazılamıyor, burada okunamıyor. */
+function cmLockedHelp(n){
+  openModal(`<h2>${t('slotLockedTtl')}</h2>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${t('slotLockedWhat')}</span></div>
+    <div class="kv" style="margin-top:12px"><span class="k">${t('slotN').replace('{n}',n)}</span>
+      <span class="v">${saveBackend()==='idb'?'IndexedDB':'localStorage'}</span></div>
+    <div class="sub" style="margin-top:12px">${t('slotLockedFix')}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeModal()">${t('gotIt')}</button>`);
+}
 /* Kariyer işlemleri. Silme kartın yüzünde kırmızı bir düğme değil: parmağın
    "devam et"e giderken geçtiği yerde durmuyor. Silmenin kendisi değişmedi —
    askDeleteSlot() ve onun onayı aynen çağrılıyor. */
@@ -13979,12 +14918,17 @@ function shopTxHtml(){
   if(typeof iapPendingN!=='function')return '';
   const pend=iapPendingN(),stuck=iapStuckN();
   const unver=iapUnverifiedN(),held=iapHeldN();
-  if(!pend&&!stuck&&!unver&&!held)return '';
+  /* Durumu netleştirilemeyen işlem AYRI yazılıyor: "teslim edilemedi" cümlesi
+     onun için yanlış olurdu, çünkü çelişen sürümlerden biri hakkın verildiğini
+     söylüyor olabilir. Ne verildiğini ne verilmediğini iddia etmiyoruz. */
+  const uncl=typeof iapUnclearN==='function'?iapUnclearN():0;
+  if(!pend&&!stuck&&!unver&&!held&&!uncl)return '';
   return `<div class="sect">${t('shopTxT')}</div>
   <div class="shpTx">
     ${pend?`<p class="shpTxP">${t('shopTxPending').replace('{n}',pend)}</p>`:''}
     ${held?`<p class="shpTxP">${t('shopTxHeld').replace('{n}',held)}</p>`:''}
     ${unver?`<p class="shpTxP">${t('shopTxUnverified').replace('{n}',unver)}</p>`:''}
+    ${uncl?`<p class="shpTxP">${t('shopTxUnclear').replace('{n}',uncl)}</p>`:''}
     ${stuck?`<p class="shpTxS">${t('shopTxStuck').replace('{n}',stuck)}</p>`:''}
     ${stuck?`<p class="shpTxH">${t('shopTxHelp')}</p>`:''}
   </div>`;
@@ -15588,14 +16532,21 @@ menu(){
      ayrıca listelemek aynı eylemi SLOTS kez tekrarlamak olurdu — yuvalar hâlâ
      üç, ama boşken aralarında seçim diye bir şey yok. Kart yine 1. yuvayı
      hedefliyor; ilk kayıt düştüğü anda liste kendiliğinden geri geliyor. */
-  if(!head)return cmTopHtml()+cmNewMainHtml(1);
+  if(!head){
+    /* Gölge yuva varken "hiç kayıt yok" demek yanlış olurdu: kayıt var, bu
+       açılışta okunamıyor. Davet yalnız gerçekten boş bir yuvaya gidiyor. */
+    const free=cmFirstFree(),sh=cmShadowRows(0);
+    return cmTopHtml()+(free?cmNewMainHtml(free):'')
+      +(sh?`<div class="sect cmSect">${t('slotsLbl')}</div>`+sh:'')+cmForkHtml()+cmRescueHtml();
+  }
   const rest=[];
   for(let n=1;n<=SLOTS;n++){
     if(n===head.n)continue;
     const c=cmSlot(n);
-    rest.push(c?cmRowHtml(c):cmEmptyRowHtml(n));
+    rest.push(c?cmRowHtml(c):(slotShadow(n)?cmShadowRowHtml(n):cmEmptyRowHtml(n)));
   }
-  return cmTopHtml()+cmMainHtml(head)+`<div class="sect cmSect">${t('slotsLbl')}</div>`+rest.join('');
+  return cmTopHtml()+cmMainHtml(head)+`<div class="sect cmSect">${t('slotsLbl')}</div>`
+    +rest.join('')+cmForkHtml()+cmRescueHtml();
 },
 setup(){return setupHtml();},
 dash(){
@@ -17803,7 +18754,12 @@ function save(){if(curSlot&&S)saveToSlot(curSlot);}
    "yükleniyor" satırı gösteriyor ve göç bitince yeniden çiziliyor. */
 stack=[{v:'menu'}];
 render();
-storeInit().then(()=>{render();},()=>{render();});
+storeInit().then(()=>{
+  render();
+  /* Çakışan bir kayıt başka bir yuvaya kurtarıldıysa kullanıcı bunu bilmeli:
+     menüde beklemediği bir kariyer belirdi ve nedeni görünmüyor. */
+  if(rescuedCount())toast(t('rescueDone'));
+},()=>{render();});
 
 /* Ödüllü reklam adaptörü (js/ads.js). Açılışta bir kez ve şu sırayla: izin
    bilgisi tazeleniyor, gerekiyorsa UMP formu gösteriliyor, canRequestAds
@@ -17821,7 +18777,13 @@ adsInit();
    ağ üzerinden gidiyor, menü onu bekleyemez. Açılışta yaptığı iş üç şey —
    faturalandırma destekleniyor mu, ürünlerin YERELLEŞTİRİLMİŞ fiyatları, ve
    ödenmiş ama kapanmamış işlemlerin uzlaştırılması. Sorgu başarısız olursa
-   hiçbir hak düşmüyor ve satın alma kapalı kalıyor. */
+   hiçbir hak düşmüyor ve satın alma kapalı kalıyor.
+
+   BURADA storeInit() BEKLENMİYOR ve beklenmemeli — ama iapInit()'in içindeki
+   ödeme kuyruğu okuması onu kendisi bekliyor (iapqLoad → storeReadyP). İkisi
+   ayrı: fiyat sorgusu yerel diskin açılmasına takılmıyor, kuyruk ise arka uç
+   seçilmeden okunmuyor. Yukarıdaki satırın storeInit()'i başlatmış olması da
+   şart değil; kapı gerekirse kendisi başlatıyor. */
 iapInit();
 
 /* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta

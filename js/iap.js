@@ -230,18 +230,274 @@ function iapOwned(id) {
    orphan/unbound/undeliverable kayıtları hiçbir yolda silinmiyor; consume/ack
    de yapılmıyor. Onaylanmayan satın almayı Play kendisi iade ediyor — ama biz
    onu "iade edildi" diye YAZMIYORUZ, çünkü doğrulayamıyoruz. */
-let IAPQ = null;                      // {v, q:{tok:rec}} — diskteki kaydın aynası
+let IAPQ = null;                      // {v, q:{tok:rec}, cf?} — diskteki kaydın aynası
 let IAPQL = null;                     // yükleme sözü (tekilleştirme)
+let IAPQE = '';                       // '' | 'read' | 'bad' | 'merge' — yükleme neden tutmadı
 
+/* ================= KUYRUĞUN YÜKLENMESİ =================
+   Üç ayrı hata, ve üçü de bir zamanlar "kuyruk boş" diye okunuyordu:
+
+   1) DEPOLAMA HENÜZ HAZIR DEĞİLKEN OKUMAK. SAVEH.backend 'ls' değeriyle
+      başlıyor ve storeBackendInit() bitene kadar öyle kalıyor. iapInit() ilk
+      çizimden hemen sonra, storeInit() BEKLENMEDEN çağrılıyor — o anda yapılan
+      recGet('iapq') IndexedDB'li bir cihazda localStorage'a bakar, orayı boş
+      bulur ve kuyruğu "yüklendi, boş" diye işaretlerdi. Sonraki her iapqSave()
+      o boş aynayı IndexedDB'ye yazar, yani diskteki ÖDENMİŞ işlem kayıtlarını
+      silerdi. Bu yüzden okuma storeReadyP()'nin arkasında: arka uç seçilmeden
+      kuyruğa bakılmıyor.
+
+   2) OKUMA HATASI ve BOZUK KAYIT. "Okuyamadım" ile "orada bir şey yok" aynı
+      cevap değil — js/saves.js'teki göç aynı ayrımı aynı sebeple yapıyor.
+      Gerçekten bulunmayan kayıt boş kuyruktur ve ilk işlemde yazılır; okuma
+      hatası ya da tanınmayan bir yük ise KUYRUK YOK demektir: IAPQ null kalıyor,
+      hiçbir şey yazılmıyor ve satın alma kapalı kalıyor (iapAvailable).
+      localStorage tarafında bu ayrım recReadLs() ile yapılıyor, çünkü
+      lsGet/jparse/recGet zincirinin üçü de hatayı null'a çeviriyor.
+
+   3) ÖNCEKİ OTURUMUN localStorage KUYRUĞUNU GÖRMEMEK. IndexedDB bir açılışta
+      açılamazsa katman localStorage'a düşüyor ve o oturumda ödenen işlemler
+      'menajerIapQV1' anahtarına yazılıyor. Bir sonraki açılışta IndexedDB
+      açılınca recGet() yalnız oraya bakıyordu: önceki oturumun ücretli kayıtları
+      görünmez kalıyordu. Artık IndexedDB açılışında localStorage kaynağı da
+      okunuyor ve BİRLEŞTİRİLİYOR (iapqAdopt).
+
+   Sonuç null dönüyor, REDDETMİYOR: çağıranların yarısı açılış yolunda ve
+   yakalanmamış bir ret orada hiçbir şey kazandırmaz. */
 function iapqBlank() { return { v: 1, q: {} }; }
+function iapqReady() { return !!IAPQ; }
+function iapqErr() { return IAPQE; }
+
+/* Alan sırasından bağımsız karşılaştırma anahtarı. "İki kayıt aynı mı" sorusu
+   göçte tam eşdeğerlikle cevaplanıyor (js/saves.js moveVerdict ile aynı kural);
+   JSON.stringify'ın anahtar sırası kaynağa göre değiştiği için kendi başına
+   yetmiyor. */
+function iapqKey(o) {
+  if (o === null || typeof o !== 'object') return JSON.stringify(o === undefined ? null : o);
+  if (Array.isArray(o)) return '[' + o.map(iapqKey).join(',') + ']';
+  return '{' + Object.keys(o).sort().map(k => JSON.stringify(k) + ':' + iapqKey(o[k])).join(',') + '}';
+}
+/* Tanıdığımız bir kuyruk mu. Tanımadığımız her yük 'bad': üstüne yazmak yerine
+   olduğu yerde bırakılıyor. */
+function iapqShape(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  if (!v.q || typeof v.q !== 'object' || Array.isArray(v.q)) return null;
+  if (v.cf !== undefined && (!v.cf || typeof v.cf !== 'object' || Array.isArray(v.cf))) return null;
+  const bad = Object.keys(v.q).some(k => {
+    const r = v.q[k];
+    return !r || typeof r !== 'object' || Array.isArray(r) || typeof r.st !== 'string';
+  });
+  return bad ? null : v;
+}
+
+/* ================= İKİ DEPODAKİ KUYRUĞUN BİRLEŞTİRİLMESİ =================
+   Bu birleştirme bir UZLAŞTIRICI DEĞİL. Yaptığı tek şey kaybı önlemek: iki
+   depodaki kayıtları yan yana getirmek, güvenle tekilleştirilebilenleri
+   tekilleştirmek ve geri kalanı OLDUĞU GİBİ saklayıp o tokenı eylemsiz
+   bırakmak.
+
+   Neden bir sıralama YOK. Aynı tokenın kimlik alanlarının uyuşması, iki kaydın
+   TESLİMAT ve KAPANIŞ bilgisinin eşdeğer olduğunu kanıtlamaz: 'done' diyen
+   kopya o kapanışın gerçekten olduğunu bize kanıtlamıyor (sunucu yok,
+   getPurchases tüketilmiş tokenı zaten göstermiyor) ve 'ready' diyen kopya da
+   teslimatın yapılmadığını kanıtlamıyor. Yerel defterin ikinci bir hak
+   yazmaması ayrı bir güvence ve iyi bir şey — ama atılan kaydın taşıdığı
+   bilgiyi geri getirmiyor. Bu yüzden bir enum sırası ya da 'done' etiketi
+   yüzünden diğer özgün kayıt ATILMIYOR.
+
+   Alan sınıfları:
+     KİMLİK    bu tokenın hangi satın alma olduğu
+     DURUM     teslimat ve kapanış bilgisi — çelişirse UZLAŞTIRILMIYOR
+     KÖKEN     kaydın yerelde ne zaman ve hangi yolla oluştuğu; teslimat
+               hakkında hiçbir şey söylemiyor, bu yüzden farkı çelişki değil */
+const IAPQ_IDF = ['pid', 'sku', 'sc', 'cid', 'att'];
+const IAPQ_PROV = { at: 1, src: 1 };
+
+/* Bir tarafın bu token için taşıdığı SÜRÜMLER. Çelişki daha önce kaydedildiyse
+   özgün sürümler onlardır — kaydın kendisi yalnızca onların yerini tutan
+   eylemsiz bir işaret. Bu, yeniden benimsemenin kaydı büyütmemesinin de sebebi:
+   sürümler her zaman ÖZGÜN kayıtlar, türetilmiş olan değil. */
+function iapqVers(side, tok) {
+  const cf = side && side.cf && side.cf[tok];
+  if (cf && cf.length) return cf.slice();
+  const r = side && side.q && side.q[tok];
+  return r ? [r] : [];
+}
+/* Aynı sürümü iki kez saklamıyoruz: aynı kaynak tekrar tekrar benimsenirse
+   liste büyümemeli. */
+function iapqUniq(list) {
+  const seen = {}, out = [];
+  list.forEach(r => { const k = iapqKey(r); if (!seen[k]) { seen[k] = 1; out.push(r); } });
+  return out;
+}
+/* İki sürüm TEK bir kayda indirgenebilir mi. Yalnız iki şey yapılıyor:
+     - eksik bir alan diğer taraftan tamamlanıyor (yokluk çelişki değil),
+     - köken alanlarının farkı yok sayılıyor (at'ta en erken olan kalıyor;
+       src yalnız tanı amaçlı ve ikisinden biri yeterli).
+   BAŞKA hiçbir farkı çözmüyor. Dönüş null ise indirgenemez. */
+function iapqFold2(a, b) {
+  const out = {};
+  const keys = {};
+  Object.keys(a).forEach(k => { keys[k] = 1; });
+  Object.keys(b).forEach(k => { keys[k] = 1; });
+  let clash = false;
+  Object.keys(keys).forEach(k => {
+    const x = a[k], y = b[k];
+    const hx = (x !== undefined && x !== null), hy = (y !== undefined && y !== null);
+    if (!hx) { out[k] = y; return; }
+    if (!hy) { out[k] = x; return; }
+    if (x === y) { out[k] = x; return; }
+    if (IAPQ_PROV[k]) { out[k] = (k === 'at') ? Math.min(x, y) : x; return; }
+    clash = true;                       // durum/teslimat ya da tanımadığımız bir alan
+  });
+  return clash ? null : out;
+}
+/* Çelişkinin yerini tutan EYLEMSİZ kayıt. Kendisi bir sürüm değil: özgün
+   sürümler cf'te duruyor. Yalnız BÜTÜN sürümlerin hemfikir olduğu kimlik
+   alanlarını taşıyor; çelişen her alan null — özellikle att, çünkü yanlış bir
+   att başka bir denemenin rezervasyonunu düşürürdü (iapReapRes). */
+function iapqDisputedRec(tok, vers) {
+  const rec = { tok: tok };
+  IAPQ_IDF.forEach(f => {
+    let v = null, seen = false, clash = false;
+    vers.forEach(r => {
+      const x = r[f];
+      if (x === undefined || x === null) return;
+      if (!seen) { v = x; seen = true; } else if (x !== v) clash = true;
+    });
+    rec[f] = (clash || !seen) ? null : v;
+  });
+  /* 'disputed' YENİ BİR ÇÖZÜM YOLU DEĞİL, bir durdurma işareti: iapAdvance'ın
+     bilinen dallarının hiçbirine uymuyor ve iapIngest onu ilerletmiyor, yani
+     teslimat da consume/ack de BAŞLAMIYOR. */
+  rec.st = 'disputed';
+  rec.at = Math.min.apply(null, vers.map(r => r.at || 0).filter(n => n > 0).concat([Date.now()]));
+  rec.note = 'merge';
+  return rec;
+}
+/* Bir tokenın bütün sürümlerinden tek kayıt + (gerekiyorsa) çelişki listesi. */
+function iapqFold(tok, vers) {
+  vers = iapqUniq(vers);
+  if (!vers.length) return null;
+  if (vers.length === 1) return { rec: vers[0], cf: null };
+  if (vers.length === 2) {
+    const one = iapqFold2(vers[0], vers[1]);
+    if (one) return { rec: one, cf: null };
+  }
+  return { rec: iapqDisputedRec(tok, vers), cf: vers };
+}
+/* İki kuyruğun birleşimi. Bir tarafta olan token her zaman korunuyor; iki
+   tarafta olan token indirgenebiliyorsa indirgeniyor, indirgenemiyorsa
+   sürümleriyle birlikte saklanıyor. */
+function iapqMergeAll(dst, src) {
+  const out = { v: 1, q: {} };
+  const cf = {};
+  const toks = {};
+  [dst, src].forEach(s => {
+    Object.keys((s && s.q) || {}).forEach(k => { toks[k] = 1; });
+    Object.keys((s && s.cf) || {}).forEach(k => { toks[k] = 1; });
+  });
+  Object.keys(toks).forEach(tok => {
+    const f = iapqFold(tok, iapqVers(dst, tok).concat(iapqVers(src, tok)));
+    if (!f) return;
+    out.q[tok] = f.rec;
+    if (f.cf) cf[tok] = f.cf;
+  });
+  if (Object.keys(cf).length) out.cf = cf;
+  return out;
+}
+
+/* localStorage kaynağını IndexedDB hedefine devralır.
+   Sıra, s1..s3 göçününkiyle aynı ve aynı sebeple: YAZ → TANIK → GERİ OKU →
+   ANCAK O ZAMAN KAYNAĞI SİL. Tanık "içeriğim depolamaya verildi" diyor; yalnız
+   taze bir okuma "araya kimse yazmadı" diyor. Her doğrulanamayan adımda kaynak
+   yerinde kalıyor ve kuyruk YÜKLENMEMİŞ sayılıyor — bir sonraki iapRetry()
+   kaldığı yerden devam ediyor. */
+function iapqAdopt(dst) {
+  const r = recReadLs('iapq');
+  if (r.st === 'err') return Promise.resolve({ ok: false, err: 'read' });
+  if (r.st === 'bad') return Promise.resolve({ ok: false, err: 'bad' });
+  if (r.st === 'none') return Promise.resolve({ ok: true, q: dst });
+  const src = iapqShape(r.v);
+  if (!src) return Promise.resolve({ ok: false, err: 'bad' });
+  /* Kaynak boşsa taşınacak bir şey yok: hedefte hiç kayıt olmayabilir ve
+     olmayan bir kaydı "geri okuyup doğrulamak" mümkün değil. */
+  if (!Object.keys(src.q).length && !Object.keys(src.cf || {}).length) {
+    recDelLs('iapq');
+    return Promise.resolve({ ok: true, q: dst });
+  }
+  const merged = iapqMergeAll(dst, src);
+  const done = () => { recDelLs('iapq'); return { ok: true, q: merged }; };
+  const prove = () => recGet('iapq').then(
+    back => (back && iapqKey(back) === iapqKey(merged)) ? done() : { ok: false, err: 'merge' },
+    () => ({ ok: false, err: 'merge' }));
+  if (iapqKey(merged) === iapqKey(dst)) return prove();   // hedef zaten kapsıyor
+  return queueRec('iapq', () => merged, w => iapqKey(w) === iapqKey(merged))
+    .then(ok => ok ? prove() : { ok: false, err: 'merge' });
+}
+
+/* Arka uca göre okuma. Arka uç zaten localStorage ise KAYNAK İLE HEDEF AYNI
+   ANAHTAR olur ve göç diye bir şey yoktur — js/saves.js'in migrateLsSlots()'u
+   aynı tuzağa aynı cevabı veriyor. */
+function iapqRead() {
+  if (saveBackend() === 'ls') {
+    const r = recReadLs('iapq');
+    if (r.st === 'err') return Promise.resolve({ ok: false, err: 'read' });
+    if (r.st === 'bad') return Promise.resolve({ ok: false, err: 'bad' });
+    if (r.st === 'none') return Promise.resolve({ ok: true, q: iapqBlank() });
+    const q = iapqShape(r.v);
+    return Promise.resolve(q ? { ok: true, q: q } : { ok: false, err: 'bad' });
+  }
+  return recGet('iapq').then(rec => {
+    let dst;
+    if (rec === null || rec === undefined) dst = iapqBlank();
+    else { dst = iapqShape(rec); if (!dst) return { ok: false, err: 'bad' }; }
+    return iapqAdopt(dst);
+  }, () => ({ ok: false, err: 'read' }));
+}
+
 function iapqLoad() {
   if (IAPQ) return Promise.resolve(IAPQ);
-  if (IAPQL) return IAPQL;
-  IAPQL = recGet('iapq').then(rec => {
-    IAPQ = (rec && rec.q && typeof rec.q === 'object') ? rec : iapqBlank();
-    return IAPQ;
-  }, () => { IAPQ = iapqBlank(); return IAPQ; });
+  if (IAPQL) return IAPQL;                  // uçuştaki okuma: ikinci bir okuma DA, ikinci bir göç DE açılmıyor
+  IAPQL = storeReadyP().then(iapqRead).then(r => {
+    if (r.ok) { IAPQ = r.q; IAPQE = ''; return IAPQ; }
+    IAPQL = null; IAPQE = r.err; return null;
+  }, () => { IAPQL = null; IAPQE = 'read'; return null; });
   return IAPQL;
+}
+
+/* ================= HAZIRLIK: YÜKLEME + İLK UZLAŞTIRMA, TEK SEFER =================
+   Üç yol aynı işi isteyebiliyor: açılış (iapInit), kariyer açma
+   (iapOnCareerOpen) ve mağaza açma (js/ui.js pushV → iapRetry). iapqLoad()
+   okumayı ve göçü zaten tekilleştiriyor, ama ONDAN SONRAKİ uzlaştırma ayrı bir
+   iş: üç yol da kendi turunu açsaydı aynı anda üç getPurchases() ve üç ingest
+   zinciri koşardı. Uçuş kilidi (IAPS.flight) yalnız AYNI TOKENIN teslimatını
+   tekilleştiriyor — bütün uzlaştırmayı değil, ve ona öyleymiş gibi
+   güvenilemez. Bu yüzden ikisi tek bir söze bağlı.
+
+   Başarısızlıkta söz siliniyor, yani bir sonraki kullanıcı eylemi yeniden
+   deneyebiliyor. Başarıda kalıyor: ikinci bir açılış uzlaştırması yok. Satın
+   alma sonrasındaki uzlaştırma (iapBuy'ın PENDING yolu) bilerek buradan
+   GEÇMİYOR — o taze bir sorgu istiyor ve uçuştaki eski bir tura bağlanmamalı. */
+let IAPQP = null;
+function iapqPrepare() {
+  if (IAPQP) return IAPQP;
+  IAPQP = iapqLoad().then(q => {
+    if (!q) { IAPQP = null; return null; }
+    return iapReconcile().then(() => q, () => q);
+  }, () => { IAPQP = null; return null; });
+  return IAPQP;
+}
+/* Kontrollü yeniden deneme. Kuyruk yüklenemediyse tek giriş noktası bu:
+   mağaza açılırken (js/ui.js pushV) ve kariyer açılırken çağrılıyor, zamanlayıcı
+   YOK. Tekilleştirme iapqPrepare()'de: aynı anda gelen çağrılar aynı sözü alır,
+   ikinci bir okuma da, ikinci bir göç de, ikinci bir uzlaştırma da açılmaz. */
+function iapRetry() {
+  if (IAPQ) return Promise.resolve('again');
+  /* Köprü yokken (web/PWA/tek dosya) yüklenecek bir şey de yok: kuyruk yalnız
+     Play işlemleri için var ve o sürümlerde hiç yazılmıyor. */
+  if (!iapBridge()) return Promise.resolve('nobridge');
+  return iapqPrepare().then(q => { iapRepaint(); return q ? 'ok' : 'noq'; },
+    () => { iapRepaint(); return 'noq'; });
 }
 /* Kuyruğu diske verir ve GERÇEKTEN yazıldığını tanıkla doğrular. Ücretli bir
    kaydın "yazıldı sanılıp" kaybolduğu yol kapalı olsun diye söz döndürüyor. */
@@ -263,6 +519,12 @@ function iapPendingN() { return iapqCount('pending'); }
 function iapStuckN() {
   return iapqCount('orphan') + iapqCount('unbound') + iapqCount('undeliverable');
 }
+/* Durumu NETLEŞTİRİLEMEYEN işlemler. 'stuck' ile bilerek AYRI sayılıyor:
+   shopTxStuck "hiçbir hak verilmedi" diyor ve bu, çelişen sürümlerden biri
+   teslimatın yapıldığını söylüyorken DOĞRU DEĞİL. shopTxUnclear yalnız
+   kanıtlayabildiğimizi söylüyor — durumu netleştiremedik, kaydı saklıyoruz,
+   başka adım atmıyoruz ve kullanıcının halihazırdaki hakları değişmiyor. */
+function iapUnclearN() { return iapqCount('disputed'); }
 /* Hak verilmiş ama kapanışı DOĞRULANAMAMIŞ işlemler. 'stuck' değil — kullanıcı
    aldığını aldı; ama "tamamlandı" da değil, çünkü tamamlandığını kanıtlayamıyoruz. */
 function iapUnverifiedN() { return iapqCount('unverified'); }
@@ -340,19 +602,24 @@ const IAPS = {
   price: {},        // ürün id → Play'in YERELLEŞTİRİLMİŞ fiyat dizesi
   prod: null,       // 'ok' | 'fail' | null — ürün sorgusunun sonucu
   busy: '',         // '' | ürün id — akış açıkken
-  flight: {},       // token → 1: aynı token için uçuştaki teslimat (geri almayı güvenli kılar)
+  flight: {},       // token → 1: aynı token için uçuştaki TESLİMAT (geri almayı güvenli kılar)
+  fin: {},          // token → 1: aynı token için uçuştaki KAPANIŞ (consume/ack)
   qErr: false,      // son hak sorgusu başarısız mı
   boot: false
 };
 /* Satın alma yapılabilir mi. Fiyat sorgusu tutmadıysa da KAPALI: fiyatı
    bilinmeyen bir ürünü satmak, kullanıcıya ne ödeyeceğini söylememek olurdu. */
 function iapAvailable() {
-  return !!(IAP.wired && iapBridge() && IAPS.sup === true && IAPS.prod === 'ok');
+  /* IAPQ olmadan satın alma YOK. Kuyruk, ödenmiş işlemin tek yerel izi; onu
+     okuyamamışken yeni bir ödeme başlatmak, kaydedilemeyecek bir işlem
+     başlatmak olurdu. */
+  return !!(IAP.wired && iapBridge() && IAPS.sup === true && IAPS.prod === 'ok' && IAPQ);
 }
 function iapWhy() {
   if (!IAP.wired) return 'nobill';
   if (!iapBridge()) return 'noplay';
   if (IAPS.sup === false) return 'nostore';
+  if (!IAPQ) return 'noq';
   if (!iapAvailable()) return 'noprod';
   return '';
 }
@@ -530,9 +797,15 @@ function iapDeliverDevice(rec) {
   PREFS.iap.t[rec.tok] = rec.pid;
   PREFS.iap.miss = 0;
   savePrefs();
+  return Promise.resolve(iapDevicePersisted(rec.tok, rec.pid)
+    ? (again ? 'again' : 'ok') : 'writefail');
+}
+/* Cihaz defterinin DİSKTEKİ hâli bu tokenı taşıyor mu. Bellekteki PREFS bu
+   soruyu cevaplayamaz: yazması tutmamış bir teslimat hakkı bellekte bırakıyor
+   ve ona bakan bir yeniden deneme hiç koşmazdı. */
+function iapDevicePersisted(tok, pid) {
   const back = jparse(lsGet(PREFKEY));
-  const ok = !!(back && back.iap && back.iap.t && back.iap.t[rec.tok] === rec.pid);
-  return Promise.resolve(ok ? (again ? 'again' : 'ok') : 'writefail');
+  return !!(back && back.iap && back.iap.t && back.iap.t[tok] === pid);
 }
 
 /* ================= İŞLEMİ İŞLEME =================
@@ -542,6 +815,10 @@ function iapDeliverDevice(rec) {
 
    Android'de purchaseState dizesi: "1" = PURCHASED, "2" = PENDING. */
 function iapIngest(tx, src) {
+  /* KUYRUK YOKSA HİÇBİR ŞEY İŞLENMİYOR. iapqAll() null kuyrukta boş bir nesne
+     döndürüyor, yani buradaki kayıt hiçbir yere yazılmadan teslimata ve
+     consume'a kadar gidebilirdi: para ödenmiş, hak verilmiş, yerel iz YOK. */
+  if (!IAPQ) return Promise.resolve('noq');
   const tok = tx && (tx.purchaseToken || tx.transactionId);
   if (!tok) return Promise.resolve('notoken');
   const pid = iapPidOfSku(tx.productIdentifier);
@@ -552,35 +829,81 @@ function iapIngest(tx, src) {
     rec = q[tok] = { tok: tok, sku: tx.productIdentifier, pid: pid,
       sc: iapById(pid).sc, cid: null, att: null, st: 'pending', at: Date.now(), src: src };
   }
-  if (rec.st === 'done') return Promise.resolve('done');
+  /* KAPANMIŞ KAYIT. 'İşlem kapandı' ile 'hak bu cihazda duruyor' AYRI iki
+     şey ve buradaki tek satırlık çıkış ikisini birbirine bağlıyordu: cihaz
+     kapsamlı hak iapReapNoAds tarafından düşürülmüş olabilir ve token geri
+     geldiğinde bir daha yazılmazdı. Kararı veren PLAY'in bu taze yanıtı. */
+  if (rec.st === 'done') return iapRestoreDevice(rec, tx, pid);
 
   /* Hedef kimliği: satın almanın KENDİSİNDEN. Yerel bir tahmin yok. */
   const tag = iapParseTag(tx.appAccountToken);
   if (tag) { rec.cid = rec.cid || tag.cid; rec.att = rec.att || tag.att; }
 
-  /* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
-     ve Android'de `String.valueOf(int)` ile geliyor: "0" UNSPECIFIED, "1"
-     PURCHASED, "2" PENDING. Eksikse PURCHASED VARSAYILMIYOR — eskiden burada
-     `undefined → '1'` vardı ve bu, durumu bildirmeyen bir yanıtı satın alınmış
-     saymak demekti. Yalnız açıkça "1" hak veriyor. */
-  const ps = (tx.purchaseState === undefined || tx.purchaseState === null)
-    ? '' : String(tx.purchaseState);
+  /* Yalnız açıkça "1" hak veriyor; eksik durum PURCHASED VARSAYILMIYOR
+     (iapTxPs). Eskiden burada `undefined → '1'` vardı ve bu, durumu
+     bildirmeyen bir yanıtı satın alınmış saymak demekti. */
+  const ps = iapTxPs(tx);
   if (ps === '2') { rec.st = 'pending'; return iapqSave(tok).then(() => 'pending'); }
   if (ps !== '1') { rec.st = 'pending'; return iapqSave(tok).then(() => 'unknownstate'); }
 
-  /* Miktar: Play tek adetten fazlasını bu üründe vermiyor ve biz de
-     desteklemiyoruz. Yine de KONTROL ediliyor — desteklenmeyen bir miktarı
-     sessizce tek adet gibi teslim etmek eksik teslimat olurdu. */
-  const qty = (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+  /* Miktar yine de KONTROL ediliyor (iapTxQty). */
+  const qty = iapTxQty(tx);
   if (qty !== 1) {
     rec.st = 'undeliverable'; rec.note = 'qty';
     return iapqSave(tok).then(() => 'undeliverable');
   }
+  /* KAYIT NE DERSE DESİN, HAK YERİNDE Mİ. 'granted'/'finishing'/'unverified'
+     hepsi 'teslim edildi' diyor; cihaz defterinden hak düşmüş olabilir. O
+     zaman teslimata geri dönülüyor — kapanış zaten yapılacaktı, yani
+     fazladan bir acknowledge doğmuyor. */
+  if (rec.sc === 'device' && !iapDevicePersisted(tok, rec.pid)
+    && (rec.st === 'granted' || rec.st === 'finishing' || rec.st === 'unverified')) rec.st = 'ready';
   if (rec.st === 'pending' || rec.st === 'orphan' || rec.st === 'unbound') rec.st = 'ready';
   /* Doğrulanamamış bir kapanışın tokenı GERİ GELDİYSE satın alma hâlâ açıktır:
      hak zaten yazılı, yalnız kapanış yeniden denenmeli. */
   else if (rec.st === 'unverified') rec.st = 'granted';
   return iapqSave(tok).then(() => iapAdvance(rec));
+}
+/* purchaseState eklentinin TS tanımında İSTEĞE BAĞLI (`purchaseState?: string`)
+   ve Android'de `String.valueOf(int)` ile geliyor: '0' UNSPECIFIED, '1'
+   PURCHASED, '2' PENDING. Eksikse PURCHASED VARSAYILMIYOR; okuma tek yerde
+   duruyor ki geri yükleme yolu da AYNI kapıdan geçsin. */
+function iapTxPs(tx) {
+  return (tx.purchaseState === undefined || tx.purchaseState === null)
+    ? '' : String(tx.purchaseState);
+}
+/* Play tek adetten fazlasını vermiyor ve biz desteklemiyoruz; yine de
+   okunuyor — desteklenmeyen bir miktarı sessizce tek adet saymak eksik
+   teslimat olurdu. */
+function iapTxQty(tx) {
+  return (tx.quantity === undefined || tx.quantity === null) ? 1 : tx.quantity;
+}
+
+/* KAPANMIŞ BİR CİHAZ İŞLEMİNİN YEREL HAKKINI YENİDEN YAZAR.
+
+   iapReapNoAds, art arda IAP.missMax başarılı-ama-boş sorgudan sonra reklam
+   kaldırma hakkını düşürüyor. Bu bilerek kabul edildi ÇÜNKÜ geri alınabilir
+   sayılmıştı (IAP.missMax'in yorumu); geri almanın gerçekten olduğu yer burası.
+
+   KARARI VEREN PLAY'İN BU TAZE YANITI, eski 'done' kaydı DEĞİL. Bu yola yalnız
+   iapIngest'ten, yani elde bir Transaction varken geliniyor: kayıt tek başına
+   hiçbir hakkı diriltmiyor.
+
+   YENİ ÖDEME, CONSUME YA DA ACKNOWLEDGE YOK: kapanış zaten olmuştu ve kayıt
+   'done' kalıyor. Yazma tutmazsa 'restored' RAPORLANMIYOR; kayıt da yerinde
+   kaldığı için bir sonraki başarılı sorgu aynı yolu yeniden deniyor. */
+function iapRestoreDevice(rec, tx, pid) {
+  /* YALNIZ TÜKETİLMEYEN CİHAZ HAKKI. Kapasite paketi tüketiliyor; tüketilmiş
+     token zaten sorguda görünmüyor ve kariyer defterine bu yoldan
+     dokunulmuyor. Ürün eşleşmiyorsa da hak yok: token bizim kaydımızın
+     ürününü taşımak zorunda. */
+  if (rec.sc !== 'device' || rec.pid !== pid) return Promise.resolve('done');
+  /* Normal teslimat yolundaki AYNI kapılar: PENDING, durumu bildirilmeyen
+     yanıt ve desteklenmeyen miktar hak vermiyor. */
+  if (iapTxPs(tx) !== '1' || iapTxQty(tx) !== 1) return Promise.resolve('done');
+  if (iapDevicePersisted(rec.tok, rec.pid)) return Promise.resolve('done');
+  return iapDeliverDevice(rec).then(r =>
+    (r === 'ok' || r === 'again') ? 'restored' : 'restorefail');
 }
 function iapPidOfSku(sku) {
   const p = IAP_PRODUCTS.find(x => x.sku === sku);
@@ -590,6 +913,7 @@ function iapPidOfSku(sku) {
 /* Kaydı bulunduğu durumdan bir adım ileri götürür. Yeniden çağrılabilir:
    her adım kendi ön koşulunu okuyor. */
 function iapAdvance(rec) {
+  if (!IAPQ) return Promise.resolve('noq');          // kaydı yazacak yer yok
   if (rec.st === 'done') return Promise.resolve('done');
   if (rec.st === 'undeliverable') return Promise.resolve('undeliverable');
   /* Token artık sorguda yok: consume'u yeniden denemenin anlamı yok ve
@@ -628,11 +952,28 @@ function iapAfterDeliver(rec, r) {
    yeniden açılışta bu kaydı görüp Play'e tekrar soruyoruz; kuyruk kaydı
    olmasaydı yalnız Play sorgusuna kalırdık ve tüketilmiş token orada yok. */
 function iapFinish(rec) {
+  /* 'finishing' KAYDEDİLEMEDEN consume/ack çağrılmamalı: yanıt kaybolursa
+     toparlanmanın tek dayanağı o kayıt. */
+  if (!IAPQ) return Promise.resolve('noq');
+  /* KAPANMIŞ KAYIT YENİDEN KAPATILMAZ. Bugün buraya yalnız iapAdvance'tan
+     geliniyor ve o zaten 'done'u eliyor — ama consume/ack'i GÖNDEREN yer burası,
+     yani koşulu burada tutmak doğrusu: her çağıranın önce kontrol etmesine
+     güvenmek, bir gün etmeyen bir çağıran demek. */
+  if (rec.st === 'done') return Promise.resolve('done');
   const P = iapBridge();
   if (!P) return Promise.resolve('nobridge');
   const consume = rec.sc === 'career';                 // kapasite tüketilebilir
   if (consume && typeof P.consumePurchase !== 'function') return Promise.resolve('nobridge');
   if (!consume && typeof P.acknowledgePurchase !== 'function') return Promise.resolve('nobridge');
+  /* AYNI TOKENIN KAPANIŞI İKİ KEZ UÇMAZ. IAPS.flight yalnız TESLİMATI
+     tekilleştiriyor; kapanışın kendi kilidi olmadan iki zincir aynı tokena iki
+     consume gönderebiliyordu — ölçüldü: açılıştaki uzlaştırma 'finishing'te
+     iken kullanıcının kariyeri açması (iapOnCareerOpen) ikinci bir çağrı
+     açıyor. İkincisi Play'de zaten tüketilmiş bir token üzerinde koşar, yani
+     hata döner ve kaydı gereksiz yere 'finishing'te bırakır. */
+  if (IAPS.fin[rec.tok]) return Promise.resolve('inflight');
+  IAPS.fin[rec.tok] = 1;
+  const free = r => { delete IAPS.fin[rec.tok]; return r; };
   rec.st = 'finishing'; rec.ft = Date.now();
   return iapqSave(rec.tok).then(() => {
     const call = consume ? P.consumePurchase({ purchaseToken: rec.tok })
@@ -641,13 +982,17 @@ function iapFinish(rec) {
       rec.st = 'done'; rec.dt = Date.now();
       return iapqSave(rec.tok).then(() => 'done');
     }, () => 'finishfail');                            // 'finishing' kalıyor, yeniden denenecek
-  });
+  }).then(free, e => { free(); throw e; });
 }
 
 /* ================= UZLAŞTIRMA =================
    Açılışta ve her satın almadan sonra. Play'in BAŞARILI bir yanıtı olmadan
    hiçbir hak düşürülmüyor ve hiçbir rezervasyon iptal edilmiyor. */
 function iapReconcile() {
+  /* Play sorgusu yerel kuyruğun YEDEĞİ DEĞİL: tüketilmiş bir token
+     getPurchases()'ta hiç görünmüyor, dolayısıyla kuyruk okunmadan yapılan bir
+     uzlaştırma eksik bir dünya görüntüsü üzerinde karar verirdi. */
+  if (!IAPQ) return Promise.resolve('noq');
   const P = iapBridge();
   if (!P) return Promise.resolve('nobridge');
   return P.getPurchases({ productType: 'inapp' }).then(res => {
@@ -912,7 +1257,7 @@ function iapAfterBuy(r, att) {
   if (r === 'pending') return iapToast('shopPending');
   if (r === 'orphan' || r === 'unbound') return iapToast('shopStuck');
   if (r === 'undeliverable') return iapToast('shopUndeliver');
-  if (r === 'finishfail' || r === 'writefail') return iapToast('shopLater');
+  if (r === 'finishfail' || r === 'writefail' || r === 'restorefail') return iapToast('shopLater');
   return iapToast('shopThanks');
 }
 function iapToast(k) { if (typeof toast === 'function' && typeof t === 'function') toast(t(k)); }
@@ -934,10 +1279,20 @@ function iapInit() {
      gelmiyor ve bu yol her seferinde aynı ucuz cevabı veriyor. */
   if (!P) return Promise.resolve('nobridge');
   IAPS.boot = true;
-  return iapqLoad().then(() => P.isBillingSupported()).then(res => {
+  /* Kuyruk yüklemesi depolamanın hazır olmasını bekliyor (iapqLoad), ama ÜRÜN
+     SORGUSU onu beklemiyor: ikisi paralel gidiyor ve yalnız UZLAŞTIRMA kuyruğa
+     bağlı. Fiyatların gelmesi yerel diskin açılmasına takılmamalı.
+
+     Kuyruk gelmezse uzlaştırma da YAPILMIYOR ve satın alma kapalı kalıyor;
+     kurtarma yolu bir zamanlayıcı değil, iapRetry(). */
+  const ql = iapqLoad();
+  return P.isBillingSupported().then(res => {
     IAPS.sup = !!(res && res.isBillingSupported);
     if (!IAPS.sup) return 'nostore';
-    return iapProducts().then(() => iapReconcile());
+    /* Uzlaştırma iapqPrepare() üzerinden, yani mağaza ya da kariyer açılışıyla
+       aynı tek turdan. ql yalnız "hazırlık zaten başladı" demek için erken
+       çağrılıyor; ürün sorgusu onu beklemiyor. */
+    return iapProducts().then(() => ql).then(q => q ? iapqPrepare().then(() => 'ok') : 'noq');
   }, () => { IAPS.sup = false; return 'nostore'; }).then(r => { iapRepaint(); return r; });
 }
 /* Fiyatlar Play'den, YERELLEŞTİRİLMİŞ olarak. Kodda hiçbir fiyat yok ve
@@ -959,7 +1314,10 @@ function iapProducts() {
 }
 /* Kariyer açıldığında: bekleyen bir teslimat varsa hedefi artık bulunabilir. */
 function iapOnCareerOpen() {
-  if (!IAPQ) return Promise.resolve('noq');
+  /* Kuyruk yüklenememişse burası sessizce geçilmiyor: kariyeri açmak
+     kullanıcının bir eylemi ve kontrollü bir yeniden deneme için doğru an.
+     Yükleme yine tutmazsa hiçbir teslimat denenmiyor. */
+  if (!IAPQ) return iapRetry().then(() => IAPQ ? iapOnCareerOpen() : 'noq');
   const q = iapqAll();
   let p = Promise.resolve();
   Object.keys(q).forEach(tok => {

@@ -1,6 +1,7 @@
 name: Android build
 
-# Elle çalıştırılır (Actions sekmesi → Run workflow) ya da main'e push'ta.
+# Elle çalıştırılır (Actions sekmesi → Run workflow), izlenen dallara push'ta
+# ve HER pull request'te.
 # Amaç: Android Studio kurmadan indirilebilir bir APK üretmek.
 on:
   workflow_dispatch:
@@ -9,7 +10,37 @@ on:
     # değiştiren bir dal, main'e girmeden önce derlendiğini görmek zorunda.
     # chore/** aynı gerekçeyle var — android/ projesinin kendisini taşıyan dal
     # da o gruba giriyor.
-    branches: [main, 'upgrade/**', 'chore/**']
+    # feat/** ve fix/** sonradan eklendi: ödeme ve düzeltme dalları bugüne kadar
+    # hiçbir otomatik kontrolden geçmiyordu, oysa native tarafa ve satın alma
+    # akışına dokunan çalışma tam olarak orada yapılıyor.
+    branches: [main, 'upgrade/**', 'chore/**', 'feat/**', 'fix/**']
+  # Dal adı kalıbına uymayan bir katkı da kontrolsüz kalmasın diye PR'lar hedef
+  # dala bakılmadan kapsanıyor. pull_request kullanılıyor, pull_request_target
+  # DEĞİL: ikincisi PR'ın kodunu deponun yazma yetkili bağlamında çalıştırır ve
+  # burada kazanılacak hiçbir şey yok — bu doğrulamanın sırra ihtiyacı yok.
+  pull_request:
+
+# Varsayılan GITHUB_TOKEN yetkisi en aza indiriliyor. İki iş de yalnız depoyu
+# okuyor; artifact yükleme Actions çalışma zamanı tokenini kullanıyor, bu izni
+# değil. Fork'tan gelen PR'larda token zaten salt okunur ve sır verilmiyor.
+permissions:
+  contents: read
+
+# Eski koşuları iptal etmek için, AMA yalnız kendi kapsamında: anahtar olayı da
+# içeriyor, çünkü push ile PR aynı şeyi sınamıyor. Push kaynak commit'ini
+# derler; PR'ın varsayılan checkout'u hedef dalla oluşturulan MERGE ref'ini
+# derler. İkisi farklı ağaçlar, dolayısıyla biri diğerini iptal etmemeli.
+#
+# PR tarafında anahtar dal adı değil PR NUMARASI: farklı fork'lardaki aynı adlı
+# dallardan (herkeste bulunan "fix/typo" gibi) açılan PR'lar aynı kovaya
+# düşmesin. workflow_dispatch de kendi event_name'iyle ayrı kalıyor.
+#
+# Bunun kabul edilen sonucu: bir dal hem push hem PR olayı ürettiğinde iki
+# doğrulama koşuyor. Bu aşamada kabul ediliyor — ayrı bir deduplikasyon
+# düzeneği kurulmadı.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   apk:
@@ -32,8 +63,20 @@ jobs:
       # Kilit dosyası depoda: npm ci onu birebir kuruyor, böylece CI derlemesi
       # tekrar üretilebilir oluyor. npm install olsaydı her koşu farklı yama
       # sürümü çekebilirdi.
+      # --foreground-scripts: postinstall (patch-package) çıktısı loga düşsün.
+      # Yama uygulanamazsa bunu bir satır uyarı olarak değil, adımın kendi
+      # çıktısında görmek gerekiyor.
       - name: Bağımlılıklar
-        run: npm ci
+        run: npm ci --foreground-scripts
+
+      # npm ci sessizce yamasız bir ağaç bırakabilir: eklenti sürümü kayarsa
+      # patch-package uyarır ve akış devam eder. O paket iki şeyi birden
+      # kaybeder — ödeme hatalarını ayıran npx: kodu ve satın alma tokenini
+      # logdan çıkaran redaksiyon. Kontrol KURULU kaynağı okur, patches/
+      # dosyasını değil: yamanın kendisi silinen satırları taşıdığı için orayı
+      # taramak her koşuda yanlış alarm verirdi.
+      - name: Native yama kontrolü
+        run: node tools/check-native-patch.js
 
       - name: Web varlıklarını hazırla
         run: npm run www
@@ -167,6 +210,32 @@ jobs:
           fi
           echo "native kütüphane yok"
 
+      # ===== RELEASE YAPILANDIRMASI =====
+      #
+      # Buraya kadar her şey DEBUG paketini ölçüyordu. Debug, release'in yanlış
+      # olabileceği iki şeyi hiç görmüyor: release kaynak kümesinin derlenip
+      # derlenmediğini ve ads-testcfg.js ayrımını (debug AEA test coğrafyası
+      # taşır, release null taşımak zorundadır).
+      #
+      # Bu TAM PAKET DERLEMESİ DEĞİL, üç belirli Gradle görevi. Sebebi kasıtlı:
+      # assembleRelease/bundleRelease/packageRelease, android/app/build.gradle
+      # içindeki taskGraph kapısını tetikler ve keystore.properties yoksa düşer.
+      # O kapı doğru — sessizce imzasız paket üretmemek için var — ve bu kontrol
+      # uğruna zayıflatılmadı. Aşağıdaki görevler kapının desenine girmediği
+      # için sırsız çalışıyor, yani PR doğrulaması upload keystore istemiyor.
+      - name: release-1-gradle-gorevleri
+        run: |
+          cd android && ./gradlew --no-daemon --warning-mode all \
+            :app:compileReleaseJavaWithJavac \
+            :app:mergeReleaseAssets \
+            :app:processReleaseMainManifest
+
+      # isTesting:true burada hata SAYILMAZ: paket hâlâ bilerek test reklam
+      # birimleriyle çalışıyor. Sorulan tek şey debug ayarının release'e
+      # taşınmadığı.
+      - name: release-2-yapilandirma
+        run: node tools/check-release-config.js
+
       - name: dogrulama-ciktilarini-yukle
         if: always()
         uses: actions/upload-artifact@v4
@@ -190,6 +259,6 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Bağımlılıklar
-        run: npm ci
+        run: npm ci --foreground-scripts
       - name: Kayıt testleri
         run: node tools/savetest.js

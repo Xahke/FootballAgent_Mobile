@@ -171,16 +171,27 @@ function dbTx(store,mode,fn){
    bir dizeyi kurmak "Devam"a basmanın maliyetinin %42'siydi), localStorage'a
    düşüldüğünde ise JSON'a çevriliyor. */
 const LSKEY={meta:'menajerMetaV1',s1:'menajerSaveV9s1',s2:'menajerSaveV9s2',s3:'menajerSaveV9s3',
-  iapq:'menajerIapQV1'};
+  iapq:'menajerIapQV1',
+  f1:'menajerForkV1s1',f2:'menajerForkV1s2',f3:'menajerForkV1s3'};
 /* iapq: ödenmiş ama henüz kapanmamış satın almaların defteri (js/iap.js).
    PREFS'te DEĞİL, burada: PREFS yalnız localStorage'da yaşıyor ve kota dolduğunda
    sessizce yazılamıyor — ücretli bir işlem kaydının kaybolabileceği tek yer orasıydı.
    Buraya konunca kariyer kayıtlarıyla aynı arka ucu, aynı kuyruğu ve aynı sağlık
    raporlamasını (SAVEH) kullanıyor.
 
+   f1..f3: KARANTİNA. Aynı kariyer kimliğini taşıyan ikinci bir kopya buraya
+   konuyor (js/saves.js, parkFork). Neden ayrı bir anahtar ailesi:
+
+   - Yuva DEĞİL. Aynı cid'li iki kayıt iki normal yuvaya konamaz: cid ödeme ve
+     ödül teslimatının hedefi, iki hedef olursa hangisine teslim edildiği
+     belirsizleşir.
+   - localStorage'da da AYRI bir ad taşıyor ('menajerForkV1s*'). Göç kaynağı
+     olan 'menajerSaveV9s*' anahtarlarına sonradan yazılması karantinadaki
+     kopyayı ezemez; iki aile hiçbir arka uçta çakışmıyor.
+
    ST_SAVE değil ST_META: recSlotKeys() ST_SAVE'in bütün anahtarlarını "yuva var mı"
-   diye okuyor ve buraya konan dördüncü bir anahtar o sayımı kirletirdi. */
-function storeName(key){return (key==='meta'||key==='iapq')?ST_META:ST_SAVE;}
+   diye okuyor ve buraya konan fazladan bir anahtar o sayımı kirletirdi. */
+function storeName(key){return (key==='meta'||key==='iapq'||key.charAt(0)==='f')?ST_META:ST_SAVE;}
 
 function recGet(key){
   if(SAVEH.backend==='ls')return Promise.resolve(jparse(lsGet(LSKEY[key])));
@@ -210,6 +221,36 @@ function recDel(key){
   if(SAVEH.backend==='ls'){lsDel(LSKEY[key]);return Promise.resolve(true);}
   return dbTx(storeName(key),'readwrite',st=>st.delete(key)).then(()=>true);
 }
+/* ===== HAM localStorage OKUMASI — yalnız iapq için =====
+   lsGet(), jparse() ve recGet() zincirinin ÜÇÜ DE hatayı null'a çeviriyor:
+   anahtar yok, erişim attı, JSON bozuk — üç ayrı olgu, tek cevap. Kariyer
+   kayıtları için bu doğru davranış ve DEĞİŞMİYOR: bozuk bir kaydı meta'dan
+   düşürmek menünün yalan söylemesini engelliyor ve o yol kendi sözleşmesine
+   sahip (validSave, moveVerdict).
+
+   Ödenmiş bir işlem kaydı için doğru değil. "Okuyamadım"ı "orada bir şey yok"
+   sanıp üstüne boş kuyruk yazmak, parayı silmek olur. Bu yüzden ayrı bir
+   okuyucu ve dört ayrı cevap:
+     none  anahtar yok            → gerçekten boş, yazılabilir
+     err   erişim attı            → BİLMİYORUZ, hiçbir şey yazılmamalı
+     bad   JSON ayrıştırılamadı   → BİLMİYORUZ, hiçbir şey yazılmamalı
+     ok    ayrıştırıldı           → yapı denetimi çağırana ait */
+function lsRead(k){
+  let s;
+  try{s=localStorage.getItem(k);}
+  catch(e){return {st:'err'};}
+  if(s===null||s===undefined)return {st:'none'};
+  let v;
+  try{v=JSON.parse(s);}
+  catch(e){return {st:'bad'};}
+  return {st:'ok',v:v};
+}
+/* Kayıt anahtarının localStorage'daki karşılığını HAM okur — arka uç ne olursa
+   olsun. Yalnız iapq göçü kullanıyor: IndexedDB açıldığında önceki oturumun
+   localStorage kuyruğu hâlâ orada duruyor olabilir. */
+function recReadLs(key){return lsRead(LSKEY[key]);}
+function recDelLs(key){lsDel(LSKEY[key]);}
+
 /* Hangi yuvalarda kayıt var — yalnız anahtarlar. Açılışta özet ile gerçeğin
    tutup tutmadığı buradan bakılıyor; üç kaydı okumak 20 MB ayrıştırmak olurdu. */
 function recSlotKeys(){

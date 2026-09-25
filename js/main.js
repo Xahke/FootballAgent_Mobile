@@ -15,7 +15,12 @@ function save(){if(curSlot&&S)saveToSlot(curSlot);}
    "yükleniyor" satırı gösteriyor ve göç bitince yeniden çiziliyor. */
 stack=[{v:'menu'}];
 render();
-storeInit().then(()=>{render();},()=>{render();});
+storeInit().then(()=>{
+  render();
+  /* Çakışan bir kayıt başka bir yuvaya kurtarıldıysa kullanıcı bunu bilmeli:
+     menüde beklemediği bir kariyer belirdi ve nedeni görünmüyor. */
+  if(rescuedCount())toast(t('rescueDone'));
+},()=>{render();});
 
 /* Ödüllü reklam adaptörü (js/ads.js). Açılışta bir kez ve şu sırayla: izin
    bilgisi tazeleniyor, gerekiyorsa UMP formu gösteriliyor, canRequestAds
@@ -33,7 +38,13 @@ adsInit();
    ağ üzerinden gidiyor, menü onu bekleyemez. Açılışta yaptığı iş üç şey —
    faturalandırma destekleniyor mu, ürünlerin YERELLEŞTİRİLMİŞ fiyatları, ve
    ödenmiş ama kapanmamış işlemlerin uzlaştırılması. Sorgu başarısız olursa
-   hiçbir hak düşmüyor ve satın alma kapalı kalıyor. */
+   hiçbir hak düşmüyor ve satın alma kapalı kalıyor.
+
+   BURADA storeInit() BEKLENMİYOR ve beklenmemeli — ama iapInit()'in içindeki
+   ödeme kuyruğu okuması onu kendisi bekliyor (iapqLoad → storeReadyP). İkisi
+   ayrı: fiyat sorgusu yerel diskin açılmasına takılmıyor, kuyruk ise arka uç
+   seçilmeden okunmuyor. Yukarıdaki satırın storeInit()'i başlatmış olması da
+   şart değil; kapı gerekirse kendisi başlatıyor. */
 iapInit();
 
 /* Uygulama arkaya alınırken son durumu kuyruğa bırak. Tarayıcı kapanışta

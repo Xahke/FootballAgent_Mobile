@@ -38,6 +38,11 @@ let curSlot=0;
 /* Açılış tamamlanana kadar menü "yükleniyor" gösteriyor; boş yuva göstermek
    kaydı silinmiş gibi görünürdü. */
 let storeReady=false;
+/* storeInit()'in sözü, tek örnek. Depolamaya bağlı başlangıçlar (js/iap.js'in
+   ödeme kuyruğu) bunu BEKLEMEK zorunda: SAVEH.backend açılışta 'ls' değerinden
+   başlıyor ve storeBackendInit() bitene kadar öyle kalıyor — daha erken yapılan
+   her recGet() YANLIŞ arka uçtan okur ve "orada bir şey yok" der. */
+let STOREP=null;
 
 /* ================= CİHAZ TERCİHLERİ ================= */
 let PREFS=jparse(lsGet(PREFKEY))||{};
@@ -91,7 +96,42 @@ function allMeta(){return META;}
 function slotMeta(n){return META['s'+n]||null;}
 function slotUsed(n){return !!slotMeta(n);}
 function anySlot(){for(let n=1;n<=SLOTS;n++)if(META['s'+n])return true;return false;}
-function metaDirty(){queueRec('meta',()=>META);}
+/* Özeti diske bırakır. metaDirtyC(), aynı işi yapıp "yazdığım özet gerçekten
+   şunu taşıyordu" sorusunu cevaplayan söz döndürüyor — kuyruk anahtar başına
+   birleştiği için tanık, depolamaya VERİLEN özet üzerinde çalışıyor. */
+function metaDirtyC(witness){const p=queueRec('meta',()=>META,witness);rememberIdbSlots();return p;}
+function metaDirty(){metaDirtyC();}
+
+/* ================= ARKA UÇ GÖLGESİ =================
+   IndexedDB bir açılışta açılamayabilir: bozuk profil, dolu disk, başka bir
+   sekmenin tuttuğu eski sürüm, bazı gizli sekme kipleri. Katman o zaman
+   localStorage'a düşüyor — ve kariyerlerin kaydı orada YOK. Menü üç boş yuva
+   çiziyordu.
+
+   Boş yuva "kaydın silindi" demektir ve kullanıcıyı üstüne yeni bir kariyer
+   kurmaya davet eder. Oysa kayıt yerli yerinde duruyor, yalnız bu açılışta
+   okunamıyor: GEÇİCİ BİR ERİŞİM HATASI, KAYDIN YOKLUĞUNUN KANITI DEĞİLDİR.
+
+   Bu yüzden IndexedDB gerçekten kullanılabilirken hangi yuvalarda kayıt olduğu
+   cihaz tercihlerine yazılıyor. Bu bir KOPYA değil, bir İPUCU: yalnız "orada
+   bir kayıt vardı" der, içeriği hakkında hiçbir şey söylemez ve hiçbir zaman
+   veri kaynağı olarak okunmaz. Tek işi, okuyamadığımız bir yuvayı menünün boş
+   göstermemesi. Eskimiş olabilir; eskimiş olması da zararsız, çünkü gölge yuva
+   yalnızca "şimdi kurma, önce depoyu düzelt" der. */
+function rememberIdbSlots(){
+  if(SAVEH.backend!=='idb')return;
+  const a=[];
+  for(let n=1;n<=SLOTS;n++)if(META['s'+n])a.push(n);
+  const s=a.join(',');
+  if(pref('idbs',null)!==s){PREFS.idbs=s;savePrefs();}
+}
+/* "Burada bir kariyer var ama şu anda okuyamıyoruz." Yalnız localStorage'a
+   düşülmüşken anlamlı; IndexedDB açıkken gerçeğin kendisi elimizde. */
+function slotShadow(n){
+  if(SAVEH.backend!=='ls'||META['s'+n])return false;
+  return (','+pref('idbs','')+',').indexOf(','+n+',')>=0;
+}
+function anyShadow(){for(let n=1;n<=SLOTS;n++)if(slotShadow(n))return true;return false;}
 /* Özet menüde gösterilen her şeyi taşır; tam kaydı açmaya gerek kalmaz.
    totalWeeks() global S'yi okuduğu için burada fikstürden yeniden hesaplanıyor —
    bu fonksiyon her zaman kendisine verilen duruma bakmalı.
@@ -194,32 +234,292 @@ function deleteSlot(n){
   queueDel('s'+n);
   metaDirty();
   if(curSlot===n){curSlot=0;S=null;}
+  /* Yer açıldı: yer olmadığı için localStorage'da bekleyen bir kurtarma varsa
+     şimdi tamamlanabilir. Beklenmiyor — menü kurtarma bitince kendini çiziyor. */
+  if(RESCUE.length)RESCUEP=retryRescue();
 }
 
 /* ================= AÇILIŞ VE GÖÇ =================
    Sıra önemli:
    1) arka uç seçilir (IndexedDB var mı),
-   2) özet okunur — hangi yuvaların dolu sayıldığını bilmeden göç yapılamaz,
-   3) localStorage yuvaları taşınır,
-   4) tek kayıtlı sürümün anahtarı taşınır,
-   5) özet gerçekle karşılaştırılır.
+   2) özet okunur,
+   3) özet GERÇEKLE uzlaştırılır — göç "hedef yuvada kayıt var mı" sorusunu
+      özet üzerinden ucuza cevaplıyor ve eksik bir özet o soruyu YANLIŞ
+      cevaplardı ("yok" deyip mevcut kariyerin üstüne yazdırırdı),
+   4) localStorage yuvaları taşınır,
+   5) tek kayıtlı sürümün anahtarı taşınır,
+   6) özet bir kez daha uzlaştırılır (göç yeni kayıtlar yazmış olabilir).
    Her adım kendi başına yeniden çalıştırılabilir; yarıda kesilen göç bir sonraki
    açılışta kaldığı yerden devam eder. */
 function storeInit(){
-  return storeBackendInit()
+  if(STOREP)return STOREP;
+  STOREP=storeBackendInit()
     .then(()=>recGet('meta'))
     .then(m=>{META=m||{};},()=>{META={};})
+    .then(reconcileMeta)
     .then(migrateLsSlots)
     .then(migrateLegacy)
     .then(reconcileMeta)
-    .then(()=>{storeReady=true;},e=>{storeReady=true;noteSaveFail('init',e);});
+    .then(()=>{storeReady=true;rememberIdbSlots();},e=>{storeReady=true;noteSaveFail('init',e);});
+  return STOREP;
+}
+/* "Depolama hazır" kapısı. Henüz başlamadıysa BAŞLATIYOR — bu kapıyı bekleyen
+   bir çağrı storeInit()'in daha önce çağrılmış olmasına bağlı kalmamalı; yükleme
+   sırası değişirse sessizce sonsuza kadar beklerdi. storeInit() kendi hatasını
+   yuttuğu için kapı hiçbir zaman REDDETMİYOR: "depolama açıldı mı" ile "açılış
+   sorunsuz muydu" ayrı sorular, ikincisini SAVEH cevaplıyor. */
+function storeReadyP(){return storeInit();}
+
+/* ================= localStorage DÖNEMİNİN DEVRİ =================
+   Kayıpsız olmasının tek yolu sırayı bozmamak: yaz → geri oku → aynı mı diye
+   bak → ANCAK O ZAMAN sil. Karşılaştırma tam serileştirme üzerinden; pahalı ama
+   kayıt başına ömürde bir kez çalışıyor ve "taşıdım sandım" ihtimalini
+   bırakmıyor.
+
+   Eksik olan şey HEDEFE BAKMAKTI. Eski sürüm kaynağı doğrudan 's<n>' üzerine
+   yazıyordu; hedefte ne olduğunu hiç sormuyordu. İki ayrı yoldan kariyer
+   kaybettiriyordu:
+
+   1) Arka uç zaten localStorage iken kaynak ile hedef AYNI anahtardır. Kayıt
+      kendi üstüne yazılıyor, doğrulama tabii ki geçiyor, ardından kaynak
+      siliniyordu — IndexedDB açılamayan bir cihazda kariyer ikinci açılışta
+      yok oluyordu.
+   2) IndexedDB bir açılışta açılamayıp kullanıcı localStorage yolunda aynı
+      yuvada yeni bir kariyer kurduğunda, sonraki başarılı açılış o yeni kaydı
+      IndexedDB'deki eski kariyerin üstüne yazıyordu.
+
+   Bugünkü kural tek cümle: KAYNAK ANCAK HEDEFİN ONU ZATEN TAŞIDIĞI
+   KANITLANIRSA SİLİNİR. Kanıtlanamayan her durumda iki kayıt da kalır. */
+
+/* Kariyer kimliği — yoksa boş dize. Kimliksiz eski kayıtlar hiçbir kimlikle
+   eşleşmez, bu yüzden hiçbir zaman çatal sayılmazlar. */
+function recCid(rec){
+  const c=rec&&rec.S&&rec.S.cid;
+  return (typeof c==='string'&&c)?c:'';
+}
+/* Kaynağın hedefe ne yapacağı. Dönüş:
+   'done'     kaynağın BİREBİR aynısı zaten bir yuvada duruyor — kaynak silinebilir
+   'fork'     aynı kariyer kimliği, farklı içerik — karantinaya (bkz. parkFork)
+   'move'     hedef boş, ya da oyunun hiç açamayacağı bir kalıntı — normal göç
+   'conflict' başka bir kariyer aynı yuvayı istiyor — boş yuvaya kurtarma
+
+   BURADA SIRALAMA YOK, ve olmaması bilinçli. Önceki sürüm "aynı cid + hedef eşit
+   ya da ileri (season, week)" durumunu kaynağın hedefte KAPSANDIĞI kanıtı sayıp
+   kaynağı siliyordu. Değildi:
+
+   - Aynı hafta içinde ayrışmış iki kopyanın (season, week)'i eşittir ve
+     içerikleri farklıdır; sıralama onları ayıramaz.
+   - İleri haftadaki bir kopya, geride kalan kopyaya teslim edilmiş bir satın
+     alma tokenını (S.iap.t) taşımıyor olabilir. İlerleme kapsama demek değil.
+
+   Kayıt biçimi bir sürüm/soy zinciri taşımıyor, yani "şu kopya şunun torunudur"
+   diye bir kanıt yok. Elimizdeki tek gerçek kanıt TAM EŞDEĞERLİK: korunması
+   gereken bütün yük (v, S, PID) bit bit aynı. Kaynak yalnız o zaman siliniyor. */
+function moveVerdict(dst){
+  if(dst===undefined||dst===null)return 'move';
+  /* İleri sürümlü kayıt bozuk değil, daha yeni bir sürümün yazdığı kayıttır;
+     loadSlot() ile aynı kural, asla üstüne yazılmaz. */
+  if(schemaOf(dst)>SAVE_SCHEMA)return 'conflict';
+  /* Oyunun açamadığı bir kalıntı gerçek bir kariyerin önünü kesmiyor. */
+  if(!validSave(migrateSave(dst)))return 'move';
+  return 'conflict';
+}
+/* Bu kimliği taşıyan CANLI yuva. Karantinadakiler canlı değil, burada yoklar. */
+function cidSlot(cid){
+  if(!cid)return 0;
+  for(let n=1;n<=SLOTS;n++){const m=META['s'+n];if(m&&m.cid===cid)return n;}
+  return 0;
+}
+/* Özet karşılaştırması — ts hariç, çünkü kurtarılan kopyanın özeti kurtarma
+   anında üretiliyor ve saati farklı olur. Ucuz ön eleme; kararı tam
+   karşılaştırma veriyor. */
+function metaLike(a,b){
+  return !!(a&&b&&a.cid===b.cid&&a.agent===b.agent&&a.agency===b.agency&&
+            a.season===b.season&&a.week===b.week&&a.cash===b.cash&&
+            a.rep===b.rep&&a.clients===b.clients);
+}
+/* Bu kaydın BİREBİR aynısı zaten bir yuvada duruyor mu? Kurtarma ya da park
+   yazıldıktan SONRA, kaynak silinmeden kesilen bir açılış aksi halde her
+   seferinde bir kopya daha üretirdi. Önce özetten eleniyor: çakışma yolunda
+   normalde hiçbir tam okuma yapılmıyor. */
+function findSameRec(want,mo){
+  let p=Promise.resolve(0);
+  for(let m=1;m<=SLOTS;m++)p=p.then(((k)=>hit=>{
+    if(hit||!metaLike(META['s'+k],mo))return hit;
+    return recGet('s'+k).then(r=>(r&&JSON.stringify(r)===want)?k:0,()=>0);
+  })(m));
+  return p;
+}
+/* Kurtarma için boş yuva. "Boş" üç kaynağa birden bakıyor: özet, arka ucun
+   gerçek anahtarları ve localStorage'da bekleyen başka bir göç kaynağı. */
+function freeSlotFor(busy){
+  busy=busy||{};
+  for(let m=1;m<=SLOTS;m++){
+    if(META['s'+m]||busy['s'+m])continue;
+    if(lsGet(SLOTKEY(m))!==null)continue;
+    return m;
+  }
+  return 0;
+}
+/* Yer bulunamadığı için localStorage'da bekleyen kayıtlar. Menü bunu gösteriyor
+   (js/ui.js, cmRescueHtml): sessizce beklemesi, kullanıcı açısından kaybolmakla
+   aynı şey olurdu. why: 'noRoom' boş yuva yok, 'forkBusy' karantina dolu. */
+let RESCUE=[];
+let RESCUED=0;
+/* Yuva boşalınca başlatılan kurtarmanın sözü. Oyun beklemiyor (menü kurtarma
+   bitince kendini çiziyor); testlerin belirlenimci olması için duruyor. */
+let RESCUEP=null;
+function rescuePending(){return RESCUE;}
+function rescuedCount(){return RESCUED;}
+function rescueTask(){return RESCUEP||Promise.resolve();}
+
+/* ================= KARANTİNA (AYNI KİMLİKLİ ÇATAL) =================
+   Aynı cid'yi taşıyan ikinci bir kopya boş bir yuvaya KONMUYOR. Konsaydı
+   kimlik iki canlı kariyeri birden gösterirdi ve cid'ye bağlı her şey bozulurdu:
+
+   - iapSlotOfCid() META'yı tarayıp İLK eşleşen yuvayı döner; ödeme yanlış
+     kopyaya teslim edilebilirdi.
+   - deleteSlot() cid'ye bakıp rwDropCid()/iapOrphanCid() çağırıyor; bir kopyayı
+     silmek diğerinin bekleyen ücretli işlemini hedefsiz bırakırdı.
+   - İki kopya da aynı S.iap.t tokenını taşırsa bir satın alma iki kariyerde
+     birden kapasite verirdi.
+
+   Kopyayı kurtarmak için cid'yi kendiliğinden değiştirmek de çözüm değil: cid
+   ödemenin hedefi, ve onu sessizce değiştirmek bekleyen bir işlemin hedefini
+   koparır. Bu yüzden ikinci kopya karantinada duruyor — kalıcı, menüde görünür,
+   ama canlı bir kariyer değil. Ne yapılacağına KULLANICI karar veriyor. */
+const FORKKEY=n=>'f'+n;
+function forkList(){
+  const fk=(META&&META.fk)||{};
+  return Object.keys(fk).filter(k=>fk[k]&&fk[k].meta)
+    .map(k=>({key:k,slot:fk[k].slot,meta:fk[k].meta}));
+}
+function forkOf(key){const fk=(META&&META.fk)||{};return fk[key]||null;}
+/* Özet ve kayıt ayrı yazılıyor, bu yüzden dizin KALICI olmadan kaynak silinmiyor:
+   yazılmış ama dizine girmemiş bir kopya kullanıcı için görünmez olurdu. Tanık
+   (js/store.js — seal) depolamaya verilen özetin gerçekten girdiyi taşıdığını
+   söylüyor, canlı META'yı sonradan okumuyor. */
+function noteFork(k,n,mo){
+  if(!META.fk||typeof META.fk!=='object')META.fk={};
+  META.fk[k]={slot:n,meta:mo};
+  return metaDirtyC(m=>!!(m&&m.fk&&m.fk[k]));
+}
+function dropFork(k){
+  if(META.fk)delete META.fk[k];
+  return metaDirtyC(m=>!(m&&m.fk&&m.fk[k]));
+}
+function parkFork(n,rec,want,mo){
+  const k=FORKKEY(n);
+  return recGet(k).then(cur=>{
+    if(cur&&JSON.stringify(cur)===want){
+      /* Zaten park edilmiş; dizin ya da kaynak silme adımı yarıda kalmış. */
+      return noteFork(k,n,mo).then(okw=>{
+        if(okw)lsDel(SLOTKEY(n));
+        return okw?'parked':'verifyFailed';
+      });
+    }
+    /* Dolu ve BAŞKA bir kayıt. Dizinde karşılığı varsa kullanıcının kararını
+       bekleyen gerçek bir çatal demektir: dokunmuyoruz, kaynak da yerinde kalıyor.
+       Dizinde karşılığı YOKSA o baytlara hiçbir yoldan ulaşılamıyor ve oraya
+       ancak iki yoldan düşülür — park dizini yazamadı (kaynak hâlâ ls'te) ya da
+       kurtarma kaydı yuvaya yazıp silmeye gelemedi (kayıt yuvada). İki durumda
+       da veri başka bir yerde duruyor, yani üstüne yazmak kayıp değil. */
+    if(cur&&forkOf(k)){RESCUE.push({from:n,meta:mo,why:'forkBusy'});return 'forkBusy';}
+    return recPut(k,rec)
+      .then(()=>recGet(k))
+      .then(back=>{
+        if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+        return noteFork(k,n,mo).then(okw=>{
+          if(okw)lsDel(SLOTKEY(n));
+          return okw?'parked':'verifyFailed';
+        });
+      });
+  }).catch(e=>{noteSaveFail(k,e);return 'writeFailed';});
+}
+/* Kullanıcının kararı 1: saklanan kopyayı kur.
+   Kurtarma BİREBİR: kayıt olduğu gibi yazılıyor — kimlik de, ödeme defteri de,
+   rezervasyonlar da değişmiyor. Bir önceki sürüm burada yeni bir cid atayıp
+   S.iap'ı düşürüyordu; ikisi de yanlıştı:
+
+   - Ödenmiş bir token YALNIZ saklanan kopyada duruyor olabilir (oynanan kopya o
+     satın almayı hiç görmemiş olabilir). Onu düşürmek, "kurtarma" adı altında
+     para ödenmiş bir kaydı silmekti — üstelik karantina kaydı da hemen ardından
+     siliniyordu, yani geri getirilemiyordu.
+   - cid bekleyen bir satın almanın hedefi (iapSlotOfCid). Sessizce değiştirmek
+     o bağı koparır.
+
+   Bunun bedeli, kurtarmanın bir ÖN KOŞULU olması: bu kimlik hiçbir yuvada canlı
+   olmamalı, çünkü aynı cid iki canlı yuvada duramaz. Canlı ikiz yerindeyken
+   kurtarma yapılmıyor ve ekran nedenini yazıyor — kayıplı bir kopya üretmek
+   yerine iki özgün kayıt da olduğu gibi korunuyor. İki defteri birleştirmek de
+   çözüm değil: tavan, rezervasyon ve token tekilliği ayrı ayrı bozulurdu.
+
+   Kuyruk önce boşaltılıyor: yuva silme kuyruktan geçiyor, recPut ise geçmiyor —
+   uçuştaki bir silme, az önce yazdığımız kaydı silebilirdi. */
+function forkRestore(key){
+  if(!forkOf(key))return Promise.resolve('gone');
+  return saveDrain().then(()=>recGet(key)).then(rec=>{
+    if(!forkOf(key))return 'gone';
+    const d=migrateSave(rec);
+    if(!validSave(d))return 'broken';
+    /* Kanıt kaydın KENDİSİNDEN okunuyor, dizinden değil: dizin eskimiş olabilir. */
+    if(cidSlot(recCid(rec)))return 'live';
+    const m=freeSlotFor();
+    if(!m)return 'noRoom';
+    const want=JSON.stringify(rec);
+    return recPut('s'+m,rec)
+      .then(()=>recGet('s'+m))
+      .then(back=>{
+        if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+        META['s'+m]=metaOf(d.S);
+        if(META.fk)delete META.fk[key];
+        return metaDirtyC(mm=>!!(mm&&mm['s'+m])&&!(mm.fk&&mm.fk[key])).then(okw=>{
+          if(!okw)return 'verifyFailed';
+          /* Geçiş BİREBİR tamamlandı ve doğrulandı; ancak o zaman karantina
+             kopyası silinebilir. Silinemese bile veri kaybı yok — dizinsiz kalan
+             baytların üstüne bir sonraki park yazabilir (bkz. parkFork). */
+          return recDel(key).then(()=>{forkFreed();return 'restored';},()=>'restored');
+        });
+      });
+  }).catch(err=>{noteSaveFail(key,err);return 'writeFailed';});
+}
+/* Kullanıcının kararı 2: kopyayı sil. Sessiz bir kayıp değil — ekran soruyor. */
+function forkDiscard(key){
+  if(!forkOf(key))return Promise.resolve(false);
+  return recDel(key).then(()=>dropFork(key).then(()=>{forkFreed();return true;}),
+                          e=>{noteSaveFail(key,e);return false;});
+}
+/* Karantina yeri boşaldı: yalnız orası dolu olduğu için localStorage'da bekleyen
+   bir kaynak varsa şimdi park edilebilir. Beklenmiyor — menü kendini çiziyor. */
+function forkFreed(){
+  if(RESCUE.some(r=>r.why==='forkBusy'))RESCUEP=retryRescue();
 }
 
-/* localStorage'daki bir kaydı arka uca taşır. Kayıpsız olmasının tek yolu
-   sırayı bozmamak: yaz → geri oku → aynı mı diye bak → ancak o zaman sil.
-   Karşılaştırma tam serileştirme üzerinden; pahalı ama kayıt başına ömürde bir
-   kez çalışıyor ve "taşıdım sandım" ihtimalini bırakmıyor. */
-function moveOneSlot(n){
+/* Çakışma: BAŞKA bir kariyer aynı yuvayı istiyor. İkisi de kalıyor —
+   localStorage'dan gelen BOŞ BİR YUVAYA kurtarılıyor ve menüde normal bir
+   kariyer olarak görünüyor. Boş yuva yoksa hiçbir şey silinmiyor: kaynak yerinde
+   bekliyor, menü kullanıcıya bir yuva boşaltmasını söylüyor ve yuva boşalınca
+   kurtarma kendiliğinden tamamlanıyor. */
+function rescueOneSlot(n,rec,want,mo,busy){
+  /* Oyunun açamayacağı bir kalıntı için yuva harcamıyoruz. Silmiyoruz da. */
+  if(!mo)return Promise.resolve('invalid');
+  const m=freeSlotFor(busy);
+  if(!m){RESCUE.push({from:n,meta:mo,why:'noRoom'});return Promise.resolve('noRoom');}
+  return recPut('s'+m,rec)
+    .then(()=>recGet('s'+m))
+    .then(back=>{
+      if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+      busy['s'+m]=true;
+      META['s'+m]=mo;metaDirty();
+      lsDel(SLOTKEY(n));
+      RESCUED++;
+      return 'rescued';
+    })
+    .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+}
+
+function moveOneSlot(n,busy){
+  busy=busy||{};
   const raw=lsGet(SLOTKEY(n));
   if(raw===null)return Promise.resolve('none');
   const d=jparse(raw);
@@ -228,20 +528,58 @@ function moveOneSlot(n){
   if(!d||typeof d!=='object')return Promise.resolve('unparsable');
   const rec={v:SAVE_SCHEMA,S:d.S,PID:d.PID};
   const want=JSON.stringify(rec);
-  return recPut('s'+n,rec)
-    .then(()=>recGet('s'+n))
-    .then(back=>{
-      if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
-      lsDel(SLOTKEY(n));
-      if(!META['s'+n]&&validSave(rec)){META['s'+n]=metaOf(rec.S);metaDirty();}
-      return 'moved';
-    })
-    .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+  const mo=validSave(rec)?metaOf(rec.S):null;
+  /* Önce hedef okunuyor. Okuma hatasının AYRI bir cevap olması bu düzeltmenin
+     özü: "okuyamadım" ile "orada bir şey yok" aynı sayılırsa geçici bir hata
+     mevcut kariyerin üstüne yazdırır. Hata durumunda hiçbir şey yazılmıyor,
+     kaynak yerinde duruyor, göç bir sonraki açılışa kalıyor. */
+  return recGet('s'+n).then(dst=>{
+    if(dst&&JSON.stringify(dst)===want){lsDel(SLOTKEY(n));return 'done';}
+    /* Aynı kayıt başka bir yuvaya daha önce taşınmış olabilir. */
+    return findSameRec(want,mo).then(hit=>{
+      if(hit){lsDel(SLOTKEY(n));return 'done';}
+      /* Kimlik CANLI bir yuvada zaten varsa bu kayıt o kariyerin ikinci
+         kopyasıdır — hedef yuva boş olsa bile karantinaya gidiyor, çünkü
+         yazılsaydı aynı cid iki canlı yuvada görünürdü. */
+      const cs=recCid(rec);
+      if(cs&&cidSlot(cs))return parkFork(n,rec,want,mo);
+      const v=moveVerdict(dst);
+      if(v==='conflict')return rescueOneSlot(n,rec,want,mo,busy);
+      return recPut('s'+n,rec)
+        .then(()=>recGet('s'+n))
+        .then(back=>{
+          if(!back||JSON.stringify(back)!==want)return 'verifyFailed';
+          busy['s'+n]=true;
+          lsDel(SLOTKEY(n));
+          if(!META['s'+n]&&mo){META['s'+n]=mo;metaDirty();}
+          return 'moved';
+        })
+        .catch(e=>{noteSaveFail('s'+n,e);return 'writeFailed';});
+    });
+  },e=>{noteSaveFail('s'+n,e);return 'readFailed';});
 }
 function migrateLsSlots(){
-  let p=Promise.resolve();
-  for(let n=1;n<=SLOTS;n++)p=p.then(((k)=>()=>moveOneSlot(k))(n));
-  return p;
+  RESCUE=[];
+  /* Arka uç zaten localStorage ise taşınacak bir YER yok: kaynak anahtarı ile
+     hedef anahtarı aynı. Eski sürüm bunu fark etmiyordu (yukarıdaki 1. yol). */
+  if(SAVEH.backend==='ls')return Promise.resolve();
+  return recSlotKeys().then(keys=>{
+    const busy={};keys.forEach(k=>{busy[k]=true;});
+    let p=Promise.resolve();
+    for(let n=1;n<=SLOTS;n++)p=p.then(((k)=>()=>moveOneSlot(k,busy))(n));
+    return p;
+  },e=>{
+    /* Hedefin durumunu okuyamadık. Okuyamamak "kayıt yok" demek değil: hiçbir
+       şey yazılmıyor, kaynaklar yerinde kalıyor, göç bir sonraki açılışa. */
+    noteSaveFail('init',e);
+  });
+}
+/* Yuva boşalınca bekleyen kurtarmayı tamamlar. Kuyruk boşalmadan bakmak yuvayı
+   hâlâ dolu görürdü — silme de aynı kuyruktan geçiyor. */
+function retryRescue(){
+  return saveDrain().then(migrateLsSlots).then(()=>{
+    if(!curSlot&&typeof render==='function')render();
+  });
 }
 
 /* ================= ESKİ KAYDIN DEVRİ =================
