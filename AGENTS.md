@@ -92,7 +92,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (544 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (553 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
@@ -834,6 +834,203 @@ query and a disputed record all grant nothing; that a repeated identical respons
 produces no further calls; and that a failed local write is retried rather than
 reported as success.
 
+### A declined payment is a result, not a mystery — but only three codes say so
+
+A reservation is written before payment starts and, by design, only **proven**
+transitions release it. That design was right and is unchanged. What was missing is
+that one class of proof was never read: **the payment resolving as a definitive
+failure.** A declined card left the reservation in place forever, because
+`iapIsCancel()` recognised only `USER_CANCELED`, and nothing else in the file could
+ever drop it — `iapReapRes()` only releases against a *delivered* token, and a
+declined attempt produces no token and no queue record at all. The career silently
+lost that much capacity, permanently.
+
+**A second proof was attempted and then withdrawn, and the withdrawal is the decision
+worth recording.** An intermediate version released the reservation automatically on
+`3` BILLING_UNAVAILABLE, `4` ITEM_UNAVAILABLE and `5` DEVELOPER_ERROR, on the grounds
+that Google documents all three as **non-retriable**. That is not the same claim.
+"Retrying will not help" is Play telling you the *attempt* is over; it is **not**
+evidence that no purchase exists. `PurchasesUpdatedListener` describes `purchases` only
+as "List of updated purchases if present" and **does not guarantee the list is null on a
+non-OK code**. Releasing the reservation widens a real exposure: a paid entitlement that
+arrives later finds the ceiling taken and lands as `undeliverable` — paid, not
+delivered. So `3`/`4`/`5` are classified for **wording only** and the reservation stays.
+
+**A separate finding came out of that reading, and it is not evidence of anything
+either.** The plugin enters `handlePurchase()` only when `responseCode == OK` *and*
+`purchases != null`; on any other result it rejects immediately
+(`NativePurchasesPlugin.onPurchasesUpdated`). So a `Purchase` arriving alongside a
+non-OK result is **discarded without us ever seeing it**. Discarded data is not proof
+that no purchase happened — it is precisely what makes the non-OK case impossible to
+confirm from here. That is a defect to raise against the plugin, not a justification.
+
+**The cancel path keeps the same theoretical risk and is deliberately kept separate.**
+`USER_CANCELED` (1) and the `launch` stage still release, through `iapReleasing()`. The
+exposure is of the same kind — if a purchase somehow came out of a flow Play called
+cancelled, it would hit the same `undeliverable` path. The difference is that this
+behaviour predates this branch and has no measured harm, so it is a preserved status
+quo rather than a widened one. **A new code joins that list only when definitive-failure
+evidence for that specific attempt can be shown**, which the contract does not currently
+provide for any of `3`/`4`/`5`.
+
+`2` SERVICE_UNAVAILABLE, `6` ERROR, `12` NETWORK_ERROR and `-1` SERVICE_DISCONNECTED are
+documented **retriable**, and `7` ITEM_ALREADY_OWNED says a purchase *does* exist. Every
+unrecognised code is uncertain. **Uncertainty is the default and no timeout or empty
+`getPurchases()` round ever changes it.**
+
+`iapTerminalKind()` still reads the structured field under the same three conditions as
+`iapIsCancel()` — stage `updated`, a recognised code, **and the attempt's own
+`appAccountToken`** — but it now answers *what happened* (`cancel` / `declined` /
+`refused`), not *what may be released*. `iapReleasing()` is the separate, shorter answer
+to the second question.
+
+**The release is now witnessed.** `iapRelease()` used to delete from memory and assume
+the write stuck. If it did not, the reservation came back on the next launch while that
+session's screen showed it gone — memory and disk disagreed and the user was invited to
+buy capacity that was not there. It now confirms the deletion against the record on
+disk and, when the write fails, puts the entry back and marks it `df` — *proven
+definitive failure*. `iapReapRes()` reads `df` as its second piece of evidence and
+finishes the job on the next reconcile. `df` is written from exactly one place, only
+after a matching-tag terminal response; **a reservation that carries no `df` is never
+swept**, which is why reservations created before this change are left exactly where
+they are.
+
+**The screen stopped conflating two facts.** `iapState()` returns `'held'` — not
+`'full'` — when the ceiling binds only because of reservations, and `shopCapHeld` says
+so: the allowance is not spent, an unfinished purchase is holding it. `shopCapFull` now
+means what it says. `shopDeclined` is its own sentence too, because "you cancelled" and
+"your payment was declined" are not the same event.
+
+**One promise was removed rather than implemented.** `shopTxHeld` used to say the
+capacity "is released on its own once the payment resolves". No code path backed that
+for a payment that resolves as a *failure*: with no token there is nothing for
+`iapReapRes()` to match. The string now claims only what holds — no allowance has been
+spent, delivery clears the reservation, an attempt whose outcome is never learned keeps
+it, and the order can be checked in Play.
+
+`tools/savetest.js` block 24 scenarios **(31)–(35)** hold all of it: that a declined
+payment grants nothing, moves no money, writes no queue record and **keeps** its
+reservation with no `df` mark; that every retriable/unknown code and a real PENDING keep
+it too; that a foreign or missing tag releases nothing and a second attempt's reservation is
+untouched; that a failed release write is reported as failure, leaves memory agreeing
+with disk and is finished by the next reconcile; that an old reservation with no `df` is
+never swept; and that `'held'` and `'full'` are different states with different
+sentences in both languages.
+
+### The reservation write has a window, and the purchase lock has to cover all of it
+
+A reservation is removed from `S` in memory and only then written to disk. Between those
+two moments the ceiling looks free while disk says otherwise, and a purchase started in
+that window would spend capacity nothing has confirmed. `IAPS.busy` covers the window
+inside `iapRelease()` because `iapBuy()` now holds the lock until the release settles.
+**`iapReapRes()` has the same window and nothing was covering it** — and it is the worse
+one, because reconcile runs at boot, on career open and on **shop open**, which is
+exactly when the user is looking at the buy buttons. `IAPS.hold` (`'' | 'reap'`) closes
+it: `iapState()` returns `busy` while it is set, and it is released on every path —
+success, failed write, and career change. Measured from inside the write itself, with a
+real `iapBuy()` call: it returns `false` and no request reaches Play.
+
+### The diagnostic code says what happened, and is allowed to do nothing about it
+
+Nothing in the app recorded *why* an attempt failed, so a reservation that is already on
+disk can no longer be explained — which is why the two reservations on the test device
+cannot be classified. `iapNoteDiag()` fixes that going forward, for new attempts only,
+and it is deliberately the narrowest thing that answers the question from the store
+screen with no cable attached:
+
+| Field | Holds |
+|---|---|
+| `s` | the stage string (`launch` / `updated` / `state`), `''` when it could not be parsed |
+| `c` | the numeric BillingResponseCode or PurchaseState, `null` when it could not be parsed |
+| `m` | whether the tag matched **this** attempt — `1`/`0`, never the tag itself |
+
+**What is not stored is the point:** no raw error message, no purchase token, no
+`appAccountToken`, no order id, no account id. The store prints it as one plain
+`shopTxDiag` line (`updated/3 · tag matched`), and an unparsable code reads as
+*unknown* rather than being guessed.
+
+Three properties keep it inert:
+
+- **It grants nothing.** No decision reads `dg`. A reservation is still released only by
+  delivery evidence or `df`, and `dg` is a different field with a different meaning — a
+  record can carry `dg` forever and never be swept.
+- **It never back-fills.** A reservation with no `dg` — which is every reservation
+  written before this change, including the two on the device — produces no line at all.
+  No code is inferred for it.
+- **Failing to write it damages nothing.** The mark is added to a reservation that is
+  already on disk and saved best-effort; if that save fails, the reservation and every
+  purchased entitlement are exactly as they were.
+
+**Four narrower failure modes were found while testing this and are closed here.**
+
+- **The async write can land in a different career.** `iapRelease()`'s failure branch
+  reads `S` and `curSlot` *after* its await; a slot change in that window wrote the
+  reservation and its `df` into whichever career was open by then. `iapSameCareer(cid,
+  slot)` now guards every post-await write. **The slot number alone is not identity** —
+  a slot can be deleted and reused, and only the `cid` changes when it is. If the career
+  is gone, nothing is written: the original career's record on disk was never modified,
+  so its reservation is still there.
+- **The retry needed the same guarantee as the first delete.** `iapReapRes()` also
+  deleted from memory and assumed the write stuck, so a failed write showed capacity that
+  disk did not have — and dropped the `df` evidence with it. It now snapshots what it
+  removed, witnesses the write, and restores on failure.
+- **Writing the evidence can fail too, and that is not the same as keeping it.** After a
+  failed delete the `df` write is itself confirmed. If it does not land, the mark exists
+  **only in memory** and is lost when the app closes — and then nothing is released, which
+  is the correct outcome. The tests measure both halves separately across a real new
+  session; nothing here claims the evidence survives a kill unless it was seen on disk.
+- **The purchase lock was released before the durable result was known.** `IAPS.busy` was
+  cleared at the top of the rejection branch, while `iapRelease()` had already deleted from
+  memory and not yet written. Measured in that window: `iapState()` said `go` and **a
+  second purchase actually started** against capacity no disk had confirmed. The lock is
+  now held until `iapRelease()` settles.
+
+**The caller decides the sentence, from the real result.** `iapRelease()` returns
+`'released' | 'failed' | 'kept' | 'none'` instead of a boolean, and `iapRejKey(kind, rel)`
+picks the string. When the write did not land, **no message claims the capacity was
+released** — `shopHoldKept` says the attempt was not charged and the capacity still shows
+as reserved. `iapTerminalKind()` also splits the terminal codes by *kind*, because "your
+card was declined" is only true for `3`; `4` (ITEM_UNAVAILABLE) and `5` (DEVELOPER_ERROR)
+get `shopBuyRefused`, which never mentions a payment method.
+
+**How strong the tag guarantee actually is — read the patch, not the mock.** `npxCode()`
+builds the tag from `call.getString("appAccountToken")`, i.e. **our own PluginCall's
+options**, and the listener closes over the `PluginCall` that `connectBillingClient()` was
+given. So on the *rejection* path the tag proves **which of our calls produced this
+rejection** — not which purchase Play is talking about. (On the *success* path it is the
+other way round and genuinely Play-sourced: `handlePurchase()` reads
+`getObfuscatedAccountId()` off the `Purchase`, and `setObfuscatedAccountId()` put our tag
+there in the first place, which is what lets a late PURCHASED token find its attempt.) A
+mock echoing `o.appAccountToken` back cannot demonstrate more than this, and the tests do
+not pretend otherwise.
+
+**And the release decision is a bounded risk, not a proof.** `PurchasesUpdatedListener`
+documents `billingResult` as "Result of the purchase update", naming ITEM_UNAVAILABLE and
+USER_CANCELED as examples of failure results, and describes `purchases` only as "List of
+updated purchases if present" — it does **not** guarantee the list is null on a non-OK
+code, and the plugin discards any purchase that arrives with one. So `3`/`4`/`5` mean
+*this flow failed and Play's own guidance says retrying will not help*; they do not prove
+no purchase can ever exist. What bounds the risk is the rest of the design: our tag rides
+to Play via `setObfuscatedAccountId`, so a purchase that did materialise still arrives
+through `getPurchases()` → `iapIngest()` and is delivered, and `iapApplyTo()` is
+idempotent. The only loss case is the ceiling being full at that later moment, which lands
+as `undeliverable` — recorded, never acknowledged. That is the same exposure
+`USER_CANCELED` has always carried.
+
+`tools/savetest.js` block 24 scenarios **(36)–(40)** hold all of it: a career switch during
+a failed release writing nothing into the second career and leaving the first career's
+record on disk intact; a failed reap write showing no phantom free capacity and keeping
+`df`, twice in a row, then completing when writes recover; `df` in memory only versus `df`
+confirmed on disk, each carried into a fresh session; the lock observed from inside the
+write itself; and the three terminal codes classified and worded separately.
+
+**Still unproven, and it is the same gap as before:** no real purchase has ever been
+made, and **which response code the device actually returned was never captured** —
+`js/iap.js` never persisted the stage or code, and Capacitor's own log of the rejection
+is suppressed in release builds (`loggingBehavior` defaults to `debug`, i.e.
+`FLAG_DEBUGGABLE`). So this change fixes the class of failure the contract lets us
+recognise; whether the device's decline was in fact one of `3`/`4`/`5` is not known.
+
 **Three persistent structures:**
 
 | | |
@@ -1397,7 +1594,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 513 today, but count them rather than trusting this line; it has
+  counts must match — 553 today, but count them rather than trusting this line; it has
   been stale before. Objects returned from events, themes, branches and
   rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
   check it isn't taken — `archLbl` already meant "Archive" and a second meaning
@@ -1496,7 +1693,10 @@ close-out for a gameplay change:
 7. **Ads and purchases**, if `js/ads.js`, `js/iap.js`, `js/sim.js`'s transition points or
    the store screen changed — `node tools/savetest.js` blocks **18–24** cover the rewarded
    adapter, the consent flow, the age gate, the privacy feedback, the season-transition
-   contract and the store's scope/ceiling rules, and block **28** covers when the purchase
+   contract and the store's scope/ceiling rules — including block 24 **(31)–(43)**, which
+   pin which BillingResponseCodes may release a reservation and which may not, and
+   which hold the career-binding, write-failure, purchase-lock and diagnostic-record
+   guarantees, and block **28** covers when the purchase
    queue may be read: it holds the boot gate (`ctl.openGate` stalls the IndexedDB open while
    `ctl.pre` installs the bridge before the scripts run, which is the only way the real boot
    race is visible), that a read error or an unrecognised payload is not an empty queue, and

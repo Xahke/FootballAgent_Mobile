@@ -486,11 +486,16 @@ function shopTxHtml(){
      onun için yanlış olurdu, çünkü çelişen sürümlerden biri hakkın verildiğini
      söylüyor olabilir. Ne verildiğini ne verilmediğini iddia etmiyoruz. */
   const uncl=typeof iapUnclearN==='function'?iapUnclearN():0;
+  /* Tanı kodu: cihaza bağlanmadan yeni bir başarısız denemeyi ayırmak için.
+     Kimlik taşımıyor (js/iap.js iapNoteDiag) ve hiçbir karara yetki vermiyor —
+     yalnız okunuyor. Bilgi taşımayan eski kayıtlar satır üretmiyor. */
+  const diag=typeof iapDiagList==='function'?iapDiagList():[];
   if(!pend&&!stuck&&!unver&&!held&&!uncl)return '';
   return `<div class="sect">${t('shopTxT')}</div>
   <div class="shpTx">
     ${pend?`<p class="shpTxP">${t('shopTxPending').replace('{n}',pend)}</p>`:''}
     ${held?`<p class="shpTxP">${t('shopTxHeld').replace('{n}',held)}</p>`:''}
+    ${diag.length?`<p class="shpTxP">${esc(t('shopTxDiag').replace('{v}',diag.join(' | ')))}</p>`:''}
     ${unver?`<p class="shpTxP">${t('shopTxUnverified').replace('{n}',unver)}</p>`:''}
     ${uncl?`<p class="shpTxP">${t('shopTxUnclear').replace('{n}',uncl)}</p>`:''}
     ${stuck?`<p class="shpTxS">${t('shopTxStuck').replace('{n}',stuck)}</p>`:''}
@@ -2720,7 +2725,11 @@ shop(){
      aynısı "Satın al" diye görmüyor. */
   const pack=p=>{
     const st=iapState(p.id);
-    const note=st==='full'?t('shopCapFull'):st==='nocareer'?t('shopNeedCareer'):'';
+    /* 'held' ile 'full' ayrı cümleler: biri hakkın bittiğini, öteki
+       sonuçlanmamış bir denemenin kapasiteyi tuttuğunu söylüyor. Kararı
+       iapState() veriyor, kart yalnız yazıyor. */
+    const note=st==='full'?t('shopCapFull'):st==='held'?t('shopCapHeld')
+      :st==='nocareer'?t('shopNeedCareer'):'';
     return `<div class="shpCard${p.cap===IAP.capMax?' top':''}${note?' out':''}">
       <span class="shpIc">${ICONS['shopCap'+p.cap]}</span>
       <span class="shpN"><i>+</i>${p.cap}</span>
