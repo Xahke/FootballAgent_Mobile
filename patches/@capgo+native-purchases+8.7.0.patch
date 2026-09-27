@@ -1,8 +1,24 @@
 diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-index d8bfea2..075a15a 100644
+index d8bfea2..499ff15 100644
 --- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
 +++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-@@ -219,11 +219,17 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -20,6 +20,7 @@ import com.android.billingclient.api.PendingPurchasesParams;
+ import com.android.billingclient.api.ProductDetails;
+ import com.android.billingclient.api.ProductDetailsResponseListener;
+ import com.android.billingclient.api.Purchase;
++import com.android.billingclient.api.PurchasesResponseListener;
+ import com.android.billingclient.api.PurchasesUpdatedListener;
+ import com.android.billingclient.api.QueryProductDetailsParams;
+ import com.android.billingclient.api.QueryProductDetailsResult;
+@@ -39,6 +40,7 @@ import java.util.concurrent.Executors;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.atomic.AtomicBoolean;
+ import java.util.concurrent.atomic.AtomicInteger;
++import java.util.concurrent.atomic.AtomicReference;
+ import org.json.JSONArray;
+ 
+ @CapacitorPlugin(name = "NativePurchases")
+@@ -219,11 +221,17 @@ public class NativePurchasesPlugin extends Plugin {
  
      private void handlePurchase(Purchase purchase, PluginCall purchaseCall) {
          Log.d(TAG, "handlePurchase() called");
@@ -23,7 +39,7 @@ index d8bfea2..075a15a 100644
          Log.d(TAG, "Is acknowledged: " + purchase.isAcknowledged());
  
          if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-@@ -289,7 +295,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -289,7 +297,7 @@ public class NativePurchasesPlugin extends Plugin {
                  // This would require additional Google Play API calls to get subscription details
              }
  
@@ -32,7 +48,7 @@ index d8bfea2..075a15a 100644
              if (purchaseCall != null) {
                  purchaseCall.resolve(ret);
              } else {
-@@ -302,7 +308,8 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -302,7 +310,8 @@ public class NativePurchasesPlugin extends Plugin {
              // given to them. You can also choose to remind the user to complete the
              // purchase if you detect that it is still pending.
              if (purchaseCall != null) {
@@ -42,7 +58,7 @@ index d8bfea2..075a15a 100644
              } else {
                  Log.d(TAG, "purchaseCall is null for pending purchase");
              }
-@@ -310,15 +317,44 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -310,15 +319,54 @@ public class NativePurchasesPlugin extends Plugin {
              Log.d(TAG, "Purchase state is OTHER: " + purchase.getPurchaseState());
              // Handle any other error codes.
              if (purchaseCall != null) {
@@ -70,10 +86,20 @@ index d8bfea2..075a15a 100644
 +     *   asama  launch  = launchBillingFlow OK donmedi (akis HIC baslamadi)
 +     *          updated = onPurchasesUpdated OK disi bir sonuc verdi
 +     *          state   = satin alma geldi ama PURCHASED degil
-+     *   kod    BillingResponseCode (updated/launch) ya da PurchaseState (state)
++     *          query   = getPurchases sorgusu OK disi bir sonuc verdi
++     *          nolist  = getPurchases OK dondu ama liste vermedi
++     *          convert = sonuc donusturulurken istisna olustu (kod 0)
++     *          dispatch= getPurchases sorgusu hic gonderilemedi (kod 0)
++     *   kod    BillingResponseCode (launch/updated/query) ya da PurchaseState
++     *          (state); nolist/convert/dispatch icin anlamli bir kod yoktur, 0
 +     *   token  bu cagriya verilen appAccountToken - hangi DENEME oldugu.
 +     *          Gec gelen bir callback'in baska bir denemenin rezervasyonunu
 +     *          dusurmesini engelleyen tek alan budur.
++     *
++     * SORGU ASAMALARINDA ETIKETIN TESLIMAT ANLAMI YOKTUR: getPurchases'e
++     * verilen appAccountToken bir hesap FILTRESIDIR, bir denemenin kimligi
++     * degil; rezervasyon kararlari yalniz 'updated'/'launch' asamalarini okur.
++     * Sorgu asamalari yalnizca "bu sorguya guvenilemez" demeye yarar.
 +     */
 +    private static String npxCode(String stage, int code, PluginCall call) {
 +        String tag = call != null ? call.getString("appAccountToken") : null;
@@ -89,7 +115,7 @@ index d8bfea2..075a15a 100644
          AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
              .setPurchaseToken(purchaseToken)
              .build();
-@@ -429,7 +465,12 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -429,7 +477,12 @@ public class NativePurchasesPlugin extends Plugin {
                                  Log.d(TAG, "Purchase update failed or purchases is null");
                                  Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
                                  if (purchaseCall != null) {
@@ -103,7 +129,7 @@ index d8bfea2..075a15a 100644
                                  }
                              }
                              closeBillingClient();
-@@ -698,6 +739,15 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -698,6 +751,15 @@ public class NativePurchasesPlugin extends Plugin {
                              "Billing flow launch result: " + billingResult2.getResponseCode() + " - " + billingResult2.getDebugMessage()
                          );
                          Log.i(NativePurchasesPlugin.TAG, "onProductDetailsResponse2" + billingResult2);
@@ -119,7 +145,7 @@ index d8bfea2..075a15a 100644
                      }
                  }
              );
-@@ -727,7 +777,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -727,7 +789,7 @@ public class NativePurchasesPlugin extends Plugin {
          if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
              assert purchases != null;
              for (Purchase purchase : purchases) {
@@ -128,7 +154,7 @@ index d8bfea2..075a15a 100644
                  Log.d(TAG, "Purchase state: " + purchase.getPurchaseState());
                  if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                      PurchaseAction action = PurchaseActionDecider.decide(false, purchase);
-@@ -747,17 +797,17 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -747,17 +809,17 @@ public class NativePurchasesPlugin extends Plugin {
      private void onConsumeResponse(BillingResult billingResult, String purchaseToken) {
          Log.d(TAG, "onConsumeResponse() called");
          Log.d(TAG, "Consume result: " + billingResult.getResponseCode() + " - " + billingResult.getDebugMessage());
@@ -149,7 +175,133 @@ index d8bfea2..075a15a 100644
          }
      }
  
-@@ -1127,7 +1177,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1100,34 +1162,126 @@ public class NativePurchasesPlugin extends Plugin {
+         }
+ 
+         withBillingClient(call, () -> {
++            /* PATCH (FootballAgent_Mobile): BU CAGRININ ISTEMCISI.
++               closeBillingClient() `billingClient` alanini KOSULSUZ kapatiyor,
++               ama alan paylasimli: billingExecutor tek is parcacikli olsa da
++               getPurchases sorgulari gonderip hemen donuyor, bu arada baslayan
++               baska bir islem initBillingClient -> connectBillingClient ile HER
++               ZAMAN yeni bir istemci kurup alani eziyor. Bu durumda bizim gec
++               gelen callback'imiz ONUN baglantisini kapatiyordu (olculdu).
++               Kimlikle sahiplik kontrolu eklentinin kendi deyimi:
++               onBillingServiceDisconnected da `billingClient == client` bakiyor. */
++            final BillingClient ownedClient;
++            synchronized (billingClientLock) {
++                ownedClient = billingClient;
++            }
+             JSONArray allPurchases = new JSONArray();
+             AtomicInteger pendingQueries = new AtomicInteger((queryInApp ? 1 : 0) + (querySubs ? 1 : 0));
+             AtomicBoolean finished = new AtomicBoolean(false);
+-
++            /* PATCH (FootballAgent_Mobile): BASARISIZ BIR SORGU, BOS BIR SONUC DEGIL.
++               Yayimlanan 8.7.0'da queryPurchasesAsync OK donmediginde ya da sonuc
++               donusturulurken bir istisna yakalandiginda yalnizca log yaziliyor,
++               sonra maybeFinish yine call.resolve({purchases: ...}) cagiriyordu.
++               Cagiran taraf bu yuzden "sorgu yapilamadi" ile "gercekten hicbir
++               satin alma yok" arasini ayirt edemiyordu - oysa bu ikisi ZIT
++               kararlar gerektiriyor: ilkinde HICBIR hak dusmemeli, ikincisi
++               normal bir basari.
++               Ilk basarisizligin yapilandirilmis kodu burada tutulur; ham hata
++               metni ne JS'e ne loga gecer. */
++            AtomicReference<String> queryFail = new AtomicReference<>(null);
++
++            /* PATCH: TEK BIRLESME NOKTASI, TEK SONUC.
++               Sonucu - resolve ya da reject - yalniz burasi verir. 'finished'
++               bayragi gec gelen bir callback'in ikinci bir resolve/reject
++               uretmesini engelliyor; closeBillingClient() de bu yuzden hala tek
++               yerde ve tek kez cagriliyor. Ilk basarisizlikta ERKEN reddedilmiyor:
++               erken bir kapatma hala ucusta olan diger sorgunun - ve billingClient
++               eklentide paylasimli TEK alan oldugu icin baska bir islemin -
++               baglantisini dusurebilirdi. Beklemenin bedeli yalniz gecikme. */
+             Runnable maybeFinish = () -> {
+                 int remaining = pendingQueries.decrementAndGet();
+                 Log.d(TAG, "Pending purchase queries remaining: " + remaining);
+                 if (remaining <= 0 && finished.compareAndSet(false, true)) {
++                    String failCode = queryFail.get();
++                    /* PATCH: baglantiyi YALNIZ hala sahibiysek kapatiyoruz.
++                       Alan artik baska bir islemin istemcisini tutuyorsa HICBIR
++                       SEY kapatilmiyor, iki sebeple birden:
++                         - onun baglantisini kapatmak onun isini bozar;
++                         - bizimki zaten kapatilmistir - initBillingClient() ilk
++                           isi olarak closeBillingClientLocked() cagiriyor, yani
++                           devralan islem oncekinin baglantisini kendisi kapatir.
++                       Dolayisiyla burada ownedClient.endConnection() cagirmak bir
++                       sizintiyi kapatmaz, ayni baglantiyi ikinci kez kapatir
++                       (olculdu). */
++                    synchronized (billingClientLock) {
++                        if (billingClient == ownedClient) {
++                            closeBillingClientLocked();
++                        } else {
++                            Log.d(TAG, "Billing client changed owner; closing nothing");
++                        }
++                    }
++                    if (failCode != null) {
++                        /* Kod JS'e reject'in ikinci alani olarak gidiyor, loga
++                           YAZILMIYOR: icinde cagiranin verdigi hesap filtresi
++                           olabilir ve logcat cihazda baska bilesenlerce okunur. */
++                        Log.d(TAG, "Purchase query did not complete, rejecting");
++                        call.reject("Purchase query failed", failCode);
++                        return;
++                    }
+                     JSObject result = new JSObject();
+                     result.put("purchases", allPurchases);
+                     Log.d(TAG, "Returning " + allPurchases.length() + " purchases");
+-                    closeBillingClient();
+                     call.resolve(result);
+                 }
+             };
+ 
++            /* PATCH (FootballAgent_Mobile): GONDERIM DE BASARISIZ OLABILIR.
++               queryPurchasesAsync firlattiginda 8.7.0'da cagri HIC
++               sonuclanmiyordu: withBillingClient bir RuntimeException'i yalniz
++               logluyor ve reddetmiyor (initBillingClient kendi retini zaten
++               yazdigi icin), dolayisiyla JS tarafindaki promise sonsuza kadar
++               askida kaliyor ve cagiranin kilidi hic serbest kalmiyor. Gonderim
++               de ayni birlesme noktasindan geciyor: sonuc tektir ve BASARI
++               DEGILDIR. Lambda govdeleri bilerek oldugu gibi birakildi -
++               degisen tek sey sorgunun nasil gonderildigi. */
++            java.util.function.BiConsumer<String, PurchasesResponseListener> dispatch = (type, listener) -> {
++                /* PATCH: BIR SORGU, BIR CEVAP. pendingQueries duz bir sayac, yani
++                   ayni sorgunun iki kez cevaplanmasi sayaci HENUZ DONMEMIS diger
++                   turun yerine indiriyordu: iki urun turu sorulduginda ikinci
++                   inapp cevabi, subs hala ucustayken BASARILI VE KISMI bir resolve
++                   uretiyor, ardindan gelen subs hatasi da 'finished' yuzunden hic
++                   gorunmuyordu (olculdu). Her gonderim kendi tek-kullanimlik
++                   bayragini tasiyor; sayac her tur icin tam bir kez azaliyor. */
++                AtomicBoolean answered = new AtomicBoolean(false);
++                try {
++                    billingClient.queryPurchasesAsync(
++                        QueryPurchasesParams.newBuilder().setProductType(type).build(),
++                        (billingResult, purchases) -> {
++                            if (!answered.compareAndSet(false, true)) {
++                                Log.d(TAG, "Ignoring duplicate purchase query response: " + type);
++                                return;
++                            }
++                            listener.onQueryPurchasesResponse(billingResult, purchases);
++                        }
++                    );
++                } catch (Exception dispatchEx) {
++                    /* Istisna metni yazilmaz; hangi turun gonderilemedigi yeter. */
++                    Log.d(TAG, "Purchase query could not be dispatched: " + type);
++                    if (answered.compareAndSet(false, true)) {
++                        queryFail.compareAndSet(null, npxCode("dispatch", 0, call));
++                        maybeFinish.run();
++                    }
++                }
++            };
++
+             if (queryInApp) {
+                 Log.d(TAG, "Querying in-app purchases");
+-                QueryPurchasesParams queryInAppParams = QueryPurchasesParams.newBuilder()
+-                    .setProductType(BillingClient.ProductType.INAPP)
+-                    .build();
+-
+-                billingClient.queryPurchasesAsync(queryInAppParams, (billingResult, purchases) -> {
++                dispatch.accept(BillingClient.ProductType.INAPP, (billingResult, purchases) -> {
+                     try {
                          Log.d(TAG, "In-app purchases query result: " + billingResult.getResponseCode());
                          if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
                              for (Purchase purchase : purchases) {
@@ -158,7 +310,43 @@ index d8bfea2..075a15a 100644
                                  AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
                                  String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
                                  if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
-@@ -1180,7 +1230,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1158,11 +1312,23 @@ public class NativePurchasesPlugin extends Plugin {
+                                     allPurchases.put(purchaseData);
+                                 }
+                             }
++                        } else if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
++                            /* PATCH: sorgu basarisiz sonuclandi. Bos liste DEGIL.
++                               debugMessage loglanmiyor: serbest metin, cevrilmemis
++                               ve icerigi garanti degil; karar kodla veriliyor. */
++                            Log.d(TAG, "In-app purchase query failed, code: " + billingResult.getResponseCode());
++                            queryFail.compareAndSet(null, npxCode("query", billingResult.getResponseCode(), call));
+                         } else {
+-                            Log.d(TAG, "In-app purchase query failed: " + billingResult.getDebugMessage());
++                            /* PATCH: OK dondu ama liste vermedi. Bu KANITLANMIS bos
++                               bir liste degil; tahmin etmek yerine reddediliyor. */
++                            Log.d(TAG, "In-app purchase query returned OK without a list");
++                            queryFail.compareAndSet(null, npxCode("nolist", 0, call));
+                         }
+                     } catch (Exception ex) {
+-                        Log.d(TAG, "Error processing in-app purchase query: " + ex.getMessage());
++                        /* PATCH: donusturme tamamlanamadi -> KISMI liste dondurulemez.
++                           Istisna metni ne loga ne JS'e gecer; yalniz asama tasinir. */
++                        Log.d(TAG, "Error processing in-app purchase query: [REDACTED]");
++                        queryFail.compareAndSet(null, npxCode("convert", 0, call));
+                     } finally {
+                         maybeFinish.run();
+                     }
+@@ -1171,16 +1337,12 @@ public class NativePurchasesPlugin extends Plugin {
+ 
+             if (querySubs) {
+                 Log.d(TAG, "Querying only subscription purchases");
+-                QueryPurchasesParams querySubsParams = QueryPurchasesParams.newBuilder()
+-                    .setProductType(BillingClient.ProductType.SUBS)
+-                    .build();
+-
+-                billingClient.queryPurchasesAsync(querySubsParams, (billingResult, purchases) -> {
++                dispatch.accept(BillingClient.ProductType.SUBS, (billingResult, purchases) -> {
+                     try {
                          Log.d(TAG, "Subscription purchases query result: " + billingResult.getResponseCode());
                          if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
                              for (Purchase purchase : purchases) {
@@ -167,7 +355,33 @@ index d8bfea2..075a15a 100644
                                  AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
                                  String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
                                  if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
-@@ -1262,7 +1312,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1211,11 +1373,23 @@ public class NativePurchasesPlugin extends Plugin {
+                                     allPurchases.put(purchaseData);
+                                 }
+                             }
++                        } else if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
++                            /* PATCH: sorgu basarisiz sonuclandi. Bos liste DEGIL.
++                               debugMessage loglanmiyor: serbest metin, cevrilmemis
++                               ve icerigi garanti degil; karar kodla veriliyor. */
++                            Log.d(TAG, "Subscription purchase query failed, code: " + billingResult.getResponseCode());
++                            queryFail.compareAndSet(null, npxCode("query", billingResult.getResponseCode(), call));
+                         } else {
+-                            Log.d(TAG, "Subscription purchase query failed: " + billingResult.getDebugMessage());
++                            /* PATCH: OK dondu ama liste vermedi. Bu KANITLANMIS bos
++                               bir liste degil; tahmin etmek yerine reddediliyor. */
++                            Log.d(TAG, "Subscription purchase query returned OK without a list");
++                            queryFail.compareAndSet(null, npxCode("nolist", 0, call));
+                         }
+                     } catch (Exception ex) {
+-                        Log.d(TAG, "Error processing subscription purchase query: " + ex.getMessage());
++                        /* PATCH: donusturme tamamlanamadi -> KISMI liste dondurulemez.
++                           Istisna metni ne loga ne JS'e gecer; yalniz asama tasinir. */
++                        Log.d(TAG, "Error processing subscription purchase query: [REDACTED]");
++                        queryFail.compareAndSet(null, npxCode("convert", 0, call));
+                     } finally {
+                         maybeFinish.run();
+                     }
+@@ -1262,7 +1436,7 @@ public class NativePurchasesPlugin extends Plugin {
              return;
          }
  
@@ -176,7 +390,7 @@ index d8bfea2..075a15a 100644
          withBillingClient(call, () -> {
              AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
                  .setPurchaseToken(purchaseToken)
-@@ -1302,7 +1352,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1302,7 +1476,7 @@ public class NativePurchasesPlugin extends Plugin {
              return;
          }
  

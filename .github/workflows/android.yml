@@ -78,6 +78,15 @@ jobs:
       - name: Native yama kontrolü
         run: node tools/check-native-patch.js
 
+      # Yamanın DURDUĞU ile DOĞRU DAVRANDIĞI ayrı iki soru. Üstteki kontrol
+      # işaretleri arar; bu adım yamalı Java'nın kendisini derleyip koşturuyor:
+      # başarısız bir Play sorgusu artık reject mi üretiyor, gerçekten boş ve
+      # başarılı bir liste hâlâ resolve mu. Yalnız JDK gerekir — Android SDK,
+      # Gradle ve ağ kullanmaz, bu yüzden buraya, senkronizasyondan önce
+      # konuldu ve saniyeler sürer.
+      - name: Native davranış testi
+        run: node tools/native-test.js
+
       - name: Web varlıklarını hazırla
         run: npm run www
 

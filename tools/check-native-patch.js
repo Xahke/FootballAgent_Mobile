@@ -83,7 +83,30 @@ const npxMarkers = [
 for (const [label, re] of npxMarkers) {
   if (!re.test(code)) fail(`npx hata kodu yaması eksik: ${label} bulunamadı`);
 }
-if (!fails.some(f => f.startsWith('npx'))) ok('npx hata kodu değişikliği yerinde (6 işaret)');
+if (!fails.some(f => f.startsWith('npx'))) ok(`npx hata kodu değişikliği yerinde (${npxMarkers.length} işaret)`);
+
+/* ---- 2b. Başarısız sorgu yaması duruyor mu ----------------------------- */
+
+/* Bu ayrı bir soru, ve ayrı sorulması gerekiyor: npx işaretleri yerinde
+   olduğu hâlde `getPurchases()` yolu yamasız kalabilir. Yamasız hâlde başarısız
+   bir Play sorgusu `resolve({purchases: []})` ile kapanıyor, yani "sorulamadı"
+   ile "hiç satın alma yok" aynı görünüyor — ve ikisi zıt kararlar gerektiriyor.
+   Davranışın kendisi `node tools/native-test.js` ile ölçülüyor; burada yalnız
+   yamanın kurulu kaynakta durduğu doğrulanıyor. */
+const queryMarkers = [
+  ['sorgu reddi', /"Purchase query failed"/],
+  ['query aşaması', /npxCode\(\s*"query"/],
+  ['nolist aşaması', /npxCode\(\s*"nolist"/],
+  ['convert aşaması', /npxCode\(\s*"convert"/],
+  ['dispatch aşaması', /npxCode\(\s*"dispatch"/],
+  ['tek birleşme noktası (queryFail)', /AtomicReference\s*<\s*String\s*>\s+queryFail/],
+];
+for (const [label, re] of queryMarkers) {
+  if (!re.test(code)) fail(`sorgu hatası yaması eksik: ${label} bulunamadı`);
+}
+if (!fails.some(f => f.startsWith('sorgu'))) {
+  ok(`başarısız sorgu yaması yerinde (${queryMarkers.length} işaret)`);
+}
 
 /* ---- 3. Hassas log ifadeleri geri gelmiş mi ---------------------------- */
 

@@ -4562,6 +4562,73 @@ async function tPlayBilling() {
     ok(!!(rec && rec.S.iap.r && Object.keys(rec.S.iap.r).length === 1),
       '(43c) diskteki rezervasyon da duruyor');
   }
+
+  /* (44) BAŞARISIZ SORGU HİÇBİR ŞEYİ TEMİZLEMİYOR — HEPSİ BİRDEN.
+         (11) bunun bir parçasını ölçüyordu: reklam kaldırma hakkı ve yokluk
+         sayacı. Eksik olan, aynı turda KUYRUK ve REZERVASYONUN da
+         dokunulmadığıydı — ve bu, native yamanın yeni ürettiği reject'in
+         gerçekten zararsız olduğu iddiasının tam karşılığı.
+
+         Native taraf artık başarısız bir sorguyu reject ediyor (eskiden
+         `resolve({purchases: []})` idi, bkz. tools/native-test.js). Bu reject
+         JS'te iapReconcile'ın hata dalına düşüyor: hiçbir hak silinmiyor,
+         hiçbir kayıt ilerletilmiyor, hiçbir rezervasyon düşmüyor. Buradaki
+         ölçüm o dalın GERÇEKTEN eylemsiz olduğunu gösteriyor — tek tek değil,
+         dört durumun hepsi aynı anda.
+
+         Tekrar da önemli: sorgu birçok kez düşse bile hiçbir sayaç birikmiyor,
+         yani "yeter sayıda başarısızlık" diye bir eşik yok. */
+  {
+    const { a } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    /* Kaybedilebilecek her şeyi birden kur: cihaz hakkı (reklam kaldırma),
+       kariyer hakkı (kapasite), açık bir kuyruk kaydı ve bir rezervasyon. */
+    a.R("PREFS.iap={t:{NOADS1:'noads'},miss:1};savePrefs();");
+    a.R("S.iap={t:{TOKCAP:'cap5'},r:{attX:{cap:3,at:1}}};save();");
+    a.R("IAPQ.q.TOKQ={tok:'TOKQ',sku:'cap_plus_1',pid:'cap1',sc:'career',"
+      + "cid:S.cid,att:'attX',st:'ready',at:1};");
+    await a.R('iapqSave()'); await a.R('saveDrain()');
+    const before = {
+      noads: a.R('iapNoAds()'),
+      owned: a.R('iapCapOwned()'),
+      res: a.R('iapCapReserved()'),
+      miss: a.R('PREFS.iap.miss'),
+      q: a.R('JSON.stringify(iapqAll())')
+    };
+    ok(before.noads === true && before.owned === 5 && before.res === 3,
+      '(44) başlangıç durumu kuruldu', JSON.stringify(before));
+
+    /* Sorgu reddediliyor — native tarafın yeni davranışının JS'teki karşılığı. */
+    const P = a.ctx.Capacitor.Plugins.NativePurchases;
+    P.getPurchases = () => Promise.reject(Object.assign(
+      new Error('Purchase query failed'), { code: 'npx:query:2:' }
+    ));
+    for (let i = 0; i < 4; i++) {
+      ok(await a.R('iapReconcile()') === 'queryfail', '(44) ' + (i + 1) + '. tur reddedildi');
+    }
+    await a.R('saveDrain()');
+
+    ok(a.R('iapNoAds()') === before.noads, '(44) cihaz hakkı duruyor');
+    ok(a.R('iapCapOwned()') === before.owned, '(44) kariyer hakkı duruyor');
+    ok(a.R('iapCapReserved()') === before.res, '(44) rezervasyon duruyor');
+    ok(a.R("(S.iap.r.attX||{}).df") === undefined, '(44) rezervasyona df işareti konmadı');
+    ok(a.R('JSON.stringify(iapqAll())') === before.q, '(44) kuyruk kaydı bitine kadar aynı');
+    ok((a.R('PREFS.iap.miss') || 0) === before.miss,
+      '(44) yokluk sayacı ARTMADI — tekrar da biriktirmiyor');
+    ok(a.R('IAPS.qErr') === true, '(44) hata durumu görünür');
+
+    /* Diskte de aynı: bellekte korunup diske eksik yazılmış olmasın. */
+    const rec = await a.R("recGet('s1')");
+    ok(!!(rec && rec.S.iap.t.TOKCAP === 'cap5'), '(44) diskteki kariyer hakkı duruyor');
+    ok(!!(rec && rec.S.iap.r && rec.S.iap.r.attX && rec.S.iap.r.attX.cap === 3),
+      '(44) diskteki rezervasyon duruyor');
+
+    /* Ve sonrasında GEÇERLİ bir sorgu normal işliyor: hata dalı kalıcı bir
+       kilit bırakmıyor. Gerçekten boş ve başarılı bir liste normal başarıdır. */
+    P.getPurchases = () => Promise.resolve({ purchases: [] });
+    ok(await a.R('iapReconcile()') === 'ok', '(44) başarılı boş sorgu normal başarı');
+    ok(a.R('IAPS.qErr') === false, '(44) hata durumu temizlendi');
+  }
 }
 
 /* ================= [25] depo geri dönüşü ve göç =================

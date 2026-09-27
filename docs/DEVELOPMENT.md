@@ -84,12 +84,13 @@ imzalama anahtarı, upload keystore ya da yayın yetkisi kullanılmaz. Fork'tan 
 bir PR de bu yüzden güvenle derlenebiliyor.
 
 **Ne kontrol ediliyor.** Var olanlara (npm ci, `cap sync` farkı, SDK sürümleri,
-debug APK + paket kimliği/etiket/SDK/native .so doğrulamaları, `savetest`) iki
+debug APK + paket kimliği/etiket/SDK/native .so doğrulamaları, `savetest`) üç
 kontrol eklendi:
 
 | Adım | Ne soruyor |
 |---|---|
-| `Native yama kontrolü` (`tools/check-native-patch.js`) | eklenti tam 8.7.0 mı, `npx:` hata kodu değişikliği kurulu kaynakta duruyor mu, kaldırdığımız hassas log ifadeleri geri gelmiş mi |
+| `Native yama kontrolü` (`tools/check-native-patch.js`) | eklenti tam 8.7.0 mı, `npx:` hata kodu ve başarısız-sorgu değişiklikleri kurulu kaynakta duruyor mu, kaldırdığımız hassas log ifadeleri geri gelmiş mi |
+| `Native davranış testi` (`tools/native-test.js`) | yamalı Java **koşuyor mu ve doğru mu**: başarısız bir Play sorgusu reject üretiyor mu, gerçekten boş ve başarılı bir liste hâlâ resolve mu. Yalnız JDK ister — Android SDK, Gradle ve ağ kullanmaz. **Gerçek API uyumluluğunu KANITLAMAZ** (stub'lar koda göre yazılır); onu `release-1-gradle-gorevleri` içindeki `:app:compileReleaseJavaWithJavac` geçişli olarak `:capgo-native-purchases:compileReleaseJavaWithJavac` üzerinden yapıyor |
 | `release-1-gradle-gorevleri` + `release-2-yapilandirma` (`tools/check-release-config.js`) | release Java derleniyor mu, release manifest/varlık birleştirme üretilebiliyor mu, release `ads-testcfg.js` null mı |
 
 Release kontrolü **tam paket derlemesi değil**, üç belirli Gradle görevi:
@@ -326,6 +327,7 @@ node tools/build-themes.js && node build.js   # → dist/menajer.html
 | tools/build-www.js | Capacitor'ın paketleyeceği www/ klasörünü hazırlar |
 | tools/android.js | APK/AAB üretir, dosyanın yerini yazar |
 | tools/check-native-patch.js | patch-package yamasının KURULU kaynağa uygulandığını doğrular (CI) |
+| tools/native-test.js + tools/native-test/ | Yamalı eklenti kaynağını derleyip JVM’de koşturur; `getPurchases()` başarısız bir sorguyu reject ediyor mu diye ölçer. `npm run native:test` (CI) |
 | tools/check-release-config.js | Release derleme/varlık çıktılarını doğrular, imza sırrı istemez (CI) |
 | .github/workflows/android.yml | APK'yı GitHub'da derler, indirilebilir çıktı bırakır |
 | android/ | Native Android projesi — kaynak denetiminde. `cap sync` tazeler, `cap add` yeniden üretir (kullanma) |

@@ -834,6 +834,124 @@ query and a disputed record all grant nothing; that a repeated identical respons
 produces no further calls; and that a failed local write is retried rather than
 reported as success.
 
+### A failed Play query is not an empty one, and that was the hole under every reconcile
+
+Everything `iapReconcile()` does rests on one precondition stated in its own comment:
+**a successful Play answer.** `iapReapNoAds()` counts a miss towards `IAP.missMax` and
+eventually drops a paid device entitlement; `iapReapQueue()` demotes `granted`/`finishing`
+records to `unverified`; `iapReapRes()` reads delivery evidence. None of those may run on
+a query whose result was never established. The JS side was written that way and is
+correct — `iapReconcile()`'s reject branch sets `IAPS.qErr`, returns `'queryfail'` and
+touches nothing.
+
+**It was simply never reached.** In the published 8.7.0 `getPurchases()`, a
+`queryPurchasesAsync` result that was not `OK` produced one `Log.d` line and nothing
+else; an exception while converting the results was swallowed by a `catch` that also only
+logged; and the `finally` then ran `maybeFinish`, whose only ending was
+`call.resolve({purchases: allPurchases})`. So a query that failed, a query that returned
+`OK` with no list, and a conversion that died halfway all arrived in JS as an ordinary
+**successful** response — empty, or worse, silently partial. "Play does not list this
+token" and "Play could not be asked" are opposite facts that demand opposite decisions,
+and the bridge reported them identically.
+
+The patch makes `getPurchases()` **reject** in every one of those cases, with
+`npx:<stage>:<code>:<tag>` in `err.code` like the rest of the file:
+
+| Stage | Code | Means |
+|---|---|---|
+| `query` | BillingResponseCode | `queryPurchasesAsync` answered non-OK |
+| `nolist` | 0 | it answered `OK` but handed back no list — not a *proven* empty list |
+| `convert` | 0 | an exception while turning the results into the payload |
+| `dispatch` | 0 | the query could not be issued at all |
+
+A **genuinely** successful empty list is untouched: it still resolves, with an empty
+array, and that remains the normal "you own nothing here" answer.
+
+Six properties, each of which a different mistake would break — and three of them were
+written only after a test caught the mistake:
+
+- **One join point, one result.** The first failure is recorded in an
+  `AtomicReference<String> queryFail` and read in `maybeFinish`, which is still the only
+  place that resolves or rejects and still guarded by `finished`. A late or duplicated
+  callback produces no second result.
+- **No early reject, deliberately.** Rejecting on the first failure would mean closing the
+  client while the other query is still in flight. The cost of waiting is latency and
+  nothing else, so `closeBillingClient()` stays one call in one place.
+- **One answer per query.** `pendingQueries` is a plain counter, so a query answered twice
+  used to decrement it in place of a type that had **not** come back yet: with both product
+  types requested, a second `inapp` callback produced an early, *partial* resolve while
+  `subs` was still outstanding, and the `subs` failure that followed was then invisible
+  behind `finished`. Each dispatch now carries its own one-shot flag, so the counter falls
+  exactly once per requested type. Scenario (13) measures it; scenario (8) does not, because
+  with a single type the hole is not reachable.
+- **The connection is closed only by its current owner.** `billingClient` is a single shared
+  field, and the plugin already serialises it in a way worth reading before touching:
+  `initBillingClient()` opens with `closeBillingClientLocked()`, so an operation that takes
+  over **closes the previous client itself**. `getPurchases()` therefore captures the client
+  it was given and, at the join point, closes the field only while it is still that client —
+  otherwise it closes **nothing**. Both halves were measured: without the ownership check, a
+  late callback ended the *incoming* operation's connection; and closing "our own" client in
+  the else branch — which looks like leak-prevention — ended the same connection a second
+  time, because the incoming operation had already closed it. Scenario (12) pins all three
+  facts: the other call is not settled, its connection is not closed, and ours is closed
+  exactly once.
+- **Partial results never ship.** When two product types are requested and one fails, the
+  successfully converted half is discarded with the reject rather than presented as the
+  whole answer.
+- **Nothing new reaches logcat.** The failing paths log the numeric response code only —
+  no `getDebugMessage()`, no exception text, and never the `npx:` code itself, because the
+  tag inside it can carry the account filter the caller passed. The code travels to JS as
+  `reject`'s second argument and stops there.
+
+**A second defect surfaced while writing the test for the dispatch case, and it was worse
+than a false empty list: the call never settled at all.** If `queryPurchasesAsync` throws,
+the exception leaves the task and lands in `withBillingClient`'s `catch (RuntimeException)`,
+which only logs and closes — correctly, because `initBillingClient()` already rejects the
+call for *setup* failures, so rejecting again there would double up. A throw from the
+**task body** gets no such reject. In JS that is a promise that never settles: `iapqPrepare`
+/ `IAPS.qrp` never released, and on the purchase path `IAPS.busy` held for the rest of the
+session. The dispatch now goes through the same join point, so the outcome is a single
+reject.
+
+**The query stages are inert on the JS side, and that is checked rather than assumed.**
+`iapErrInfo()` parses them, but `iapTerminalKind()`, `iapNotStarted()` and `iapReleasing()`
+read only `updated` and `launch`, so **no query failure can ever release a reservation** —
+which is exactly right, since a query says nothing about a payment attempt. `js/iap.js` was
+not changed for this fix; block 24 scenario (44) measures that the reject leaves the device
+entitlement, the career ledger, the queue record, the reservation (and its absent `df`) and
+`PREFS.iap.miss` all bit-for-bit unchanged, over four consecutive failures, in memory and
+on disk, and that a valid empty query afterwards is still plain success.
+
+**How this is measured — and it is a different kind of evidence from the rest of this
+file.** `node tools/native-test.js` compiles the **real** patched `NativePurchasesPlugin.java`
+out of `node_modules` and runs `getPurchases()` on a JVM, against the smallest stub surface
+that will run it (`tools/native-test/stubs/`, hermetic — a JDK is the only requirement, no
+Android SDK, no Gradle, no network). 42 assertions over eleven scenarios: the four reject
+stages, both success cases, a partial failure, reverse callback order, a duplicated
+callback, a late callback after the result, and the log redaction. Running the *same*
+harness against the pristine 8.7.0 source reproduces the old behaviour exactly — non-OK →
+`resolve({purchases: []})`, a partial list resolved as whole, a dispatch throw producing no
+result at all — which is why the harness exists rather than a mock on the JS side: writing
+`Promise.reject` into a JS mock only proves JS handles a reject, never that the bridge
+produces one. `tools/check-native-patch.js` separately asserts the patch is present in the
+installed source; presence and behaviour are two questions and it answers only the first.
+
+**Three checks, three different questions — and the hermetic one cannot answer the API
+question.** `javac` succeeding against `tools/native-test/stubs/` proves the *body* behaves
+correctly; it proves **nothing** about whether the patched source still matches the real
+Play Billing, Capacitor and Android APIs, because the stubs are written to fit the code.
+That is `:capgo-native-purchases:compileDebugJavaWithJavac` — the module compiled through
+Gradle against real `com.android.billingclient:billing:8.3.0`, real `capacitor-android`,
+real Guava and the real `android.jar`. Run it whenever the patch moves. CI already covers
+the release variant transitively: `:app:compileReleaseJavaWithJavac` cannot run without
+compiling this module first.
+
+**What this does not establish.** The stubs are not the Play Billing library and the JVM is
+not a device: what is measured is the Java body's behaviour given a response, never what
+Play actually answers. No real purchase has been made, and the reservations already on the
+test device still cannot be classified — this fix is the first step that makes a query
+result trustworthy, not a repair of anything already on disk.
+
 ### A declined payment is a result, not a mystery — but only three codes say so
 
 A reservation is written before payment starts and, by design, only **proven**
@@ -1691,12 +1809,20 @@ close-out for a gameplay change:
    legacy path: a `menajerSaveV9` payload must land in slot 1 with its theme/language
    carried into `PREFS`.
 7. **Ads and purchases**, if `js/ads.js`, `js/iap.js`, `js/sim.js`'s transition points or
-   the store screen changed — `node tools/savetest.js` blocks **18–24** cover the rewarded
+   the store screen changed — **`node tools/native-test.js` first** if the plugin patch
+   moved: it compiles and runs the patched Java itself, which is the only way to tell a
+   query failure from a successful empty list (see *A failed Play query* above). That run is
+   hermetic and therefore says nothing about real-API compatibility, so a moved patch also
+   needs `cd android && ./gradlew :capgo-native-purchases:compileDebugJavaWithJavac` — the
+   module against the real Billing/Capacitor/Android artifacts. Then
+   `node tools/savetest.js` blocks **18–24** cover the rewarded
    adapter, the consent flow, the age gate, the privacy feedback, the season-transition
    contract and the store's scope/ceiling rules — including block 24 **(31)–(43)**, which
    pin which BillingResponseCodes may release a reservation and which may not, and
    which hold the career-binding, write-failure, purchase-lock and diagnostic-record
-   guarantees, and block **28** covers when the purchase
+   guarantees, and **(44)**, which holds that a rejected Play query clears no
+   entitlement, queue record or reservation and advances no miss counter. Block **28**
+   covers when the purchase
    queue may be read: it holds the boot gate (`ctl.openGate` stalls the IndexedDB open while
    `ctl.pre` installs the bridge before the scripts run, which is the only way the real boot
    race is visible), that a read error or an unrecognised payload is not an empty queue, and
