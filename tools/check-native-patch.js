@@ -76,7 +76,6 @@ const npxMarkers = [
   ['npxCode yardımcısı', /private\s+static\s+String\s+npxCode\s*\(/],
   ['npx: önek biçimi', /"npx:"/],
   ['state aşaması', /npxCode\(\s*"state"/],
-  ['updated aşaması', /npxCode\(\s*"updated"/],
   ['launch aşaması', /npxCode\(\s*"launch"/],
   ['başlamayan akış reddi', /"Billing flow did not start"/],
 ];
@@ -84,6 +83,38 @@ for (const [label, re] of npxMarkers) {
   if (!re.test(code)) fail(`npx hata kodu yaması eksik: ${label} bulunamadı`);
 }
 if (!fails.some(f => f.startsWith('npx'))) ok(`npx hata kodu değişikliği yerinde (${npxMarkers.length} işaret)`);
+
+/* ---- 2c. Satın alma güncellemesi yaması duruyor mu ------------------- */
+
+/* Yine ayrı bir soru: npx işaretleri yerindeyken onPurchasesUpdated yolu
+   yamasız kalabilir. Yamasız hâlde OK olmayan bir sonuçla BİRLİKTE gelen
+   Purchase listesi hiç okunmadan atılıyor, OK yolunda yalnız ilk kayıt
+   işleniyor ve boş bir listede purchases.get(0) fırlatıyor — yani çağrı hiç
+   sonuçlanmıyor. Üç ayrı aşama olmadan js/iap.js "bu güncelleme satın alma
+   taşımıyordu" diyemez ve hiçbir rezervasyonu güvenle bırakamaz.
+   ESKİ 'updated' AŞAMASI BİLEREK YASAK: js/iap.js onu yeni kanıt saymıyor, ama
+   kurulu kaynakta yeniden görünmesi yamanın geri alındığı anlamına gelir.
+   Davranış `node tools/native-test.js` ile ölçülüyor; burada yalnız varlık. */
+const updateMarkers = [
+  ['updnone aşaması', /STAGE_UPD_NONE\s*=\s*"updnone"/],
+  ['updnull aşaması', /STAGE_UPD_NULL\s*=\s*"updnull"/],
+  ['updtx aşaması', /STAGE_UPD_TX\s*=\s*"updtx"/],
+  ['açık satın alma çağrısı', /claimOpenPurchaseCall\s*\(/],
+  ['tek sonuçlanma bayrağı', /purchaseFlowSettled/],
+  ['akışın işaretlenmesi', /beginPurchaseFlow\s*\(\s*call\s*\)/],
+  ['denemenin kaydını seçme', /pickUpdatedPurchase\s*\(/],
+  ['güncellemedeki kayıt sayısı', /"updatedPurchaseCount"/],
+  ['sahiplikli kapatma', /closeOwnedBillingClient\s*\(/],
+];
+for (const [label, re] of updateMarkers) {
+  if (!re.test(code)) fail(`satın alma güncellemesi yaması eksik: ${label} bulunamadı`);
+}
+if (/npxCode\(\s*"updated"/.test(code)) {
+  fail('satın alma güncellemesi yaması geri alınmış: eski "updated" aşaması kurulu kaynakta');
+}
+if (!fails.some(f => f.startsWith('satın alma'))) {
+  ok(`satın alma güncellemesi yaması yerinde (${updateMarkers.length} işaret)`);
+}
 
 /* ---- 2b. Başarısız sorgu yaması duruyor mu ----------------------------- */
 

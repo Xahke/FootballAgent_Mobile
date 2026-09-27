@@ -26,7 +26,11 @@ const PLUGIN_SRC = path.join(
   ROOT, 'node_modules', '@capgo', 'native-purchases', 'android', 'src', 'main', 'java'
 );
 const STUBS = path.join(__dirname, 'native-test', 'stubs');
-const HARNESS = path.join(__dirname, 'native-test', 'GetPurchasesTest.java');
+/* İki koşum, iki ayrı sözleşme: sorgu yolu ve satın alma güncellemesi yolu. */
+const HARNESSES = [
+  { file: path.join(__dirname, 'native-test', 'GetPurchasesTest.java'), main: 'GetPurchasesTest' },
+  { file: path.join(__dirname, 'native-test', 'PurchaseUpdateTest.java'), main: 'PurchaseUpdateTest' }
+];
 
 /* ---- JDK bul ----------------------------------------------------------- */
 
@@ -80,7 +84,7 @@ function main() {
     process.exit(1);
   }
 
-  const sources = javaFiles(STUBS).concat(javaFiles(PLUGIN_SRC)).concat([HARNESS]);
+  const sources = javaFiles(STUBS).concat(javaFiles(PLUGIN_SRC)).concat(HARNESSES.map(h => h.file));
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'native-test-'));
   const argFile = path.join(outDir, 'sources.txt');
   /* Windows'ta komut satırı uzunluğu sınırlı; javac'in @argfile biçimi kullanılıyor.
@@ -104,11 +108,14 @@ function main() {
   console.log('  derleme tamam');
   console.log('');
 
-  const run = spawnSync(java, ['-cp', outDir, 'GetPurchasesTest'], { stdio: 'inherit' });
-  if (run.status !== 0) {
-    console.error('');
-    console.error('native test DÜŞTÜ');
-    process.exit(run.status === null ? 1 : run.status);
+  for (const h of HARNESSES) {
+    const run = spawnSync(java, ['-cp', outDir, h.main], { stdio: 'inherit' });
+    if (run.status !== 0) {
+      console.error('');
+      console.error('native test DÜŞTÜ: ' + h.main);
+      process.exit(run.status === null ? 1 : run.status);
+    }
+    console.log('');
   }
   console.log('native test tamam');
 }

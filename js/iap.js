@@ -583,10 +583,14 @@ function iapReserve(p) {
    geliyor, ama o oturumda ekran onu düşmüş gösteriyordu — bellekle disk
    ayrışıyordu ve kullanıcı olmayan bir kapasiteyi satın almaya çalışıyordu. */
 function iapRelease(att, reason) {
-  if (!S || !curSlot || !att) return Promise.resolve(false);
+  /* Dönüş, belgelenen dört değerden biri. Eskiden bu üç çıkış `false` dönüyordu
+     ve çağıran onu "yazma tutmadı" ile aynı kefeye koyuyordu: rezervasyonu hiç
+     olmayan bir ürün (reklam kaldırma) iptal edildiğinde ekran "ayrılan kapasite
+     kaydedilemedi" diyordu — ortada ayrılan kapasite yokken. */
+  if (!S || !curSlot || !att) return Promise.resolve('none');
   const r = iapResOf(S);
-  if (!r || !r[att]) return Promise.resolve(false);
-  if (reason === 'stale') return Promise.resolve(false);
+  if (!r || !r[att]) return Promise.resolve('none');
+  if (reason === 'stale') return Promise.resolve('kept');
   const back = r[att], cid = S.cid, slot = curSlot;
   delete r[att];
   return saveSlotConfirmed(slot,
@@ -627,7 +631,8 @@ function iapSameCareer(cid, slot) {
    ayırabilmek için.
 
    NE SAKLANIYOR — yalnız yapılandırılmış üç alan:
-     s  aşama dizesi ('launch' | 'updated' | 'state'), bilinmiyorsa ''
+     s  aşama dizesi ('launch' | 'updnone' | 'updnull' | 'updtx' | 'state' ve
+        yamanın eski biçiminden 'updated'), bilinmiyorsa ''
      c  sayısal BillingResponseCode / PurchaseState, çözülemiyorsa null
      m  etiket BU denemeyle eşleşti mi (1/0)
    NE SAKLANMIYOR: ham hata mesajı, satın alma tokeni, appAccountToken, sipariş
@@ -1273,16 +1278,25 @@ function iapBuy(id) {
       isConsumable: false,
       autoAcknowledgePurchases: false
     }).then(tx => {
+      /* Aynı güncellemede BİZİM kaydımızdan başkası da geldiyse onlar bilerek
+         bitirilmedi (native taraf yalnız bu denemenin kaydını işliyor) ve tek
+         yerden bulunabilirler: bir sorgu turu. Google'ın uyarısı bu dinleyicide
+         bildirilen her satın almanın consume ya da acknowledge edilmesini
+         istiyor, yoksa iade ediliyor — yani geciktirilecek bir iş değil. */
+      const more = !!(tx && typeof tx.updatedPurchaseCount === 'number' && tx.updatedPurchaseCount > 1);
       return iapIngest(tx, 'buy').then(r => {
         IAPS.busy = '';
         iapAfterBuy(r, att);
+        if (more) return iapReconcile().then(() => iapRepaint(), () => 0);
       });
     }, err => {
       /* Ret geldi. Sınıf, hem rezervasyonun kaderini hem cümleyi belirliyor:
-           - BU denemenin açık USER_CANCELED'ı        → KESİN, düşer
-           - ödeme ekranının hiç açılmadığı sonuç      → KESİN, düşer
-           - ödeme reddi (3) ve ürün/istek reddi (4,5) → KALIR; yalnız
-             kullanıcıya NE OLDUĞU söyleniyor (bkz. iapTerminalKind)
+           - BU denemenin açık USER_CANCELED'ı        → düşer
+           - ödeme ekranının hiç açılmadığı sonuç      → düşer
+           - ödeme reddi (3), DÖRT koşul birden        → düşer (bkz. iapReleasing)
+           - ürün/istek reddi (4,5)                    → KALIR; yalnız kullanıcıya
+             ne olduğu söyleniyor
+           - yanında satın alma gelen sonuç ('updtx')  → KALIR, teslimata gider
            - PENDING, bağlantı kaybı, her belirsiz şey → KALIR
          Sınıflandırma yalnız yamanın taşıdığı yapılandırılmış alandan; genel
          hata metninden iptal ya da başarısızlık çıkarımı YOK. */
@@ -1294,7 +1308,11 @@ function iapBuy(id) {
       let kind = iapTerminalKind(err, tag);
       if (!kind && iapNotStarted(err, tag)) kind = 'notStarted';
       if (!kind && iapIsPending(err)) kind = 'pending';
-      const sure = iapReleasing(kind);
+      /* (4) ÇELİŞKİ VARSA SINIF DÜŞÜYOR. Bu denemeye ait bir satın alma kaydı
+         biliniyorsa "ödemen reddedildi" cümlesi de yanlış olurdu, sadece serbest
+         bırakma değil: sonuç BELİRSİZ sayılıyor. */
+      if (kind === 'declined' && !iapAttClear(att)) kind = '';
+      const sure = iapReleasing(kind, err, tag, att);
       return iapRelease(att, sure ? 'failed' : 'stale').then(rel =>
         /* Tanı kodu, rezervasyon DURUYORSA yazılıyor; düşmüşse yazılacak kayıt
            yok. Sonucu akışı etkilemiyor — yazılamazsa da mesaj ve kilit aynı. */
@@ -1306,12 +1324,15 @@ function iapBuy(id) {
            hesaba katıyor: yazma tutmadıysa hiçbir mesaj kapasitenin serbest
            bırakıldığını söylemiyor. */
         iapToast(iapRejKey(kind, rel));
-        const pending = (kind === 'pending');
-        /* PENDING bir satın alma purchaseProduct'tan RET olarak döndüğü için
-           kuyruğa girmiyor. Hemen bir uzlaştırma turu onu getPurchases()
-           üzerinden kayda geçiriyor; yoksa ekranda "bekleyen ödeme" satırı
-           bir sonraki açılışa kadar görünmezdi. */
-        if (pending) return iapReconcile().then(() => iapRepaint(), () => 0);
+        /* İKİ SINIF HEMEN BİR SORGU TURU GEREKTİRİYOR ve ikisi de ret yolundan
+           geliyor, yani kuyruğa hiç girmiyorlar:
+             'pending'  ödeme onay bekliyor — yoksa ekranda "bekleyen ödeme"
+                        satırı bir sonraki açılışa kadar görünmezdi.
+             'carried'  OK olmayan sonuçla birlikte bir satın alma geldi. O kayıt
+                        bitirilmedi; Google'ın uyarısı gereği consume/acknowledge
+                        edilmesi gerekiyor, yoksa iade edilir. */
+        const requery = (kind === 'pending' || kind === 'carried');
+        if (requery) return iapReconcile().then(() => iapRepaint(), () => 0);
       });
     });
   }).catch(() => { IAPS.busy = ''; iapRepaint(); iapToast('shopBuyFail'); });
@@ -1336,6 +1357,48 @@ function iapBuy(id) {
    uygulanmamış bir ortamda `err.code` boş kalır ve her ret BELİRSİZ sayılır,
    yani davranış yamasız hâlde de güvenli tarafta kalır. */
 const IAP_BRC_USER_CANCELED = 1;   // BillingClient.BillingResponseCode.USER_CANCELED
+
+/* ================= GÜNCELLEME AŞAMALARI =================
+   onPurchasesUpdated'ın OK dışı sonucu ARTIK ÜÇ AYRI AŞAMA olarak geliyor ve
+   ayrımı yapan yer native taraf (patches/@capgo+native-purchases+8.7.0.patch):
+
+     'updnone'  OK değil; purchases listesi GELDİ ve BOŞTU
+     'updnull'  OK değil; purchases listesi HİÇ GELMEDİ
+     'updtx'    OK değil AMA yanında en az bir satın alma geldi
+     'updated'  yamanın ESKİ biçimi — üçünü hiç ayırmıyordu
+
+   Neden gerekti: eklenti OK olmayan bir sonuçla birlikte gelen Purchase
+   listesini hiç OKUMADAN atıyordu. O yüzden "ortada satın alma yok" bu taraftan
+   DOĞRULANAMIYOR, yalnız varsayılabiliyordu — ve bir varsayım rezervasyon
+   düşürmeye yetmez. Artık liste okunuyor: yanında satın alma gelen bir sonuç
+   'updtx' ile bildiriliyor ve KESİN BAŞARISIZ SAYILMIYOR; kayıt da native
+   tarafta bitirilmediği (ne consume ne acknowledge) için getPurchases →
+   iapIngest yolundan normal teslimatına gidiyor.
+
+   'updated' BİLEREK yeni kanıt sayılmıyor: o biçim "yanında satın alma geldi"
+   durumunu da kapsıyordu, yani onunla gelen bir 3/4/5 hâlâ belirsizdir. Eski
+   biçim yalnız iptal sınıfını taşımaya devam ediyor — bu daldan ÖNCE de öyleydi
+   ve korunan bir mevcut durum, genişletilen bir maruziyet değil. */
+const IAP_ST_UPD_NONE = 'updnone';
+const IAP_ST_UPD_NULL = 'updnull';
+const IAP_ST_UPD_TX = 'updtx';
+const IAP_ST_UPD_OLD = 'updated';
+/* BU GÜNCELLEMEDE SATIN ALMA YOK diyen aşamalar.
+   İkisi tanıda ayrı tutuluyor — "liste gelmedi" ile "boş liste geldi" aynı şey
+   değil — ama karar için aynı şeyi söylüyorlar. Dayanağı resmî sözleşmenin kendi
+   cümlesi: PurchasesUpdatedListener.onPurchasesUpdated'ın `purchases` parametresi
+   "List of updated purchases if present" olarak tanımlı. Yani liste, güncellenmiş
+   satın almaların bildirildiği YER; gelmemesi de boş gelmesi de "bu geri çağrıda
+   güncellenmiş satın alma yok" demektir.
+   NE DEMEZ: "hiçbir yerde satın alma yok". O yüzden serbest bırakma tek başına
+   buna değil, aşağıdaki kod koşuluyla BİRLİKTE dayanıyor. */
+function iapUpdNoTx(i) {
+  return !!i && (i.stage === IAP_ST_UPD_NONE || i.stage === IAP_ST_UPD_NULL);
+}
+/* Satın alma güncellemesinden gelen her aşama (eski biçim dahil). */
+function iapUpdStage(i) {
+  return !!i && (iapUpdNoTx(i) || i.stage === IAP_ST_UPD_TX || i.stage === IAP_ST_UPD_OLD);
+}
 
 /* Ödeme ekranı açılmadan ÖNCE dönen argüman/ürün doğrulama hataları. Bunlar
    deterministik ve para almaları mümkün değil. Dizeler sabitlenen sürümün
@@ -1362,82 +1425,116 @@ function iapErrInfo(err) {
 }
 /* Bu ret, BU DENEMENİN kesin iptali mi.
    ÜÇ koşul birden — biri eksikse belirsiz sayılıyor:
-     1) aşama 'updated' (satın alma akışı gerçekten açılmış ve sonuç vermiş),
+     1) aşama bir satın alma güncellemesi ve yanında satın alma YOK
+        ('updnone'/'updnull', ya da yamanın eski 'updated' biçimi),
      2) kod USER_CANCELED,
      3) taşınan appAccountToken BİZİM denemenin etiketi.
    (3) olmadan, gecikmiş bir callback yeni bir denemenin rezervasyonunu
-   düşürebilirdi. */
+   düşürebilirdi. 'updtx' burada da dışlanıyor: elde bir satın alma varken
+   "iptal edildi" demek onu yok saymak olurdu.
+   Canlı karar yolu iapTerminalKind; bu yardımcı o sınıflandırmanın iptal
+   dalını tek başına sorulabilir hâlde tutuyor. */
 function iapIsCancel(err, tag) {
   const i = iapErrInfo(err);
-  return !!(i && i.stage === 'updated' && i.code === IAP_BRC_USER_CANCELED && i.tag === tag);
+  if (!i || !iapUpdStage(i) || i.stage === IAP_ST_UPD_TX) return false;
+  return i.code === IAP_BRC_USER_CANCELED && i.tag === tag;
 }
-/* ODEMENIN KESİN BAŞARISIZLIĞI — vazgeçme değil, reddedilme.
-   Kaynak, resmi sözleşme: BillingClient.BillingResponseCode referansı ve
-   developer.android.com/google/play/billing/errors ("Retriable mi" sütunu).
-   Listeye YALNIZ orada NON-RETRIABLE olan ve geriye açık bir satın alma
-   bırakmayan kodlar giriyor:
+/* ÖDEMENİN REDDİ — DÖRT KOŞULLU, DAR BİR SERBEST BIRAKMA.
 
-     3 BILLING_UNAVAILABLE  "A user billing error occurred during processing."
-       Ödeme yöntemi işlenirken kabul edilmedi (süresi geçmiş kart, desteklenmeyen
-       ülke, kurumsal kısıt…). Belgeler: "Automatic retries are unlikely to help",
-       kullanıcının önce koşulu düzeltmesi gerekiyor. Bu deneme SONUÇLANMIŞTIR.
-     4 ITEM_UNAVAILABLE     "The requested product is not available for purchase."
-     5 DEVELOPER_ERROR      "Error resulting from incorrect usage of the API."
+   Bu, ürün sahibinin seçtiği başarısız ödeme işleme politikasıdır: yeni bir
+   denemede DOĞRUDAN REDDEDİLEN bir ödeme, kapasite rezervasyonunu kalıcı olarak
+   kilitlemez. Aşağıdaki dört koşul BİRLİKTE sağlandığında — ve yalnız o zaman —
+   ilgili denemenin rezervasyonu mevcut güvenli yazma yolundan (iapRelease)
+   kaldırılır:
 
-   LİSTEDE OLMAYANLAR BİLEREK YOK — hiçbiri tahminle eklenmemeli:
-     2 SERVICE_UNAVAILABLE / 6 ERROR / 12 NETWORK_ERROR / -1 SERVICE_DISCONNECTED
-       belgelerde RETRIABLE. Bağlantı koptuğunda satın almanın durumu hâlâ açık
-       olabiliyor; belgeler bu sonuçlardan sonra queryPurchasesAsync ile
-       doğrulamayı öneriyor — yani "olmadı" demiyor.
-     7 ITEM_ALREADY_OWNED   satın almanın VAR olduğunu söylüyor. Rezervasyonu
-       bırakmak, var olan bir hakkın yerini bu arada satılmış başka bir pakete
-       verdirirdi.
-     Tanınmayan her kod BELİRSİZDİR. Varsayılan belirsizliktir.
+     (1) native aşama 'updnone' ya da 'updnull' — yamalı köprü purchases
+         listesini OKUDU ve bu güncellemede satın alma yoktu,
+     (2) BillingResponseCode YALNIZ 3 (BILLING_UNAVAILABLE),
+     (3) sonuç mevcut AÇIK satın alma çağrısına ait ve deneme etiketi eşleşiyor,
+     (4) bu denemeye ilişkin BİLİNEN bir PURCHASED/PENDING kaydıyla çelişmiyor.
 
-   Etiket koşulu iptaldekiyle aynı ve aynı sebeple: gecikmiş bir callback başka
-   bir denemenin rezervasyonunu düşüremesin. */
+   (3) iki parçadan oluşuyor ve ikisi de zaten var: native taraf sonucu yalnız
+   açık satın alma çağrısına yazıyor (claimOpenPurchaseCall + akış başına tek
+   sonuç bayrağı), ve bu ret bizim o deneme için beklediğimiz purchaseProduct
+   sözünün reddi olarak geliyor; etiket eşleşmesi iapTerminalKind'de aranıyor.
+   (4) iapAttClear() ile okunuyor.
+
+   BU BİR GELECEK GARANTİSİ DEĞİL. Google'ın sözleşmesi "bu denemeye başka bir
+   sonuç gelmeyecek" demiyor ve burada öyle bir iddia YOK. Politika bilinçli bir
+   tercih: doğrudan reddedilen bir denemenin kapasiteyi süresiz tutması, bu
+   kararın kabul ettiği riskten daha büyük bir zarar. Geç gelen bir satın alma
+   ortaya çıkarsa MEVCUT yol onu taşır: etiketimiz setObfuscatedAccountId ile
+   Play'de, dolayısıyla getPurchases → iapIngest onu kuyruğa alır, iapApplyTo
+   idempotenttir, teslim edilmeden consume/acknowledge YOKTUR ve tavan o anda
+   doluysa kayıt 'undeliverable' olarak SAKLANIR — sessizce atılmaz.
+
+   KAPSAM DIŞINDA KALANLAR, ve hiçbiri tahminle eklenmemeli:
+     4 ITEM_UNAVAILABLE / 5 DEVELOPER_ERROR  — otomatik serbest bırakmada YOK;
+       yalnız kullanıcıya ne olduğu söylenir (shopBuyRefused).
+     'updtx'  yanında satın alma gelen sonuç — elde satın alma varken serbest
+       bırakma olmaz; kayıt teslimata gider.
+     'state' 2 (gerçek PENDING) ve 0 (eksik veri), 2/6/12/-1 (retriable),
+       7 (ITEM_ALREADY_OWNED), tanınmayan her kod, sorgu aşamaları, etiket
+       uyuşmazlığı — hepsi rezervasyonu KORUR.
+     Eski 'updated' biçimi (yamasız/eski paket) — üç durumu ayırmadığı için (1)
+       sayılmaz; yalnız iptal sınıfını taşımaya devam eder.
+     Zaman aşımı, boş bir getPurchases turu ya da dg tanı kaydı ASLA kanıt değil,
+       ve eski rezervasyonlara geriye dönük temizlik YOK: df yalnız bu yoldan
+       doğar, df taşımayan bir rezervasyon süpürülmez. */
 const IAP_BRC_BILLING_UNAVAILABLE = 3;   // ödeme yöntemi işlenirken kabul edilmedi
 const IAP_BRC_REFUSED = [4, 5];          // ITEM_UNAVAILABLE, DEVELOPER_ERROR
-/* SINIFLANDIRMA YALNIZ NE SÖYLENECEĞİ İÇİN — REZERVASYON İÇİN DEĞİL.
-   Dönüş: '' | 'cancel' | 'declined' | 'refused'.
+/* (4) BU DENEMEYE AİT BİLİNEN BİR SATIN ALMA KAYDI VAR MI.
+   Kuyruk, görülmüş her Transaction'ın tek yerel izi ve her kayıt kendi att'ını
+   taşıyor. Aynı att için bir kayıt varsa — durumu ne olursa olsun: PENDING,
+   teslim edilmiş, kapanışı doğrulanmamış, çelişkili — bu denemeden BİR SATIN
+   ALMA çıkmış demektir ve "ödeme reddedildi" sonucuyla çelişir; o hâlde serbest
+   bırakma yok.
+   KUYRUK OKUNAMAMIŞSA da yok (IAPQ null): doğrulayamadığımız bir koşulu geçmiş
+   saymak, koşulu hiç koymamakla aynı şey olurdu. */
+function iapAttClear(att) {
+  if (!att || !IAPQ) return false;
+  const q = iapqAll();
+  return !Object.keys(q).some(tok => q[tok] && q[tok].att === att);
+}
+/* NE OLDUĞU — ne yapılacağı DEĞİL. İki soru ayrı iki fonksiyonda:
+   iapTerminalKind cümleyi, iapReleasing rezervasyonu belirliyor. Bu fonksiyon
+   SAF: yalnız err/tag okur, kuyruğa ya da kayda bakmaz.
+   Dönüş: '' | 'cancel' | 'declined' | 'refused' | 'carried'.
 
-   3/4/5 bir ara sürümde rezervasyonu KENDİLİĞİNDEN düşürüyordu; bu GERİ ALINDI.
-   Gerekçesi yeterli değildi: "non-retriable" Play'in yeniden denemenin fayda
-   etmeyeceğini söylemesidir, ORTADA SATIN ALMA OLMADIĞININ KANITI DEĞİL.
-   PurchasesUpdatedListener `purchases` için yalnız "List of updated purchases
-   if present" diyor; non-OK sonuçta listenin boş olduğu GARANTİ EDİLMİYOR.
-   Rezervasyon bırakıldıktan sonra geç gelen ücretli bir hak, tavan o sırada
-   dolmuşsa 'undeliverable'a düşer — ödenmiş ama teslim edilmemiş. Bu maruziyeti
-   genişletmemeye karar verildi.
-
-   AYRI BİR BULGU, ve kanıt olarak KULLANILMIYOR: eklenti, non-OK bir sonuçla
-   BİRLİKTE gelen Purchase listesini hiç işlemiyor — onPurchasesUpdated yalnız
-   responseCode OK iken handlePurchase'a giriyor, aksi hâlde doğrudan reddediyor
-   (NativePurchasesPlugin.onPurchasesUpdated). Yani böyle bir satın alma bizim
-   tarafımızdan GÖRÜLMEDEN atılıyor. Atılan veri "satın alma yok" kanıtı değildir;
-   tam tersine, non-OK sonucun satın almasız olduğunu doğrulamamızı imkânsız
-   kılan şeydir. Bu, eklentide açılması gereken ayrı bir konu.
-
-   İPTAL YOLUNDAKİ AYNI RİSK DURUYOR ve bilerek ayrı tutuluyor: USER_CANCELED (1)
-   ve 'launch' aşaması rezervasyonu düşürmeye devam ediyor. Teorik maruziyet
-   aynı cinsten — Play'in iptal dediği bir akıştan yine de bir satın alma
-   çıkarsa aynı 'undeliverable' hâli doğar. Farkı, bu davranışın bu daldan ÖNCE
-   de var olması ve ölçülmüş bir zararının bulunmaması; yani korunan bir mevcut
-   durum, genişletilen bir maruziyet değil. Yeni bir kod bu listeye ancak O
-   DENEMEYE AİT kesin başarısızlık kanıtı gösterilebildiğinde eklenmeli. */
+   'carried' = OK olmayan sonuçla BİRLİKTE satın alma geldi. Eklenti bu listeyi
+   eskiden hiç okumadan atıyordu; artık okunuyor ve bu durum kendi sınıfını
+   alıyor. Hiçbir koşulda serbest bırakmıyor ve iptal kodu bile bu aşamadan
+   geldiyse 'cancel' SAYILMIYOR. Kayıt native tarafta bitirilmediği için
+   getPurchases → iapIngest yolundan normal teslimatına gidiyor; iapBuy hemen bir
+   uzlaştırma turu açıyor, çünkü Google'ın uyarısı bu dinleyicide bildirilen her
+   satın almanın consume ya da acknowledge edilmesini istiyor. */
 function iapTerminalKind(err, tag) {
   const i = iapErrInfo(err);
-  if (!i || i.stage !== 'updated' || i.tag !== tag) return '';
+  if (!i || i.tag !== tag) return '';
+  if (i.stage === IAP_ST_UPD_TX) return 'carried';
+  if (!iapUpdNoTx(i) && i.stage !== IAP_ST_UPD_OLD) return '';
   if (i.code === IAP_BRC_USER_CANCELED) return 'cancel';
   if (i.code === IAP_BRC_BILLING_UNAVAILABLE) return 'declined';
   if (IAP_BRC_REFUSED.indexOf(i.code) !== -1) return 'refused';
   return '';
 }
 /* REZERVASYONU DÜŞÜREN SINIFLAR — ve yalnız bunlar.
-     'cancel'      kullanıcının kendi iptali (USER_CANCELED, eşleşen etiket)
+     'cancel'      kullanıcının kendi iptali (USER_CANCELED, eşleşen etiket, ve
+                   güncelleme satın alma TAŞIMIYORSA — bkz. 'carried')
      'notStarted'  ödeme ekranı hiç açılmadı ('launch' aşaması)
-   3/4/5 burada YOK: bkz. iapTerminalKind üstündeki gerekçe. */
-function iapReleasing(kind) { return kind === 'cancel' || kind === 'notStarted'; }
+     'declined'    yukarıdaki DÖRT koşul birden
+   Dört koşul burada bir arada okunabilsin diye kod ve etiket yeniden
+   doğrulanıyor: sınıf zaten ikisini içeriyor, ama serbest bırakma kuralının tek
+   bir yerde tam olarak görünmesi bu tekrardan daha değerli.
+   err/tag/att verilmezse 'declined' serbest bırakmıyor: kanıt yoksa karar da
+   yok. 'refused' (4/5) ve 'carried' hiçbir koşulda bırakmıyor. */
+function iapReleasing(kind, err, tag, att) {
+  if (kind === 'cancel' || kind === 'notStarted') return true;
+  if (kind !== 'declined') return false;
+  const i = iapErrInfo(err);
+  return !!(i && iapUpdNoTx(i) && i.code === IAP_BRC_BILLING_UNAVAILABLE
+    && i.tag === tag && iapAttClear(att));
+}
 /* Retten sonra hangi cümle. İKİ eksen var ve ikisi de gerekli:
      kind  ne olduğu (iptal / ödeme reddi / ürün-istek reddi / başlamadı / …)
      rel   iapRelease'in GERÇEK sonucu — 'released' | 'failed' | 'kept' | 'none'
@@ -1448,10 +1545,18 @@ function iapReleasing(kind) { return kind === 'cancel' || kind === 'notStarted';
    bulunmuyor — rezervasyon duruyor ve bunu mağaza ekranındaki tutulu satırı
    anlatıyor. */
 function iapRejKey(kind, rel) {
-  if (iapReleasing(kind)) {
+  /* YAZMA TUTMADIYSA hiçbir sınıf kapasitenin açıldığını ima etmiyor. Reddedilen
+     ödeme de buraya girdi: shopDeclined "yeniden deneyebilirsin" diyor ve
+     rezervasyon diskte durduğu sürece o deneme başlamayacak — yani o cümle
+     yanıltıcı olurdu. shopHoldKept tam olarak olanı söylüyor. */
+  if (rel === 'failed') return 'shopHoldKept';
+  if (kind === 'cancel' || kind === 'notStarted') {
     if (rel !== 'released' && rel !== 'none') return 'shopHoldKept';
     return kind === 'cancel' ? 'shopCancelled' : 'shopBuyFail';
   }
+  /* 'declined'/'refused' kapasite hakkında AYRICA bir iddiada bulunmuyor:
+     serbest bırakıldıysa tutulu satırı ekrandan düşer, bırakılmadıysa orada
+     durur ve shopCapHeld/shopTxHeld onu anlatır. */
   if (kind === 'declined') return 'shopDeclined';
   if (kind === 'refused') return 'shopBuyRefused';
   return kind === 'pending' ? 'shopPending' : 'shopBuyUnsure';

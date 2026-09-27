@@ -1,5 +1,5 @@
 diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-index d8bfea2..499ff15 100644
+index d8bfea2..1ada3ba 100644
 --- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
 +++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
 @@ -20,6 +20,7 @@ import com.android.billingclient.api.PendingPurchasesParams;
@@ -18,12 +18,155 @@ index d8bfea2..499ff15 100644
  import org.json.JSONArray;
  
  @CapacitorPlugin(name = "NativePurchases")
-@@ -219,11 +221,17 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -56,6 +58,121 @@ public class NativePurchasesPlugin extends Plugin {
+         return thread;
+     });
+     private BillingClient billingClient;
++    /* PATCH (FootballAgent_Mobile): ACIK SATIN ALMA CAGRISI VE TEK SONUCLANMA.
++
++       PurchasesUpdatedListener bir ISTEMCI seviyesi dinleyicisidir, ama eklenti
++       onu istemciyi KURAN PluginCall'a bagliyor: connectBillingClient'e verilen
++       cagri ne ise, onPurchasesUpdated onu resolve/reject ediyor. O cagri bir
++       getPurchases ya da isBillingSupported cagrisi da olabilir - yani bir satin
++       alma guncellemesi, satin almayla ilgisi olmayan bir cagriya cevap olarak
++       yaziliyordu.
++
++       Iki soru ayri ayri cevaplaniyor:
++         purchaseFlowCall     su an ACIK olan satin alma cagrisi (referans
++                              kimligi; callbackId'ye gerek yok)
++         purchaseFlowSettled  o cagri sonuclandi mi - launch reddi, urun bulunamadi
++                              reddi, kurulum reddi ve onPurchasesUpdated AYNI
++                              bayragi paylasiyor, dolayisiyla akis basina en fazla
++                              bir resolve/reject uretilebiliyor.
++
++       ETIKETIN NE OLDUGU: npxCode() tagi PluginCall'in KENDI seceneginden okur.
++       Yani ret yolunda tag "bu ret hangi CAGRIDAN dogdu" sorusunun cevabidir,
++       Play'in islem kimligi dogrulamasi DEGILDIR. Basari yolunda ise tag
++       Purchase.getAccountIdentifiers() uzerinden Play'den geri gelir. */
++    private final AtomicReference<PluginCall> purchaseFlowCall = new AtomicReference<>(null);
++    private final AtomicBoolean purchaseFlowSettled = new AtomicBoolean(true);
++
++    /* Satin alma guncellemesinin yapilandirilmis asamalari. Tek yerde durmalari
++       onemli: JS tarafi bu dizeleri okuyup rezervasyon karari veriyor. */
++    private static final String STAGE_UPD_NONE = "updnone"; // OK degil, liste GELDI ve BOSTU
++    private static final String STAGE_UPD_NULL = "updnull"; // OK degil, liste HIC GELMEDI
++    private static final String STAGE_UPD_TX = "updtx"; // OK degil AMA yaninda satin alma geldi
++
++    private void beginPurchaseFlow(PluginCall call) {
++        purchaseFlowCall.set(call);
++        purchaseFlowSettled.set(false);
++    }
++
++    /** BU cagriyi sonuclandirma hakkini alir; zaten sonuclanmissa false. */
++    private boolean claimPurchaseCall(PluginCall call) {
++        if (call == null || purchaseFlowCall.get() != call) {
++            return false;
++        }
++        if (!purchaseFlowSettled.compareAndSet(false, true)) {
++            return false;
++        }
++        purchaseFlowCall.set(null);
++        return true;
++    }
++
++    /** ACIK satin alma cagrisini sonuclandirma hakkini alir. Istemci seviyesi
++     *  dinleyicisi icin: guncelleme, istemciyi kuran cagriya degil akisa aittir. */
++    private PluginCall claimOpenPurchaseCall() {
++        PluginCall call = purchaseFlowCall.get();
++        if (call == null) {
++            return null;
++        }
++        if (!purchaseFlowSettled.compareAndSet(false, true)) {
++            return null;
++        }
++        purchaseFlowCall.set(null);
++        return call;
++    }
++
++    /** Sonuclandirma hakki alinabiliyorsa reddeder; alinamiyorsa HICBIR SEY
++     *  yapmaz - ikinci bir sonuc uretmek yerine sessiz kalir. */
++    private void rejectPurchaseCall(PluginCall call, String message, String code) {
++        if (!claimPurchaseCall(call)) {
++            Log.d(TAG, "Purchase call already settled; not rejecting again");
++            return;
++        }
++        if (code == null) {
++            call.reject(message);
++        } else {
++            call.reject(message, code);
++        }
++    }
++
++    /** Baglantiyi YALNIZ hala sahibiysek kapatir (bkz. getPurchases'teki ayni
++     *  gerekce). owned null ise eski davranis korunur. */
++    private void closeOwnedBillingClient(BillingClient owned) {
++        synchronized (billingClientLock) {
++            if (owned == null || billingClient == owned) {
++                closeBillingClientLocked();
++            } else {
++                Log.d(TAG, "Billing client changed owner; closing nothing");
++            }
++        }
++    }
++
++    /** Guncellemedeki hangi satin alma BU denemeye ait.
++     *
++     *  Eklenti kosulsuz purchases.get(0) aliyordu: liste bos oldugunda
++     *  IndexOutOfBounds firlatiyor (Play callback'i icinde, yani cagri hic
++     *  sonuclanmiyor), birden fazla kayit geldiginde de gerisini atiyordu.
++     *  Etiket eslesmesi varsa o kayit seciliyor; yoksa DAVRANIS DEGISMIYOR ve
++     *  ilk kayit isleniyor - JS tarafi hedefi satin almanin kendi
++     *  appAccountToken'indan cozdugu icin yanlis hedefe teslimat buradan
++     *  dogmuyor. Secilmeyen kayitlara DOKUNULMUYOR: acknowledge/consume
++     *  edilmedikleri icin getPurchases() onlari yine listeler ve ayni guvenli
++     *  kuyruk/teslimat yolundan gecerler. */
++    private Purchase pickUpdatedPurchase(List<Purchase> purchases, PluginCall call) {
++        if (purchases == null || purchases.isEmpty()) {
++            return null;
++        }
++        String tag = call != null ? call.getString("appAccountToken") : null;
++        if (tag != null && !tag.isEmpty()) {
++            for (Purchase purchase : purchases) {
++                AccountIdentifiers ids = purchase.getAccountIdentifiers();
++                String id = ids != null ? ids.getObfuscatedAccountId() : null;
++                if (tag.equals(id)) {
++                    return purchase;
++                }
++            }
++            Log.d(TAG, "No purchase in this update carries this attempt's account identifier");
++        }
++        return purchases.get(0);
++    }
  
-     private void handlePurchase(Purchase purchase, PluginCall purchaseCall) {
+     @PluginMethod
+     public void isBillingSupported(PluginCall call) {
+@@ -198,6 +315,10 @@ public class NativePurchasesPlugin extends Plugin {
+ 
+     private void rejectBillingSetupCall(PluginCall purchaseCall, AtomicBoolean callRejected, String code, String message) {
+         if (purchaseCall != null && callRejected.compareAndSet(false, true)) {
++            /* PATCH: bu cagri satin alma akisiysa akisin tek-sonuclanma bayragi da
++               burada tukenir; yoksa gec gelen bir onPurchasesUpdated ayni cagriya
++               ikinci bir sonuc yazabilirdi. */
++            claimPurchaseCall(purchaseCall);
+             purchaseCall.reject(code, message);
+         }
+     }
+@@ -217,13 +338,26 @@ public class NativePurchasesPlugin extends Plugin {
+         }
+     }
+ 
+-    private void handlePurchase(Purchase purchase, PluginCall purchaseCall) {
++    private void handlePurchase(Purchase purchase, PluginCall purchaseCall, int updatedCount) {
          Log.d(TAG, "handlePurchase() called");
 -        Log.d(TAG, "Purchase details: " + purchase.toString());
 -        Log.i(NativePurchasesPlugin.TAG, "handlePurchase" + purchase);
++        /* PATCH: bu guncellemede kac kayit geldi. Secilmeyenler bilerek
++           BITIRILMIYOR (ne consume ne acknowledge), boylece getPurchases()
++           onlari yine listeler; sayi JS'e gidiyor ki cagiran taraf bir
++           uzlastirma turu acmayi bilsin. Google'in kendi uyarisi: bu
++           dinleyicide bildirilen her satin alma consume ya da acknowledge
++           edilmeli, yoksa iade edilir. */
++        Log.d(TAG, "Purchases in this update: " + updatedCount);
 +        // PATCH (FootballAgent_Mobile): satin alma tokeni, orderId ve Purchase
 +        // nesnesinin kendisi (toString() -> getOriginalJson()) logcat'e yaziliyordu.
 +        // Logcat cihazda baska bilesenlerce okunabilir ve hata raporu/ekran
@@ -39,7 +182,15 @@ index d8bfea2..499ff15 100644
          Log.d(TAG, "Is acknowledged: " + purchase.isAcknowledged());
  
          if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-@@ -289,7 +297,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -274,6 +408,7 @@ public class NativePurchasesPlugin extends Plugin {
+             ret.put("isAcknowledged", purchase.isAcknowledged());
+             ret.put("purchaseState", String.valueOf(purchase.getPurchaseState()));
+             ret.put("appAccountToken", purchaseAccountId);
++            ret.put("updatedPurchaseCount", updatedCount);
+ 
+             // Add cancellation information - ALWAYS set willCancel
+             // Note: Android doesn't provide direct cancellation information in the Purchase object
+@@ -289,7 +424,7 @@ public class NativePurchasesPlugin extends Plugin {
                  // This would require additional Google Play API calls to get subscription details
              }
  
@@ -48,7 +199,7 @@ index d8bfea2..499ff15 100644
              if (purchaseCall != null) {
                  purchaseCall.resolve(ret);
              } else {
-@@ -302,7 +310,8 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -302,7 +437,8 @@ public class NativePurchasesPlugin extends Plugin {
              // given to them. You can also choose to remind the user to complete the
              // purchase if you detect that it is still pending.
              if (purchaseCall != null) {
@@ -58,7 +209,7 @@ index d8bfea2..499ff15 100644
              } else {
                  Log.d(TAG, "purchaseCall is null for pending purchase");
              }
-@@ -310,15 +319,54 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -310,15 +446,54 @@ public class NativePurchasesPlugin extends Plugin {
              Log.d(TAG, "Purchase state is OTHER: " + purchase.getPurchaseState());
              // Handle any other error codes.
              if (purchaseCall != null) {
@@ -115,21 +266,121 @@ index d8bfea2..499ff15 100644
          AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
              .setPurchaseToken(purchaseToken)
              .build();
-@@ -429,7 +477,12 @@ public class NativePurchasesPlugin extends Plugin {
-                                 Log.d(TAG, "Purchase update failed or purchases is null");
-                                 Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
-                                 if (purchaseCall != null) {
+@@ -411,6 +586,10 @@ public class NativePurchasesPlugin extends Plugin {
+         final AtomicBoolean setupSettled = new AtomicBoolean(false);
+ 
+         Log.d(TAG, "Creating new BillingClient (attempt " + attempt + "/" + BILLING_CONNECTION_MAX_ATTEMPTS + ")");
++        /* PATCH: dinleyicinin KENDI istemcisi. Anonim sinif, henuz atanmamis olan
++           yerel "client" degiskenini yakalayamaz; kapatma kararinda sahiplik
++           kontrolu yapabilmek icin bir tutucu gerekiyor. */
++        final AtomicReference<BillingClient> clientRef = new AtomicReference<>(null);
+         final BillingClient client;
+         synchronized (billingClientLock) {
+             client = BillingClient.newBuilder(getContext())
+@@ -420,19 +599,55 @@ public class NativePurchasesPlugin extends Plugin {
+                         public void onPurchasesUpdated(@NonNull BillingResult billingResult, List<Purchase> purchases) {
+                             Log.d(TAG, "onPurchasesUpdated() called");
+                             Log.d(TAG, "Billing result: " + billingResult.getResponseCode() + " - " + billingResult.getDebugMessage());
+-                            Log.d(TAG, "Purchases count: " + (purchases != null ? purchases.size() : 0));
++                            int updatedCount = purchases != null ? purchases.size() : 0;
++                            Log.d(TAG, "Purchases count: " + updatedCount);
+                             Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
+-                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+-                                Log.d(TAG, "Purchase update successful, processing first purchase");
+-                                handlePurchase(purchases.get(0), purchaseCall);
++                            /* PATCH (FootballAgent_Mobile): SONUC ACIK OLAN SATIN ALMA
++                               CAGRISINA yazilir, istemciyi KURAN cagriya degil - ve en
++                               fazla BIR KEZ. Acik bir akis yoksa hicbir sey
++                               sonuclandirilmiyor: eski kod burada bir getPurchases
++                               cagrisini bir Transaction ile resolve edebiliyordu. Satin
++                               alma bilgisi bu durumda da KAYBOLMUYOR; hicbir sey consume
++                               ya da acknowledge edilmedigi icin getPurchases() onu yine
++                               listeler. */
++                            PluginCall target = claimOpenPurchaseCall();
++                            if (target == null) {
++                                Log.d(TAG, "No open purchase call for this update; settling nothing");
++                                return;
++                            }
++                            boolean okResult = billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK;
++                            Purchase chosen = pickUpdatedPurchase(purchases, target);
++                            if (okResult && chosen != null) {
++                                Log.d(TAG, "Purchase update successful, processing the purchase of this attempt");
++                                handlePurchase(chosen, target, updatedCount);
++                            } else if (chosen != null) {
++                                /* PATCH: OK OLMAYAN SONUCLA BIRLIKTE SATIN ALMA GELDI.
++                                   Eski kod bu listeyi hic okumadan atiyordu - "satin alma
++                                   yok" diye degil, GORMEDEN. Play'in sozlesmesi purchases
++                                   icin yalniz "List of updated purchases if present" diyor,
++                                   yani OK olmayan bir sonucta listenin bos oldugunu GARANTI
++                                   ETMIYOR. Boyle bir sonuc KESIN BASARISIZ SAYILAMAZ: ayri
++                                   bir asamayla bildiriliyor, kayit BITIRILMEDEN birakiliyor
++                                   ve guvenli yol (getPurchases -> teslimat ->
++                                   consume/acknowledge) onu isliyor. */
++                                Log.d(TAG, "Purchase update was not OK but carried purchases; outcome is not conclusive");
++                                target.reject(
++                                    "Purchase update carried a purchase",
++                                    npxCode(STAGE_UPD_TX, billingResult.getResponseCode(), target)
++                                );
+                             } else {
+-                                Log.d(TAG, "Purchase update failed or purchases is null");
+-                                Log.i(NativePurchasesPlugin.TAG, "onPurchasesUpdated" + billingResult);
+-                                if (purchaseCall != null) {
 -                                    purchaseCall.reject("Purchase is not purchased");
-+                                    // PATCH: BillingResponseCode ve denemenin kimligi JS'e kayipsiz
-+                                    // tasiniyor. Capacitor reject(msg, code) -> JS tarafinda err.code.
-+                                    purchaseCall.reject(
-+                                        "Purchase is not purchased",
-+                                        npxCode("updated", billingResult.getResponseCode(), purchaseCall)
-+                                    );
-                                 }
+-                                }
++                                /* PATCH: "liste hic gelmedi" ile "liste geldi ve bostu" AYRI
++                                   asamalar. Ikisi de bu guncellemede satin alma olmadigini
++                                   soyluyor, ama ayni sey degiller ve tani ikisini
++                                   karistirmamali. */
++                                String stage = purchases == null ? STAGE_UPD_NULL : STAGE_UPD_NONE;
++                                Log.d(TAG, "Purchase update carried no purchase, stage: " + stage);
++                                target.reject(
++                                    "Purchase is not purchased",
++                                    npxCode(stage, billingResult.getResponseCode(), target)
++                                );
                              }
+-                            closeBillingClient();
++                            closeOwnedBillingClient(clientRef.get());
+                         }
+                     }
+                 )
+@@ -440,6 +655,7 @@ public class NativePurchasesPlugin extends Plugin {
+                 .build();
+             billingClient = client;
+         }
++        clientRef.set(client);
+ 
+         Log.d(TAG, "Starting billing client connection");
+         client.startConnection(
+@@ -609,6 +825,10 @@ public class NativePurchasesPlugin extends Plugin {
+         );
+         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder().setProductList(productList).build();
+         Log.d(TAG, "Initializing billing client for purchase");
++        /* PATCH: akis ACIK olarak isaretleniyor. Bundan sonraki her sonuc -
++           urun bulunamadi, akis baslamadi, onPurchasesUpdated - ayni
++           tek-sonuclanma bayragindan geciyor. */
++        beginPurchaseFlow(call);
+         withBillingClient(call, () -> {
+             Log.d(TAG, "Querying product details for purchase");
+             billingClient.queryProductDetailsAsync(
+@@ -627,7 +847,7 @@ public class NativePurchasesPlugin extends Plugin {
+                         if (productDetailsList.isEmpty()) {
+                             Log.d(TAG, "No products found");
                              closeBillingClient();
-@@ -698,6 +751,15 @@ public class NativePurchasesPlugin extends Plugin {
+-                            call.reject("Product not found");
++                            rejectPurchaseCall(call, "Product not found", null);
+                             return;
+                         }
+                         // Process the result
+@@ -671,7 +891,7 @@ public class NativePurchasesPlugin extends Plugin {
+                                     if (selectedOffer == null) {
+                                         Log.d(TAG, "Offer token not found for product: " + productIdentifier);
+                                         closeBillingClient();
+-                                        call.reject("Offer token not found for product: " + productIdentifier);
++                                        rejectPurchaseCall(call, "Offer token not found for product: " + productIdentifier, null);
+                                         return;
+                                     }
+                                     productDetailsParams.setOfferToken(selectedOffer.getOfferToken());
+@@ -698,6 +918,16 @@ public class NativePurchasesPlugin extends Plugin {
                              "Billing flow launch result: " + billingResult2.getResponseCode() + " - " + billingResult2.getDebugMessage()
                          );
                          Log.i(NativePurchasesPlugin.TAG, "onProductDetailsResponse2" + billingResult2);
@@ -137,7 +388,8 @@ index d8bfea2..499ff15 100644
 +                        // cagri sonsuza kadar askida kaliyordu. Simdi asamasiyla birlikte
 +                        // reddediliyor: "odeme ekrani acilmadi" KESIN bir sonuctur.
 +                        if (billingResult2.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-+                            call.reject(
++                            rejectPurchaseCall(
++                                call,
 +                                "Billing flow did not start",
 +                                npxCode("launch", billingResult2.getResponseCode(), call)
 +                            );
@@ -145,7 +397,7 @@ index d8bfea2..499ff15 100644
                      }
                  }
              );
-@@ -727,7 +789,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -727,7 +957,7 @@ public class NativePurchasesPlugin extends Plugin {
          if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
              assert purchases != null;
              for (Purchase purchase : purchases) {
@@ -154,7 +406,7 @@ index d8bfea2..499ff15 100644
                  Log.d(TAG, "Purchase state: " + purchase.getPurchaseState());
                  if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                      PurchaseAction action = PurchaseActionDecider.decide(false, purchase);
-@@ -747,17 +809,17 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -747,17 +977,17 @@ public class NativePurchasesPlugin extends Plugin {
      private void onConsumeResponse(BillingResult billingResult, String purchaseToken) {
          Log.d(TAG, "onConsumeResponse() called");
          Log.d(TAG, "Consume result: " + billingResult.getResponseCode() + " - " + billingResult.getDebugMessage());
@@ -175,7 +427,7 @@ index d8bfea2..499ff15 100644
          }
      }
  
-@@ -1100,34 +1162,126 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1100,34 +1330,126 @@ public class NativePurchasesPlugin extends Plugin {
          }
  
          withBillingClient(call, () -> {
@@ -310,7 +562,7 @@ index d8bfea2..499ff15 100644
                                  AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
                                  String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
                                  if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
-@@ -1158,11 +1312,23 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1158,11 +1480,23 @@ public class NativePurchasesPlugin extends Plugin {
                                      allPurchases.put(purchaseData);
                                  }
                              }
@@ -336,7 +588,7 @@ index d8bfea2..499ff15 100644
                      } finally {
                          maybeFinish.run();
                      }
-@@ -1171,16 +1337,12 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1171,16 +1505,12 @@ public class NativePurchasesPlugin extends Plugin {
  
              if (querySubs) {
                  Log.d(TAG, "Querying only subscription purchases");
@@ -355,7 +607,7 @@ index d8bfea2..499ff15 100644
                                  AccountIdentifiers accountIdentifiers = purchase.getAccountIdentifiers();
                                  String purchaseAccountId = accountIdentifiers != null ? accountIdentifiers.getObfuscatedAccountId() : null;
                                  if (hasAccountFilter && (purchaseAccountId == null || !purchaseAccountId.equals(accountFilter))) {
-@@ -1211,11 +1373,23 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1211,11 +1541,23 @@ public class NativePurchasesPlugin extends Plugin {
                                      allPurchases.put(purchaseData);
                                  }
                              }
@@ -381,7 +633,7 @@ index d8bfea2..499ff15 100644
                      } finally {
                          maybeFinish.run();
                      }
-@@ -1262,7 +1436,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1262,7 +1604,7 @@ public class NativePurchasesPlugin extends Plugin {
              return;
          }
  
@@ -390,7 +642,7 @@ index d8bfea2..499ff15 100644
          withBillingClient(call, () -> {
              AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
                  .setPurchaseToken(purchaseToken)
-@@ -1302,7 +1476,7 @@ public class NativePurchasesPlugin extends Plugin {
+@@ -1302,7 +1644,7 @@ public class NativePurchasesPlugin extends Plugin {
              return;
          }
  
