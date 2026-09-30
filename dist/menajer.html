@@ -5390,16 +5390,14 @@ shopBuy:'Satın al',
 shopOff:'Satın alma şu anda kullanılamıyor',
 shopOwned:'Zaten alındı',
 shopCapFull:'Bu kariyerde kapasite hakkın doldu',
-shopCapHeld:'Tamamlanmamış bir satın alma bu kapasiteyi tutuyor',
 shopNeedCareer:'Bu ürün açık bir kariyere işlenir — önce bir kariyer aç.',
 shopBusy:'Bir satın alma sürüyor.',
 shopThanks:'Satın alma tamamlandı.',
 shopPending:'Ödemen onay bekliyor. Onaylandığında hakkın kendiliğinden verilecek; bu birkaç saat sürebilir.',
-shopCancelled:'Satın alma iptal edildi. Ödeme alınmadı ve bu paket için ayrılan kapasite serbest bırakıldı.',
+shopCancelled:'Satın alma iptal edildi. Ödeme alınmadı.',
 shopDeclined:'Ödeme tamamlanamadı ve bu denemede senden bir şey tahsil edilmedi. Ödeme yöntemin kabul edilmemiş olabilir; Google Play’deki ödeme yöntemini kontrol edip yeniden deneyebilirsin.',
 shopBuyRefused:'Satın alma tamamlanamadı ve senden bir şey tahsil edilmedi. Bu paket şu anda satın alınamıyor.',
-shopHoldKept:'Bu denemede senden bir şey tahsil edilmedi. Bu paket için ayrılan kapasite şu anda kaydedilemedi ve ayrılmış görünmeye devam ediyor.',
-shopBuyUnsure:'Satın alma tamamlanmadı. Vazgeçtiysen bir şey olmadı; ödeme alındıysa uygulama açıldığında kendiliğinden işlenecek. Bu arada bu paketin kapasitesi ayrılmış kalır.',
+shopBuyUnsure:'Satın alma tamamlanmadı. Vazgeçtiysen bir şey olmadı; ödeme alındıysa uygulama açıldığında kendiliğinden işlenecek.',
 shopBuyFail:'Satın alma başlatılamadı.',
 shopLater:'Satın alman alındı ama şu anda işlenemedi. Uygulama açıldığında yeniden denenecek.',
 shopStuck:'Bu satın alma hedef kariyerine ulaşamadı.',
@@ -5409,11 +5407,6 @@ shopTxPending:'{n} ödeme onay bekliyor. Hak, ödeme tamamlanınca veriliyor.',
 shopTxStuck:'{n} satın alma teslim edilemedi. Hiçbir hak verilmedi ve işlem tarafımızdan onaylanmadı.',
 shopTxUnclear:'{n} satın almanın durumu netleştirilemedi. Kaydı olduğu gibi saklıyoruz ve bu işlem üzerinde başka bir adım atmıyoruz. Halihazırdaki hakların olduğu gibi duruyor. Siparişin durumunu Google Play sipariş geçmişinden takip edebilirsin.',
 shopTxUnverified:'{n} işlemin tamamlandığı doğrulanamadı. Aldığın hak duruyor ve ikinci kez verilmeyecek; ancak ödemenin Play tarafında kapandığını da iade edildiğini de söyleyemiyoruz.',
-shopTxHeld:'{n} tamamlanmamış satın alma için kapasite ayrılmış durumda. Bu kapasiteyi kullanmadın ve bir hak da harcamadın. Ödeme tamamlanıp hak teslim edilirse ayrılan kapasite düşer; sonucu öğrenilemeyen bir deneme ise ayrılmış kalır. Siparişin durumunu Google Play sipariş geçmişinden görebilirsin.',
-shopTxDiag:'Tanı kodu: {v}',
-diagUnknown:'bilinmiyor',
-diagTagOk:'etiket eşleşti',
-diagTagNo:'etiket eşleşmedi',
 shopTxHelp:'Onaylanmayan bir satın almayı Google Play kendi kurallarına göre iade edebilir. Durumu Play’deki sipariş geçmişinden görebilir, sonuçlanmazsa Google Play desteğine başvurabilirsin.',
 shopNoRestoreCap:'Kapasite paketleri tüketilir: uygulamayı silip yeniden kurarsan bu paketlerin geri yükleneceği garanti edilmez.',
 shopRestoreAds:'Reklam kaldırma aynı Google Play hesabında yeniden kurulumdan sonra geri yüklenir.',
@@ -5693,16 +5686,14 @@ shopBuy:'Buy',
 shopOff:'Purchasing is unavailable right now',
 shopOwned:'Already owned',
 shopCapFull:'No capacity allowance left in this career',
-shopCapHeld:'An unfinished purchase is holding this capacity',
 shopNeedCareer:'This product applies to an open career — open one first.',
 shopBusy:'A purchase is already in progress.',
 shopThanks:'Purchase complete.',
 shopPending:'Your payment is awaiting approval. The item is granted on its own once it completes, which can take a few hours.',
-shopCancelled:'Purchase cancelled. Nothing was charged and the capacity reserved for this pack has been released.',
+shopCancelled:'Purchase cancelled. Nothing was charged.',
 shopDeclined:'The payment could not be completed and you were not charged for this attempt. Your payment method may have been declined — check it in Google Play and try again.',
 shopBuyRefused:'The purchase could not be completed and you were not charged. This pack cannot be bought right now.',
-shopHoldKept:'You were not charged for this attempt. The capacity reserved for this pack could not be updated right now and still shows as reserved.',
-shopBuyUnsure:'The purchase did not complete. If you backed out, nothing happened; if the payment did go through, it is processed on its own when the app opens. Until then this pack’s capacity stays reserved.',
+shopBuyUnsure:'The purchase did not complete. If you backed out, nothing happened; if the payment did go through, it is processed on its own when the app opens.',
 shopBuyFail:'The purchase could not be started.',
 shopLater:'Your purchase went through but could not be processed right now. It will be retried when the app opens.',
 shopStuck:'This purchase could not reach the career it was bought for.',
@@ -5712,11 +5703,6 @@ shopTxPending:'{n} payment awaiting approval. The item is granted once the payme
 shopTxStuck:'{n} purchase could not be delivered. Nothing was granted and we did not acknowledge the transaction.',
 shopTxUnclear:'{n} purchase could not be resolved with certainty. We are keeping the record as it is and taking no further step on this transaction. The entitlements you already have are unchanged. You can follow the order in your Google Play order history.',
 shopTxUnverified:'{n} transaction could not be confirmed as completed. What you bought is yours and will not be granted twice; but we cannot say the payment was closed on Play’s side, nor that it was refunded.',
-shopTxHeld:'Capacity is reserved for {n} unfinished purchase. You have not used this capacity and no allowance has been spent. If the payment completes and the item is delivered, the reservation is cleared; if the attempt never resolves, it stays reserved. You can check the order in your Google Play order history.',
-shopTxDiag:'Diagnostic code: {v}',
-diagUnknown:'unknown',
-diagTagOk:'tag matched',
-diagTagNo:'tag did not match',
 shopTxHelp:'Google Play may refund a purchase we never acknowledged, under its own rules. You can follow it in your Play order history, and contact Google Play support if it is not resolved.',
 shopNoRestoreCap:'Capacity packs are consumed: if you uninstall and reinstall, these packs are not guaranteed to be restored.',
 shopRestoreAds:'Ad removal is restored after a reinstall on the same Google Play account.',
@@ -8233,31 +8219,60 @@ function adsClose(att) {
                  tema/dil/doğum yılı ile aynı yerde: kariyer kaydı açık olmadan
                  da (ana menü) okunabilmek zorunda.
 
-   ===== KAPASİTE TAVANI =====
+   ===== KAPASİTE TAVANI, VE REZERVASYONUN NEDEN OLMADIĞI =====
 
    Kariyer başına satın alınabilecek toplam kapasite artışı IAP.capMax (+10).
-   Tavan TEK yerde, iapCapOwned()'ın sonundaki clamp'te: defter bir şekilde
-   fazlasını taşısa bile oyuna giren sayı tavanı aşamaz. Mağaza ekranı aynı
-   tavanı ayrıca ÇİZİYOR (kalan hak), ama karar orada değil burada.
+   Tavan TEK yerde uygulanıyor: TESLİMATTA. iapCapOwned()'ın sonundaki clamp
+   oyuna giren sayıyı sınırlıyor, iapAfterDeliver() ise tavana sığmayan bir
+   satın almayı KISMEN teslim etmek yerine 'undeliverable' işaretliyor ve
+   ONAYLAMIYOR. Mağaza ekranı aynı tavanı ayrıca çiziyor (kalan hak), ama
+   karar orada değil.
+
+   BURADA BİR REZERVASYON VARDI VE KALDIRILDI. Ödeme başlamadan diske yazılan,
+   tavan hesabına katılan ve yalnız "kanıtlanmış" bir geçişle düşen bir kayıttı.
+   Amacı gerçekti: iki satın alma üst üste başlatılırsa aynı 10 birim iki kez
+   satılmasın. Ama bedeli daha büyük çıktı ve bu ölçüldü, tahmin edilmedi —
+   Play'in "her zaman reddeder" test kartı siparişi önce PENDING açıp sonra
+   SESSİZCE iptal ediyor (ne geri çağırma, ne olay, ne hata; token yalnızca
+   getPurchases listesinden düşüyor). O anda rezervasyonu düşürecek bir kanıt
+   hiç doğmuyor ve kayıt SONSUZA KADAR kalıyor; tavan dolunca iapState() her
+   pakete 'held' diyor, yani rezervasyonu düşürebilecek tek kod yolu olan
+   satın alma ret dalı bir daha hiç çalışmıyor. Kilit kendini besliyor.
+
+   İKİ ZARARI YAN YANA KOYMAK GEREKİYORDU:
+     rezervasyonsuz en kötü hâl → iki paket üst üste gelir, ikincisi teslim
+       EDİLMEZ, onaylanmaz, ve Play kendi kuralına göre onaylanmayan satın
+       almayı iade eder. Nadir ve GERİ DÖNÜŞÜ VAR.
+     rezervasyonlu en kötü hâl → başarısız her ödemede kapasite kalıcı olarak
+       kilitlenir, o kariyer bir daha hiçbir şey satın alamaz. Sık ve GERİ
+       DÖNÜŞÜ YOK.
+   Önlediğinden büyük bir zarar üreten bir koruma, koruma değildir.
+
+   KABUL EDİLEN ŞEY AÇIKÇA ŞU: tavanı aşan ikinci satın almanın iadesi bizim
+   değil PLAY'İN yolundan geçiyor ve bunu doğrulayamıyoruz (sunucu yok,
+   tüketilmiş token sorguda görünmüyor). Bu yeni bir bağımlılık değil —
+   'undeliverable' kayıtları için zaten aynı politikaya dayanıyorduk; yeni
+   olan, o durumun artık ÖNLENMİYOR oluşu.
+
+   ESKİ KAYITLARA GÖÇ YOK ve gerekmiyor: S.iap.r artık hiçbir yerde OKUNMUYOR,
+   dolayısıyla dahili testteki cihazlarda duran tıkalı kayıtlar diskte kalır ve
+   hiçbir şeyi engellemez. En temiz göç, hiç göç olmamasıdır.
 
    KAPASİTE = OYUNCU MÜŞTERİ KAPASİTESİ. Üç kariyer kayıt yuvasıyla (js/saves.js,
    SLOTS) hiçbir ilgisi yok ve olmayacak: yuva sayısı bir depolama biçimi,
    kapasite bir oyun dengesi terimi (core.js maxClients).
 
-   ===== ÜÇ KALICI YAPI =====
+   ===== İKİ KALICI YAPI =====
 
      S.iap.t   teslim edilmiş tokenlar → ürün id. Kapasitenin kaynağı.
-     S.iap.r   REZERVASYONLAR: {att: {cap, at, tok}}. Ödeme BAŞLAMADAN önce
-               yazılıyor, teslimatla AYNI yazmada siliniyor — böylece aynı
-               kapasite bir an bile iki kez sayılmıyor.
      iapq      cihaz genelinde ödenmiş-ama-kapanmamış işlemler (js/store.js'te
                kendi anahtarı). Kariyer silinse de DURUYOR; ücretli bir işlem
                kaydı hiçbir yolda silinerek kaybedilmiyor.
 
    ===== SIRA, VE NEDEN BU SIRA =====
 
-     rezervasyon yaz → (doğrula) → purchaseProduct → PURCHASED mi →
-     hedef kariyeri çöz → hakkı YAZ → (tanıkla doğrula) → consume/ack → kapat
+     purchaseProduct → PURCHASED mi → hedef kariyeri çöz → hakkı YAZ →
+     (tanıkla doğrula) → consume/ack → kapat
 
    Acknowledge/consume en sonda, çünkü Play onaylanan satın almayı ödenmiş
    sayar: arada bir çökme olsaydı Play "teslim edildi" derken defter boş
@@ -8364,29 +8379,15 @@ function iapCapOwned() {
   const n = iapOwnedOf(S).reduce((s, p) => s + (p.cap || 0), 0);
   return Math.min(n, IAP.capMax);
 }
-/* Bu kariyerdeki REZERVE kapasite. Rezervasyon, ödeme başlamadan önce
-   kalıcılaştırılan "bu kadarını almak üzereyim" kaydı. Tavan hesabına katılıyor
-   ki iki paket aynı boşluğu paylaşamasın — pencere açıkken tutulan bir bellek
-   kilidi bunu yapamazdı, çünkü süreç ölümünden sağ çıkmaz. */
-function iapResOf(st) {
-  const r = st && st.iap && st.iap.r;
-  return (r && typeof r === 'object') ? r : null;
-}
-function iapCapReserved() {
-  if (typeof S === 'undefined' || !S) return 0;
-  const r = iapResOf(S);
-  if (!r) return 0;
-  return Object.keys(r).reduce((s, k) => s + ((r[k] && r[k].cap) || 0), 0);
-}
 /* Herhangi bir DURUMUN ham kapasitesi (clamp'siz). Teslimat kararı hedef
    kariyerin kendi durumu üzerinden verilmek zorunda — açık kariyerin değil. */
 function iapCapOfState(st) {
   return iapOwnedOf(st).reduce((s, p) => s + (p.cap || 0), 0);
 }
 /* Bu kariyerde kalan kapasite hakkı — mağaza ekranı bunu yazıyor.
-   Rezerve edilmiş kapasite BURADA düşülüyor: satın alınabilirlik kararı ile
-   tavan kararı aynı sayıyı okusun. */
-function iapCapLeft() { return Math.max(0, IAP.capMax - iapCapOwned() - iapCapReserved()); }
+   Yalnız DEFTER okunuyor: satın alınabilirlik kararı ile tavan kararı aynı sayıyı
+   okusun ve ikisi de yalnız gerçekten teslim edilmiş haktan doğsun. */
+function iapCapLeft() { return Math.max(0, IAP.capMax - iapCapOwned()); }
 
 /* CİHAZ kapsamı: otomatik reklamlar kapatılmış mı. Kariyer açık olmasa da
    okunabiliyor, çünkü PREFS ana menüde de var. */
@@ -8543,8 +8544,9 @@ function iapqFold2(a, b) {
 }
 /* Çelişkinin yerini tutan EYLEMSİZ kayıt. Kendisi bir sürüm değil: özgün
    sürümler cf'te duruyor. Yalnız BÜTÜN sürümlerin hemfikir olduğu kimlik
-   alanlarını taşıyor; çelişen her alan null — özellikle att, çünkü yanlış bir
-   att başka bir denemenin rezervasyonunu düşürürdü (iapReapRes). */
+   alanlarını taşıyor; çelişen her alan null — att dahil, çünkü att teslimatın
+   hangi kariyere gideceğini çözen etiketin yarısı ve yanlışı sessizce yanlış
+   kariyere teslimat demek olurdu. */
 function iapqDisputedRec(tok, vers) {
   const rec = { tok: tok };
   IAPQ_IDF.forEach(f => {
@@ -8741,124 +8743,6 @@ function iapParseTag(s) {
   return { cid: cid === 'dev' ? null : cid, att: att };
 }
 
-/* ================= REZERVASYON =================
-   Ödeme BAŞLAMADAN yazılıyor ve yazıldığı DOĞRULANMADAN satın alma açılmıyor.
-   Dönüş: att (söz) ya da null. */
-function iapReserve(p) {
-  if (!S || !curSlot || !p.cap) return Promise.resolve(null);
-  if (!S.iap || typeof S.iap !== 'object') S.iap = {};
-  if (!S.iap.r || typeof S.iap.r !== 'object') S.iap.r = {};
-  const att = iapAtt();
-  S.iap.r[att] = { cap: p.cap, at: Date.now() };
-  const cid = S.cid;
-  return saveSlotConfirmed(curSlot,
-    w => !!(w && w.S && w.S.cid === cid && w.S.iap && w.S.iap.r && w.S.iap.r[att])
-  ).then(ok => {
-    if (ok) return att;
-    /* Yazılamadıysa rezervasyon YOK sayılıyor ve satın alma HİÇ başlamıyor:
-       kalıcı olmayan bir rezervasyon tavanı koruyamaz. */
-    if (S && S.iap && S.iap.r) delete S.iap.r[att];
-    return null;
-  });
-}
-/* Rezervasyonu düşürmenin TEK yeri. reason ayrımı önemli:
-     'cancel'  kullanıcı vazgeçti — KESİN, hemen düşer
-     'failed'  akış hiç başlamadı ya da ödeme KESİN başarısız oldu — KESİN
-     'stale'   BELİRSİZ — burada DÜŞMEZ; yalnız iapReconcile() düşürebilir
-   Teslimatta düşme ayrı yoldan (iapApplyTo), çünkü orada defter yazımıyla
-   AYNI yazmada olmak zorunda.
-
-   SİLME DİSKTE DOĞRULANIYOR. Önceki hâl yalnız bellekten siliyor ve yazmanın
-   tuttuğunu sormuyordu: yazma düşerse rezervasyon bir sonraki açılışta geri
-   geliyor, ama o oturumda ekran onu düşmüş gösteriyordu — bellekle disk
-   ayrışıyordu ve kullanıcı olmayan bir kapasiteyi satın almaya çalışıyordu. */
-function iapRelease(att, reason) {
-  /* Dönüş, belgelenen dört değerden biri. Eskiden bu üç çıkış `false` dönüyordu
-     ve çağıran onu "yazma tutmadı" ile aynı kefeye koyuyordu: rezervasyonu hiç
-     olmayan bir ürün (reklam kaldırma) iptal edildiğinde ekran "ayrılan kapasite
-     kaydedilemedi" diyordu — ortada ayrılan kapasite yokken. */
-  if (!S || !curSlot || !att) return Promise.resolve('none');
-  const r = iapResOf(S);
-  if (!r || !r[att]) return Promise.resolve('none');
-  if (reason === 'stale') return Promise.resolve('kept');
-  const back = r[att], cid = S.cid, slot = curSlot;
-  delete r[att];
-  return saveSlotConfirmed(slot,
-    w => !!(w && w.S && w.S.cid === cid && !(w.S.iap && w.S.iap.r && w.S.iap.r[att]))
-  ).then(ok => {
-    if (ok) return 'released';
-    /* Yazılamadı. KAYIT GERİ KONUYOR ki ekran diskte olmayan bir serbestliği
-       göstermesin — ama yalnız HÂLÂ AYNI KARİYERDEYSEK. Await sırasında yuva
-       değişmiş olabilir ve o zaman bu geri koyma BAŞKA bir kariyere rezervasyon
-       (ve df) yazardı. Kariyer gittiyse hiçbir şey yazılmıyor: bu kariyerin
-       diskteki kaydı zaten değişmedi, rezervasyon orada duruyor. */
-    if (!iapSameCareer(cid, slot)) return 'failed';
-    const rr = iapResOf(S);
-    if (!rr || !back) return 'failed';
-    /* df = KANITLANMIŞ kesin başarısızlık. Yalnız buradan doğuyor, yani yalnız
-       eşleşen etiketli terminal bir sonuçtan; süreyle ya da boş bir getPurchases
-       turuyla ASLA yazılmıyor. Sonraki uzlaştırma turu (iapReapRes) yarım kalan
-       silmeyi tamamlıyor — AMA ancak bu ikinci yazma tutarsa. Tutmazsa işaret
-       yalnız BELLEKTE kalır ve uygulama kapanınca kaybolur; o hâlde hiçbir şey
-       serbest bırakılmaz. İkisi ayrı şeydir ve burada ayrı tutuluyor. */
-    rr[att] = back; rr[att].df = 1;
-    return saveSlotConfirmed(slot,
-      w => !!(w && w.S && w.S.cid === cid && w.S.iap && w.S.iap.r
-        && w.S.iap.r[att] && w.S.iap.r[att].df === 1)
-    ).then(() => 'failed', () => 'failed');
-  });
-}
-/* Await'ten SONRA hâlâ aynı kariyerde miyiz. Yalnız yuva numarasını yakalamak
-   yetmiyor: yuva silinip yeniden kullanılabilir ve aynı numarada başka bir
-   kariyer durabilir. Kimlik o yeniden kullanımda değişiyor, numara değişmiyor. */
-function iapSameCareer(cid, slot) {
-  return !!(typeof S !== 'undefined' && S && curSlot === slot && S.cid === cid);
-}
-
-/* ================= TANI KODU =================
-   Cihaza bağlanmadan, yalnız mağaza ekranından okunabilen dar bir kayıt: bir
-   sonraki iç testte YENİ bir başarısız denemenin hangi yoldan geldiğini
-   ayırabilmek için.
-
-   NE SAKLANIYOR — yalnız yapılandırılmış üç alan:
-     s  aşama dizesi ('launch' | 'updnone' | 'updnull' | 'updtx' | 'state' ve
-        yamanın eski biçiminden 'updated'), bilinmiyorsa ''
-     c  sayısal BillingResponseCode / PurchaseState, çözülemiyorsa null
-     m  etiket BU denemeyle eşleşti mi (1/0)
-   NE SAKLANMIYOR: ham hata mesajı, satın alma tokeni, appAccountToken, sipariş
-   kimliği, hesap kimliği. Etiketin KENDİSİ değil, yalnız eşleşip eşleşmediği.
-
-   YETKİSİ YOK. Hiçbir karar bu alanı okumuyor: rezervasyon yalnız teslimat
-   kanıtıyla ya da df ile düşüyor (iapReapRes). dg yalnız YAZILIYOR ve
-   gösteriliyor; df ile karıştırılamaz, çünkü ayrı alan ve ayrı anlam.
-
-   YAZILAMAZSA hiçbir şey bozulmuyor: rezervasyon ve ücretli haklar zaten
-   diskte olduğu gibi duruyor, yalnız tanı bilgisi kaydedilmemiş olur. */
-function iapNoteDiag(att, err, tag, cid, slot) {
-  if (!iapSameCareer(cid, slot)) return Promise.resolve(false);
-  const r = iapResOf(S);
-  /* Rezervasyon düştüyse (iptal / akış hiç başlamadı) yazacak bir şey yok. */
-  if (!r || !r[att]) return Promise.resolve(false);
-  const i = iapErrInfo(err);
-  r[att].dg = i
-    ? { s: i.stage || '', c: (typeof i.code === 'number') ? i.code : null, m: (i.tag === tag) ? 1 : 0 }
-    : { s: '', c: null, m: 0 };
-  return saveSlotConfirmed(slot).then(ok => !!ok, () => false);
-}
-/* Ekranda gösterilecek sade satırlar. Tanı bilgisi TAŞIMAYAN eski kayıtlar
-   atlanıyor — geçmiş bir denemeye tahmini kod ATANMIYOR. */
-function iapDiagList() {
-  if (typeof S === 'undefined' || !S) return [];
-  const r = iapResOf(S);
-  if (!r) return [];
-  const unk = t('diagUnknown');
-  return Object.keys(r).map(att => {
-    const d = r[att] && r[att].dg;
-    if (!d) return null;
-    return (d.s || unk) + '/' + ((typeof d.c === 'number') ? d.c : unk)
-      + ' · ' + t(d.m ? 'diagTagOk' : 'diagTagNo');
-  }).filter(Boolean);
-}
 
 /* ================= KÖPRÜ ================= */
 function iapBridge() {
@@ -8879,12 +8763,6 @@ const IAPS = {
   flight: {},       // token → 1: aynı token için uçuştaki TESLİMAT (geri almayı güvenli kılar)
   fin: {},          // token → 1: aynı token için uçuştaki KAPANIŞ (consume/ack)
   qErr: false,      // son hak sorgusu başarısız mı
-  /* Rezervasyon BELLEKTEN silinmiş ama silme henüz DİSKE yazılmamışken
-     açık olan pencere. iapRelease'i IAPS.busy koruyor; iapReapRes'in
-     kendi penceresi vardı ve onu hiçbir şey korumuyordu — uzlaştırma
-     açılışta, kariyer açılışında ve mağaza açılışında koşuyor, yani
-     kullanıcı tam o anda ekranda olabiliyor. Kayda GİRMİYOR. */
-  hold: '',         // '' | 'reap'
   boot: false
 };
 /* Satın alma yapılabilir mi. Fiyat sorgusu tutmadıysa da KAPALI: fiyatı
@@ -8912,17 +8790,8 @@ function iapState(id) {
   if (!p) return 'off';
   if (p.sc === 'career' && (typeof S === 'undefined' || !S || !S.agent || !curSlot)) return 'nocareer';
   if (iapOwned(id)) return 'owned';
-  if (p.cap && p.cap > iapCapLeft()) {
-    /* İKİ FARKLI GERÇEK, İKİ FARKLI CÜMLE. "Hakkın doldu" ancak defter gerçekten
-       doluysa doğru. Tavan yalnız sonuçlanmamış bir denemenin rezervasyonu
-       yüzünden bağlıyorsa kullanıcı hiçbir hak KULLANMADI; ona hakkının
-       bittiğini söylemek, harcamadığı bir şeyi harcattığını söylemek olurdu.
-       Ayrım defterden okunuyor, rezervasyonlar hariç tutularak. */
-    return (p.cap <= IAP.capMax - iapCapOwned()) ? 'held' : 'full';
-  }
-  /* Doğrulanmamış boş kapasiteyle satın alma başlatılamaz: kilit hem
-     satın alma akışını hem rezervasyon yazmasını kapsıyor. */
-  if (IAPS.busy || IAPS.hold) return 'busy';
+  if (p.cap && p.cap > iapCapLeft()) return 'full';
+  if (IAPS.busy) return 'busy';
   return iapAvailable() ? 'go' : 'off';
 }
 
@@ -8934,16 +8803,12 @@ function iapApplyTo(st, tok, pid, att) {
   if (!st.iap || typeof st.iap !== 'object') st.iap = {};
   if (!st.iap.t || typeof st.iap.t !== 'object') st.iap.t = {};
   if (st.iap.t[tok]) {                       // zaten teslim edilmiş: no-op
-    if (att && st.iap.r) delete st.iap.r[att];
     return 'again';
   }
   st.iap.t[tok] = pid;
-  if (att && st.iap.r) delete st.iap.r[att];
   return 'ok';
 }
-/* Kalıcılaşmayan bir teslimatın bellekten geri alınması. Rezervasyon da geri
-   konuyor: teslimat olmadıysa o kapasite hâlâ "almak üzere olduğumuz" kapasite
-   ve tavandan yer tutmaya devam etmeli. */
+/* Kalıcılaşmayan bir teslimatın bellekten geri alınması. */
 /* Geri alma, MUTASYONU YAPTIĞI NESNEYİ takip eder — o an S'de ne varsa onu
    değil. Eskiden zincirin sonunda `iapRollback(S, ...)` çağrılıyordu ve S bu
    arada BAŞKA bir kariyer olabiliyordu: eski kariyerin rezervasyonu yeni
@@ -8956,9 +8821,8 @@ function iapApplyTo(st, tok, pid, att) {
      m.did   iapApplyTo GERÇEKTEN yazdı mı ('again' ise yazmadı, silmemeli) */
 function iapMark(st, tok, pid, att) {
   const had = !!(st.iap && st.iap.t && st.iap.t[tok]);
-  const resBack = (st.iap && st.iap.r && att) ? (st.iap.r[att] || null) : null;
   const r = iapApplyTo(st, tok, pid, att);
-  return { st: st, cid: st.cid, tok: tok, pid: pid, att: att, res: resBack, did: (r === 'ok' && !had) };
+  return { st: st, cid: st.cid, tok: tok, pid: pid, att: att, did: (r === 'ok' && !had) };
 }
 function iapRollback(m) {
   if (!m || !m.did) return false;
@@ -8971,10 +8835,6 @@ function iapRollback(m) {
      paralel başlamadığını iapDeliverCareer'ın uçuş kilidi garanti ediyor. */
   if (!st.iap.t || st.iap.t[m.tok] !== m.pid) return false;
   delete st.iap.t[m.tok];
-  if (m.att && m.res) {
-    if (!st.iap.r || typeof st.iap.r !== 'object') st.iap.r = {};
-    st.iap.r[m.att] = m.res;
-  }
   return true;
 }
 /* Kaydın gerçekten bu teslimatı taşıyıp taşımadığı. Canlı nesne kimliğine
@@ -9293,7 +9153,7 @@ function iapReconcile() {
     let p = Promise.resolve();
     list.forEach(tx => { p = p.then(() => iapIngest(tx, 'query').catch(() => 0)); });
     return p.then(() => iapReapQueue(seen)).then(() => iapReapNoAds(seen))
-      .then(() => iapReapRes(seen)).then(() => 'ok');
+      .then(() => 'ok');
   }, () => {
     /* BAŞARISIZ SORGU "satın alma yok" DEMEK DEĞİL. Hiçbir hak silinmiyor,
        hiçbir rezervasyon düşmüyor, hiçbir kayıt kapanmıyor. */
@@ -9351,70 +9211,6 @@ function iapReapNoAds(seen) {
   savePrefs();
   return Promise.resolve(true);
 }
-/* Rezervasyon toplama — TEK KANIT: teslimatın kalıcılaşmış olması.
-   att'ye ait kuyruk kaydının tokenı bu kariyerin DEFTERİNDE ise, o deneme
-   gerçekten sonuçlanmıştır ve rezervasyonu artık yer tutmamalı. (Normalde
-   rezervasyon teslimatla AYNI yazmada düşer; burası yalnız o yazmanın araya
-   giren bir yeniden yükleme yüzünden eksik kaldığı hâli toparlıyor.)
-
-   BAŞKA HİÇBİR GEREKÇE rezervasyonu düşürmüyor. Özellikle:
-     - "Play bu tokenı N sorgudur görmüyor"  → kanıt değil
-     - "rezervasyon eskidi"                  → kanıt değil
-     - orphan / unbound / undeliverable      → ÖDEME açısından sonuçlanmış
-       değiller. Hedefi bulunamayan bir kayıt kariyer yeniden göründüğünde
-       ready'ye dönebiliyor (iapOnCareerOpen) ve geç gelen bir ödeme aynı
-       denemeyi canlandırabiliyor; rezervasyonu şimdi bırakmak, o teslimatın
-       yerini bu arada alınmış başka bir pakete verdirirdi.
-
-   Bunun bedeli açık: sonucu hiç öğrenilemeyen bir deneme o kariyerin
-   kapasitesinden yer tutmaya devam eder. Bu bilerek seçildi — kullanıcıya
-   yanlışlıkla iki kez sattırmaktansa mağazada durumu YAZMAK (iapHeldN →
-   shopTxHeld) tercih edildi. */
-function iapReapRes() {
-  if (!S || !curSlot) return Promise.resolve(true);
-  const r = iapResOf(S);
-  if (!r) return Promise.resolve(true);
-  const t = iapTokens(S) || {};
-  const done = {};
-  const q = iapqAll();
-  Object.keys(q).forEach(tok => { if (q[tok].att && t[tok]) done[q[tok].att] = true; });
-  /* İKİ KANIT, ikisi de kanıt — tahmin değil:
-       done[att]  teslimat deftere yazıldı (asıl yol),
-       r[att].df  bu deneme KANITLANMIŞ biçimde kesin başarısızdı ve serbest
-                  bırakma yazması düşmüştü (iapRelease). df yalnız oradan
-                  doğuyor; süre ya da boş sorgu onu ASLA yazmıyor, bu yüzden
-                  hata bilgisi taşımayan ESKİ rezervasyonlar buradan geçmiyor. */
-  const cid = S.cid, slot = curSlot, gone = {};
-  /* ÖNCE karar, SONRA silme: silinecek bir şey yoksa kilit hiç alınmıyor. */
-  const keys = Object.keys(r).filter(att => done[att] || (r[att] && r[att].df));
-  if (!keys.length) return Promise.resolve(true);
-  keys.forEach(att => { gone[att] = r[att]; delete r[att]; });
-  IAPS.hold = 'reap';
-  const free = () => { IAPS.hold = ''; };
-  /* YENİDEN DENEME, İLK SİLMEYLE AYNI GÜVENCEDE. Burası da bellekten silip
-     yazmanın tuttuğunu sormuyordu: yazma düşerse ekran diskte olmayan bir boş
-     kapasiteyi gösterirdi ve kanıt (df) bellekten de silinmiş olurdu. */
-  return saveSlotConfirmed(slot,
-    w => !!(w && w.S && w.S.cid === cid
-      && keys.every(a => !(w.S.iap && w.S.iap.r && w.S.iap.r[a])))
-  ).then(ok => {
-    if (ok) { free(); return true; }
-    /* Kariyer bu arada değiştiyse HİÇBİR ŞEY yazılmıyor — eski kariyerin
-       diskteki kaydı zaten olduğu gibi duruyor. */
-    if (!iapSameCareer(cid, slot)) { free(); return false; }
-    const rr = iapResOf(S);
-    if (rr) keys.forEach(a => { rr[a] = gone[a]; });
-    free();
-    return false;
-  }, e => { free(); throw e; });
-}
-/* Sonucu öğrenilememiş, hâlâ yer tutan rezervasyon sayısı. Mağaza bunu yazıyor:
-   kapasitenin neden kullanılamadığı kullanıcıya görünmeden tutulamaz. */
-function iapHeldN() {
-  if (typeof S === 'undefined' || !S) return 0;
-  const r = iapResOf(S);
-  return r ? Object.keys(r).length : 0;
-}
 
 /* Kariyer silinirken çağrılıyor (js/saves.js deleteSlot). Kayıt SİLİNMİYOR —
    ücretli bir işlem kaydı kaybedilemez; yalnız "hedefi yok" diye işaretleniyor.
@@ -9439,7 +9235,7 @@ function iapBuy(id) {
   const st = iapState(id);
   if (st !== 'go') {
     if (typeof toast === 'function') {
-      toast(t(st === 'full' ? 'shopCapFull' : st === 'held' ? 'shopCapHeld'
+      toast(t(st === 'full' ? 'shopCapFull'
         : st === 'owned' ? 'shopOwned'
         : st === 'nocareer' ? 'shopNeedCareer' : st === 'busy' ? 'shopBusy' : 'shopOff'));
     }
@@ -9450,81 +9246,56 @@ function iapBuy(id) {
   IAPS.busy = id;
   iapRepaint();
   const cid = (p.sc === 'career' && S) ? S.cid : null;
-  /* Yuva da yakalanıyor: tanı kaydı await'ten sonra yazılıyor ve o ana
-     kadar kariyer değişmiş olabilir (iapSameCareer). */
-  const slot = curSlot;
-
-  /* Rezervasyon ÖNCE ve kalıcı. Yazılamazsa ödeme HİÇ başlamıyor. */
-  const pre = p.cap ? iapReserve(p) : Promise.resolve(iapAtt());
-  pre.then(att => {
-    if (!att) { IAPS.busy = ''; iapRepaint(); iapToast('shopBuyFail'); return; }
-    return P.purchaseProduct({
-      productIdentifier: p.sku,
-      productType: 'inapp',
-      appAccountToken: iapTag(cid, att),
-      /* İKİSİ DE FALSE: eklenti hiçbir şeyi kendiliğinden bitirmesin.
-         isConsumable true olsaydı eklenti call.resolve()'dan ÖNCE consume
-         ederdi (PurchaseActionDecider) — teslimattan önce kapatmak olurdu. */
-      isConsumable: false,
-      autoAcknowledgePurchases: false
-    }).then(tx => {
-      /* Aynı güncellemede BİZİM kaydımızdan başkası da geldiyse onlar bilerek
-         bitirilmedi (native taraf yalnız bu denemenin kaydını işliyor) ve tek
-         yerden bulunabilirler: bir sorgu turu. Google'ın uyarısı bu dinleyicide
-         bildirilen her satın almanın consume ya da acknowledge edilmesini
-         istiyor, yoksa iade ediliyor — yani geciktirilecek bir iş değil. */
-      const more = !!(tx && typeof tx.updatedPurchaseCount === 'number' && tx.updatedPurchaseCount > 1);
-      return iapIngest(tx, 'buy').then(r => {
-        IAPS.busy = '';
-        iapAfterBuy(r, att);
-        if (more) return iapReconcile().then(() => iapRepaint(), () => 0);
-      });
-    }, err => {
-      /* Ret geldi. Sınıf, hem rezervasyonun kaderini hem cümleyi belirliyor:
-           - BU denemenin açık USER_CANCELED'ı        → düşer
-           - ödeme ekranının hiç açılmadığı sonuç      → düşer
-           - ödeme reddi (3), DÖRT koşul birden        → düşer (bkz. iapReleasing)
-           - ürün/istek reddi (4,5)                    → KALIR; yalnız kullanıcıya
-             ne olduğu söyleniyor
-           - yanında satın alma gelen sonuç ('updtx')  → KALIR, teslimata gider
-           - PENDING, bağlantı kaybı, her belirsiz şey → KALIR
-         Sınıflandırma yalnız yamanın taşıdığı yapılandırılmış alandan; genel
-         hata metninden iptal ya da başarısızlık çıkarımı YOK. */
-      /* KİLİT BURADA BIRAKILMIYOR. iapRelease bellekten senkron siliyor ama
-         diske yazması await gerektiriyor; kilidi burada bırakmak, o aralıkta
-         DOĞRULANMAMIŞ boş kapasiteyle ikinci bir satın alma başlatılmasına izin
-         verirdi. Kilit, kalıcı sonuç belli olunca bırakılıyor. */
-      const tag = iapTag(cid, att);
-      let kind = iapTerminalKind(err, tag);
-      if (!kind && iapNotStarted(err, tag)) kind = 'notStarted';
-      if (!kind && iapIsPending(err)) kind = 'pending';
-      /* (4) ÇELİŞKİ VARSA SINIF DÜŞÜYOR. Bu denemeye ait bir satın alma kaydı
-         biliniyorsa "ödemen reddedildi" cümlesi de yanlış olurdu, sadece serbest
-         bırakma değil: sonuç BELİRSİZ sayılıyor. */
-      if (kind === 'declined' && !iapAttClear(att)) kind = '';
-      const sure = iapReleasing(kind, err, tag, att);
-      return iapRelease(att, sure ? 'failed' : 'stale').then(rel =>
-        /* Tanı kodu, rezervasyon DURUYORSA yazılıyor; düşmüşse yazılacak kayıt
-           yok. Sonucu akışı etkilemiyor — yazılamazsa da mesaj ve kilit aynı. */
-        iapNoteDiag(att, err, tag, cid, slot).then(() => rel, () => rel)
-      ).then(rel => {
-        IAPS.busy = '';
-        iapRepaint();
-        /* Cümleyi ÇAĞIRAN seçiyor ve serbest bırakmanın gerçek sonucunu
-           hesaba katıyor: yazma tutmadıysa hiçbir mesaj kapasitenin serbest
-           bırakıldığını söylemiyor. */
-        iapToast(iapRejKey(kind, rel));
-        /* İKİ SINIF HEMEN BİR SORGU TURU GEREKTİRİYOR ve ikisi de ret yolundan
-           geliyor, yani kuyruğa hiç girmiyorlar:
-             'pending'  ödeme onay bekliyor — yoksa ekranda "bekleyen ödeme"
-                        satırı bir sonraki açılışa kadar görünmezdi.
-             'carried'  OK olmayan sonuçla birlikte bir satın alma geldi. O kayıt
-                        bitirilmedi; Google'ın uyarısı gereği consume/acknowledge
-                        edilmesi gerekiyor, yoksa iade edilir. */
-        const requery = (kind === 'pending' || kind === 'carried');
-        if (requery) return iapReconcile().then(() => iapRepaint(), () => 0);
-      });
+  /* DENEME ETİKETİ — ve artık BAŞKA HİÇBİR ŞEY. Eskiden burada, ödeme
+     başlamadan önce diske bir REZERVASYON yazılıyordu. att o kaydın anahtarıydı;
+     şimdi yalnız bu denemeyi adlandırıyor ve setObfuscatedAccountId ile Play'e
+     gidiyor. İşe yaradığı yer değişmedi: geç gelen bir PURCHASED token hangi
+     kariyere ait olduğunu kendisi söylüyor (iapIngest → iapParseTag). */
+  const att = iapAtt();
+  const tag = iapTag(cid, att);
+  P.purchaseProduct({
+    productIdentifier: p.sku,
+    productType: 'inapp',
+    appAccountToken: tag,
+    /* İKİSİ DE FALSE: eklenti hiçbir şeyi kendiliğinden bitirmesin.
+       isConsumable true olsaydı eklenti call.resolve()'dan ÖNCE consume
+       ederdi (PurchaseActionDecider) — teslimattan önce kapatmak olurdu. */
+    isConsumable: false,
+    autoAcknowledgePurchases: false
+  }).then(tx => {
+    /* Aynı güncellemede BİZİM kaydımızdan başkası da geldiyse onlar bilerek
+       bitirilmedi (native taraf yalnız bu denemenin kaydını işliyor) ve tek
+       yerden bulunabilirler: bir sorgu turu. Google'ın uyarısı bu dinleyicide
+       bildirilen her satın almanın consume ya da acknowledge edilmesini
+       istiyor, yoksa iade ediliyor — yani geciktirilecek bir iş değil. */
+    const more = !!(tx && typeof tx.updatedPurchaseCount === 'number' && tx.updatedPurchaseCount > 1);
+    return iapIngest(tx, 'buy').then(r => {
+      IAPS.busy = '';
+      iapAfterBuy(r, att);
+      if (more) return iapReconcile().then(() => iapRepaint(), () => 0);
     });
+  }, err => {
+    /* Ret geldi. Sınıf artık YALNIZ CÜMLEYİ belirliyor — düşürülecek bir
+       rezervasyon yok, dolayısıyla yanlış sınıflandırmanın bedeli de bir
+       cümleden ibaret. Sınıflandırma yine yalnız yamanın taşıdığı
+       yapılandırılmış alandan okunuyor; genel hata metninden iptal ya da
+       başarısızlık çıkarımı YOK. */
+    let kind = iapTerminalKind(err, tag);
+    if (!kind && iapNotStarted(err, tag)) kind = 'notStarted';
+    if (!kind && iapIsPending(err)) kind = 'pending';
+    IAPS.busy = '';
+    iapRepaint();
+    iapToast(iapRejKey(kind));
+    /* İKİ SINIF HEMEN BİR SORGU TURU GEREKTİRİYOR ve ikisi de ret yolundan
+       geliyor, yani kuyruğa hiç girmiyorlar:
+         'pending'  ödeme onay bekliyor — yoksa ekranda "bekleyen ödeme"
+                    satırı bir sonraki açılışa kadar görünmezdi.
+         'carried'  OK olmayan sonuçla birlikte bir satın alma geldi. O kayıt
+                    bitirilmedi; Google'ın uyarısı gereği consume/acknowledge
+                    edilmesi gerekiyor, yoksa iade edilir. */
+    if (kind === 'pending' || kind === 'carried') {
+      return iapReconcile().then(() => iapRepaint(), () => 0);
+    }
   }).catch(() => { IAPS.busy = ''; iapRepaint(); iapToast('shopBuyFail'); });
   return true;
 }
@@ -9629,65 +9400,30 @@ function iapIsCancel(err, tag) {
   if (!i || !iapUpdStage(i) || i.stage === IAP_ST_UPD_TX) return false;
   return i.code === IAP_BRC_USER_CANCELED && i.tag === tag;
 }
-/* ÖDEMENİN REDDİ — DÖRT KOŞULLU, DAR BİR SERBEST BIRAKMA.
+/* ÖDEME RETLERİNİN SINIFLANDIRILMASI — ve bunun artık SADECE cümle için
+   olduğu.
 
-   Bu, ürün sahibinin seçtiği başarısız ödeme işleme politikasıdır: yeni bir
-   denemede DOĞRUDAN REDDEDİLEN bir ödeme, kapasite rezervasyonunu kalıcı olarak
-   kilitlemez. Aşağıdaki dört koşul BİRLİKTE sağlandığında — ve yalnız o zaman —
-   ilgili denemenin rezervasyonu mevcut güvenli yazma yolundan (iapRelease)
-   kaldırılır:
+   Bu blok bir zamanlar bir SERBEST BIRAKMA kuralıydı: dört koşul birden
+   sağlanınca reddedilen bir denemenin kapasite rezervasyonu düşürülürdü.
+   Rezervasyon kavramı kaldırıldığı için o kuralın da konusu kalmadı —
+   düşürülecek bir şey yok. Geriye KULLANICIYA NE SÖYLENECEĞİ kaldı ve o
+   ayrım hâlâ gerçek: "vazgeçtin", "ödemen reddedildi" ve "istek reddedildi"
+   üç farklı olay.
 
-     (1) native aşama 'updnone' ya da 'updnull' — yamalı köprü purchases
-         listesini OKUDU ve bu güncellemede satın alma yoktu,
-     (2) BillingResponseCode YALNIZ 3 (BILLING_UNAVAILABLE),
-     (3) sonuç mevcut AÇIK satın alma çağrısına ait ve deneme etiketi eşleşiyor,
-     (4) bu denemeye ilişkin BİLİNEN bir PURCHASED/PENDING kaydıyla çelişmiyor.
+   Yanlış sınıflandırmanın bedeli de buna göre küçüldü: eskiden yanlış bir
+   sınıf ödenmiş bir işlemin kapasitesini başkasına verdirebilirdi, şimdi en
+   fazla yanlış bir cümle gösterir. Yine de çıkarım yapılmıyor: sınıf yalnız
+   yamanın taşıdığı yapılandırılmış alandan okunuyor (iapErrInfo), genel hata
+   metninden DEĞİL.
 
-   (3) iki parçadan oluşuyor ve ikisi de zaten var: native taraf sonucu yalnız
-   açık satın alma çağrısına yazıyor (claimOpenPurchaseCall + akış başına tek
-   sonuç bayrağı), ve bu ret bizim o deneme için beklediğimiz purchaseProduct
-   sözünün reddi olarak geliyor; etiket eşleşmesi iapTerminalKind'de aranıyor.
-   (4) iapAttClear() ile okunuyor.
-
-   BU BİR GELECEK GARANTİSİ DEĞİL. Google'ın sözleşmesi "bu denemeye başka bir
-   sonuç gelmeyecek" demiyor ve burada öyle bir iddia YOK. Politika bilinçli bir
-   tercih: doğrudan reddedilen bir denemenin kapasiteyi süresiz tutması, bu
-   kararın kabul ettiği riskten daha büyük bir zarar. Geç gelen bir satın alma
-   ortaya çıkarsa MEVCUT yol onu taşır: etiketimiz setObfuscatedAccountId ile
-   Play'de, dolayısıyla getPurchases → iapIngest onu kuyruğa alır, iapApplyTo
-   idempotenttir, teslim edilmeden consume/acknowledge YOKTUR ve tavan o anda
-   doluysa kayıt 'undeliverable' olarak SAKLANIR — sessizce atılmaz.
-
-   KAPSAM DIŞINDA KALANLAR, ve hiçbiri tahminle eklenmemeli:
-     4 ITEM_UNAVAILABLE / 5 DEVELOPER_ERROR  — otomatik serbest bırakmada YOK;
-       yalnız kullanıcıya ne olduğu söylenir (shopBuyRefused).
-     'updtx'  yanında satın alma gelen sonuç — elde satın alma varken serbest
-       bırakma olmaz; kayıt teslimata gider.
-     'state' 2 (gerçek PENDING) ve 0 (eksik veri), 2/6/12/-1 (retriable),
-       7 (ITEM_ALREADY_OWNED), tanınmayan her kod, sorgu aşamaları, etiket
-       uyuşmazlığı — hepsi rezervasyonu KORUR.
-     Eski 'updated' biçimi (yamasız/eski paket) — üç durumu ayırmadığı için (1)
-       sayılmaz; yalnız iptal sınıfını taşımaya devam eder.
-     Zaman aşımı, boş bir getPurchases turu ya da dg tanı kaydı ASLA kanıt değil,
-       ve eski rezervasyonlara geriye dönük temizlik YOK: df yalnız bu yoldan
-       doğar, df taşımayan bir rezervasyon süpürülmez. */
+   3 BILLING_UNAVAILABLE ödeme yönteminin kabul edilmediği hâl (shopDeclined);
+   4 ITEM_UNAVAILABLE ve 5 DEVELOPER_ERROR ise ödemeyle ilgili değil, istekle
+   ilgili (shopBuyRefused) — o yüzden ayrı tutuluyorlar ve ikincisi hiçbir
+   zaman ödeme yönteminden söz etmiyor. */
 const IAP_BRC_BILLING_UNAVAILABLE = 3;   // ödeme yöntemi işlenirken kabul edilmedi
 const IAP_BRC_REFUSED = [4, 5];          // ITEM_UNAVAILABLE, DEVELOPER_ERROR
-/* (4) BU DENEMEYE AİT BİLİNEN BİR SATIN ALMA KAYDI VAR MI.
-   Kuyruk, görülmüş her Transaction'ın tek yerel izi ve her kayıt kendi att'ını
-   taşıyor. Aynı att için bir kayıt varsa — durumu ne olursa olsun: PENDING,
-   teslim edilmiş, kapanışı doğrulanmamış, çelişkili — bu denemeden BİR SATIN
-   ALMA çıkmış demektir ve "ödeme reddedildi" sonucuyla çelişir; o hâlde serbest
-   bırakma yok.
-   KUYRUK OKUNAMAMIŞSA da yok (IAPQ null): doğrulayamadığımız bir koşulu geçmiş
-   saymak, koşulu hiç koymamakla aynı şey olurdu. */
-function iapAttClear(att) {
-  if (!att || !IAPQ) return false;
-  const q = iapqAll();
-  return !Object.keys(q).some(tok => q[tok] && q[tok].att === att);
-}
-/* NE OLDUĞU — ne yapılacağı DEĞİL. İki soru ayrı iki fonksiyonda:
-   iapTerminalKind cümleyi, iapReleasing rezervasyonu belirliyor. Bu fonksiyon
+/* NE OLDUĞU. Tek iş bu: hangi cümlenin gösterileceğini belirlemek. Fonksiyon
+   SAF — yalnız err/tag okur, kuyruğa ya da kayda bakmaz.
    SAF: yalnız err/tag okur, kuyruğa ya da kayda bakmaz.
    Dönüş: '' | 'cancel' | 'declined' | 'refused' | 'carried'.
 
@@ -9708,45 +9444,14 @@ function iapTerminalKind(err, tag) {
   if (IAP_BRC_REFUSED.indexOf(i.code) !== -1) return 'refused';
   return '';
 }
-/* REZERVASYONU DÜŞÜREN SINIFLAR — ve yalnız bunlar.
-     'cancel'      kullanıcının kendi iptali (USER_CANCELED, eşleşen etiket, ve
-                   güncelleme satın alma TAŞIMIYORSA — bkz. 'carried')
-     'notStarted'  ödeme ekranı hiç açılmadı ('launch' aşaması)
-     'declined'    yukarıdaki DÖRT koşul birden
-   Dört koşul burada bir arada okunabilsin diye kod ve etiket yeniden
-   doğrulanıyor: sınıf zaten ikisini içeriyor, ama serbest bırakma kuralının tek
-   bir yerde tam olarak görünmesi bu tekrardan daha değerli.
-   err/tag/att verilmezse 'declined' serbest bırakmıyor: kanıt yoksa karar da
-   yok. 'refused' (4/5) ve 'carried' hiçbir koşulda bırakmıyor. */
-function iapReleasing(kind, err, tag, att) {
-  if (kind === 'cancel' || kind === 'notStarted') return true;
-  if (kind !== 'declined') return false;
-  const i = iapErrInfo(err);
-  return !!(i && iapUpdNoTx(i) && i.code === IAP_BRC_BILLING_UNAVAILABLE
-    && i.tag === tag && iapAttClear(att));
-}
-/* Retten sonra hangi cümle. İKİ eksen var ve ikisi de gerekli:
-     kind  ne olduğu (iptal / ödeme reddi / ürün-istek reddi / başlamadı / …)
-     rel   iapRelease'in GERÇEK sonucu — 'released' | 'failed' | 'kept' | 'none'
-   Yazmanın tuttuğu bilinmeden hiçbir cümle "ayrılan kapasite serbest bırakıldı"
-   demiyor; 'none' ise ortada rezervasyon hiç yoktu (reklam kaldırma gibi
-   kapasitesiz ürün), yani iddia edilecek bir şey de yok.
-   'declined'/'refused' NE OLDUĞUNU söylüyor ama kapasite hakkında hiçbir iddiada
-   bulunmuyor — rezervasyon duruyor ve bunu mağaza ekranındaki tutulu satırı
-   anlatıyor. */
-function iapRejKey(kind, rel) {
-  /* YAZMA TUTMADIYSA hiçbir sınıf kapasitenin açıldığını ima etmiyor. Reddedilen
-     ödeme de buraya girdi: shopDeclined "yeniden deneyebilirsin" diyor ve
-     rezervasyon diskte durduğu sürece o deneme başlamayacak — yani o cümle
-     yanıltıcı olurdu. shopHoldKept tam olarak olanı söylüyor. */
-  if (rel === 'failed') return 'shopHoldKept';
-  if (kind === 'cancel' || kind === 'notStarted') {
-    if (rel !== 'released' && rel !== 'none') return 'shopHoldKept';
-    return kind === 'cancel' ? 'shopCancelled' : 'shopBuyFail';
-  }
-  /* 'declined'/'refused' kapasite hakkında AYRICA bir iddiada bulunmuyor:
-     serbest bırakıldıysa tutulu satırı ekrandan düşer, bırakılmadıysa orada
-     durur ve shopCapHeld/shopTxHeld onu anlatır. */
+/* Retten sonra hangi cümle. Tek eksen kaldı: NE OLDUĞU.
+   Eskiden ikinci bir eksen vardı — rezervasyonun serbest bırakılıp
+   bırakılamadığı — ve 'shopHoldKept' gibi cümleler oradan doğuyordu. Ortada
+   kapasite tutan bir kayıt olmadığı için hiçbir cümlenin artık kapasite
+   hakkında bir iddiası yok. */
+function iapRejKey(kind) {
+  if (kind === 'cancel') return 'shopCancelled';
+  if (kind === 'notStarted') return 'shopBuyFail';
   if (kind === 'declined') return 'shopDeclined';
   if (kind === 'refused') return 'shopBuyRefused';
   return kind === 'pending' ? 'shopPending' : 'shopBuyUnsure';
@@ -15260,21 +14965,15 @@ function hmBadgeFail(img){
 function shopTxHtml(){
   if(typeof iapPendingN!=='function')return '';
   const pend=iapPendingN(),stuck=iapStuckN();
-  const unver=iapUnverifiedN(),held=iapHeldN();
+  const unver=iapUnverifiedN();
   /* Durumu netleştirilemeyen işlem AYRI yazılıyor: "teslim edilemedi" cümlesi
      onun için yanlış olurdu, çünkü çelişen sürümlerden biri hakkın verildiğini
      söylüyor olabilir. Ne verildiğini ne verilmediğini iddia etmiyoruz. */
   const uncl=typeof iapUnclearN==='function'?iapUnclearN():0;
-  /* Tanı kodu: cihaza bağlanmadan yeni bir başarısız denemeyi ayırmak için.
-     Kimlik taşımıyor (js/iap.js iapNoteDiag) ve hiçbir karara yetki vermiyor —
-     yalnız okunuyor. Bilgi taşımayan eski kayıtlar satır üretmiyor. */
-  const diag=typeof iapDiagList==='function'?iapDiagList():[];
-  if(!pend&&!stuck&&!unver&&!held&&!uncl)return '';
+  if(!pend&&!stuck&&!unver&&!uncl)return '';
   return `<div class="sect">${t('shopTxT')}</div>
   <div class="shpTx">
     ${pend?`<p class="shpTxP">${t('shopTxPending').replace('{n}',pend)}</p>`:''}
-    ${held?`<p class="shpTxP">${t('shopTxHeld').replace('{n}',held)}</p>`:''}
-    ${diag.length?`<p class="shpTxP">${esc(t('shopTxDiag').replace('{v}',diag.join(' | ')))}</p>`:''}
     ${unver?`<p class="shpTxP">${t('shopTxUnverified').replace('{n}',unver)}</p>`:''}
     ${uncl?`<p class="shpTxP">${t('shopTxUnclear').replace('{n}',uncl)}</p>`:''}
     ${stuck?`<p class="shpTxS">${t('shopTxStuck').replace('{n}',stuck)}</p>`:''}
@@ -17504,10 +17203,10 @@ shop(){
      aynısı "Satın al" diye görmüyor. */
   const pack=p=>{
     const st=iapState(p.id);
-    /* 'held' ile 'full' ayrı cümleler: biri hakkın bittiğini, öteki
-       sonuçlanmamış bir denemenin kapasiteyi tuttuğunu söylüyor. Kararı
-       iapState() veriyor, kart yalnız yazıyor. */
-    const note=st==='full'?t('shopCapFull'):st==='held'?t('shopCapHeld')
+    /* Tek kapasite cümlesi kaldı: hak gerçekten dolduysa 'full'. Eskiden bir
+       de 'held' vardı — sonuçlanmamış bir denemenin kapasiteyi tuttuğunu
+       söylerdi; rezervasyon kalktığı için o durum artık oluşamıyor. */
+    const note=st==='full'?t('shopCapFull')
       :st==='nocareer'?t('shopNeedCareer'):'';
     return `<div class="shpCard${p.cap===IAP.capMax?' top':''}${note?' out':''}">
       <span class="shpIc">${ICONS['shopCap'+p.cap]}</span>

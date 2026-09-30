@@ -3102,7 +3102,6 @@ async function tPlayBilling() {
     await waitFor(() => a.R("IAPS.busy") === '' && st.consumes > 0, 3000);
     await a.R('saveDrain()');
     ok(a.R('iapCapOwned()') === 3, '(1) kapasite tam olarak teslim edildi');
-    ok(a.R('iapCapReserved()') === 0, '(1) rezervasyon teslimatla birlikte düştü');
     ok(st.consumes === 1, '(1) tam bir kez consume edildi');
     ok(st.acks === 0, '(1) tüketilebilir üründe acknowledge yok');
     const tok = Object.keys(a.R('S.iap.t'))[0];
@@ -3145,29 +3144,29 @@ async function tPlayBilling() {
     ok(st.consumes === 0, '(3) yazma tutmadan consume edilmedi');
     ok(st.acks === 0, '(3) yazma tutmadan acknowledge edilmedi');
     ok(a.R('iapCapOwned()') === 0, '(3) hak verilmedi');
-    /* Rezervasyon kalıcılaşamadıysa satın alma HİÇ başlamamalı. */
-    ok(st.buys === 0, '(3) rezervasyon yazılamadan ödeme başlatılmadı');
+    /* Rezervasyon kapısı kalktığı için ödeme ARTIK BAŞLIYOR — ve bu doğru:
+       satın almayı engelleyen yerel bir yazma yok. Asıl güvence değişmedi:
+       hak diske yazılamadığı sürece ne hak veriliyor ne işlem kapatılıyor,
+       yani ödenmiş bir işlem sessizce yutulmuyor; kayıt açık kalıyor. */
+    ok(st.buys === 1, '(3) ödeme başladı — yerel yazma artık kapı değil');
+    ok(a.R('iapCapLeft()') === 10, '(3) kapasite de tutulmadı');
     delete ctl.failWrite;
   }
 
-  /* (4) REZERVASYON VE TAVAN — kısmi teslimat YOK. */
+  /* (4) TAVAN TESLİMATTA UYGULANIYOR — ve kısmi teslimat YOK.
+         Rezervasyon kaldırıldıktan sonra tavanı koruyan tek yer burası: defter
+         clamp'i oyuna giren sayıyı sınırlıyor, iapAfterDeliver ise sığmayan
+         satın almayı KISMEN teslim etmek yerine 'undeliverable' yapıyor ve
+         TÜKETMİYOR — Play onaylanmayan satın almayı kendi kuralıyla iade eder. */
   {
     const { a, st } = await billSession(newDisk(), {}, {});
     await careerIn(a, 1); await billBoot(a);
-    /* Elle rezervasyon: +5 rezerveyken +10 alınamaz, +5 alınabilir. */
-    const att = await a.R("iapReserve({cap:5})");
-    await a.R('saveDrain()');
-    ok(!!att, '(4) rezervasyon kalıcılaştı');
-    ok(a.R('iapCapReserved()') === 5, '(4) rezerve kapasite sayılıyor');
-    ok(a.R('iapCapLeft()') === 5, '(4) kalan hak rezervasyonu düşüyor');
-    ok(a.R("iapState('cap10')") === 'held', '(4) tavanı aşan paket kapalı — HAK DOLDU değil, TUTULDU');
+    ok(a.R('iapCapLeft()') === 10, '(4) başlangıçta tam hak');
+    /* Satın alınabilirlik YALNIZ teslim edilmiş haktan hesaplanıyor. */
+    a.R("S.iap={t:{X0:'cap5'}};");
+    ok(a.R('iapCapLeft()') === 5, '(4) teslim edilen hak kalan haktan düşüyor');
+    ok(a.R("iapState('cap10')") === 'full', '(4) sığmayan paket kapalı — GERÇEK tavan');
     ok(a.R("iapState('cap5')") === 'go', '(4) sığan paket açık');
-    /* Rezervasyon BELİRSİZ sebeple düşmez. */
-    await a.R("iapRelease('" + att + "','stale')");
-    ok(a.R('iapCapReserved()') === 5, '(4) belirsiz sonuç rezervasyonu düşürmedi');
-    /* Kesin sonuç düşürür. */
-    await a.R("iapRelease('" + att + "','cancel')"); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(4) iptal rezervasyonu düşürdü');
     /* Tavanı aşan bir teslimat: hak YOK, consume YOK. */
     a.R("S.iap={t:{X1:'cap5'},r:{}};");
     await a.R("iapIngest(__tx('BIG','cap_plus_10','1',S.cid+'.aabbccdd',1),'test')");
@@ -3197,14 +3196,12 @@ async function tPlayBilling() {
     ok(a.R('iapCapOwned()') === 0, '(6) PENDING işlemde hak verilmedi');
     ok(a.R('iapPendingN()') === 1, '(6) bekleyen işlem ekranda sayılıyor');
     ok(st.consumes === 0, '(6) PENDING tüketilmedi');
-    ok(a.R('iapCapReserved()') === 3, '(6) rezervasyon PENDING boyunca duruyor');
     /* Ödeme tamamlandı: aynı token PURCHASED olarak dönüyor. */
     const tok = Object.keys(a.R('IAPQ.q'))[0];
     a.R("Capacitor.Plugins.NativePurchases.getPurchases=function(){return Promise.resolve({purchases:["
       + "__tx('" + tok + "','cap_plus_3','1',IAPQ.q['" + tok + "'].cid+'.'+IAPQ.q['" + tok + "'].att,1)]});};");
     await a.R('iapReconcile()'); await a.R('saveDrain()');
     ok(a.R('iapCapOwned()') === 3, '(6) ödeme tamamlanınca hak verildi');
-    ok(a.R('iapCapReserved()') === 0, '(6) rezervasyon teslimatla düştü');
   }
 
   /* (7) KARİYER DEĞİŞTİRME — hedef açılmadan, doğru yuvaya teslimat. */
@@ -3335,7 +3332,6 @@ async function tPlayBilling() {
     await careerIn(a, 1); await billBoot(a);
     a.R('delete S.iap;'); a.R('save();'); await a.R('saveDrain()');
     ok(a.R('iapCapOwned()') === 0, '(14) defter yokken kapasite 0');
-    ok(a.R('iapCapReserved()') === 0, '(14) rezervasyon yokken 0');
     ok(a.R('iapCapLeft()') === a.R('IAP.capMax'), '(14) kalan hak tam');
     ok(a.R('maxClients()') > 0, '(14) oyun formülü çalışıyor');
     ok(a.R('iapNoAds()') === false, '(14) cihaz defteri yokken hak yok');
@@ -3385,84 +3381,6 @@ async function tPlayBilling() {
     a.R("L='tr';");
   }
 
-  /* (18) BOŞ SORGU SAYISI ÖDEME SONUCUNU KANITLAMAZ.
-         Belirsiz bir ödeme, İSTEDİĞİ KADAR başarılı-ama-boş sorgudan sonra
-         PURCHASED dönebilir. Rezervasyon hiçbir sayıda düşmemeli — beklenti
-         bilerek hiçbir sabitten türetilmiyor, sabit bir "çok fazla" sayı
-         kullanılıyor; bir gün yeniden bir eşik eklenirse bu test kırılsın. */
-  {
-    const { a, st } = await billSession(newDisk(), {}, { pending: true });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    const tok = Object.keys(a.R('IAPQ.q'))[0];
-    ok(a.R('iapCapReserved()') === 5, '(18) yavaş ödeme için rezervasyon duruyor');
-
-    /* En kötü hâl: rezervasyon çok eski, kuyrukta denemeye bağlanacak iz yok,
-       ve Play uzun süre hiçbir şey döndürmüyor. */
-    a.R("IAPQ.q['" + tok + "'].att=null;");
-    a.R("S.iap.r[Object.keys(S.iap.r)[0]].at=1;");
-    a.R("Capacitor.Plugins.NativePurchases.getPurchases=function(){return Promise.resolve({purchases:[]});};");
-    for (let i = 0; i < 25; i++) { await a.R('iapReconcile()'); }
-    await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(18) 25 boş sorgu rezervasyonu DÜŞÜRMEDİ');
-    ok(a.R("iapState('cap10')") === 'held', '(18) tavan korunuyor, ikinci paket satılamıyor (tutulu)');
-    ok(a.R('iapHeldN()') === 1, '(18) ayrılan kapasite ekranda görünüyor');
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      ok(a.R('VIEWS.shop()').indexOf(a.R("t('shopTxHeld').replace('{n}',1)")) !== -1,
-        '(18) ' + lang + ' kapasitenin neden ayrıldığı yazıyor');
-    }
-    a.R("L='tr';");
-
-    /* Sığan bir paket alınabilir — tavan kilitlenmiş değil, yalnız 5'i ayrılmış. */
-    ok(a.R("iapState('cap5')") === 'go', '(18) kalan 5 hâlâ satılabilir');
-
-    /* Ve sonunda ilk ödeme PURCHASED dönüyor: TAM teslimat, fazla satış yok. */
-    a.R("IAPQ.q['" + tok + "'].att=Object.keys(S.iap.r)[0];");
-    a.R("Capacitor.Plugins.NativePurchases.getPurchases=function(){return Promise.resolve({purchases:["
-      + "__tx('" + tok + "','cap_plus_5','1',IAPQ.q['" + tok + "'].cid+'.'+IAPQ.q['" + tok + "'].att,1)]});};");
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapOwned()') === 5, '(18) geç gelen ödeme TAM teslim edildi');
-    ok(a.R('iapCapReserved()') === 0, '(18) rezervasyon teslimatla düştü');
-    ok(a.R('iapHeldN()') === 0, '(18) ayrılan kapasite kalmadı');
-    ok(st.consumes === 1, '(18) tam bir kez tüketildi');
-    ok(a.R('iapStuckN()') === 0, '(18) teslim edilemeyen işlem YOK');
-  }
-
-  /* (19) ÖDEME AÇISINDAN SONUÇLANMAMIŞ DURUMLAR REZERVASYONU BIRAKMAZ.
-         orphan/unbound/undeliverable "para bitti" demek değil: hedefi bulunamayan
-         bir kayıt kariyer yeniden göründüğünde ready'ye dönebiliyor. Rezervasyonu
-         şimdi bırakmak, o teslimatın yerini bu arada satılmış bir pakete
-         verdirirdi. Tek kanıt: tokenın defterde olması. */
-  {
-    const { a } = await billSession(newDisk(), {}, {});
-    await careerIn(a, 1); await billBoot(a);
-    a.R("Capacitor.Plugins.NativePurchases.getPurchases=function(){return Promise.resolve({purchases:[]});};");
-
-    for (const stt of ['orphan', 'unbound', 'undeliverable']) {
-      const att = await a.R("iapReserve({cap:5})"); await a.R('saveDrain()');
-      a.R("IAPQ.q.R_" + stt + "={tok:'R_" + stt + "',sku:'cap_plus_5',pid:'cap5',sc:'career',"
-        + "cid:S.cid,att:'" + att + "',st:'" + stt + "',at:1};");
-      a.R("S.iap.r['" + att + "'].at=1;");
-      for (let i = 0; i < 10; i++) { await a.R('iapReconcile()'); }
-      await a.R('saveDrain()');
-      ok(a.R('iapCapReserved()') === 5, '(19) ' + stt + ' rezervasyonu BIRAKMADI');
-      /* Temizle: sıradaki durum için yeniden kur. */
-      a.R("delete S.iap.r['" + att + "'];delete IAPQ.q.R_" + stt + ";");
-      a.R('save();'); await a.R('saveDrain()');
-    }
-
-    /* KANIT: token deftere girdiyse rezervasyon serbest kalır. */
-    const att = await a.R("iapReserve({cap:5})"); await a.R('saveDrain()');
-    a.R("IAPQ.q.PROVEN={tok:'PROVEN',sku:'cap_plus_5',pid:'cap5',sc:'career',"
-      + "cid:S.cid,att:'" + att + "',st:'done',at:1};");
-    a.R("if(!S.iap.t)S.iap.t={};S.iap.t.PROVEN='cap5';");
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(19) kalıcı teslimat rezervasyonu bıraktı');
-    ok(a.R('iapCapOwned()') === 5, '(19) hak yerinde');
-  }
-
   /* (20b) RET SINIFLARI — eklentinin gerçek hata yollarına göre.
          8.7.0'ın onPurchasesUpdated'ı USER_CANCELED dahil OK OLMAYAN HER
          sonucu tek bir "Purchase is not purchased" retine indiriyor. Bu yüzden
@@ -3474,7 +3392,6 @@ async function tPlayBilling() {
     a.R("iapBuy('cap3');");
     await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
     ok(st.buys === 1, '(20b) ödeme akışı denendi');
-    ok(a.R('iapCapReserved()') === 3, '(20b) belirsiz ret rezervasyonu DÜŞÜRMEDİ');
     ok(a.R('iapCapOwned()') === 0, '(20b) hak verilmedi');
 
     /* Ödeme ekranı açılmadan dönen doğrulama hatası KESİN: hemen düşer. */
@@ -3483,7 +3400,6 @@ async function tPlayBilling() {
     a2.R("iapBuy('cap3');");
     await waitFor(() => a2.R('IAPS.busy') === '', 3000); await a2.R('saveDrain()');
     ok(st2.buys === 1, '(20b) akış denendi');
-    ok(a2.R('iapCapReserved()') === 0, '(20b) kesin başlamama rezervasyonu düşürdü');
     ok(a2.R("iapState('cap10')") === 'go', '(20b) tavan serbest kaldı');
     /* İptal artık TAHMİN değil: yalnız yamanın taşıdığı yapılandırılmış alandan
        okunuyor. Metinden çıkarım yapılmadığı burada tutuluyor. */
@@ -3491,96 +3407,6 @@ async function tPlayBilling() {
       '(20b) metinden iptal çıkarımı yok');
     ok(a2.R("iapIsCancel({code:'npx:updated:1:x.y'},'x.y')") === true,
       '(20b) açık USER_CANCELED tanınıyor');
-  }
-
-  /* (20c) İPTAL SONRASI KAPASİTE KİLİTLENMİYOR — engelin kendisi.
-         Kullanıcı +10 ekranını açıp vazgeçiyor: ödeme yok, rezervasyon yok,
-         ürün yeniden satın alınabilir. */
-  {
-    const { a, st } = await billSession(newDisk(), {}, { buyCancel: true });
-    await careerIn(a, 1); await billBoot(a);
-    ok(a.R("iapState('cap10')") === 'go', '(20c) başta +10 satın alınabilir');
-    a.R("iapBuy('cap10');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(st.buys === 1, '(20c) ödeme ekranı açıldı');
-    ok(a.R('iapCapOwned()') === 0, '(20c) kapasite verilmedi');
-    ok(a.R('iapCapReserved()') === 0, '(20c) rezervasyon BIRAKILDI');
-    ok(a.R('iapHeldN()') === 0, '(20c) tutulu kapasite yok');
-    ok(a.R('iapCapLeft()') === 10, '(20c) tavan tamamen serbest');
-    ok(a.R("iapState('cap10')") === 'go', '(20c) yeniden satın alınabilir');
-    ok(Object.keys(a.R('IAPQ.q')).length === 0, '(20c) ödeme kaydı oluşmadı');
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      ok(a.R("t('shopCancelled')").length > 0, '(20c) ' + lang + ' iptal metni var');
-    }
-    a.R("L='tr';");
-  }
-
-  /* (20d) İPTAL YALNIZ KENDİ DENEMESİNİ BIRAKIR.
-         Gecikmiş bir callback başka bir denemenin etiketini taşıyorsa,
-         açıktaki rezervasyona DOKUNAMAZ. */
-  {
-    const { a } = await billSession(newDisk(), {}, { buyStaleCancel: true });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(20d) yabancı etiketli iptal rezervasyonu düşürmedi');
-    ok(a.R('iapHeldN()') === 1, '(20d) kapasite tutulu kaldı');
-    /* Önceden alınmış bir token da etkilenmiyor. */
-    a.R("if(!S.iap.t)S.iap.t={};S.iap.t.OLD='cap1';");
-    a.R("iapRelease(Object.keys(S.iap.r)[0],'stale');");
-    ok(a.R("S.iap.t.OLD") === 'cap1', '(20d) önceden alınmış token dokunulmadı');
-  }
-
-  /* (20e) AKIŞ HİÇ BAŞLAMADI (launch aşaması) — KESİN sonuç, rezervasyon düşer.
-         Bağlantı kaybı gibi BELİRSİZ sonuçta ise KALIR. */
-  {
-    const { a } = await billSession(newDisk(), {}, { buyNoStart: true });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(20e) ödeme ekranı açılmadıysa rezervasyon düştü');
-
-    const { a: a2 } = await billSession(newDisk(), {}, { buyLost: true });
-    await careerIn(a2, 1); await billBoot(a2);
-    a2.R("iapBuy('cap5');");
-    await waitFor(() => a2.R('IAPS.busy') === '', 3000); await a2.R('saveDrain()');
-    ok(a2.R('iapCapReserved()') === 5, '(20e) bağlantı kaybı rezervasyonu KORUDU');
-    ok(a2.R('iapHeldN()') === 1, '(20e) tutulu kapasite ekranda');
-  }
-
-  /* (20) ÖDEME SONRASI KAYIT HATASI — rezervasyon tuttu, ödeme PURCHASED,
-         ama hak kaydı yazılamıyor. Kapanış YAPILMAMALI ve bellekte geçici
-         olarak eklenen hak KALICI SAYILMAMALI. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl);
-    await a.booted;
-    const st = fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    const before = a.R('iapCapOwned()');
-    ok(before === 0, '(20) başlangıçta kapasite yok');
-    /* Rezervasyon BAŞARIYLA yazılıyor; yazma hatası ancak ondan sonra başlıyor. */
-    const att = await a.R("iapReserve({cap:3})"); await a.R('saveDrain()');
-    ok(!!att, '(20) rezervasyon kalıcılaştı');
-    ctl.failWrite = () => quotaErr();
-    await a.R("iapIngest(__tx('PW','cap_plus_3','1',S.cid+'.'+'" + att + "',1),'test')");
-    await tick(8);
-    ok(st.consumes === 0, '(20) hak yazılamadan consume EDİLMEDİ');
-    ok(st.acks === 0, '(20) hak yazılamadan acknowledge EDİLMEDİ');
-    ok(a.R('iapCapOwned()') === 0, '(20) bellekteki geçici hak geri alındı');
-    ok(a.R('iapCapReserved()') === 3, '(20) rezervasyon geri kondu');
-    ok(a.R('IAPQ.q.PW') === null || a.R('IAPQ.q.PW.st') !== 'granted',
-      '(20) işlem "hak verildi" olarak işaretlenmedi');
-    /* Depolama düzeliyor: sonraki normal kayıt ÇİFT hak üretmiyor. */
-    delete ctl.failWrite;
-    a.R('save();'); await a.R('saveDrain()');
-    ok(a.R('iapCapOwned()') === 0, '(20) düzelen kayıt kendiliğinden hak yazmadı');
-    await a.R('iapAdvance(IAPQ.q.PW)'); await a.R('saveDrain()');
-    ok(a.R('iapCapOwned()') === 3, '(20) yeniden deneme hakkı bir kez verdi');
-    ok(Object.keys(a.R('S.iap.t')).length === 1, '(20) defterde tek token');
-    ok(a.R('iapCapReserved()') === 0, '(20) rezervasyon teslimatla düştü');
-    ok(st.consumes === 1, '(20) tam bir kez tüketildi');
   }
 
   /* (21) CONSUME TUTTU, YANIT KAYIP, ARDINDAN SÜREÇ KAPANDI.
@@ -3676,14 +3502,13 @@ async function tPlayBilling() {
        koyalım. Bilerek en zor hâl: değer karşılaştırmasına dayanan bir koruma
        burada ayırt edemez; yalnız "mutasyonu hangi NESNEYE yaptım" bilgisi
        ayırt eder. */
-    a.R("S.iap={t:{XTOK:'cap5'},r:{bbbbbbbb:{cap:3,at:1}}};save();");
+    a.R("S.iap={t:{XTOK:'cap5'}};save();");
     await a.R('saveDrain()');
     await a.R('loadSlot(1)');
     await billBoot(a);
     ok(a.R('S.cid') === cidA, '(23) A açık');
 
-    const att = await a.R("iapReserve({cap:5})"); await a.R('saveDrain()');
-    a.R("IAPQ.q.XTOK={tok:'XTOK',sku:'cap_plus_5',pid:'cap5',sc:'career',cid:S.cid,att:'" + att + "',st:'ready',at:1};");
+    a.R("IAPQ.q.XTOK={tok:'XTOK',sku:'cap_plus_5',pid:'cap5',sc:'career',cid:S.cid,att:'aaaaaaaa',st:'ready',at:1};");
     await a.R('iapqSave()');
 
     /* Yazma düşüyor; teslimat başlatılıp BEKLENMİYOR, araya yuva değişimi giriyor. */
@@ -3702,9 +3527,6 @@ async function tPlayBilling() {
     /* B TAMAMEN AYNI kalmalı. */
     ok(a.R("S.iap.t.XTOK") === 'cap5', '(23) B\'nin kendi tokenı korundu');
     ok(a.R("Object.keys(S.iap.t).length") === 1, '(23) B\'ye token eklenmedi');
-    ok(a.R("Object.keys(S.iap.r).join(',')") === 'bbbbbbbb',
-      '(23) A\'nın rezervasyonu B\'ye SIZMADI');
-    ok(a.R('iapCapReserved()') === 3, '(23) B\'nin rezerve kapasitesi değişmedi');
     ok(a.R('iapCapOwned()') === 5, '(23) B\'nin kapasitesi değişmedi');
 
     /* A: diskte ne varsa bellekte de o olmalı — token yok, rezervasyon duruyor.
@@ -3718,14 +3540,11 @@ async function tPlayBilling() {
     await waitFor(() => a.R("Object.keys(IAPS.flight).length") === 0, 3000);
     ok(a.R('S.cid') === cidA, '(23) A yeniden yüklendi');
     ok(a.R("S.iap.t&&S.iap.t.XTOK") === undefined, '(23) A\'ya hak YAZILMADI');
-    ok(a.R("!!(S.iap.r&&S.iap.r['" + att + "'])") === true, '(23) A\'nın rezervasyonu duruyor');
     ok(a.R('iapCapOwned()') === 0, '(23) A\'da kapasite yok');
-    ok(a.R('iapCapReserved()') === 5, '(23) A\'nın rezervasyonu tavandan yer tutuyor');
     /* Depolama düzelince yeniden deneme tam ve tek sefer teslim ediyor. */
     delete ctl.failWrite;
     await a.R('iapAdvance(IAPQ.q.XTOK)'); await a.R('saveDrain()');
     ok(a.R('iapCapOwned()') === 5, '(23) yeniden deneme hakkı bir kez verdi');
-    ok(a.R('iapCapReserved()') === 0, '(23) rezervasyon teslimatla düştü');
     ok(st.consumes === 1, '(23) tam bir kez tüketildi');
   }
 
@@ -3738,11 +3557,10 @@ async function tPlayBilling() {
     const { a } = await billSession(newDisk(), {}, {});
     await careerIn(a, 1); await billBoot(a);
     /* İki ayrı kariyer nesnesi; ikisinde de AYNI token adı ve AYNI ürün. */
-    a.R("__A={cid:'aaaa',iap:{t:{},r:{zz:{cap:5,at:1}}}};");
-    a.R("__B={cid:'bbbb',iap:{t:{TK:'cap5'},r:{}}};");
+    a.R("__A={cid:'aaaa',iap:{t:{}}};");
+    a.R("__B={cid:'bbbb',iap:{t:{TK:'cap5'}}};");
     a.R("__m=iapMark(__A,'TK','cap5','zz');");
     ok(a.R("__A.iap.t.TK") === 'cap5', '(23b) mutasyon A nesnesine yazıldı');
-    ok(a.R("__A.iap.r.zz") === undefined, '(23b) rezervasyon aynı anda düştü');
     ok(a.R("__m.did") === true, '(23b) gerçekten yazıldığı işaretlendi');
 
     /* 1) HEDEFİN YENİDEN BELİRLENMEMESİ asıl korumadır, ve bunu değer
@@ -3770,10 +3588,9 @@ async function tPlayBilling() {
     a.R("__A.cid='other';iapRollback(__m);__A.cid='aaaa';");
     ok(a.R("__A.iap.t.TK") === 'cap5', '(23b) kimlik uyuşmayınca geri alma yapılmadı');
 
-    /* 3) Doğru hedef ve doğru kimlik: geri alma yapılır, rezervasyon geri gelir. */
+    /* 3) Doğru hedef ve doğru kimlik: geri alma yapılır. */
     ok(a.R("iapRollback(__m)") === true, '(23b) doğru hedefte geri alma çalıştı');
     ok(a.R("__A.iap.t.TK") === undefined, '(23b) token geri alındı');
-    ok(a.R("__A.iap.r.zz&&__A.iap.r.zz.cap") === 5, '(23b) rezervasyon geri kondu');
 
     /* 4) İkinci kez geri alma, araya giren başarılı bir teslimatı SİLMEZ. */
     a.R("__A.iap.t.TK='cap5';");
@@ -4021,646 +3838,17 @@ async function tPlayBilling() {
     ok(st.buys === 1, '(30) yeni ödeme yok');
   }
 
-  /* (31) KESİN BAŞARISIZ ÖDEME REZERVASYONU KALICI OLARAK TUTUYORDU.
-         Cihazda görülen kusur: kullanıcı vazgeçmedi, para da alınmadı — ödeme
-         yöntemi reddetti (lisans testinin "her zaman reddeder" kartı, ekranda
-         updated/3). Rezervasyon süresiz kaldı ve +10 ürünü kapandı.
-
-         SEÇİLEN POLİTİKA: doğrudan reddedilen bir deneme kapasiteyi kalıcı
-         kilitlemez. Serbest bırakma DÖRT koşullu (bkz. iapReleasing): aşama
-         'updnone'/'updnull' (native yama purchases listesini okudu —
-         PurchaseUpdateTest (1)(2)), kod YALNIZ 3, sonuç açık satın alma
-         çağrısının ve etiket eşleşiyor, ve bu denemeye ait bilinen bir
-         PURCHASED/PENDING kaydı YOK. Bu bir gelecek garantisi değil, kabul edilen
-         bir risk: geç gelen bir satın alma yine getPurchases → iapIngest
-         yolundan gelir, kuyrukta saklanır ve teslim edilmeden kapatılmaz. */
-  {
-    const disk = newDisk(), ls = {};
-    const { a, st } = await billSession(disk, ls, { buyCode: { stage: 'updnone', code: 3 } });
-    await careerIn(a, 1); await billBoot(a);
-    const cash0 = a.R('S.cash');
-    ok(a.R("iapState('cap1')") === 'go', '(31) başta +1 satın alınabilir');
-    a.R("iapBuy('cap1');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(st.buys === 1, '(31) ödeme ekranı açıldı');
-    ok(a.R('iapCapOwned()') === 0, '(31) hiçbir hak verilmedi');
-    ok(a.R('S.cash') === cash0, '(31) oyun parası değişmedi');
-    ok(Object.keys(a.R('IAPQ.q')).length === 0, '(31) ödenmiş işlem kaydı oluşmadı');
-    ok(st.consumes === 0 && st.acks === 0, '(31) hiçbir kapanış çağrısı yok');
-    /* REZERVASYON, MEVCUT GÜVENLİ YAZMA YOLUNDAN KALDIRILIYOR. */
-    ok(a.R('iapCapReserved()') === 0, '(31) rezervasyon serbest bırakıldı');
-    ok(a.R('iapHeldN()') === 0, '(31) tutulu kapasite kalmadı');
-    ok(a.R("Object.keys(S.iap.r||{}).length") === 0, '(31) kayıtta rezervasyon yok');
-    ok(a.R('iapCapLeft()') === 10, '(31) kalan hak yine 10');
-    ok(a.R("iapState('cap10')") === 'go', '(31) gerçek tavan yeniden açık');
-    const rec31 = await a.R("recGet('s1')");
-    ok(!!(rec31 && rec31.S && rec31.S.iap) && Object.keys(rec31.S.iap.r || {}).length === 0,
-      '(31) DİSKTE de rezervasyon yok');
-    const b = session(disk, ls, {}); await b.booted;
-    fakeBilling(b.ctx, {});
-    await b.R('iapInit()'); await b.R('saveDrain()');
-    await b.R('loadSlot(1)'); await b.R('saveDrain()');
-    await b.R('iapReconcile()'); await b.R('saveDrain()');
-    ok(b.R('iapCapReserved()') === 0, '(31) yeniden açılışta da serbest');
-    ok(b.R('iapCapOwned()') === 0, '(31) yeniden açılışta hak da yok');
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      const s = a.R("t('shopDeclined')");
-      ok(a.R("STR['" + lang + "'].shopDeclined !== undefined") === true,
-        '(31) ' + lang + ' reddedilen ödeme metni STR içinde tanımlı');
-      ok(typeof s === 'string' && s.length > 0 && s !== 'shopDeclined',
-        '(31) ' + lang + ' metin gerçekten yazılı');
-      ok(s !== a.R("t('shopCancelled')"), '(31) ' + lang + ' "iptal" ile aynı cümle değil');
-      ok(!/serbest bırakıldı|has been released/i.test(s),
-        '(31) ' + lang + ' kapasitenin serbest bırakıldığını İDDİA ETMİYOR', s);
-    }
-    a.R("L='tr';");
-  }
-
-  /* (32) BELİRSİZ HER SONUÇ HÂLÂ REZERVASYONU BIRAKMIYOR.
-         Resmi sözleşmede RETRIABLE olan ya da satın almanın hâlâ
-         tamamlanabileceğini ima eden hiçbir kod kesin sayılmıyor. */
-  {
-    const keep = [
-      /* Satın almanın YANINDA geldiği güncelleme: kod ne olursa olsun kesin
-         değil. Elde bir satın alma varken "başarısız" demek onu yok saymaktır. */
-      ['updtx', 3, 'BILLING_UNAVAILABLE ama yanında satın alma geldi'],
-      ['updtx', 1, 'USER_CANCELED bile yanında satın alma getirdiyse kesin değil'],
-      ['updtx', 4, 'ITEM_UNAVAILABLE + satın alma'],
-      /* Yamanın ESKİ biçimi: üç durumu ayırmıyordu, yani bir 3 onunla geldiğinde
-         satın almasız olduğu hâlâ bilinmiyor. */
-      ['updated', 3, 'eski biçim — satın alma taşıyıp taşımadığı bilinmiyor'],
-      ['updated', 4, 'eski biçim — aynı gerekçe'],
-      ['updated', 5, 'eski biçim — aynı gerekçe'],
-      /* Serbest bırakma YALNIZ kod 3'e açık. 4/5 kapsam dışı ve öyle kalıyor. */
-      ['updnone', 4, 'ITEM_UNAVAILABLE — otomatik serbest bırakmada YOK'],
-      ['updnone', 5, 'DEVELOPER_ERROR — otomatik serbest bırakmada YOK'],
-      /* Resmî sözleşmede RETRIABLE olan ya da satın almanın VAR olduğunu söyleyen
-         kodlar: zaten kesin değil. */
-      ['updnone', 2, 'SERVICE_UNAVAILABLE — retriable'],
-      ['updnone', 6, 'ERROR — retriable, geçici olabilir'],
-      ['updnull', 12, 'NETWORK_ERROR — retriable'],
-      ['updnull', -1, 'SERVICE_DISCONNECTED — retriable'],
-      ['updnone', 7, 'ITEM_ALREADY_OWNED — satın alma VAR olabilir'],
-      ['updnone', 99, 'tanınmayan kod'],
-      ['updnone', 0, 'OK — satın alma yok ama başarısızlık da denmiyor'],
-      ['state', 0, 'UNSPECIFIED_STATE'],
-      ['state', 2, 'PENDING — gerçek bekleyen ödeme'],
-      ['query', 2, 'sorgu aşaması ödeme hakkında hiçbir şey söylemiyor'],
-      ['nolist', 0, 'aynı — sorgu aşaması'],
-      ['dispatch', 0, 'aynı — sorgu hiç gönderilemedi']
-    ];
-    for (const [stage, code, why] of keep) {
-      const { a } = await billSession(newDisk(), {}, { buyCode: { stage: stage, code: code } });
-      await careerIn(a, 1); await billBoot(a);
-      a.R("iapBuy('cap5');");
-      await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-      ok(a.R('iapCapReserved()') === 5, '(32) ' + stage + ':' + code + ' rezervasyonu KORUDU — ' + why);
-      ok(a.R('iapHeldN()') === 1, '(32) ' + stage + ':' + code + ' tutulu kapasite ekranda');
-    }
-    /* Yamasız paket: err.code boş → hiçbir şey kesin değil. */
-    const { a: a2 } = await billSession(newDisk(), {}, { buyReject: 'Purchase is not purchased' });
-    await careerIn(a2, 1); await billBoot(a2);
-    a2.R("iapBuy('cap5');");
-    await waitFor(() => a2.R('IAPS.busy') === '', 3000); await a2.R('saveDrain()');
-    ok(a2.R('iapCapReserved()') === 5, '(32) kod taşımayan ret BELİRSİZ sayılıyor');
-  }
-
-  /* (33) KESİN BAŞARISIZLIK YALNIZ KENDİ DENEMESİNİ BIRAKIR.
-         Gecikmiş bir callback başka bir denemenin etiketini taşıyorsa, ya da
-         etiket hiç gelmemişse, açıktaki rezervasyona DOKUNAMAZ. */
-  {
-    const { a } = await billSession(newDisk(), {}, { buyCode: { stage: 'updated', code: 1, tag: 'BASKA.deneme' } });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(33) yabancı etiketli iptal rezervasyonu düşürmedi');
-
-    const { a: a2 } = await billSession(newDisk(), {}, { buyCode: { stage: 'updated', code: 1, tag: null } });
-    await careerIn(a2, 1); await billBoot(a2);
-    a2.R("iapBuy('cap5');");
-    await waitFor(() => a2.R('IAPS.busy') === '', 3000); await a2.R('saveDrain()');
-    ok(a2.R('iapCapReserved()') === 5, '(33) etiketsiz iptal da düşürmedi');
-
-    /* İki rezervasyon, biri kesin başarısız: yalnız O düşüyor. Önceki
-       rezervasyon elle kuruluyor (başka, hâlâ açık bir deneme). */
-    const { a: a3 } = await billSession(newDisk(), {}, { buyCode: { stage: 'updated', code: 1 } });
-    await careerIn(a3, 1); await billBoot(a3);
-    const keepAtt = await a3.R("iapReserve({cap:3})");
-    await a3.R('saveDrain()');
-    ok(a3.R('iapCapReserved()') === 3, '(33) önceki deneme rezerve');
-    a3.R("iapBuy('cap5');");
-    await waitFor(() => a3.R('IAPS.busy') === '', 3000); await a3.R('saveDrain()');
-    ok(a3.R('iapCapReserved()') === 3, '(33) yalnız iptal edilen deneme düştü');
-    ok(a3.R("!!(S.iap.r['" + keepAtt + "'])") === true, '(33) diğer denemenin rezervasyonu duruyor');
-  }
-
-  /* (34) SERBEST BIRAKMA YAZILAMAZSA BELLEK İLE DİSK AYRIŞMIYOR.
-         Eski kod bellekten siliyor, yazmanın tuttuğunu SORMUYORDU: yazma
-         düşerse rezervasyon yeniden açılışta geri geliyor, ama ekran onu
-         düşmüş gösteriyordu. Şimdi kayıt geri konuyor ve KANITLANMIŞ verdict
-         işaretleniyor; sonraki uzlaştırma turu işi bitiriyor. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    const st = fakeBilling(a.ctx, { buyCode: { stage: 'updated', code: 1 } });
-    await careerIn(a, 1); await billBoot(a);
-    ctl.failWrite = () => quotaErr();
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    delete ctl.failWrite;
-    /* Rezervasyon YAZILAMADIĞI için satın alma zaten hiç başlamamış olmalı. */
-    ok(st.buys === 0, '(34) rezervasyon yazılamadıysa ödeme HİÇ başlamadı');
-    ok(a.R('iapCapReserved()') === 0, '(34) yazılamayan rezervasyon sayılmıyor');
-
-    /* Şimdi rezervasyon tutuyor, ama SERBEST BIRAKMA yazması düşüyor. */
-    const att = await a.R("iapReserve({cap:5})");
-    await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(34) rezervasyon kalıcılaştı');
-    ctl.failWrite = () => quotaErr();
-    const rel = await a.R("iapRelease('" + att + "','failed')");
-    await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(rel === 'failed', '(34) serbest bırakma BAŞARISIZ olarak raporlandı', String(rel));
-    ok(a.R('iapCapReserved()') === 5, '(34) bellek diske uydu — sahte serbest bırakma yok');
-    ok(a.R("(S.iap.r['" + att + "']||{}).df") === 1, '(34) kanıtlanmış verdict kayda işlendi');
-    /* Sonraki uzlaştırma turu aynı serbest bırakmayı tamamlıyor. */
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(34) uzlaştırma turu serbest bırakmayı tamamladı');
-    ok(a.R('iapHeldN()') === 0, '(34) tutulu kapasite kalmadı');
-    /* ESKİ BİÇİM — hata bilgisi taşımayan rezervasyon OTOMATİK TEMİZLENMİYOR.
-       Cihazdaki iki kayıt tam olarak bu biçimde ve bu düzeltme onlara
-       dokunmuyor; kurtarılmaları ayrı bir karar. */
-    a.R("S.iap.r={eski1:{cap:5,at:1},eski2:{cap:3,at:2}};");
-    await a.R('saveDrain()');
-    for (let i = 0; i < 5; i++) { await a.R('iapReconcile()'); }
-    await a.R('saveDrain()');
-    ok(a.R('iapHeldN()') === 2, '(34) df taşımayan eski rezervasyonlar duruyor');
-    ok(a.R('iapCapReserved()') === 8, '(34) tuttukları kapasite de duruyor');
-  }
-
-  /* (35) EKRAN İKİ FARKLI GERÇEĞİ AYIRIYOR.
-         "Hakkın doldu" ile "tamamlanmamış bir işlem kapasiteni tutuyor" aynı
-         cümle değildi; ikisi de 'full' dönüyordu. Ve tutulu satırı, hiçbir kod
-         yolunun garanti edemediği bir OTOMATİK SERBEST KALMA vaat ediyordu:
-         reddedilerek sonuçlanan bir ödemede token da kuyruk kaydı da oluşmuyor,
-         dolayısıyla iapReapRes'in arayacağı kanıt hiç doğmuyor. */
-  {
-    const a = session(newDisk(), {}, {}); await a.booted; await careerIn(a, 1);
-    /* Defter dolu: gerçekten hak bitmiş. */
-    a.R("S.iap={t:{a:'cap10'}};");
-    ok(a.R("iapState('cap1')") === 'full', '(35) defter doluysa "hak doldu"');
-    /* Yalnız rezervasyon: hak bitmedi, tutuldu. */
-    a.R("S.iap={t:{},r:{x:{cap:10,at:1}}};");
-    ok(a.R("iapState('cap1')") === 'held', '(35) yalnız rezervasyon "tutuldu"');
-    ok(a.R('iapCapOwned()') === 0, '(35) hiçbir hak kullanılmamış');
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      ok(a.R("STR['" + lang + "'].shopCapHeld !== undefined") === true,
-        '(35) ' + lang + ' tutulu cümlesi STR içinde tanımlı');
-      ok(a.R("t('shopCapHeld')") !== a.R("t('shopCapFull')"),
-        '(35) ' + lang + ' iki durum ayrı cümle');
-      const held = a.R("t('shopTxHeld')");
-      ok(held.indexOf('{n}') !== -1, '(35) ' + lang + ' tutulu satırı sayıyı yazıyor');
-      /* Kanıtlanmamış vaat kaldırıldı. */
-      ok(!/kendiliğinden|released on its own|kendiliginden/i.test(held),
-        '(35) ' + lang + ' otomatik serbest kalma vaadi yok');
-      ok(a.R('VIEWS.shop()').indexOf(a.R("t('shopCapHeld')")) !== -1,
-        '(35) ' + lang + ' kart tutulu kapasiteyi yazıyor');
-    }
-    a.R("L='tr';");
-    /* Satın alma denemesi de doğru cümleyi veriyor. */
-    ok(a.R("iapBuy('cap1')") === false, '(35) tutulu durumda satın alma başlamıyor');
-  }
-
-  /* (36) GECİKEN YAZMA BAŞKA KARİYERE DOKUNAMAZ.
-         iapRelease'in başarısızlık dalı S ve curSlot'u await'ten SONRA okuyor.
-         Bu arada kullanıcı yuva değiştirmiş olabilir — o zaman rezervasyon ve
-         df BAŞKA bir kariyere yazılırdı. İşlem, başladığı andaki kariyer
-         KİMLİĞİNE bağlı olmak zorunda: yuva numarası yetmez, çünkü yuva
-         silinip yeniden kullanılabilir. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    /* İkinci kariyer, kendi hakkıyla birlikte. */
-    /* İkinci kariyerin KENDİ rezervasyonu da var: gerçek hâl bu. (Boş bir
-       kariyerde kusur gizleniyor — iapResOf() .r yoksa null döndüğü için
-       yazma sessizce düşüyor ve test yanlışlıkla geçiyor.) */
-    a.R("curSlot=2;newGame();createAgent('U','B','tr','D');" +
-      "S.iap={t:{TOKX:'cap1'},r:{kendi:{cap:2,at:7}}};save();");
-    await a.R('saveDrain()');
-    a.R("__c2=S;__c2cid=S.cid;");
-    await a.R('loadSlot(1)'); await a.R('saveDrain()');
-    const att = await a.R("iapReserve({cap:5})");
-    await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(36) kariyer 1 rezervasyonu kalıcı');
-    ok(a.R('S.cid !== __c2cid') === true, '(36) iki kariyer farklı');
-
-    ctl.failWrite = () => quotaErr();
-    a.R("__p=iapRelease('" + att + "','failed');");
-    /* Tam bu anda kariyer değişiyor — loadSlot()'un yaptığı şey. */
-    a.R("S=__c2;curSlot=2;");
-    const rel = await a.R('__p');
-    await a.R('saveDrain()');
-    delete ctl.failWrite;
-
-    ok(rel !== true, '(36) serbest bırakma başarılı raporlanmadı', String(rel));
-    ok(a.R("Object.keys((__c2.iap&&__c2.iap.r)||{}).join(',')") === 'kendi',
-      '(36) ikinci kariyere rezervasyon YAZILMADI',
-      a.R("JSON.stringify((__c2.iap&&__c2.iap.r)||{})"));
-    ok(a.R("(__c2.iap.r.kendi||{}).df") === undefined,
-      '(36) ikinci kariyerin kendi kaydına df basılmadı');
-    ok(a.R("__c2.iap.t.TOKX") === 'cap1', '(36) ikinci kariyerin hakkı ezilmedi');
-    /* Birinci kariyerin kaydı diskte olduğu gibi: hiçbir şey kaybolmadı. */
-    const rec1 = await a.R("recGet('s1')");
-    ok(!!(rec1 && rec1.S && rec1.S.iap && rec1.S.iap.r && rec1.S.iap.r[att]),
-      '(36) kariyer 1 rezervasyonu diskte duruyor');
-  }
-
-  /* (37) YENİDEN DENEME İLK SİLMEYLE AYNI GÜVENCEDE.
-         iapReapRes de bellekten silip yazıyordu; yazma düşerse ekran diskte
-         olmayan bir boş kapasiteyi gösterirdi — ilk silmede kapatılan kusurun
-         aynısı. İkinci yazmanın da düştüğü hâl ölçülüyor. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    a.R("S.iap={t:{},r:{x:{cap:5,at:1,df:1}}};save();");
-    await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(37) df işaretli rezervasyon yerinde');
-
-    ctl.failWrite = () => quotaErr();
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(37) yazma düştü — sahte boş kapasite YOK');
-    ok(a.R('iapHeldN()') === 1, '(37) tutulu kapasite hâlâ yazılı');
-    ok(a.R("(S.iap.r.x||{}).df") === 1, '(37) kanıt korundu');
-    /* İkinci deneme de düşüyor: durum değişmiyor, kayıp da yok. */
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(37) ikinci başarısız yazma da bozmadı');
-    delete ctl.failWrite;
-    /* Yazma düzelince iş bitiyor. */
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(37) yazma düzelince serbest bırakıldı');
-    const rec = await a.R("recGet('s1')");
-    ok(JSON.stringify((rec && rec.S && rec.S.iap && rec.S.iap.r) || {}) === '{}',
-      '(37) disk de serbest');
-  }
-
-  /* (38) KANIT BELLEKTE Mİ, DİSKTE Mİ — İKİSİ AYNI ŞEY DEĞİL.
-         df yazması da düşebilir. O hâlde işaret yalnız bellektedir ve uygulama
-         hemen kapanırsa KAYBOLUR. Bunu "kanıt korundu" diye raporlamıyoruz:
-         yeni oturumda df yoksa hiçbir şey serbest bırakılmıyor. */
-  {
-    /* a) HEM silme HEM df yazması düşüyor. */
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    const att = await a.R("iapReserve({cap:5})");
-    await a.R('saveDrain()');
-    ctl.failWrite = () => quotaErr();
-    await a.R("iapRelease('" + att + "','failed')");
-    await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(a.R('iapCapReserved()') === 5, '(38a) bellek diske uydu');
-    /* UYGULAMA HEMEN KAPANIYOR: yeni oturum, aynı disk. */
-    const b = session(disk, ls, {}); await b.booted;
-    fakeBilling(b.ctx, {});
-    await b.R('iapInit()'); await b.R('saveDrain()');
-    await b.R('loadSlot(1)'); await b.R('saveDrain()');
-    ok(b.R('iapCapReserved()') === 5, '(38a) rezervasyon yeni oturumda duruyor');
-    ok(b.R("(S.iap.r['" + att + "']||{}).df") === undefined,
-      '(38a) df diske YAZILAMADI — kanıt korunmuş değil');
-    await b.R('iapReconcile()'); await b.R('saveDrain()');
-    ok(b.R('iapCapReserved()') === 5, '(38a) kanıt yokken hiçbir şey serbest bırakılmıyor');
-
-    /* b) Silme düşüyor ama df yazması TUTUYOR — kanıt gerçekten diskte. */
-    const disk2 = newDisk(), ls2 = {}, ctl2 = {};
-    const c = session(disk2, ls2, ctl2); await c.booted;
-    fakeBilling(c.ctx, {});
-    await careerIn(c, 1); await billBoot(c);
-    const att2 = await c.R("iapReserve({cap:5})");
-    await c.R('saveDrain()');
-    let n = 0;
-    ctl2.failPut = key => (key === 's1' && ++n === 1) ? quotaErr() : null;
-    await c.R("iapRelease('" + att2 + "','failed')");
-    await c.R('saveDrain()');
-    delete ctl2.failPut;
-    const rec2 = await c.R("recGet('s1')");
-    ok(!!(rec2 && rec2.S.iap.r[att2] && rec2.S.iap.r[att2].df === 1),
-      '(38b) df DİSKE yazıldı');
-    const d = session(disk2, ls2, {}); await d.booted;
-    fakeBilling(d.ctx, {});
-    await d.R('iapInit()'); await d.R('saveDrain()');
-    await d.R('loadSlot(1)'); await d.R('saveDrain()');
-    await d.R('iapReconcile()'); await d.R('saveDrain()');
-    ok(d.R('iapCapReserved()') === 0, '(38b) yeni oturum serbest bırakmayı tamamladı');
-  }
-
-  /* (39) SATIN ALMA KİLİDİ, KALICI SERBEST BIRAKMA BİTENE KADAR DURUYOR.
-         IAPS.busy serbest bırakma yazmasından ÖNCE boşaltılıyordu. O aralıkta
-         bellekte rezervasyon zaten silinmiş, diske yazılmamış olur: ikinci bir
-         satın alma DOĞRULANMAMIŞ boş kapasiteyi kullanabilirdi. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    const st = fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    let probe = null;
-    a.ctx.__arm = () => {
-      ctl.onPut = key => {
-        if (key !== 's1' || probe) return;
-        probe = { busy: a.R('IAPS.busy'), state: a.R("iapState('cap5')"), res: a.R('iapCapReserved()') };
-      };
-    };
-    a.R("__buys=0;Capacitor.Plugins.NativePurchases.purchaseProduct=function(o){" +
-      "__buys++;__arm();var e=new Error('Purchase is not purchased');" +
-      "e.code='npx:updated:1:'+o.appAccountToken;return Promise.reject(e);};");
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    delete ctl.onPut;
-    ok(!!probe, '(39) serbest bırakma yazması gözlendi');
-    ok(probe && probe.res === 0, '(39) o anda bellekte rezervasyon zaten silinmiş');
-    ok(probe && probe.busy !== '', '(39) kilit hâlâ tutuluyor', probe && JSON.stringify(probe));
-    ok(probe && probe.state === 'busy', '(39) doğrulanmamış kapasite satın alınamıyor',
-      probe && probe.state);
-    ok(a.R('iapCapReserved()') === 0, '(39) sonunda serbest bırakıldı');
-    ok(a.R('__buys') === 1, '(39) ikinci ödeme başlamadı', String(a.R('__buys')));
-  }
-
-  /* (40) ÜÇ TERMİNAL KOD AYRI AYRI, ve SERBEST BIRAKMANIN DÖRT KOŞULU.
-         Kullanıcıya "kartın reddedildi" demek yalnız BILLING_UNAVAILABLE (3)
-         için doğru; ITEM_UNAVAILABLE (4) ürünle, DEVELOPER_ERROR (5) isteğin
-         kendisiyle ilgili. Karar ise cümleden ayrı: 3 serbest bırakabilir, 4/5
-         asla. Ayrıca yazma düşmüşse HİÇBİR mesaj kapasitenin açıldığını
-         söylemiyor.
-         Kuyruk burada GERÇEK: dördüncü koşul (bu denemeye ait bilinen bir satın
-         alma kaydı) onu okuyor. */
-  {
-    const a = session(newDisk(), {}, {}); await a.booted;
-    const st40 = fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    const kindAt = (st, c) => a.R("iapTerminalKind({code:'npx:" + st + ":" + c + ":T'},'T')");
-    const kind = c => kindAt('updnone', c);
-    ok(kind(1) === 'cancel', '(40) 1 → iptal');
-    ok(kind(3) === 'declined', '(40) 3 → ödeme reddi');
-    ok(kind(4) === 'refused', '(40) 4 → ürün satın alınamıyor');
-    ok(kind(5) === 'refused', '(40) 5 → geçersiz istek');
-    ok(kind(6) === '' && kind(2) === '' && kind(-1) === '' && kind(7) === '',
-      '(40) retriable ve belirsiz kodlar terminal değil');
-    ok(a.R("iapTerminalKind({code:'npx:updnone:3:BASKA'},'T')") === '',
-      '(40) etiket uyuşmazsa terminal değil');
-    /* CÜMLE ile KARAR ayrı iki soru: aynı kod, aşamaya göre farklı karar.
-       'updnone'/'updnull' native tarafın OKUDUĞU gerçeği taşıyor — bu güncelleme
-       satın alma taşımıyordu. 'updtx' ve eski 'updated' taşımıyor. */
-    ok(kindAt('updnull', 3) === 'declined', '(40) liste hiç gelmediyse de ödeme reddi');
-    ok(kindAt('updtx', 3) === 'carried', '(40) yanında satın alma → kendi sınıfı');
-    ok(kindAt('updtx', 1) === 'carried', '(40) iptal bile satın alma taşıyorsa carried');
-    ok(kindAt('updated', 3) === 'declined', '(40) eski biçim cümleyi hâlâ seçiyor');
-    /* DÖRT KOŞUL. att 'ATT1' ve kuyrukta ona ait kayıt YOK. */
-    const releasing = (k, st, c, tag, att) => a.R("iapReleasing('" + k + "'"
-      + (st ? ",{code:'npx:" + st + ":" + c + ":" + (tag === undefined ? 'T' : tag) + "'}" : '')
-      + ",'T','" + (att || 'ATT1') + "')");
-    ok(releasing('declined', 'updnone', 3) === true, '(40) 3 + boş liste + etiket → DÜŞER');
-    ok(releasing('declined', 'updnull', 3) === true, '(40) 3 + liste yok + etiket → DÜŞER');
-    ok(releasing('refused', 'updnone', 4) === false, '(40) 4 DÜŞÜRMÜYOR');
-    ok(releasing('refused', 'updnone', 5) === false, '(40) 5 DÜŞÜRMÜYOR');
-    ok(releasing('carried', 'updtx', 3) === false, '(40) yanında satın alma varsa DÜŞMEZ');
-    ok(releasing('declined', 'updated', 3) === false, '(40) eski biçim DÜŞÜRMÜYOR');
-    ok(releasing('declined', 'updnone', 3, 'BASKA') === false, '(40) etiket uyuşmazsa DÜŞMEZ');
-    ok(releasing('', 'updnone', 2) === false, '(40) sınıfsız sonuç düşürmüyor');
-    ok(releasing('cancel', 'updnone', 1) === true, '(40) iptal düşüren sınıf');
-    ok(releasing('notStarted', 'launch', 3) === true, '(40) başlamayan akış düşüren sınıf');
-    /* DÖRDÜNCÜ KOŞUL: bu denemeye ait bilinen bir satın alma varsa DÜŞMEZ.
-       Kayıt kuyruğa elle konuyor — durumu ne olursa olsun çelişki sayılıyor. */
-    for (const st of ['pending', 'ready', 'granted', 'done', 'unverified', 'disputed']) {
-      a.R("IAPQ.q.TOKATT={tok:'TOKATT',sku:'cap_plus_5',pid:'cap5',sc:'career',"
-        + "cid:S.cid,att:'ATT1',st:'" + st + "',at:1};");
-      ok(a.R("iapAttClear('ATT1')") === false, '(40) ' + st + ' kaydı çelişki sayılıyor');
-      ok(releasing('declined', 'updnone', 3) === false, '(40) ' + st + ' varken DÜŞMEZ');
-    }
-    a.R("delete IAPQ.q.TOKATT;");
-    ok(a.R("iapAttClear('ATT1')") === true, '(40) kayıt yokken koşul sağlanıyor');
-    ok(a.R("iapAttClear('BASKAATT')") === true, '(40) başka denemenin kaydı engellemiyor');
-    /* Kuyruk okunamadıysa da düşmez: doğrulanamayan koşul geçmiş sayılmıyor. */
-    a.R("__q=IAPQ;IAPQ=null;");
-    ok(a.R("iapAttClear('ATT1')") === false, '(40) kuyruk okunamazsa koşul sağlanmıyor');
-    ok(releasing('declined', 'updnone', 3) === false, '(40) kuyruk okunamazsa DÜŞMEZ');
-    a.R("IAPQ=__q;");
-    /* Mesaj seçimi: serbest bırakma GERÇEKTEN yazıldıysa ne, yazılmadıysa ne. */
-    const key = (k, rel) => a.R("iapRejKey('" + k + "','" + rel + "')");
-    ok(key('cancel', 'released') === 'shopCancelled', '(40) iptal + yazıldı');
-    ok(key('notStarted', 'released') === 'shopBuyFail', '(40) başlamadı + yazıldı');
-    /* YAZMA TUTMADIYSA hiçbir sınıf kapasitenin açıldığını ima etmiyor. */
-    for (const k of ['cancel', 'notStarted', 'declined']) {
-      ok(key(k, 'failed') === 'shopHoldKept', '(40) ' + k + ' + yazılamadı → tutuluyor denir');
-    }
-    for (const rel of ['kept', 'released', 'none']) {
-      ok(key('declined', rel) === 'shopDeclined', '(40) 3 → shopDeclined (' + rel + ')');
-      ok(key('refused', rel) === 'shopBuyRefused', '(40) 4/5 → shopBuyRefused (' + rel + ')');
-    }
-    ok(key('refused', 'failed') === 'shopHoldKept', '(40) 4/5 + yazılamadı → tutuluyor denir');
-    /* Kanıt verilmezse karar da yok: tek argümanlı çağrı düşürmüyor. */
-    ok(a.R("iapReleasing('declined')") === false, '(40) kanıtsız 3 düşürmüyor');
-    ok(a.R("iapReleasing('refused')") === false, '(40) 4/5 hiçbir koşulda düşürmüyor');
-    ok(a.R("iapReleasing('cancel')") === true && a.R("iapReleasing('notStarted')") === true,
-      '(40) iptal ve başlamama kanıt gerektirmiyor');
-    ok(key('pending', 'kept') === 'shopPending', '(40) PENDING kendi cümlesi');
-    ok(key('', 'kept') === 'shopBuyUnsure', '(40) belirsiz kendi cümlesi');
-    /* Rezervasyonu hiç olmayan ürün (reklam kaldırma): 'none' serbest sayılır. */
-    ok(key('cancel', 'none') === 'shopCancelled', '(40) rezervasyonsuz ürün normal cümle');
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      for (const s of ['shopBuyRefused', 'shopHoldKept']) {
-        ok(a.R("STR['" + lang + "']." + s + " !== undefined") === true,
-          '(40) ' + lang + ' ' + s + ' tanımlı');
-      }
-      /* 4/5 mesajı kart/ödeme yöntemi demiyor. */
-      const r = a.R("t('shopBuyRefused')");
-      ok(!/kart|card|ödeme yöntem|payment method/i.test(r),
-        '(40) ' + lang + ' 4/5 mesajı karttan söz etmiyor', r);
-      /* Yazılamadı mesajı serbest bırakıldığını iddia etmiyor. */
-      const h = a.R("t('shopHoldKept')");
-      ok(!/serbest bırakıldı|has been released|released/i.test(h),
-        '(40) ' + lang + ' tutuluyor mesajı serbest bırakma iddia etmiyor', h);
-    }
-    a.R("L='tr';");
-  }
-
-  /* (41) UZLAŞTIRMA PENCERESİNDE SATIN ALMA.
-         iapReapRes de rezervasyonu bellekten silip disk yazmasını bekliyor.
-         IAPS.busy yalnız iapRelease çevresinde tutuluyordu, yani bu pencere
-         açıktaydı — üstelik uzlaştırma açılışta, kariyer açılışında ve MAĞAZA
-         açılışında koşuyor, yani kullanıcı tam o anda ekranda olabiliyor.
-         Yazmanın İÇİNDEN gerçek iapBuy çağrılıyor. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    const st = fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    a.R("S.iap={t:{},r:{x:{cap:5,at:1,df:1}}};save();");
-    await a.R('saveDrain()');
-    const buys0 = st.buys;
-    let probe = null;
-    ctl.onPut = key => {
-      if (key !== 's1' || probe) return;
-      probe = {
-        res: a.R('iapCapReserved()'),
-        state: a.R("iapState('cap5')"),
-        /* GERÇEK satın alma denemesi — engelliyse false döner ve hiçbir yan
-           etkisi olmaz; engellemiyorsa Play'e istek gider ve onu sayarız. */
-        buy: a.R("iapBuy('cap5')"),
-        buysAfter: st.buys
-      };
-    };
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    delete ctl.onPut;
-    ok(!!probe, '(41) uzlaştırmanın yazması gözlendi');
-    ok(probe && probe.res === 0, '(41) o anda bellekte rezervasyon zaten silinmiş');
-    ok(probe && probe.state === 'busy', '(41) doğrulanmamış kapasite satın alınamıyor',
-      probe && probe.state);
-    ok(probe && probe.buy === false, '(41) gerçek iapBuy reddedildi', probe && String(probe.buy));
-    ok(probe && probe.buysAfter === buys0, '(41) Play\'e hiçbir ödeme isteği gitmedi');
-    ok(a.R('IAPS.hold') === '', '(41) kilit bırakıldı');
-    ok(a.R('iapCapReserved()') === 0, '(41) serbest bırakma tamamlandı');
-    ok(a.R("iapState('cap5')") === 'go', '(41) sonrasında satın alma açık');
-  }
-
-  /* (41b) AYNI KİLİT, YAZMA DÜŞTÜĞÜNDE VE KARİYER DEĞİŞTİĞİNDE DE BIRAKILIYOR. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    fakeBilling(a.ctx, {});
-    await careerIn(a, 1); await billBoot(a);
-    a.R("S.iap={t:{},r:{x:{cap:5,at:1,df:1}}};save();");
-    await a.R('saveDrain()');
-    ctl.failWrite = () => quotaErr();
-    await a.R('iapReconcile()'); await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(a.R('IAPS.hold') === '', '(41b) yazma düşünce de kilit bırakıldı');
-    ok(a.R('iapCapReserved()') === 5, '(41b) rezervasyon geri kondu');
-    /* 5 rezerve, 5 boş: cap5 hâlâ sığıyor (kilit bırakıldı), cap10 tutulu. */
-    ok(a.R("iapState('cap5')") === 'go', '(41b) kilit bırakıldı, sığan paket açık');
-    ok(a.R("iapState('cap10')") === 'held', '(41b) sığmayan paket "tutuldu" diyor');
-
-    /* Kariyer değişimi: yazma düşerken yuva değişiyor. */
-    a.R("curSlot=2;newGame();createAgent('U','B','tr','D');S.iap={t:{},r:{kendi:{cap:2,at:7}}};save();");
-    await a.R('saveDrain()');
-    a.R("__c2=S;");
-    await a.R('loadSlot(1)'); await a.R('saveDrain()');
-    ctl.failWrite = () => quotaErr();
-    a.R("__p=iapReapRes();");
-    a.R("S=__c2;curSlot=2;");
-    await a.R('__p'); await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(a.R('IAPS.hold') === '', '(41b) kariyer değişiminde de kilit bırakıldı');
-    ok(a.R("Object.keys((__c2.iap&&__c2.iap.r)||{}).join(',')") === 'kendi',
-      '(41b) ikinci kariyere hiçbir şey yazılmadı',
-      a.R("JSON.stringify((__c2.iap&&__c2.iap.r)||{})"));
-    const rec1 = await a.R("recGet('s1')");
-    ok(!!(rec1 && rec1.S.iap.r.x), '(41b) kariyer 1 rezervasyonu diskte duruyor');
-  }
-
-  /* (42) TANI KODU — USB'siz, dar, ve HİÇBİR YETKİSİ YOK.
-         Amaç: bir sonraki iç testte YENİ bir başarısız denemeyi ekrandan
-         ayırabilmek. Yalnız aşama, sayısal kod ve etiketin eşleşip eşleşmediği
-         saklanıyor. */
-  {
-    const { a } = await billSession(newDisk(), {}, { buyCode: { stage: 'updated', code: 3 } });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    const att = a.R('Object.keys(S.iap.r)[0]');
-    const dg = a.R("JSON.parse(JSON.stringify(S.iap.r['" + att + "'].dg||null))");
-    ok(!!dg, '(42) tanı kaydı yazıldı');
-    ok(dg && dg.s === 'updated' && dg.c === 3 && dg.m === 1,
-      '(42) aşama, sayısal kod ve etiket eşleşmesi', JSON.stringify(dg));
-    ok(dg && Object.keys(dg).sort().join(',') === 'c,m,s',
-      '(42) BAŞKA hiçbir alan yok', JSON.stringify(dg));
-    /* Kimlik taşımadığının doğrudan ölçümü: kaydın tamamı taranıyor. */
-    const blob = a.R("JSON.stringify(S.iap.r)");
-    const tagNow = a.R("S.cid");
-    ok(blob.indexOf(tagNow) === -1, '(42) kariyer kimliği tanı kaydında yok');
-    ok(!/appAccountToken|orderId|GPA\.|purchaseToken|TOK/.test(blob),
-      '(42) token / sipariş / hesap kimliği yok', blob);
-    ok(!/Purchase is not purchased|npx:/.test(blob), '(42) ham hata metni ve kod dizesi yok', blob);
-    /* Ekranda okunabiliyor. */
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      const v = a.R('VIEWS.shop()');
-      ok(v.indexOf('updated/3') !== -1, '(42) ' + lang + ' tanı kodu ekranda');
-      ok(v.indexOf(a.R("t('diagTagOk')")) !== -1, '(42) ' + lang + ' etiket durumu ekranda');
-    }
-    a.R("L='tr';");
-    /* YETKİSİ YOK: dg tek başına hiçbir şey serbest bırakmıyor. */
-    for (let i = 0; i < 5; i++) { await a.R('iapReconcile()'); }
-    await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 5, '(42) tanı kaydı rezervasyonu DÜŞÜRMÜYOR');
-    ok(a.R("(S.iap.r['" + att + "']||{}).df") === undefined, '(42) df ile karışmıyor');
-  }
-
-  /* (43) BİLİNMEYEN KOD, ESKİ KAYITLAR VE YAZILAMAMA. */
-  {
-    /* a) Kod çözülemiyor (yamasız paket): BİLİNMİYOR diye gösteriliyor. */
-    const { a } = await billSession(newDisk(), {}, { buyReject: 'Purchase is not purchased' });
-    await careerIn(a, 1); await billBoot(a);
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    const att = a.R('Object.keys(S.iap.r)[0]');
-    const dg = a.R("JSON.parse(JSON.stringify(S.iap.r['" + att + "'].dg||null))");
-    ok(dg && dg.s === '' && dg.c === null && dg.m === 0,
-      '(43a) çözülemeyen kod boş/null olarak saklandı', JSON.stringify(dg));
-    for (const lang of ['tr', 'en']) {
-      a.R("L='" + lang + "';");
-      const unk = a.R("t('diagUnknown')");
-      ok(a.R('VIEWS.shop()').indexOf(unk + '/' + unk) !== -1,
-        '(43a) ' + lang + ' bilinmiyor diye yazıyor');
-    }
-    a.R("L='tr';");
-
-    /* b) ESKİ kayıtlara tahmini kod ATANMIYOR — satır hiç üretilmiyor. */
-    a.R("S.iap.r={eski1:{cap:5,at:1},eski2:{cap:3,at:2}};");
-    await a.R('saveDrain()');
-    ok(a.R('iapDiagList().length') === 0, '(43b) tanı bilgisi olmayan kayda kod atanmıyor');
-    ok(a.R("VIEWS.shop().indexOf(t('shopTxDiag').split('{')[0])") === -1,
-      '(43b) tanı satırı hiç çizilmiyor');
-    ok(a.R('iapHeldN()') === 2, '(43b) eski rezervasyonlar olduğu gibi duruyor');
-
-    /* c) Tanı yazması düşerse rezervasyon ve ücretli hak bozulmuyor. */
-    const disk = newDisk(), ls = {}, ctl = {};
-    const b = session(disk, ls, ctl); await b.booted;
-    fakeBilling(b.ctx, { buyCode: { stage: 'updated', code: 3 } });
-    await careerIn(b, 1); await billBoot(b);
-    b.R("S.iap={t:{TOKX:'cap1'},r:{}};save();");
-    await b.R('saveDrain()');
-    let n = 0;
-    ctl.failPut = key => (key === 's1' && ++n === 2) ? quotaErr() : null;  // tanı yazması
-    b.R("iapBuy('cap5');");
-    await waitFor(() => b.R('IAPS.busy') === '', 3000); await b.R('saveDrain()');
-    delete ctl.failPut;
-    ok(b.R('iapCapReserved()') === 5, '(43c) rezervasyon yerinde');
-    ok(b.R('iapCapOwned()') === 1, '(43c) ücretli hak bozulmadı');
-    const rec = await b.R("recGet('s1')");
-    ok(!!(rec && rec.S.iap.t.TOKX === 'cap1'), '(43c) diskteki hak da duruyor');
-    ok(!!(rec && rec.S.iap.r && Object.keys(rec.S.iap.r).length === 1),
-      '(43c) diskteki rezervasyon da duruyor');
-  }
-
   /* (44) BAŞARISIZ SORGU HİÇBİR ŞEYİ TEMİZLEMİYOR — HEPSİ BİRDEN.
          (11) bunun bir parçasını ölçüyordu: reklam kaldırma hakkı ve yokluk
-         sayacı. Eksik olan, aynı turda KUYRUK ve REZERVASYONUN da
-         dokunulmadığıydı — ve bu, native yamanın yeni ürettiği reject'in
-         gerçekten zararsız olduğu iddiasının tam karşılığı.
+         sayacı. Eksik olan, aynı turda KUYRUĞUN da dokunulmadığıydı — ve bu,
+         native yamanın yeni ürettiği reject'in gerçekten zararsız olduğu
+         iddiasının tam karşılığı.
 
          Native taraf artık başarısız bir sorguyu reject ediyor (eskiden
          `resolve({purchases: []})` idi, bkz. tools/native-test.js). Bu reject
          JS'te iapReconcile'ın hata dalına düşüyor: hiçbir hak silinmiyor,
-         hiçbir kayıt ilerletilmiyor, hiçbir rezervasyon düşmüyor. Buradaki
-         ölçüm o dalın GERÇEKTEN eylemsiz olduğunu gösteriyor — tek tek değil,
-         dört durumun hepsi aynı anda.
+         hiçbir kayıt ilerletilmiyor. Buradaki ölçüm o dalın GERÇEKTEN eylemsiz
+         olduğunu gösteriyor — tek tek değil, hepsi aynı anda.
 
          Tekrar da önemli: sorgu birçok kez düşse bile hiçbir sayaç birikmiyor,
          yani "yeter sayıda başarısızlık" diye bir eşik yok. */
@@ -4668,7 +3856,7 @@ async function tPlayBilling() {
     const { a } = await billSession(newDisk(), {}, {});
     await careerIn(a, 1); await billBoot(a);
     /* Kaybedilebilecek her şeyi birden kur: cihaz hakkı (reklam kaldırma),
-       kariyer hakkı (kapasite), açık bir kuyruk kaydı ve bir rezervasyon. */
+       kariyer hakkı (kapasite) ve açık bir kuyruk kaydı. */
     a.R("PREFS.iap={t:{NOADS1:'noads'},miss:1};savePrefs();");
     a.R("S.iap={t:{TOKCAP:'cap5'},r:{attX:{cap:3,at:1}}};save();");
     a.R("IAPQ.q.TOKQ={tok:'TOKQ',sku:'cap_plus_1',pid:'cap1',sc:'career',"
@@ -4677,11 +3865,10 @@ async function tPlayBilling() {
     const before = {
       noads: a.R('iapNoAds()'),
       owned: a.R('iapCapOwned()'),
-      res: a.R('iapCapReserved()'),
       miss: a.R('PREFS.iap.miss'),
       q: a.R('JSON.stringify(iapqAll())')
     };
-    ok(before.noads === true && before.owned === 5 && before.res === 3,
+    ok(before.noads === true && before.owned === 5 && before.miss === 1,
       '(44) başlangıç durumu kuruldu', JSON.stringify(before));
 
     /* Sorgu reddediliyor — native tarafın yeni davranışının JS'teki karşılığı. */
@@ -4696,8 +3883,6 @@ async function tPlayBilling() {
 
     ok(a.R('iapNoAds()') === before.noads, '(44) cihaz hakkı duruyor');
     ok(a.R('iapCapOwned()') === before.owned, '(44) kariyer hakkı duruyor');
-    ok(a.R('iapCapReserved()') === before.res, '(44) rezervasyon duruyor');
-    ok(a.R("(S.iap.r.attX||{}).df") === undefined, '(44) rezervasyona df işareti konmadı');
     ok(a.R('JSON.stringify(iapqAll())') === before.q, '(44) kuyruk kaydı bitine kadar aynı');
     ok((a.R('PREFS.iap.miss') || 0) === before.miss,
       '(44) yokluk sayacı ARTMADI — tekrar da biriktirmiyor');
@@ -4706,42 +3891,12 @@ async function tPlayBilling() {
     /* Diskte de aynı: bellekte korunup diske eksik yazılmış olmasın. */
     const rec = await a.R("recGet('s1')");
     ok(!!(rec && rec.S.iap.t.TOKCAP === 'cap5'), '(44) diskteki kariyer hakkı duruyor');
-    ok(!!(rec && rec.S.iap.r && rec.S.iap.r.attX && rec.S.iap.r.attX.cap === 3),
-      '(44) diskteki rezervasyon duruyor');
 
     /* Ve sonrasında GEÇERLİ bir sorgu normal işliyor: hata dalı kalıcı bir
        kilit bırakmıyor. Gerçekten boş ve başarılı bir liste normal başarıdır. */
     P.getPurchases = () => Promise.resolve({ purchases: [] });
     ok(await a.R('iapReconcile()') === 'ok', '(44) başarılı boş sorgu normal başarı');
     ok(a.R('IAPS.qErr') === false, '(44) hata durumu temizlendi');
-  }
-
-  /* (45) TEKRARLANAN RET REZERVASYON BİRİKTİRMİYOR.
-         Cihazdaki zarar buydu: reddedilen her deneme rezervasyonunu bırakıyor,
-         kapasite tutuluyor ve sonunda paketler kapanıyor. Seçilen politikayla
-         her ret kendi rezervasyonunu düşürüyor, dolayısıyla üç ret üst üste
-         gelse de kalan hak 10 kalıyor ve +10 açık kalıyor.
-         Sınırlar da ölçülüyor: hiç hak verilmiyor, para hareket etmiyor, ödenmiş
-         işlem kaydı doğmuyor, hiçbir kapanış çağrısı gitmiyor. */
-  {
-    const { a, st } = await billSession(newDisk(), {}, { buyCode: { stage: 'updnone', code: 3 } });
-    await careerIn(a, 1); await billBoot(a);
-    const cash0 = a.R('S.cash');
-    for (let i = 1; i <= 3; i++) {
-      ok(a.R("iapState('cap5')") === 'go', '(45) ' + i + '. deneme başlatılabilir');
-      a.R("iapBuy('cap5');");
-      await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-      ok(a.R('iapCapReserved()') === 0, '(45) ' + i + '. denemeden sonra rezervasyon yok');
-      ok(a.R('iapCapLeft()') === 10, '(45) ' + i + '. denemeden sonra kalan hak 10');
-    }
-    ok(st.buys === 3, '(45) üç ödeme denemesi yapıldı');
-    ok(a.R('iapCapOwned()') === 0, '(45) hiç hak verilmedi');
-    ok(a.R('S.cash') === cash0, '(45) oyun parası değişmedi');
-    ok(Object.keys(a.R('IAPQ.q')).length === 0, '(45) ödenmiş işlem kaydı yok');
-    ok(st.consumes === 0 && st.acks === 0, '(45) hiçbir kapanış çağrısı yok');
-    ok(a.R('iapHeldN()') === 0, '(45) tutulu deneme kalmadı');
-    ok(a.R("iapState('cap10')") === 'go', '(45) +10 hâlâ açık');
-    ok(a.R("Object.keys(S.iap.r||{}).length") === 0, '(45) kayıtta rezervasyon yok');
   }
 
   /* (46) TAVAN ARİTMETİĞİ DEĞİŞMEDİ: owned + reserved + yeni paket ≤ 10.
@@ -4762,13 +3917,10 @@ async function tPlayBilling() {
     await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
     ok(st.buys === 1, '(46) ödeme denendi');
     ok(a.R('iapCapOwned()') === 1, '(46) hak artmadı');
-    ok(a.R('iapCapReserved()') === 0, '(46) rezervasyon serbest bırakıldı');
     ok(a.R('iapCapLeft()') === 9, '(46) kalan hak yine 9 — ne fazla ne eksik');
     ok(a.R("iapState('cap5')") === 'go', '(46) +5 yeniden açık');
-    ok(a.R("iapState('cap10')") === 'full', '(46) +10 GERÇEK tavan yüzünden kapalı');
-    ok(a.R("t('shopCapFull')") !== a.R("t('shopCapHeld')"), '(46) iki durum ayrı cümle');
-    /* Tavan hiçbir yolla +10'un ötesine geçmiyor: teslimat da rezervasyon da. */
-    ok(a.R("iapCapOwned() + iapCapReserved() <= 10") === true, '(46) toplam tavanı aşmıyor');
+    /* Tavan hiçbir yolla +10'un ötesine geçmiyor. */
+    ok(a.R("iapCapOwned() <= 10") === true, '(46) defter tavanı aşmıyor');
   }
 
   /* (47) OK OLMAYAN SONUÇLA BİRLİKTE GELEN SATIN ALMA KAYBOLMUYOR.
@@ -4794,7 +3946,6 @@ async function tPlayBilling() {
     ok(a.R('iapCapOwned()') === 5, '(47) hak teslim edildi');
     ok(st.consumes === 1, '(47) kapanış TAM BİR KEZ', 'consumes=' + st.consumes);
     /* Rezervasyon teslimatla DÜŞÜYOR — başarısızlık gerekçesiyle değil. */
-    ok(a.R('iapCapReserved()') === 0, '(47) rezervasyon teslimat kanıtıyla düştü');
     ok(a.R('iapCapLeft()') === 5, '(47) kalan hak 5');
   }
 
@@ -4812,7 +3963,6 @@ async function tPlayBilling() {
     await careerIn(a, 1); await billBoot(a);
     a.R("iapBuy('cap5');");
     await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    ok(a.R('iapCapReserved()') === 0, '(48) satın almasız iptal düşürdü');
 
     /* AYNI kod, ama yanında satın alma var: DÜŞMÜYOR. */
     const { a: a2 } = await billSession(newDisk(), {},
@@ -4827,7 +3977,6 @@ async function tPlayBilling() {
     ok(!!a2.R('IAPQ.q.TOKC1'), '(48) satın alma kuyruğa girdi — atılmadı');
     /* Rezervasyon başarısızlık gerekçesiyle DÜŞMEDİ; teslimat kanıtıyla düştü. */
     ok(a2.R('iapCapOwned()') === 5, '(48) hak teslim edildi');
-    ok(a2.R('iapCapReserved()') === 0, '(48) rezervasyon teslimatla düştü');
 
     /* Yabancı etiketli iptal hiçbir şeye dokunamıyor — (33) ile aynı güvence,
        yeni aşamayla. */
@@ -4836,7 +3985,6 @@ async function tPlayBilling() {
     await careerIn(a3, 1); await billBoot(a3);
     a3.R("iapBuy('cap5');");
     await waitFor(() => a3.R('IAPS.busy') === '', 3000); await a3.R('saveDrain()');
-    ok(a3.R('iapCapReserved()') === 5, '(48) yabancı etiketli iptal düşürmedi');
 
     /* DÖRDÜNCÜ KOŞUL, uçtan uca: ret gelmeden önce bu denemeye ait bir kayıt
        biliniyorsa reddedilme sonucu BELİRSİZ sayılıyor — ne serbest bırakma ne
@@ -4854,79 +4002,6 @@ async function tPlayBilling() {
     a4.R("iapBuy('cap5');");
     await waitFor(() => a4.R('IAPS.busy') === '', 3000); await a4.R('saveDrain()');
     ok(!!a4.R('IAPQ.q.TOKSEED'), '(48) denemeye ait kayıt kuyrukta');
-    ok(a4.R("iapAttClear(IAPQ.q.TOKSEED.att)") === false, '(48) koşul çelişkili görünüyor');
-    ok(a4.R('iapCapReserved()') === 5, '(48) çelişkili kayıt varken rezervasyon DURUYOR');
-    ok(a4.R("(Object.values(S.iap.r)[0]||{}).df") === undefined,
-      '(48) kesin-sonuç işareti de basılmadı');
-  }
-
-  /* (49) YAZMA DOĞRULANMADAN YENİ ÖDEME BAŞLAMIYOR, ve yazma düşerse ekran
-         diskle çelişmiyor. Pencere REDDEDİLEN ÖDEME yolundan ölçülüyor: seçilen
-         politikada serbest bırakan yeni sınıf o. (39) aynı kilidi başka bir
-         açıdan tutuyor. */
-  {
-    const disk = newDisk(), ls = {}, ctl = {};
-    const a = session(disk, ls, ctl); await a.booted;
-    const st = fakeBilling(a.ctx, { buyCode: { stage: 'updnone', code: 3 } });
-    await careerIn(a, 1); await billBoot(a);
-    /* Serbest bırakma yazmasının TAM İÇİNDEN bakılıyor. */
-    let inside = null;
-    ctl.onPut = () => {
-      if (inside === null && a.R('IAPS.busy') !== '') {
-        inside = { state: a.R("iapState('cap5')"), buy: a.R("iapBuy('cap5')"), buys: st.buys };
-      }
-    };
-    a.R("iapBuy('cap5');");
-    await waitFor(() => a.R('IAPS.busy') === '', 3000); await a.R('saveDrain()');
-    delete ctl.onPut;
-    ok(!!inside, '(49) yazma anı yakalandı', JSON.stringify(inside));
-    ok(inside && inside.state === 'busy', '(49) yazma sürerken durum "busy"', JSON.stringify(inside));
-    ok(inside && inside.buy === false, '(49) yazma sürerken yeni ödeme başlamıyor');
-    ok(st.buys === 1, '(49) Play\'e tek istek gitti');
-    ok(a.R('iapCapReserved()') === 0, '(49) yazma tamamlandı, rezervasyon düştü');
-
-    /* Şimdi yazma DÜŞÜYOR: bellek diske uyuyor ve kanıt işaretleniyor. */
-    const att = await a.R("iapReserve({cap:5})");
-    await a.R('saveDrain()');
-    ctl.failWrite = () => quotaErr();
-    const rel = await a.R("iapRelease('" + att + "','failed')");
-    await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(rel === 'failed', '(49) yazma düştü, sonuç "failed" olarak raporlandı', String(rel));
-    ok(a.R('iapCapReserved()') === 5, '(49) sahte serbest bırakma yok');
-    ok(a.R("(S.iap.r['" + att + "']||{}).df") === 1, '(49) kanıt işareti kayda girdi');
-    ok(a.R("iapRejKey('declined','failed')") === 'shopHoldKept',
-      '(49) yazma tutmazsa kapasite AÇILMIŞ gibi gösterilmiyor');
-    ok(a.R("iapRejKey('declined','released')") === 'shopDeclined',
-      '(49) yazma tuttuysa reddedilme cümlesi');
-    /* Kariyer yazma sürerken DEĞİŞİRSE ikinci kariyere dokunulmuyor ve birincinin
-       kaydı diskte olduğu gibi kalıyor. Aynı kod yolu (36)'da iptal için
-       ölçülmüştü; ödeme reddi sınıfı da aynı iapRelease('failed') çağrısına
-       indiğinden burada o düzen birebir yeniden koşuyor. */
-    a.R("__save1=S;__slot1=curSlot;");
-    a.R("curSlot=2;newGame();createAgent('U','B','tr','D');" +
-      "S.iap={t:{TOKX:'cap1'},r:{kendi:{cap:2,at:7}}};save();");
-    await a.R('saveDrain()');
-    a.R("__c2=S;S=__save1;curSlot=__slot1;");
-    const att2 = await a.R("iapReserve({cap:2})");
-    await a.R('saveDrain()');
-    ctl.failWrite = () => quotaErr();
-    a.R("__rel=iapRelease('" + att2 + "','failed');");
-    a.R("S=__c2;curSlot=2;");
-    const rel2 = await a.R('__rel');
-    await a.R('saveDrain()');
-    delete ctl.failWrite;
-    ok(rel2 === 'failed', '(49) kariyer değişince de başarı raporlanmadı', String(rel2));
-    ok(a.R("Object.keys((__c2.iap&&__c2.iap.r)||{}).join(',')") === 'kendi',
-      '(49) ikinci kariyere rezervasyon yazılmadı',
-      a.R("JSON.stringify((__c2.iap&&__c2.iap.r)||{})"));
-    ok(a.R("(__c2.iap.r.kendi||{}).df") === undefined, '(49) ikinci kariyere df basılmadı');
-    ok(a.R("__c2.iap.t.TOKX") === 'cap1', '(49) ikinci kariyerin hakkı ezilmedi');
-    const rec = await a.R("recGet('s1')");
-    ok(!!(rec && rec.S.iap.r && rec.S.iap.r[att2]),
-      '(49) birinci kariyerin rezervasyonu diskte duruyor');
-    ok(!!(rec && rec.S.iap.r[att2] && rec.S.iap.r[att2].df === undefined),
-      '(49) diskteki kayda df basılmadı');
   }
 
   /* (50) BAŞARILI ÖDEME BİR KEZ TESLİM EDİLİR, ARDINDAN BİR KEZ KAPATILIR —
@@ -4947,7 +4022,6 @@ async function tPlayBilling() {
     ok(mine.length === 1 && a.R("(IAPQ.q['" + mine[0] + "']||{}).st") === 'done',
       '(50) teslim edildi ve kapandı');
     ok(a.R('iapCapOwned()') === 5, '(50) hak TAM BİR KEZ verildi');
-    ok(a.R('iapCapReserved()') === 0, '(50) rezervasyon teslimatla düştü');
     ok(st.consumes === 1, '(50) kapanış TAM BİR KEZ');
     /* Diğer kayıt: görüldü, kayda geçti, hak VERMEDİ (hedefi bizim kariyer değil)
        ve kapatılmadı — ödenmiş bir işlemi sessizce kapatmak olurdu. */
@@ -4955,6 +4029,170 @@ async function tPlayBilling() {
     ok(a.R('IAPQ.q.TOKOTHER.st') === 'unbound', '(50) hedefi çözülemedi, kayıt açık',
       String(a.R('IAPQ.q.TOKOTHER.st')));
     ok(a.R('iapStuckN()') === 1, '(50) ekranda bekleyen işlem olarak görünüyor');
+  }
+
+  /* (51) BAŞARISIZ ÖDEME HİÇBİR İZ BIRAKMIYOR — düzeltilen hatanın kendisi.
+         Eskiden bu yol bir REZERVASYON yazıyordu ve reddedilen ödemede o kayıt
+         sonsuza kadar kalıyordu: tavan doluyor, iapState() her pakete 'held'
+         diyor ve rezervasyonu düşürebilecek tek kod yolu (satın alma ret dalı)
+         bir daha hiç çalışmıyordu. Kilit kendini besliyordu.
+         Artık yazılan bir şey yok, dolayısıyla kilitlenecek bir şey de yok. */
+  {
+    /* Cihazda ölçülen yol: Play OK + PurchaseState 2 (yama 'state'/2 ile
+       reddediyor), sonra sipariş arka planda sessizce iptal ediliyor. */
+    const { a, st } = await billSession(newDisk(), {}, { pending: true, fixedTok: 'TOKPEND' });
+    await careerIn(a, 1); await billBoot(a);
+    ok(a.R("iapState('cap10')") === 'go', '(51) önce +10 alınabilir');
+    a.R("iapBuy('cap10');");
+    await waitFor(() => a.R('IAPS.busy') === '', 3000);
+    await a.R('saveDrain()');
+    ok(st.buys === 1, '(51) ödeme denendi');
+    ok(a.R('iapCapOwned()') === 0, '(51) hak verilmedi');
+    ok(a.R('iapCapLeft()') === 10, '(51) KALAN HAK TAM — kapasite tutulmuyor');
+    ok(a.R("iapState('cap10')") === 'go', '(51) +10 hâlâ alınabilir');
+    ok(a.R("iapState('cap1')") === 'go', '(51) +1 de alınabilir');
+    /* Kariyer kaydında rezervasyon alanı HİÇ doğmuyor — S.iap bile
+       oluşturulmuyor, çünkü onu yaratan tek yazıcı iapReserve idi. */
+    const rec = await a.R("recGet('s1')");
+    ok(!!(rec && rec.S && !(rec.S.iap && rec.S.iap.r)), '(51) diske rezervasyon yazılmadı',
+      JSON.stringify(rec && rec.S && rec.S.iap));
+    /* Play sipariş iptal etti: token artık listelenmiyor. Hiçbir şey kilitli değil. */
+    st.owned = st.owned.filter(x => x.purchaseToken !== 'TOKPEND');
+    await a.R('iapReconcile()'); await a.R('saveDrain()');
+    ok(a.R('iapCapLeft()') === 10, '(51) iptalden sonra da tam hak');
+    ok(a.R("iapState('cap10')") === 'go', '(51) satın alma hâlâ açık');
+    ok(st.consumes === 0 && st.acks === 0, '(51) hiçbir şey kapatılmadı');
+  }
+
+  /* (52) ÜST ÜSTE REDDEDİLEN ÖDEMELER BİRİKMİYOR.
+         Rezervasyonun asıl zararı buydu: her başarısız deneme tavandan kalıcı
+         bir dilim yiyordu. Üç ret sonra hâlâ tam hak olmalı. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, { buyCode: { stage: 'updnull', code: 3 } });
+    await careerIn(a, 1); await billBoot(a);
+    for (let i = 0; i < 3; i++) {
+      a.R("iapBuy('cap10');");
+      await waitFor(() => a.R('IAPS.busy') === '', 3000);
+      await a.R('saveDrain()');
+    }
+    ok(st.buys === 3, '(52) üç deneme yapıldı');
+    ok(a.R('iapCapLeft()') === 10, '(52) ÜÇ RETTEN SONRA HÂLÂ TAM HAK');
+    ok(a.R("iapState('cap10')") === 'go', '(52) +10 hâlâ alınabilir');
+    ok(a.R('iapCapOwned()') === 0, '(52) hiçbir hak verilmedi');
+    ok(Object.keys(a.R('IAPQ.q')).length === 0, '(52) kuyruğa kayıt girmedi');
+    ok(st.consumes === 0 && st.acks === 0, '(52) hiçbir şey kapatılmadı');
+    /* Dördüncü deneme başarılı: normal teslimat yolundan geçiyor. */
+    const { a: b, st: sb } = await billSession(newDisk(), {}, {});
+    await careerIn(b, 1); await billBoot(b);
+    b.R("iapBuy('cap10');");
+    await waitFor(() => b.R('IAPS.busy') === '', 3000);
+    for (let i = 0; i < 3000 && b.R('iapCapOwned()') !== 10; i++) await tick();
+    await b.R('saveDrain()');
+    ok(b.R('iapCapOwned()') === 10, '(52) başarılı ödeme normal teslim edildi');
+    ok(sb.consumes === 1, '(52) bir kez kapatıldı');
+  }
+
+  /* (53) RET SINIFLARI YALNIZ CÜMLEYİ BELİRLİYOR — ve ayrımlar korunuyor.
+         Sınıflandırmanın kendisi kaldırılmadı: "vazgeçtin", "ödemen reddedildi"
+         ve "istek reddedildi" farklı olaylar ve farklı cümleler. Değişen tek şey,
+         yanlış bir sınıfın artık kapasiteye dokunamaması. */
+  {
+    const { a } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    ok(a.R("iapRejKey('cancel')") === 'shopCancelled', '(53) iptal → kendi cümlesi');
+    ok(a.R("iapRejKey('declined')") === 'shopDeclined', '(53) ödeme reddi → kendi cümlesi');
+    ok(a.R("iapRejKey('refused')") === 'shopBuyRefused', '(53) istek reddi → kendi cümlesi');
+    ok(a.R("iapRejKey('notStarted')") === 'shopBuyFail', '(53) akış başlamadı → kendi cümlesi');
+    ok(a.R("iapRejKey('pending')") === 'shopPending', '(53) beklemede → kendi cümlesi');
+    ok(a.R("iapRejKey('')") === 'shopBuyUnsure', '(53) belirsiz → belirsiz cümlesi');
+    /* Dört cümle birbirinden farklı ve HİÇBİRİ kapasite hakkında konuşmuyor. */
+    const keys = ['shopCancelled', 'shopDeclined', 'shopBuyRefused', 'shopBuyFail', 'shopBuyUnsure'];
+    ['tr', 'en'].forEach(lng => {
+      a.R("L='" + lng + "'");
+      const txt = keys.map(k => a.R("t('" + k + "')"));
+      ok(new Set(txt).size === keys.length, '(53) ' + lng + ' cümleler ayrı');
+      ok(!txt.some(s => /ayrıl|reserve|tutul|held/i.test(s)),
+        '(53) ' + lng + ' hiçbiri kapasite ayırmadan söz etmiyor');
+      ok(!txt.some(s => /undefined|\[object/.test(s)), '(53) ' + lng + ' cümleler sağlam');
+    });
+    a.R("L='tr'");
+    /* Sınıflandırma hâlâ yapılandırılmış alandan okunuyor, metinden DEĞİL. */
+    ok(a.R("iapTerminalKind({code:'npx:updnull:3:t1'},'t1')") === 'declined', '(53) 3 → declined');
+    ok(a.R("iapTerminalKind({code:'npx:updnull:4:t1'},'t1')") === 'refused', '(53) 4 → refused');
+    ok(a.R("iapTerminalKind({code:'npx:updnone:1:t1'},'t1')") === 'cancel', '(53) 1 → cancel');
+    ok(a.R("iapTerminalKind({code:'npx:updtx:1:t1'},'t1')") === 'carried', '(53) yanında satın alma → carried');
+    ok(a.R("iapTerminalKind({code:'npx:updnull:3:baska'},'t1')") === '', '(53) yabancı etiket sınıflanmıyor');
+    ok(a.R("iapTerminalKind({message:'boom'},'t1')") === '', '(53) düz metinden çıkarım yok');
+  }
+
+  /* (54) ESKİ KAYITLARDAKİ REZERVASYON ALANI EYLEMSİZ.
+         Dahili testteki cihazlarda S.iap.r duruyor. Göç yazılmadı ve gerekmiyor:
+         alan artık hiçbir yerde OKUNMUYOR, dolayısıyla hiçbir şeyi engelleyemez. */
+  {
+    const { a, st } = await billSession(newDisk(), {}, {});
+    await careerIn(a, 1); await billBoot(a);
+    /* Eski biçim: tavanın tamamını tutan bir rezervasyon + df/dg işaretleri. */
+    a.R("S.iap={t:{},r:{aabbccdd:{cap:10,at:1,df:1,dg:{s:'state',c:2,m:1}}}};save();");
+    await a.R('saveDrain()');
+    ok(a.R('iapCapLeft()') === 10, '(54) eski rezervasyon kalan hakkı etkilemiyor');
+    ok(a.R("iapState('cap10')") === 'go', '(54) +10 ALINABİLİR — kilit yok');
+    ok(a.R("iapState('cap1')") === 'go', '(54) +1 de alınabilir');
+    /* Satın alma gerçekten başlıyor ve normal teslim ediliyor. */
+    a.R("iapBuy('cap10');");
+    await waitFor(() => a.R('IAPS.busy') === '', 3000);
+    for (let i = 0; i < 3000 && a.R('iapCapOwned()') !== 10; i++) await tick();
+    await a.R('saveDrain()');
+    ok(st.buys === 1, '(54) ödeme başladı');
+    ok(a.R('iapCapOwned()') === 10, '(54) hak teslim edildi');
+    /* Eski alan SİLİNMİYOR de: dokunulmuyor, okunmuyor, o kadar. */
+    const rec = await a.R("recGet('s1')");
+    ok(!!(rec && rec.S.iap.r && rec.S.iap.r.aabbccdd), '(54) eski alan diskte duruyor — göç yok');
+    ok(a.R('iapCapOwned()') <= 10, '(54) tavan yine de aşılmadı');
+  }
+
+  /* (55) EKRAN ARTIK TUTULU KAPASİTEDEN SÖZ ETMİYOR, ve iki dilde de sağlam. */
+  {
+    const { a } = await billSession(newDisk(), {}, { pending: true, fixedTok: 'TOKSCR' });
+    await careerIn(a, 1); await billBoot(a);
+    a.R("iapBuy('cap5');");
+    await waitFor(() => a.R('IAPS.busy') === '', 3000);
+    for (let i = 0; i < 3000 && !a.R('IAPQ.q.TOKSCR'); i++) await tick();
+    await a.R('saveDrain()');
+    ['tr', 'en'].forEach(lng => {
+      a.R("L='" + lng + "'");
+      const h = a.R("pushV('shop');render();document.getElementById('view').innerHTML");
+      ok(h.indexOf('undefined') === -1 && h.indexOf('[object') === -1 && h.indexOf('NaN') === -1,
+        '(55) ' + lng + ' mağaza ekranı sağlam');
+      ok(/ödeme onay bekliyor|payment awaiting approval/i.test(h),
+        '(55) ' + lng + ' bekleyen ödeme yazıyor');
+      ok(!/ayrılmış|reserved for|tutuyor/i.test(h),
+        '(55) ' + lng + ' tutulu kapasiteden söz etmiyor');
+      ok(!/Tanı kodu|Diagnostic code/i.test(h), '(55) ' + lng + ' tanı kodu satırı yok');
+    });
+    a.R("L='tr'");
+  }
+
+  /* (56) SIZINTI TARAMASI — rezervasyon kavramı koddan gerçekten çıktı. */
+  {
+    const gone = ['iapReserve', 'iapRelease', 'iapReapRes', 'iapHeldN', 'iapCapReserved',
+      'iapResOf', 'iapNoteDiag', 'iapDiagList', 'iapReleasing', 'iapAttClear', 'iapSameCareer'];
+    const bad = [];
+    for (const f of FILES) {
+      const txt = fs.readFileSync(path.join(ROOT, 'js', f + '.js'), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      gone.forEach(n => { if (new RegExp('\\b' + n + '\\b').test(txt)) bad.push(f + ':' + n); });
+      if (/\.iap\.r\b/.test(txt)) bad.push(f + ': .iap.r okuması');
+    }
+    ok(bad.length === 0, '(56) rezervasyon mekanizması koddan çıktı', bad.join(' | '));
+    const i18n = fs.readFileSync(path.join(ROOT, 'js', 'i18n.js'), 'utf8');
+    ['shopCapHeld', 'shopTxHeld', 'shopHoldKept', 'shopTxDiag'].forEach(k => {
+      if (new RegExp('^' + k + ':', 'm').test(i18n)) bad.push('dize: ' + k);
+    });
+    ok(bad.length === 0, '(56) tutulu-kapasite dizeleri de gitti', bad.join(' | '));
+    /* Tavan hâlâ TEK yerde ve hâlâ 10. */
+    const iap = fs.readFileSync(path.join(ROOT, 'js', 'iap.js'), 'utf8');
+    ok(/capMax:\s*10/.test(iap), '(56) kariyer tavanı hâlâ 10');
+    ok(/Math\.min\(n, IAP\.capMax\)/.test(iap), '(56) tavan teslimatta uygulanıyor');
   }
 }
 
