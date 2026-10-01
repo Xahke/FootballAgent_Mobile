@@ -289,8 +289,16 @@ etiketi var — biri eklenirse pakete tek renkli bir ikon girer.
 - Gerekli materyaller: uygulama ikonu (512×512), öne çıkan görsel (1024×500),
   en az 2 ekran görüntüsü, kısa/uzun açıklama, içerik derecelendirme anketi,
   **gizlilik politikası URL'si**.
-- Bu oyun hiçbir veri toplamıyor, ağa çıkmıyor; kayıt yalnızca cihazdaki
-  `localStorage`'da. Gizlilik politikasında bunu belirtmek yeterli.
+- **"Veri toplamıyor, ağa çıkmıyor" ARTIK ANDROID İÇİN DOĞRU DEĞİL.** Oyun motoru
+  hâlâ hiçbir istek atmıyor ve kayıt yalnız cihazda duruyor; ama paketin içinde UMP,
+  Mobile Ads ve Play Billing var ve bunlar her açılışta Google'a bağlanıyor (bkz.
+  `CLAUDE.md`, *Conventions* → ağ kuralı). Yani Play listesinde ve içerik derecelendirme
+  anketinde "çevrimdışı / veri toplamaz" denemez; **Data Safety formu doldurulmak
+  zorunda** ve reklam beyanı yapılmalı. Web/PWA/tek dosya sürümü etkilenmiyor.
+- **Gizlilik politikası URL'si hazır ve güncel:** `js/i18n.js` içindeki `PRIVACY_URL`,
+  yani `xahke.github.io/privacy/pro-football-agent/{tr,en}.html` (son güncelleme 1 Ekim 2026).
+  Play Console'a verilecek adres bu; bayat kalan kısımları için Satın alma bölümünün
+  yayın listesine bak.
 
 ## Temalar
 Dört görünüm var: **dosya** (varsayılan), **gazete**, **terminal**, **saha**.
@@ -415,9 +423,19 @@ tamamlanmadan ürünler sorgulanamaz ve mağaza kapalı kalır (`iapAvailable()`
    kart, reddeden kart ve **yavaş kart** (PENDING → PURCHASED yolunu açan tek yol).
 4. **Dahili test kanalına dağıt**, test hesabıyla kur, `logcat`'te `NativePurchases`
    etiketini izle.
-5. Gizlilik metni ve Play Data Safety: faturalandırma trafiği ve saklanan satın alma
-   tokenı eklenmeli. `xahke.github.io/privacy/pro-football-agent/*.html` hâlâ
-   "reklam SDK'sı ve UMP yok" diyor; bu sayfa yayından önce yeniden yazılmalı.
+5. **Play Data Safety** formu doldurulmalı: faturalandırma trafiği, saklanan satın alma
+   tokenı ve reklam tarafının Google beyanı (IP, reklam kimliği, app set ID, uygulama
+   etkileşimleri, tanılama — "paylaşılıyor / üçüncü taraf reklamcılık") oraya girmeli.
+   **Gizlilik metni bu iş için hazır:** `xahke.github.io/privacy/pro-football-agent/*.html`
+   (son güncelleme 1 Ekim 2026) UMP akışını, iki reklam yolunu, Play Billing'i, beş
+   ürünü, Android yedeklemesini, silme yollarını ve saklama sürelerini anlatıyor;
+   rezervasyonun kaldırılmasını da takip ediyor, yani +10 sınırının **teslimatta**
+   uygulandığını ve sığmayan satın almanın kısmen teslim edilmediğini, onaylanıp
+   tüketilmediğini söylüyor. Bu dosya uzun süre "o sayfa hâlâ reklam SDK'sı ve UMP yok
+   diyor" dedi; **sayfa hakkında bir şey yazmadan önce sayfayı aç.** Metinde bugünkü
+   yapıya göre yazılmış tek şey kaldı: Google'ın **örnek reklam birimlerini ve mediation
+   kullanmadığı** ifadesi, dil başına üç yer. Bugün doğru — ve gerçek reklam birimiyle
+   **aynı sürümde** değişmesi gereken yer tam olarak bu.
 
 ### Lisans testinde dikkat
 

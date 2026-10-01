@@ -92,7 +92,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (553 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (546 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
@@ -1459,11 +1459,11 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 553 today, but count them rather than trusting this line; it has
-  been stale before. Objects returned from events, themes, branches and
-  rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before adding a key,
-  check it isn't taken — `archLbl` already meant "Archive" and a second meaning
-  silently overwrote it.
+  counts must match — 546 today (measured 1 Oct 2026), but count them rather than
+  trusting this line; it has been stale before. Objects returned from events, themes,
+  branches and rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before
+  adding a key, check it isn't taken — `archLbl` already meant "Archive" and a
+  second meaning silently overwrote it.
 - **Sound is synthesised** with Web Audio (`js/sfx.js`) — no audio assets. A single
   capture-phase listener on `SFX_SEL` fires one sound per tap; don't add `SFX` calls in
   individual handlers, they'd double up.
@@ -1476,9 +1476,19 @@ janky on a phone. Any future view with live listeners needs the same moves.
   the entitlement query). Still no `fetch` of ours — the traffic belongs to the Play
   Services client, not to `js/`. **The store listing's
   privacy claim can no longer be "the app never goes online" for the Android build**, and
-  `xahke.github.io/privacy/pro-football-agent/*.html` still says the opposite — it states
-  no ad SDK and no UMP are integrated. That page has to be rewritten before any release,
-  and it is also the URL a UMP message would point at. The web/PWA/single-file builds are
+  `xahke.github.io/privacy/pro-football-agent/*.html` **has been rewritten accordingly**
+  (last updated 1 October 2026): it describes the UMP consent flow, both ad paths,
+  Google's own data disclosure, Play Billing and the five products, Android backup,
+  deletion and retention — and it tracks the reservation removal, so it now states that
+  the +10 ceiling is applied at **delivery** and that an overflowing purchase is not
+  partially delivered, not acknowledged and not consumed (see *There is no reservation*
+  above). It is also the URL a UMP message points at. **This file said the opposite —
+  "no ad SDK and no UMP are integrated" — for far too long, so read the page before
+  repeating anything about what it claims.** Exactly one thing on it is written against
+  today's build rather than the shipped one: it says the app uses Google's **sample ad
+  units with no mediation**, three places per language. That is true today and it is the
+  wording that has to change in the same release as a real ad unit — not before, and not
+  after. The web/PWA/single-file builds are
   unaffected: no Capacitor, no plugin, no requests. `tools/build-geo.js` does download its
   source, but it is a developer tool that is never loaded by the app; its output is
   committed instead.

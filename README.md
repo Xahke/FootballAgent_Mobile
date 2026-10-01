@@ -4,15 +4,16 @@
 Find undervalued players, move them to the right clubs, negotiate their contracts,
 and take your cut.
 
-Text-based, mobile-first, runs entirely in the browser and works offline.
-Turkish and English.
+Text-based, mobile-first, Turkish and English. The browser build runs entirely
+client-side and offline; the Android build adds ads and in-app purchases, which do
+go online — see [Tech](#tech).
 
 > **Status: in development.** Playable end to end, but systems and balance are
 > still changing. Store releases for Android and iOS are planned.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-blue)
-![Offline](https://img.shields.io/badge/offline-yes-blue)
+![Offline web build](https://img.shields.io/badge/web%20build-offline-blue)
 ![TR / EN](https://img.shields.io/badge/language-TR%20%2F%20EN-blue)
 
 ---
@@ -102,15 +103,23 @@ runtime.
 
 ## Tech
 
-No framework, no bundler, no dependencies. Plain HTML, CSS and JavaScript —
-~3,400 lines across nine files, each with one job.
+No framework, no bundler, no runtime dependencies. Plain HTML, CSS and JavaScript —
+~13,700 lines across 21 files, each with one job.
 
 - **Offline first.** A service worker caches the app shell; the single-file build
   needs nothing at all.
-- **Saves are local**, in `localStorage`. The game currently makes no network
-  requests of any kind.
+- **Saves are local**, in `localStorage`. There is no account and no server for the
+  game: your careers are never uploaded anywhere.
+- **The game code makes no network requests** — no `fetch`, `XMLHttpRequest` or
+  `WebSocket` anywhere in `js/`. In the browser build that is the whole story, so it
+  is fully playable with no connection.
+- **The Android build is not offline-only.** It is packaged with Capacitor and talks
+  to Google through two plugins: ad consent (UMP) plus rewarded and season-transition
+  ads, and Google Play Billing for in-app purchases. That traffic belongs to the
+  Google Play services client, not to `js/` — but the app does go online, and its
+  privacy policy says so. Ads currently use Google's sample ad units.
 - **Sound is synthesised** with Web Audio — no audio files shipped.
-- **Fully bilingual**: 240 translation keys, Turkish and English both complete.
+- **Fully bilingual**: 546 translation keys, Turkish and English both complete.
 
 ---
 
