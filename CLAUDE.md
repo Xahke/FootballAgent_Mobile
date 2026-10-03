@@ -71,7 +71,7 @@ load order is the contract.
 
 `js/badges.js` was the most recent file to go through this, and it is a worked
 example: it sits after `data.js` (badges read a team object) and before `core.js`
-(where `tmBadge()` lives), and the same position appears in all three lists.
+(where `tmBadge()` lives), and the same position appears in all four lists.
 
 Load order:
 `i18n → store → saves → reward → ads-testcfg → ads → iap → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`

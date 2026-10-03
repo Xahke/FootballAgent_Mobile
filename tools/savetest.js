@@ -15,7 +15,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['i18n','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','core',
+const FILES = ['i18n','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','badges','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= IndexedDB taklidi ================= */
