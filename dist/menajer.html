@@ -12092,8 +12092,34 @@ function teamPos(tid){
 
 /* js/sim.js — haftalık maç simülasyonu, sezon sonu, gelişim, küme düşme/yükselme, milli turnuva */
 /* ================= SIM ================= */
+/* Takım → kadro dizini. YALNIZ simWeek() süresince dolu, dışında null.
+
+   Neden var: teamStr() ve playMatchSide() her çağrıda 7000 oyuncunun tamamını
+   tarıyordu ve bir haftada ~1270 kez çağrılıyorlar — haftalık simülasyonun
+   üçte ikisi bu taramaydı. Dizin haftada bir kez, tek geçişte kuruluyor.
+
+   Neden kalıcı değil: kadrolar transferde, sezon sonunda ve oyuncunun kendi
+   işlemlerinde değişiyor; ayakta duran bir dizin bunların her birinde
+   tazelenmek zorunda kalırdı ve unutulan tek bir yer yanlış kadroyla maç
+   oynatırdı. simWeek() içinde ise hiçbir şey p.team'e ya da S.players'a
+   dokunmuyor, yani dizin kurulduğu andan bırakıldığı ana kadar doğru.
+
+   Sıra S.players sırası — filter()'ın verdiğiyle aynı. Bu önemli: sıralamalar
+   kararlı ve rastgele çekimler kadro sırasıyla yapılıyor, dolayısıyla sonuç
+   eski taramayla bit bit aynı. */
+let SQIDX=null;
+function weekSquads(){
+  const ix={};
+  S.players.forEach(p=>{(ix[p.team]||(ix[p.team]=[])).push(p);});
+  return ix;
+}
+/* Dönen dizi her zaman çağıranın kendi kopyası: teamStr() onu yerinde
+   sıralıyor, dizinin kendisi bozulmamalı. */
+function squadOf(tid){
+  return SQIDX?(SQIDX[tid]||[]).slice():S.players.filter(p=>p.team===tid);
+}
 function teamStr(tid){
-  const ps=S.players.filter(p=>p.team===tid).sort((a,b)=>b.r-a.r).slice(0,11);
+  const ps=squadOf(tid).sort((a,b)=>b.r-a.r).slice(0,11);
   return ps.reduce((s,p)=>s+p.r+(p.form-50)*0.08,0)/ps.length;
 }
 function poisson(lam){let l=Math.exp(-lam),k=0,p=1;do{k++;p*=RF();}while(p>l);return k-1;}
@@ -12139,7 +12165,7 @@ function pickWeighted(ps,wf){
 }
 /* pick XI + subs, record apps & minutes; returns outfield players who played */
 function playMatchSide(tid){
-  const sq=S.players.filter(p=>p.team===tid);
+  const sq=squadOf(tid);
   const sorted=sq.map(p=>({p,s:p.r+(p.form-50)*0.1+R(-6,6)})).sort((a,b)=>b.s-a.s).map(x=>x.p);
   const gk=sorted.find(p=>p.pos==='KL');
   /* Dizilişi mevkiye göre kur: sadece en iyi 10'u alırsak 10 forvetli takım çıkabiliyor.
@@ -12169,7 +12195,13 @@ function playMatchSide(tid){
   const all=starters.concat(subsIn);
   return {all,out:all.filter(p=>p.pos!=='KL'),mins};
 }
+/* finally: hafta ortasında bir şey atarsa dizin ayakta kalmasın — sonraki bir
+   teamStr() çağrısı bayat kadroyu okurdu. */
 function simWeek(){
+  SQIDX=weekSquads();
+  try{simWeekRun();}finally{SQIDX=null;}
+}
+function simWeekRun(){
   const wk=S.week-1;
   if(wk>=totalWeeks())return;
   LEAGUES.forEach((_,lg)=>{
