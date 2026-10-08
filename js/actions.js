@@ -23,12 +23,59 @@ function clubMaxWage(p){
   const floor=p.age<=30?1.06:p.age<=32?1.00:0.92;
   return Math.max(base,p.wage*floor);
 }
-/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler. */
-function negChance(p,wage,patience){
+/* ===== sözleşme süresi =====
+   Kulübün gönül rahatlığıyla bağlanacağı en uzun süre oyuncunun yaşına bağlı:
+   genç oyuncuyu beş yıl kilitlemek ister, otuzunu geçmiş oyuncuya uzun sözleşme
+   vermek risktir. Bu sürenin üstündeki her yıl kabul şansından NEG_YRS.over
+   kadar götürür; altı serbesttir.
+
+   Neden var: süre eskiden kabul şansına hiç girmiyordu, imza payı ise süreyle
+   çarpılıyordu — kaydırıcının tek doğru cevabı vardı (5 yıl). Seçenek sunan ama
+   seçim gerektirmeyen bir kontrol karar değildir. */
+const NEG_YRS={over:0.08};
+function clubYears(p){return p.age<=23?5:p.age<=26?4:p.age<=29?3:p.age<=31?2:1;}
+function negYearsPen(p,years){return Math.max(0,years-clubYears(p))*NEG_YRS.over;}
+/* İmza payı — tek hesap yeri. Ekrandaki satır, anlaşma anında kayda yazılan tutar
+   ve eski kayıtların imza günündeki hesabı buradan geçiyor.
+
+   Yalnız yeni kazanılan kısım ödenir: sözleşmeye EKLENEN yıllar yeni maaş
+   üzerinden, zaten duran yıllar ise yalnız ZAM FARKI üzerinden. Eski hesap her
+   yenilemede sözleşmenin tamamını (maaş × 52 × yıl) baştan ödüyordu; yenileme
+   45 haftada bir yeniden açılabildiği için aynı yılların komisyonu her sezon
+   yeniden tahsil ediliyordu ve haftalık komisyon bunun üstüne ayrıca geliyordu.
+   Ölçüldü: 12. sezonda imza payı haftalık komisyonun beş katıydı.
+
+   Bu hâliyle bir kariyerde ödenen toplam yıl, geçen süreyle sınırlı: sözleşme
+   bugünden en çok beş yıl öteye uzanabildiği için yenilemenin zamanlaması
+   toplamı büyütemez. Sözleşmesi biten oyuncuyu uzun süreye bağlamak eskisine
+   yakın öder; dört yılı duran oyuncuyu yeniden beş yıla çekmek bir yıl öder. */
+function signFeeFor(p,wage,years,rate){
+  const left=Math.max(0,p.yrs||0);
+  const added=Math.max(0,years-left), kept=Math.min(years,left);
+  return Math.round((wage*added+Math.max(0,wage-p.wage)*kept)*52*rate);
+}
+/* Bir imzanın itibarı: anlaşmanın kattığı "yıl karşılığı" ile orantılı.
+   Yıl karşılığı = imza payı / (bir yıllık komisyon) — yani eklenen yıllar artı
+   zam farkının duran yıllara düşen payı. NEG_REP.yrs yıl karşılığında tam tutar
+   (NEG_REP.full) verilir, altı orantılı, sıfır katkı sıfır itibar.
+
+   Eşik yerine oran: "pay sıfırdan büyükse ver" kuralı 1K'lık zamla aşılırdı.
+   Sözleşmesi biten oyuncuyu üç yıla bağlamak tam tutarı verir; dört yılı duran
+   oyuncuya bir yıl ve küçük bir zam eklemek yarısından azını. */
+const NEG_REP={full:0.7, yrs:2};
+function signRepFor(fee,wage,rate){
+  const year=wage*52*rate;
+  if(!(year>0)||!(fee>0))return 0;
+  return Math.round(NEG_REP.full*clamp(fee/year/NEG_REP.yrs,0,1)*100)/100;
+}
+/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler.
+   Süre verilmezse masadaki süre okunur. */
+function negChance(p,wage,patience,years){
   const ratio=wage/negCtx.max;
   const trustBonus=(trustOf(p)-55)/600;
   return clamp(clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*patience/100)
-               +S.rep/500+trustBonus+skillBonus('neg'),0,1);
+               +S.rep/500+trustBonus+skillBonus('neg')
+               -negYearsPen(p,years===undefined?negCtx.years:years),0,1);
 }
 function openNeg(pid){
   const p=byId(pid);
@@ -72,10 +119,11 @@ function renderNeg(){
      <input type="range" min="${sMin}" max="${sMax}" value="${clamp(negCtx.wage,sMin,sMax)}"
         oninput="negCtx.wage=+this.value;renderNeg()">
      <div style="margin-top:12px"><b style="font-size:12.5px">${t('contractLen')}: <span class="num">${negCtx.years} ${t('yrs')}</span></b>
-       <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()"></div>
+       <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()">
+       ${negCtx.years>clubYears(p)?`<div class="faint" style="font-size:11.5px;margin-top:4px;color:var(--warn)">${t('negYrsOver').replace('{n}',clubYears(p))}</div>`:''}</div>
      ${negCtx.counter?`<div class="counterCard">
-       <b style="color:var(--warn)">${t('counter')}: ${fmtK(negCtx.counter)}/${t('wk')}</b><br>
-       <span class="faint" style="font-size:11.5px">${L==='tr'?'Bu rakamı ya da altını seçersen anlaşma kesin.':'Match it or go lower to seal the deal.'}</span></div>`:''}
+       <b style="color:var(--warn)">${t('counter')}: ${fmtK(negCtx.counter)}/${t('wk')} · ${negCtx.cYears} ${t('yrs')}</b><br>
+       <span class="faint" style="font-size:11.5px">${L==='tr'?'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.':'Match the wage and length (or go lower) to seal the deal.'}</span></div>`:''}
      <div style="margin-top:14px;display:flex;justify-content:space-between;font-size:11px">
        <span class="sub" style="font-weight:700">${t('clubMood')}</span>
        <b class="num" style="color:${mc}">%${Math.round(mood)}</b></div>
@@ -83,7 +131,8 @@ function renderNeg(){
      <div class="divider" style="margin:12px 0"></div>
      <div style="display:flex;justify-content:space-between;font-size:12px">
        <span class="sub">${t('signBonus')} · %${commissionPct()}</span>
-       <b class="num" style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*commissionRate()))}</b></div>
+       <b class="num" style="color:var(--gold)">${fmtK(signFeeFor(p,negCtx.wage,negCtx.years,commissionRate()))}</b></div>
+     <div class="faint" style="font-size:11px;margin-top:4px">${t('feeBasis')}</div>
    </div>
    <button class="btn p" onclick="negSubmit()">${t('send')}</button>
    <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('walkAway')}</button>`);
@@ -92,13 +141,21 @@ function negSubmit(){
   const p=byId(negCtx.pid);
   const ratio=negCtx.wage/negCtx.max;
   /* accepting the club's own counter (or less) always seals the deal */
-  const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02);
+  /* Karşı teklif maaşla birlikte süreyi de taşıyor: yalnız maaşı tutturup süreyi
+     beş yılda bırakmak kesin anlaşma sayılsaydı, süre cezası ilk red sonrasında
+     bedelsiz aşılırdı. */
+  const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02)
+    &&negCtx.years<=negCtx.cYears;
   /* Ekrandaki çubukla birebir aynı hesap — gördüğün oran gerçek oran. */
   const acc=meetsCounter?1:negChance(p,negCtx.wage,negCtx.patience);
   if(RF()<acc){
-    /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar */
+    /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar.
+       Pay ANLAŞMA anında hesaplanıp kayda yazılıyor: ekranda görülen tutar odur ve
+       imzaya kadar geçen haftalarda oyuncunun kalan yılı değişirse kaymamalı. */
+    const rate=commissionRate();
     S.pendC=S.pendC||[];
-    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,rate:commissionRate(),at:(S.tw||0)+R(1,2)});
+    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,rate,
+      fee:signFeeFor(p,negCtx.wage,negCtx.years,rate),at:(S.tw||0)+R(1,2)});
     p.morale=clamp(p.morale+10,0,100);p.ignored=0;p.hm=(S.tw||0)+4;
     /* Yeni imzadan sonra kulüp uzun süre masaya oturmaz. */
     p.rnw=(S.tw||0)+45;
@@ -114,6 +171,9 @@ function negSubmit(){
     } else {
       const counter=Math.round(negCtx.max*(0.82+RF()*0.12));
       negCtx.counter=counter;
+      /* Kulüp kendi rahat ettiği süreyi geçmez; daha kısasını istediysen o kalır. */
+      negCtx.cYears=Math.min(negCtx.years,clubYears(p));
+      negCtx.years=negCtx.cYears;
       negCtx.wage=Math.min(negCtx.wage,Math.round(counter*1.15));
       toast(`${t('counter')}: ${fmtK(counter)}/${t('wk')}`);
       renderNeg();

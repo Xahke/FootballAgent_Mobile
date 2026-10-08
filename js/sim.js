@@ -256,10 +256,20 @@ function nextWeek(){
     S.pendC=S.pendC.filter(y=>y!==x);
     const p=byId(x.pid);
     if(!p||p.agent!=='you')return;
+    /* Pay anlaşma anında kayda yazıldı (bkz. actions.js: signFeeFor). x.fee'siz
+       kayıt bu alandan önce anlaşılmış bir sözleşmedir: aynı kuralla, oyuncunun
+       ŞİMDİKİ maaşı ve kalan yılı üzerinden hesaplanır — bu yüzden p.wage/p.yrs
+       yazılmadan önce. */
+    const fee=x.fee!==undefined?x.fee:signFeeFor(p,x.wage,x.years,x.rate||commissionRate());
     p.wage=x.wage;p.yrs=x.years;
     p.morale=clamp(Math.max(p.morale+25,65),0,100);p.ignored=0;p.hm=(S.tw||0)+8;
-    const fee=Math.round(x.wage*52*x.years*(x.rate||commissionRate()));
-    S.cash+=fee;repEvent(0.7);
+    S.cash+=fee;
+    /* İtibar da paranın izlediği kuralı izler: anlaşmanın KATTIĞI kadar. Eskiden
+       her imza içeriğine bakmadan +0,7 veriyordu; yenileme 45 haftada bir yeniden
+       açıldığı için maaşı da süresi de değişmeyen imzalar itibar üretiyordu.
+       Ölçüldü: geç oyunda sezonda ~17 yenileme, yazılan itibarın yarısı buradan.
+       signRepFor() tutarı imza payından türetiyor, yani ikisi ayrışamaz. */
+    repEvent(signRepFor(fee,x.wage,x.rate||commissionRate()));
     pushNews('contractSigned',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team,y:x.years,w:fmtK(x.wage),f:fmtK(fee)},'good');
   });
   /* --- taksitli komisyon ödemeleri --- */

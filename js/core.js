@@ -285,16 +285,34 @@ function freeAgents(){return S.players.filter(p=>p.team<0);}
    komisyon oranını o belirliyor. Bu yüzden tırmanışın uzun olması gerekiyor.
 
    Azalan verim: yükseldikçe aynı iş daha az getirir. Adı olmayan menajer için
-   orta seviye bir transfer olaydır; adı olan için rutindir. Kayıplar tam değerde
-   işler — skandal her seviyede aynı zarar. */
+   orta seviye bir transfer olaydır; adı olan için rutindir.
+
+   İki sayı üst ucu belirliyor ve ikisi de ölçülerek seçildi:
+
+   REP_FLOOR — kazanç sönümlemesinin tabanı. 0,15 iken itibar ~106'dan sonra her
+   kazancın %85'i siliniyordu ve iyi oynanan yirmi sezonluk kariyer 109-111'de
+   duruyordu: yetenek ağacının 32 puanından 12-14'ü, ikinci bölüm hiç açılmıyordu.
+
+   REP_LOSS — kayıpların inebileceği en düşük ağırlık. Kayıplar eskiden hiç
+   sönümlenmiyordu ("skandal her seviyede aynı zarar"); taban devredeyken bu,
+   bir kaybın aynı büyüklükteki kazancın 6,7 katı ağırlık taşıması demekti.
+   Tek bir müşteri bırakmak sekiz sözleşme imzasını siliyor, zayıf müşteriyi
+   bırakıp iyisini almak itibarı DÜŞÜRÜYORDU. Kayıp artık kazançla aynı eğriyi
+   izliyor ama yarının altına inmiyor: büyük ajansın skandalı küçülür, kaybolmaz.
+
+   İkisi ayrı ayrı yetmiyor (taban tek başına 96-128, kayıp sönümü tek başına
+   107-127); birlikte yirminci sezon 133-157, yani iki bölüm tam. Üçüncü bölüm
+   (itibar 285) bilerek ulaşılmaz kalıyor. */
 const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
-function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
+const REP_FLOOR=0.30;        // kazancın inebileceği en düşük pay (itibar ~88'den sonra)
+const REP_LOSS=0.5;          // kaybın inebileceği en düşük pay (itibar ~63'ten sonra)
+function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,REP_FLOOR,1);}
 function repEvent(delta,raw){
   if(!delta)return S.rep;
   /* skillBonus('repg') — yetenek ağacının itibar kazancına tek dokunduğu yer.
-     Kayıplara uygulanmıyor: skandal her seviyede aynı zarar. */
+     Kayıplara uygulanmıyor: bonus kazancı büyütür, zararı küçültmez. */
   const gain=delta>0?delta*(1+skillBonus('repg')):delta;
-  const d=delta>0&&!raw?gain*repFactor():gain;
+  const d=raw?gain:delta>0?gain*repFactor():gain*Math.max(repFactor(),REP_LOSS);
   const before=agentLevel();
   /* stat() BİLEREK kullanılmıyor. stat() 0-100 arası durum değerleri içindir —
      moral, güven, form; onlarda 100 tavanı doğrudur. İtibar durum değeri değil,
@@ -349,10 +367,25 @@ function weeklyIncome(){
 /* Ajansın sabit gideri: ofis + müşteri başına idari yük + her keşif ağının bakımı.
    Başlangıçta küçük tutuluyor ki ilk transferini yapmaya vaktin olsun; ağ genişledikçe
    ve isim yaptıkça büyüyor, böylece "nereye kadar büyüyeceğim" gerçek bir karar oluyor. */
+/* Menajerin kendi bölgesi. Kayda ayrı bir alan yazılmıyor: createAgent() S.known'ı
+   aynı eşlemeyle (NAT2CTRY) dolduruyor, buradaki de ondan türüyor — eski kayıtlar
+   da S.agent.nat taşıdığı için kendiliğinden doğru cevabı veriyor. */
+function homeCtry(){return NAT2CTRY[S&&S.agent?S.agent.nat:'']||'WAF';}
+/* Bakım yalnız SENİN KURDUĞUN ağlar için işler; kendi ülkenin ligleri bedelsiz.
+   İki gerekçe, ikisi de ölçüldü:
+   - Başlangıç ülkesi gideri sessizce belirliyordu. Bakım lig gücüne endeksli
+     olduğu için güçlü ligli bir ülkeden başlayan menajer, itibarının yetmediği
+     oyuncuların ağına sezonda ~70K ödüyor, zayıf ligli ülkeden başlayan ~9K.
+   - İmza payı yalnız eklenen yıllara indirildiğinde (bkz. actions.js: signFeeFor)
+     ilk üç sezonun geliri sezon başına ~37K düştü ve iki müşterili menajerin
+     yapısal açığı kasayı iki sezonda bitirir hâle geldi. Türkiye başlangıcında
+     bu kalem sezonda ~51K.
+   Geç oyunda etkisi yok: orada gider gelirin yüzde birkaçı. */
 function weeklyCost(){
   const office=1+S.rep*0.03;
   const admin=S.clients.length*0.6;
-  const scouts=(S.known||[]).reduce((s,i)=>s+scoutCost(i)*0.0025,0);
+  const home=homeCtry();
+  const scouts=(S.known||[]).reduce((s,i)=>s+(LEAGUES[i]&&LEAGUES[i].ctry===home?0:scoutCost(i)*0.0025),0);
   const cut=1-clamp(skillBonus('cost'),0,0.6);
   /* agMod('cost') olaylardan gelen kalıcı gider farkı: büyük ofis artırır, sıkı yönetim azaltır */
   return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
@@ -373,7 +406,17 @@ function iapCap(){return iapCapOwned();}
    defteri PREFS'te (js/iap.js). İsteğe bağlı ÖDÜLLÜ reklamı kapatmıyor — onu
    kullanıcı kendi dokunuşuyla açıyor ve karşılığında ödül alıyor. */
 function iapNoAds(){return iapNoAdsOwned();}
-function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')+iapCap();}
+/* İtibardan gelen kapasite: her CAP_REP.step itibarda bir masa, ilki CAP_REP.lead
+   puan erken. Eşikler 10, 28, 46, 64, 82, 100 — eskiden 18, 36, 54, 72, 90'dı.
+
+   Neden öne çekildi: işten gelen itibar müşteri sayısıyla büyüyor (iki müşteride
+   sezonda ~2 puan) ve üçüncü masa itibar 18 istiyordu; az müşteri az itibar, az
+   itibar az müşteri demekti. Ölçüldü: sıradan oynayan kariyerin altı tohumundan
+   yalnız ikisi altıncı sezonda üçüncü müşteriye ulaşıyordu, eşik 10'dayken altısı.
+   Her itibar düzeyinde eskisine göre en fazla bir masa fazla veriyor. */
+const CAP_REP={step:18, lead:8};
+function repSlots(){return Math.floor(((S.rep||0)+CAP_REP.lead)/CAP_REP.step);}
+function maxClients(){return 2+repSlots()+skillBonus('cap')+agMod('cap')+iapCap();}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,

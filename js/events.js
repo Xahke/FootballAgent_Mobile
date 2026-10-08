@@ -604,6 +604,49 @@ function effPush(out,k,before,after,dp){
   if(!isFinite(d)||d===0)return;
   out.push({k,v:d});
 }
+/* ===== olay maliyetinin ölçeği =====
+   Olayların nakit bedelleri sabit yazılmış (−95K, −120K, −140K...) ve kariyerin
+   her anında aynı. Geç oyunda bu yuvarlama hatası; başlangıçta ise 250K'lık
+   kasanın yarısı. Ölçüldü: iki müşterili menajerde olayların altı sezonluk net
+   etkisi −300K ile −655K arasında, yani sabit giderin tamamı kadar — ve borca
+   düşen kariyerleri düşmeyenlerden ayıran en büyük oynaklık kaynağı buydu.
+
+   Küçük ajansa küçük fatura: bedel itibarla birlikte büyür ve EV_COST.full
+   itibarda yazıldığı tutara ulaşır. İtibar okunuyor, kasa değil — kasaya bağlı
+   bir indirim, olaydan önce parayı harcayarak satın alınabilirdi.
+
+   Yalnız BEDELLER ölçeklenir. Kazançlar yazıldığı gibi kalır; kalıcı ajans
+   değişikliği (r.ag) taşıyan sonuç ise bir yatırımdır — kapasite ya da gider
+   satın alıyorsun — ve fiyatı indirilmez.
+
+   Tek çağrı yeri evChoose() (js/ui.js). applyEff() bilerek dokunulmadan
+   bırakıldı: ayartma masası da oradan geçiyor ve onun bedeli zaten müşterinin
+   maaşına endeksli. */
+const EV_COST={lo:0.35, full:40};
+function evCostScale(){return clamp(EV_COST.lo+(1-EV_COST.lo)*((S&&S.rep)||0)/EV_COST.full,EV_COST.lo,1);}
+/* İtibar KAYBI da aynı ölçekten geçiyor. Adı duyulmamış menajerin skandalı haber
+   değildir: −3'lük bir olay itibar 7'deki menajerin elindekinin %40'ını,
+   itibar 90'dakinin %3'ünü götürüyordu. Ölçüldü: iki müşterili menajerde işten
+   gelen itibar sezonda ~2 puan, olay kaybı ise −2,9 — sıradan oynayan kariyer
+   altı tohumun beşinde on iki sezon boyunca iki müşteride kaldı, aynı kariyer
+   yalnız olay seçimini değiştirerek itibar 77-90'a çıkıyordu. Kötü seçim hâlâ
+   kayıp; ama kariyeri kilitleyen şey olmaktan çıkıyor.
+   Kazançlar burada da yazıldığı gibi kalır. Kayıp, r.ag olsa da ölçeklenir:
+   yatırım istisnası fiyat içindir, itibar için değil. */
+function evScaled(r){
+  if(!r)return r;
+  const k=evCostScale();
+  if(k>=1)return r;
+  const cost=r.cash<0&&!r.ag, loss=r.rep<0;
+  if(!cost&&!loss)return r;
+  /* Kopya dönüyor: eff() her çağrıda taze nesne üretiyor ama buna güvenmek
+     gerekmiyor. Alt sınırlar (1K, 0,1 itibar) sıfıra yuvarlanmayı önlüyor —
+     sıfırlanan bedel "bedelsiz seçenek" olurdu. */
+  const o=Object.assign({},r);
+  if(cost)o.cash=Math.min(-1,Math.round(r.cash*k));
+  if(loss)o.rep=Math.min(-0.1,Math.round(r.rep*k*10)/10);
+  return o;
+}
 /* Tek uygulayıcı: bütün olaylar aynı kaldıraçlardan geçer. */
 function applyEff(r,c){
   const out=[];

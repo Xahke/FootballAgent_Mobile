@@ -119,7 +119,7 @@ No framework, no bundler, no runtime dependencies. Plain HTML, CSS and JavaScrip
   Google Play services client, not to `js/` — but the app does go online, and its
   privacy policy says so. Ads currently use Google's sample ad units.
 - **Sound is synthesised** with Web Audio — no audio files shipped.
-- **Fully bilingual**: 546 translation keys, Turkish and English both complete.
+- **Fully bilingual**: 548 translation keys, Turkish and English both complete.
 
 ---
 

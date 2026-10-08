@@ -92,7 +92,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (546 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `L`, `STR{tr,en}` (548 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
@@ -118,7 +118,7 @@ balance lever depends on the funnel being the only writer:
 
 | Instead of | Use | Why |
 |---|---|---|
-| `S.rep += x` | `repEvent(x)` | applies `repFactor()` soft cap and `skillBonus('repg')`, tracks `S.repMax`, counts level-ups into `S.lvUp`. Floors at 0 and rounds to 1 decimal, but has **no upper bound** |
+| `S.rep += x` | `repEvent(x)` | applies the `repFactor()` soft cap (gains in full, losses no further than `REP_LOSS`) and `skillBonus('repg')`, tracks `S.repMax`, counts level-ups into `S.lvUp`. Floors at 0 and rounds to 1 decimal, but has **no upper bound** |
 | `p.trust += x` | `trustEvent(p, x)` | applies `skillBonus('trust')` |
 | `p.morale += x` | `moraleEvent(p, x)` | applies `skillBonus('mor')` to your clients' losses, clamps and rounds to 1 decimal |
 | any 0–100 status value | `stat(v, min)` | clamps into 0–100 and prevents 14-digit float drift showing in the UI |
@@ -357,8 +357,8 @@ With both guards, measured over 12 seasons at ~3.1 approaches per season:
 | always pay | 38 | 2 (5%) | 80 |
 
 That spread is the feature. If you retune `poachChance`, re-measure all three — a
-poaching loss goes through `repEvent()`'s **unthrottled** loss path, so it pulls directly
-on the `REP_SOFT` equilibrium described above. Those three rows were measured on the
+poaching loss goes through `repEvent()`'s loss path (full weight at low reputation, half
+from rep ≈63 — `REP_LOSS`), so it pulls on the `REP_SOFT` equilibrium described above. Those three rows were measured on the
 six-agency world and have **not** been re-run since; the formula is unchanged and the
 direct `poachChance` sample above came out slightly *lower*, so the spread should hold,
 but if you need the exact numbers, measure them rather than quoting this table.
@@ -1052,26 +1052,36 @@ Tuning happens at these, not scattered magic numbers:
 
 - `VAL` (core.js) — market value drift from performance: update interval, gain, bounds, season revert
 - `REP_SOFT` / `repFactor()` (core.js) — reputation soft cap, and the single strongest
-  brake in the game. `repFactor()` is `clamp(1 − rep/125, 0.15, 1)`, so above rep ≈106
-  every gain is throttled to 15% forever. Climbing to rep 502 therefore costs about
-  2,875 *nominal* reputation (≈2,500 with `ag5`'s +15%). It also feeds back on itself:
-  `maxClients()` is `2 + floor(rep/18)` (plus `iapCap()`, which is 0 until a purchase is
+  brake in the game. `repFactor()` is `clamp(1 − rep/125, REP_FLOOR, 1)` with `REP_FLOOR` at 0.30, so above
+  rep ≈88 every gain is throttled to 30%. The floor was 0.15 (binding at ≈106) until it
+  was measured — see below. It also feeds back on itself:
+  `maxClients()` is `2 + repSlots()` — `floor((rep + 8)/18)`, so the reputation slots open
+  at 10, 28, 46, 64, 82, 100 (see `CAP_REP` below) — (plus `iapCap()`, which is 0 until a purchase is
   ever delivered), so low reputation means few clients, which
   means few reputation sources.
 
-  Losses are deliberately **not** throttled — `repEvent()` applies `repFactor()` to gains
-  only — so past the floor a career settles wherever throttled income meets full-price
-  damage. Because the 0.15 floor binds at rep ≈106, that balance turns on one ratio:
-  season losses over season gains. Below 0.15 a career keeps climbing, slowly and
-  linearly; above it, reputation cannot pass ≈106 at all. **This constant, not the skill
-  point budget, is what decides how much of the tree a career can ever reach** — see `LV`
-  below.
+  Losses follow the same curve but stop at `REP_LOSS` (0.5): full weight at the bottom,
+  half from rep ≈63 up. They used to be unthrottled, on the reasoning that a scandal
+  costs the same at every level; with the old 0.15 floor that made one point lost weigh
+  6.7 points earned. Releasing a single client (−0.8) erased about eight contract
+  signatures, and a bot that improved its roster — release the weakest, sign better —
+  finished *below* one that never did, because the churn was all loss.
+
+  Measured over 20 seasons, three seeds of a well-played career: the old constants ended
+  at rep 109–111 with 12–14 of 32 skill points — one branch and a half, the second never
+  completed. Neither change is enough alone (floor 0.30 only: 96–128; loss floor only:
+  107–127). Together: **133–157, 15–16 points**, the second branch complete at season
+  19–20 in two seeds of three. The third branch (rep 285) is still out of reach, on
+  purpose. The roster-improving bot went from 92 to 116. Two side effects to know: the
+  middle of a career got faster too (season-12 reputation 76–86 → 90–102, since the loss
+  floor is felt from rep 63), and that feeds the unresolved late-game cash. **These two
+  constants, not the skill point budget, decide how much of the tree a career can ever
+  reach** — see `LV` below.
 
   Reputation used to be clamped at 100, because `repEvent()` wrote `S.rep` through
   `stat()`. Everything in this bullet was authored for the uncapped line — `REP_SOFT` is
-  125 and the floor binds at 106 — so **none of the region above 100 ever ran.** The clamp
-  is gone; where the equilibrium actually lands has not been re-measured over a real
-  multi-season career, so don't quote a number for it until someone does.
+  125 and the floor binds at 106 — so **none of the region above 100 ever ran.** The clamp is gone, and the
+  region has since been measured — the numbers are in the paragraph above.
 - `scoutCost()` (core.js) — what the world costs to open up; see the map section above
 - `SQTARGET` / `FAMAX` / `POSMIN` / `POSMAX` (market.js) — squad sizes and the free-agent ceiling that keeps the background market in equilibrium
 - `PERF` (sim.js) — how ability, form and morale produce a match rating; morale drives *consistency* (the spread), not the mean
@@ -1103,8 +1113,8 @@ Tuning happens at these, not scattered magic numbers:
   arriving at it. Feeding the same 348 nominal gains through today's `repEvent()` lands at
   **rep 130, level 13, 15 of 32 points** — a formula measurement, not a re-run of the bot.
 
-  The size of the gap is unchanged. Level 27 needs about 2,680 nominal from rep 100 at the
-  0.15 floor; even granting that the rate roughly doubles as client slots grow, that is a
+  The size of the gap is unchanged. Level 27 needed about 2,680 nominal from rep 100 at the old
+  0.15 floor (half that at today's 0.30); even granting that the rate roughly doubles as client slots grow, that is a
   hundred-plus seasons. Nobody finishes the tree, and nobody comes close to three branches
   either — removing the clamp moved the reachable band by a couple of levels, not by a
   couple of branches.
@@ -1113,8 +1123,8 @@ Tuning happens at these, not scattered magic numbers:
   changes *when* branches open; only `REP_SOFT` changes whether the tree can be finished.
   Don't "fix" `LV` to restore a 32-point ceiling — that would slow down the early game,
   which is not where the limit lives. If the intent is that a long career *should* reach
-  three or four branches, the levers are `REP_SOFT`, the 0.15 floor in `repFactor()`, or
-  the size of the unthrottled losses — measure again after touching any of them.
+  three or four branches, the levers are `REP_SOFT`, `REP_FLOOR` and `REP_LOSS` — measure
+  again after touching any of them.
 - `RIV` (rivals.js) — everything about rival agencies except how many there are (that is
   `RIV_ARCH.length`): what counts as a notable player, weekly signing/losing rates, race
   frequency and reach, poaching gap, grace period, chance terms and the reputation cost of
@@ -1122,6 +1132,61 @@ Tuning happens at these, not scattered magic numbers:
   `signRate`/`loseRate` (the market pool), `worth`/`poachGrace` (whether poaching is a
   decision or a spiral) and `tuneN` (the roster size those weekly rates were tuned at —
   `rivScale()` divides by it, so changing the roster does not change the world's pace)
+- `signFeeFor()` / `NEG_YRS` / `clubYears()` (actions.js) — what a renewal pays and what its
+  length costs. The signing fee is paid **only on what the deal adds**: years added to the
+  contract at the new wage, and the *raise* on the years that were already there. It used
+  to pay `wage × 52 × years` on every renewal, and since talks reopen after 45 weeks the
+  same years were collected again each season, on top of the weekly commission — measured
+  at season 12, the fee was 5–7× the weekly stream. The fee is computed at agreement and
+  stored on the `S.pendC` record (`fee`); a record without it is priced by the same rule
+  on signing day. `clubYears(p)` is the longest deal a club is comfortable with at the
+  player's age (5/4/3/2/1) and every year past it costs `NEG_YRS.over` of acceptance; the
+  club's counter-offer carries a length as well as a wage, so matching only the wage is no
+  longer a guaranteed deal. What this did **not** fix: the raise component still feeds on
+  wage inflation (client wages ran 2–4× market in the same runs), so late-game cash fell
+  by roughly half in three of four seeds and is still in the hundreds of millions.
+- `NEG_REP` / `signRepFor()` (actions.js) — the reputation a signed contract pays, derived
+  from the signing fee so the two cannot drift: `fee / one year's commission` is the deal's
+  *year-equivalent* (years added, plus the raise spread over the years already there), and
+  `NEG_REP.full` (0.7) is paid at `NEG_REP.yrs` (2) of them, proportionally below, nothing
+  for a deal that adds nothing. It used to be a flat +0.7 per signature, so a renewal that
+  changed neither wage nor length still paid — about 17 of them a season late on, half of
+  all nominal reputation. A ratio rather than a `fee > 0` gate, because a 1K raise would
+  have cleared a gate. Measured over seasons 11–20: contract reputation 11.6 → 7.3 a
+  season. It is still the largest single late source, legitimately — a season passing is a
+  year a renewal really does add — and season-20 reputation did not move (103–115 →
+  109–111), because up there 85% of every gain is throttled anyway: `REP_SOFT` sets the
+  wall, not the size of the income. The cost was at the low end: a new client arrives with
+  2–3 years left, so the first renewal adds little, and the unoptimised agent's season-12
+  median fell from 39 to 27 on six noisy seeds. If that needs buying back, `NEG_REP.yrs`
+  is the dial — but lowering it to 1 hands the yearly re-renewal its full 0.7 again.
+- `homeCtry()` in `weeklyCost()` (core.js) — network upkeep is charged only for leagues you
+  built; the home territory is free. Derived from `S.agent.nat`, never stored. Worth ~50K
+  a season on a Turkish start, and it removes a silent inequity: upkeep is indexed to
+  league strength, so the starting country used to set the opening overhead (~9K to ~70K).
+- `CAP_REP` / `repSlots()` (core.js) — the reputation part of client capacity: one slot per
+  `CAP_REP.step` (18) reputation, the first one `CAP_REP.lead` (8) points early. The
+  thresholds used to be 18, 36, 54…; work-driven reputation grows with the client count
+  (~2 a season on two clients), so a third slot at 18 was a loop with no way in. Measured
+  on six seeds of an unoptimised agent, with the reputation-loss scale below already in:
+  three clients by season 6 went from 3/6 to 6/6 and the season-12 median reputation from
+  27 to 39. At any reputation it grants at most one slot more than the old formula.
+- `EV_COST` / `evScaled()` (events.js) — event **costs** scale with reputation, from
+  `EV_COST.lo` (35%) at rep 0 to the written amount at `EV_COST.full` (rep 40). Gains are
+  untouched, a result carrying `ag` is an investment and its *price* is never discounted,
+  and **reputation losses go through the same scale** (−3 at rep 5 lands as −1.3): an
+  unknown agent's scandal is not news, and unscaled it was — event losses (−2.9 a season)
+  outweighed everything two clients could earn (~2), which left the unoptimised agent on
+  two clients for twelve seasons in five seeds of six while the same agent picking the
+  reputation option reached 77–90. Choice still decides the career — the reputation-picker
+  ends ~2.5× ahead — it just no longer locks it. Checked against an always-take-the-cash
+  bot: it does not overtake the reputation-picker on either axis. The one
+  call site is `evChoose()` — `applyEff()` is deliberately left alone because the poach
+  table goes through it with a wage-indexed price. Measured on six seeds of an unoptimised
+  two-client agent: in debt at season 3 / season 6 went from 3/6 and 2/6 to 0/6 and 0/6
+  once this and the home-upkeep rule were both in. The side effect to watch is the
+  do-nothing profile, which now drifts down slowly instead of going bankrupt; raise
+  `EV_COST.lo` if that is too gentle.
 - `IAP.capMax` (iap.js) — the most purchased client capacity a single career can ever
   carry (+10), enforced at **delivery** (`iapCapOwned()`'s clamp and `iapAfterDeliver()`).
   It is not a balance dial you can raise alone: it sits on top of the whole `maxClients()`
@@ -1459,7 +1524,7 @@ janky on a phone. Any future view with live listeners needs the same moves.
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 546 today (measured 1 Oct 2026), but count them rather than
+  counts must match — 548 today (measured 7 Oct 2026), but count them rather than
   trusting this line; it has been stale before. Objects returned from events, themes,
   branches and rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before
   adding a key, check it isn't taken — `archLbl` already meant "Archive" and a

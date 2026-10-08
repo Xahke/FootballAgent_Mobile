@@ -5180,7 +5180,7 @@ pitchNo:'Oyuncu teklifini geri çevirdi.',full:'Müşteri kapasiten dolu.',noCas
 freeAgents:'Temsilcisi Olmayan Oyuncular',
 seasonEnd:'Sezon Bitti',champion:'Şampiyonlar',topScorer:'Gol Kralı',newSeason:'Yeni Sezon',
 expiring:'Sözleşme bitiyor',wantsNew:'Yeni sözleşme istiyor',wantsOut:'Transfer istiyor',
-commission:'Komisyon',signBonus:'İmza bedeli payı',avgRating:'Güç',
+commission:'Komisyon',signBonus:'İmza bedeli payı',feeBasis:'Yalnız eklenen yıllar ve zam farkı için ödenir.',negYrsOver:'Kulüp bu yaşta {n} yıldan uzun süreye sıcak bakmıyor — kabul şansı düşüyor.',avgRating:'Güç',
   capacity:'Kapasite',weeklyCost:'Haftalık gider',permanent:'kalıcı',
 hasAgent:'Bu oyuncunun menajeri var.',myClient:'Müşterin',
 gk:'Kaleciler',df:'Defans',mf:'Orta Saha',fw:'Forvet',
@@ -5501,7 +5501,7 @@ pitchNo:'The player turned you down.',full:'Client roster is full.',noCash:'Not 
 freeAgents:'Unrepresented Players',
 seasonEnd:'Season Over',champion:'Champions',topScorer:'Top Scorer',newSeason:'New Season',
 expiring:'Contract expiring',wantsNew:'Wants a new contract',wantsOut:'Wants a transfer',
-commission:'Commission',signBonus:'Signing fee cut',avgRating:'Rating',
+commission:'Commission',signBonus:'Signing fee cut',feeBasis:'Paid on the years you add and on the raise only.',negYrsOver:'At his age the club is wary of going past {n} years — your chances drop.',avgRating:'Rating',
   capacity:'Capacity',weeklyCost:'Weekly overhead',permanent:'permanent',
 hasAgent:'This player already has an agent.',myClient:'Your client',
 gk:'Goalkeepers',df:'Defence',mf:'Midfield',fw:'Attack',
@@ -11879,16 +11879,34 @@ function freeAgents(){return S.players.filter(p=>p.team<0);}
    komisyon oranını o belirliyor. Bu yüzden tırmanışın uzun olması gerekiyor.
 
    Azalan verim: yükseldikçe aynı iş daha az getirir. Adı olmayan menajer için
-   orta seviye bir transfer olaydır; adı olan için rutindir. Kayıplar tam değerde
-   işler — skandal her seviyede aynı zarar. */
+   orta seviye bir transfer olaydır; adı olan için rutindir.
+
+   İki sayı üst ucu belirliyor ve ikisi de ölçülerek seçildi:
+
+   REP_FLOOR — kazanç sönümlemesinin tabanı. 0,15 iken itibar ~106'dan sonra her
+   kazancın %85'i siliniyordu ve iyi oynanan yirmi sezonluk kariyer 109-111'de
+   duruyordu: yetenek ağacının 32 puanından 12-14'ü, ikinci bölüm hiç açılmıyordu.
+
+   REP_LOSS — kayıpların inebileceği en düşük ağırlık. Kayıplar eskiden hiç
+   sönümlenmiyordu ("skandal her seviyede aynı zarar"); taban devredeyken bu,
+   bir kaybın aynı büyüklükteki kazancın 6,7 katı ağırlık taşıması demekti.
+   Tek bir müşteri bırakmak sekiz sözleşme imzasını siliyor, zayıf müşteriyi
+   bırakıp iyisini almak itibarı DÜŞÜRÜYORDU. Kayıp artık kazançla aynı eğriyi
+   izliyor ama yarının altına inmiyor: büyük ajansın skandalı küçülür, kaybolmaz.
+
+   İkisi ayrı ayrı yetmiyor (taban tek başına 96-128, kayıp sönümü tek başına
+   107-127); birlikte yirminci sezon 133-157, yani iki bölüm tam. Üçüncü bölüm
+   (itibar 285) bilerek ulaşılmaz kalıyor. */
 const REP_SOFT=125;          // büyüdükçe kazanç bu eğriyle sönümlenir
-function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,0.15,1);}
+const REP_FLOOR=0.30;        // kazancın inebileceği en düşük pay (itibar ~88'den sonra)
+const REP_LOSS=0.5;          // kaybın inebileceği en düşük pay (itibar ~63'ten sonra)
+function repFactor(){return clamp(1-(S.rep||0)/REP_SOFT,REP_FLOOR,1);}
 function repEvent(delta,raw){
   if(!delta)return S.rep;
   /* skillBonus('repg') — yetenek ağacının itibar kazancına tek dokunduğu yer.
-     Kayıplara uygulanmıyor: skandal her seviyede aynı zarar. */
+     Kayıplara uygulanmıyor: bonus kazancı büyütür, zararı küçültmez. */
   const gain=delta>0?delta*(1+skillBonus('repg')):delta;
-  const d=delta>0&&!raw?gain*repFactor():gain;
+  const d=raw?gain:delta>0?gain*repFactor():gain*Math.max(repFactor(),REP_LOSS);
   const before=agentLevel();
   /* stat() BİLEREK kullanılmıyor. stat() 0-100 arası durum değerleri içindir —
      moral, güven, form; onlarda 100 tavanı doğrudur. İtibar durum değeri değil,
@@ -11943,10 +11961,25 @@ function weeklyIncome(){
 /* Ajansın sabit gideri: ofis + müşteri başına idari yük + her keşif ağının bakımı.
    Başlangıçta küçük tutuluyor ki ilk transferini yapmaya vaktin olsun; ağ genişledikçe
    ve isim yaptıkça büyüyor, böylece "nereye kadar büyüyeceğim" gerçek bir karar oluyor. */
+/* Menajerin kendi bölgesi. Kayda ayrı bir alan yazılmıyor: createAgent() S.known'ı
+   aynı eşlemeyle (NAT2CTRY) dolduruyor, buradaki de ondan türüyor — eski kayıtlar
+   da S.agent.nat taşıdığı için kendiliğinden doğru cevabı veriyor. */
+function homeCtry(){return NAT2CTRY[S&&S.agent?S.agent.nat:'']||'WAF';}
+/* Bakım yalnız SENİN KURDUĞUN ağlar için işler; kendi ülkenin ligleri bedelsiz.
+   İki gerekçe, ikisi de ölçüldü:
+   - Başlangıç ülkesi gideri sessizce belirliyordu. Bakım lig gücüne endeksli
+     olduğu için güçlü ligli bir ülkeden başlayan menajer, itibarının yetmediği
+     oyuncuların ağına sezonda ~70K ödüyor, zayıf ligli ülkeden başlayan ~9K.
+   - İmza payı yalnız eklenen yıllara indirildiğinde (bkz. actions.js: signFeeFor)
+     ilk üç sezonun geliri sezon başına ~37K düştü ve iki müşterili menajerin
+     yapısal açığı kasayı iki sezonda bitirir hâle geldi. Türkiye başlangıcında
+     bu kalem sezonda ~51K.
+   Geç oyunda etkisi yok: orada gider gelirin yüzde birkaçı. */
 function weeklyCost(){
   const office=1+S.rep*0.03;
   const admin=S.clients.length*0.6;
-  const scouts=(S.known||[]).reduce((s,i)=>s+scoutCost(i)*0.0025,0);
+  const home=homeCtry();
+  const scouts=(S.known||[]).reduce((s,i)=>s+(LEAGUES[i]&&LEAGUES[i].ctry===home?0:scoutCost(i)*0.0025),0);
   const cut=1-clamp(skillBonus('cost'),0,0.6);
   /* agMod('cost') olaylardan gelen kalıcı gider farkı: büyük ofis artırır, sıkı yönetim azaltır */
   return Math.round((office+admin+scouts)*cut*(1+agMod('cost'))*10)/10;
@@ -11967,7 +12000,17 @@ function iapCap(){return iapCapOwned();}
    defteri PREFS'te (js/iap.js). İsteğe bağlı ÖDÜLLÜ reklamı kapatmıyor — onu
    kullanıcı kendi dokunuşuyla açıyor ve karşılığında ödül alıyor. */
 function iapNoAds(){return iapNoAdsOwned();}
-function maxClients(){return 2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')+iapCap();}
+/* İtibardan gelen kapasite: her CAP_REP.step itibarda bir masa, ilki CAP_REP.lead
+   puan erken. Eşikler 10, 28, 46, 64, 82, 100 — eskiden 18, 36, 54, 72, 90'dı.
+
+   Neden öne çekildi: işten gelen itibar müşteri sayısıyla büyüyor (iki müşteride
+   sezonda ~2 puan) ve üçüncü masa itibar 18 istiyordu; az müşteri az itibar, az
+   itibar az müşteri demekti. Ölçüldü: sıradan oynayan kariyerin altı tohumundan
+   yalnız ikisi altıncı sezonda üçüncü müşteriye ulaşıyordu, eşik 10'dayken altısı.
+   Her itibar düzeyinde eskisine göre en fazla bir masa fazla veriyor. */
+const CAP_REP={step:18, lead:8};
+function repSlots(){return Math.floor(((S.rep||0)+CAP_REP.lead)/CAP_REP.step);}
+function maxClients(){return 2+repSlots()+skillBonus('cap')+agMod('cap')+iapCap();}
 function repCap(){return 58+S.rep*0.38;}
 function repNeedFor(r){return Math.max(0,Math.ceil((r-58)/0.38));}
 /* a player's public profile: big-club players and hyped wonderkids demand reputable agents,
@@ -12347,10 +12390,20 @@ function nextWeek(){
     S.pendC=S.pendC.filter(y=>y!==x);
     const p=byId(x.pid);
     if(!p||p.agent!=='you')return;
+    /* Pay anlaşma anında kayda yazıldı (bkz. actions.js: signFeeFor). x.fee'siz
+       kayıt bu alandan önce anlaşılmış bir sözleşmedir: aynı kuralla, oyuncunun
+       ŞİMDİKİ maaşı ve kalan yılı üzerinden hesaplanır — bu yüzden p.wage/p.yrs
+       yazılmadan önce. */
+    const fee=x.fee!==undefined?x.fee:signFeeFor(p,x.wage,x.years,x.rate||commissionRate());
     p.wage=x.wage;p.yrs=x.years;
     p.morale=clamp(Math.max(p.morale+25,65),0,100);p.ignored=0;p.hm=(S.tw||0)+8;
-    const fee=Math.round(x.wage*52*x.years*(x.rate||commissionRate()));
-    S.cash+=fee;repEvent(0.7);
+    S.cash+=fee;
+    /* İtibar da paranın izlediği kuralı izler: anlaşmanın KATTIĞI kadar. Eskiden
+       her imza içeriğine bakmadan +0,7 veriyordu; yenileme 45 haftada bir yeniden
+       açıldığı için maaşı da süresi de değişmeyen imzalar itibar üretiyordu.
+       Ölçüldü: geç oyunda sezonda ~17 yenileme, yazılan itibarın yarısı buradan.
+       signRepFor() tutarı imza payından türetiyor, yani ikisi ayrışamaz. */
+    repEvent(signRepFor(fee,x.wage,x.rate||commissionRate()));
     pushNews('contractSigned',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team,y:x.years,w:fmtK(x.wage),f:fmtK(fee)},'good');
   });
   /* --- taksitli komisyon ödemeleri --- */
@@ -13493,6 +13546,49 @@ function effPush(out,k,before,after,dp){
   if(!isFinite(d)||d===0)return;
   out.push({k,v:d});
 }
+/* ===== olay maliyetinin ölçeği =====
+   Olayların nakit bedelleri sabit yazılmış (−95K, −120K, −140K...) ve kariyerin
+   her anında aynı. Geç oyunda bu yuvarlama hatası; başlangıçta ise 250K'lık
+   kasanın yarısı. Ölçüldü: iki müşterili menajerde olayların altı sezonluk net
+   etkisi −300K ile −655K arasında, yani sabit giderin tamamı kadar — ve borca
+   düşen kariyerleri düşmeyenlerden ayıran en büyük oynaklık kaynağı buydu.
+
+   Küçük ajansa küçük fatura: bedel itibarla birlikte büyür ve EV_COST.full
+   itibarda yazıldığı tutara ulaşır. İtibar okunuyor, kasa değil — kasaya bağlı
+   bir indirim, olaydan önce parayı harcayarak satın alınabilirdi.
+
+   Yalnız BEDELLER ölçeklenir. Kazançlar yazıldığı gibi kalır; kalıcı ajans
+   değişikliği (r.ag) taşıyan sonuç ise bir yatırımdır — kapasite ya da gider
+   satın alıyorsun — ve fiyatı indirilmez.
+
+   Tek çağrı yeri evChoose() (js/ui.js). applyEff() bilerek dokunulmadan
+   bırakıldı: ayartma masası da oradan geçiyor ve onun bedeli zaten müşterinin
+   maaşına endeksli. */
+const EV_COST={lo:0.35, full:40};
+function evCostScale(){return clamp(EV_COST.lo+(1-EV_COST.lo)*((S&&S.rep)||0)/EV_COST.full,EV_COST.lo,1);}
+/* İtibar KAYBI da aynı ölçekten geçiyor. Adı duyulmamış menajerin skandalı haber
+   değildir: −3'lük bir olay itibar 7'deki menajerin elindekinin %40'ını,
+   itibar 90'dakinin %3'ünü götürüyordu. Ölçüldü: iki müşterili menajerde işten
+   gelen itibar sezonda ~2 puan, olay kaybı ise −2,9 — sıradan oynayan kariyer
+   altı tohumun beşinde on iki sezon boyunca iki müşteride kaldı, aynı kariyer
+   yalnız olay seçimini değiştirerek itibar 77-90'a çıkıyordu. Kötü seçim hâlâ
+   kayıp; ama kariyeri kilitleyen şey olmaktan çıkıyor.
+   Kazançlar burada da yazıldığı gibi kalır. Kayıp, r.ag olsa da ölçeklenir:
+   yatırım istisnası fiyat içindir, itibar için değil. */
+function evScaled(r){
+  if(!r)return r;
+  const k=evCostScale();
+  if(k>=1)return r;
+  const cost=r.cash<0&&!r.ag, loss=r.rep<0;
+  if(!cost&&!loss)return r;
+  /* Kopya dönüyor: eff() her çağrıda taze nesne üretiyor ama buna güvenmek
+     gerekmiyor. Alt sınırlar (1K, 0,1 itibar) sıfıra yuvarlanmayı önlüyor —
+     sıfırlanan bedel "bedelsiz seçenek" olurdu. */
+  const o=Object.assign({},r);
+  if(cost)o.cash=Math.min(-1,Math.round(r.cash*k));
+  if(loss)o.rep=Math.min(-0.1,Math.round(r.rep*k*10)/10);
+  return o;
+}
 /* Tek uygulayıcı: bütün olaylar aynı kaldıraçlardan geçer. */
 function applyEff(r,c){
   const out=[];
@@ -13999,12 +14095,59 @@ function clubMaxWage(p){
   const floor=p.age<=30?1.06:p.age<=32?1.00:0.92;
   return Math.max(base,p.wage*floor);
 }
-/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler. */
-function negChance(p,wage,patience){
+/* ===== sözleşme süresi =====
+   Kulübün gönül rahatlığıyla bağlanacağı en uzun süre oyuncunun yaşına bağlı:
+   genç oyuncuyu beş yıl kilitlemek ister, otuzunu geçmiş oyuncuya uzun sözleşme
+   vermek risktir. Bu sürenin üstündeki her yıl kabul şansından NEG_YRS.over
+   kadar götürür; altı serbesttir.
+
+   Neden var: süre eskiden kabul şansına hiç girmiyordu, imza payı ise süreyle
+   çarpılıyordu — kaydırıcının tek doğru cevabı vardı (5 yıl). Seçenek sunan ama
+   seçim gerektirmeyen bir kontrol karar değildir. */
+const NEG_YRS={over:0.08};
+function clubYears(p){return p.age<=23?5:p.age<=26?4:p.age<=29?3:p.age<=31?2:1;}
+function negYearsPen(p,years){return Math.max(0,years-clubYears(p))*NEG_YRS.over;}
+/* İmza payı — tek hesap yeri. Ekrandaki satır, anlaşma anında kayda yazılan tutar
+   ve eski kayıtların imza günündeki hesabı buradan geçiyor.
+
+   Yalnız yeni kazanılan kısım ödenir: sözleşmeye EKLENEN yıllar yeni maaş
+   üzerinden, zaten duran yıllar ise yalnız ZAM FARKI üzerinden. Eski hesap her
+   yenilemede sözleşmenin tamamını (maaş × 52 × yıl) baştan ödüyordu; yenileme
+   45 haftada bir yeniden açılabildiği için aynı yılların komisyonu her sezon
+   yeniden tahsil ediliyordu ve haftalık komisyon bunun üstüne ayrıca geliyordu.
+   Ölçüldü: 12. sezonda imza payı haftalık komisyonun beş katıydı.
+
+   Bu hâliyle bir kariyerde ödenen toplam yıl, geçen süreyle sınırlı: sözleşme
+   bugünden en çok beş yıl öteye uzanabildiği için yenilemenin zamanlaması
+   toplamı büyütemez. Sözleşmesi biten oyuncuyu uzun süreye bağlamak eskisine
+   yakın öder; dört yılı duran oyuncuyu yeniden beş yıla çekmek bir yıl öder. */
+function signFeeFor(p,wage,years,rate){
+  const left=Math.max(0,p.yrs||0);
+  const added=Math.max(0,years-left), kept=Math.min(years,left);
+  return Math.round((wage*added+Math.max(0,wage-p.wage)*kept)*52*rate);
+}
+/* Bir imzanın itibarı: anlaşmanın kattığı "yıl karşılığı" ile orantılı.
+   Yıl karşılığı = imza payı / (bir yıllık komisyon) — yani eklenen yıllar artı
+   zam farkının duran yıllara düşen payı. NEG_REP.yrs yıl karşılığında tam tutar
+   (NEG_REP.full) verilir, altı orantılı, sıfır katkı sıfır itibar.
+
+   Eşik yerine oran: "pay sıfırdan büyükse ver" kuralı 1K'lık zamla aşılırdı.
+   Sözleşmesi biten oyuncuyu üç yıla bağlamak tam tutarı verir; dört yılı duran
+   oyuncuya bir yıl ve küçük bir zam eklemek yarısından azını. */
+const NEG_REP={full:0.7, yrs:2};
+function signRepFor(fee,wage,rate){
+  const year=wage*52*rate;
+  if(!(year>0)||!(fee>0))return 0;
+  return Math.round(NEG_REP.full*clamp(fee/year/NEG_REP.yrs,0,1)*100)/100;
+}
+/* Kabul olasılığı — bar da bu değeri gösterir, yani çubuk gerçeği söyler.
+   Süre verilmezse masadaki süre okunur. */
+function negChance(p,wage,patience,years){
   const ratio=wage/negCtx.max;
   const trustBonus=(trustOf(p)-55)/600;
   return clamp(clamp(1.5-ratio,0.05,0.92)*(0.65+0.35*patience/100)
-               +S.rep/500+trustBonus+skillBonus('neg'),0,1);
+               +S.rep/500+trustBonus+skillBonus('neg')
+               -negYearsPen(p,years===undefined?negCtx.years:years),0,1);
 }
 function openNeg(pid){
   const p=byId(pid);
@@ -14048,10 +14191,11 @@ function renderNeg(){
      <input type="range" min="${sMin}" max="${sMax}" value="${clamp(negCtx.wage,sMin,sMax)}"
         oninput="negCtx.wage=+this.value;renderNeg()">
      <div style="margin-top:12px"><b style="font-size:12.5px">${t('contractLen')}: <span class="num">${negCtx.years} ${t('yrs')}</span></b>
-       <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()"></div>
+       <input type="range" min="1" max="5" value="${negCtx.years}" oninput="negCtx.years=+this.value;renderNeg()">
+       ${negCtx.years>clubYears(p)?`<div class="faint" style="font-size:11.5px;margin-top:4px;color:var(--warn)">${t('negYrsOver').replace('{n}',clubYears(p))}</div>`:''}</div>
      ${negCtx.counter?`<div class="counterCard">
-       <b style="color:var(--warn)">${t('counter')}: ${fmtK(negCtx.counter)}/${t('wk')}</b><br>
-       <span class="faint" style="font-size:11.5px">${L==='tr'?'Bu rakamı ya da altını seçersen anlaşma kesin.':'Match it or go lower to seal the deal.'}</span></div>`:''}
+       <b style="color:var(--warn)">${t('counter')}: ${fmtK(negCtx.counter)}/${t('wk')} · ${negCtx.cYears} ${t('yrs')}</b><br>
+       <span class="faint" style="font-size:11.5px">${L==='tr'?'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.':'Match the wage and length (or go lower) to seal the deal.'}</span></div>`:''}
      <div style="margin-top:14px;display:flex;justify-content:space-between;font-size:11px">
        <span class="sub" style="font-weight:700">${t('clubMood')}</span>
        <b class="num" style="color:${mc}">%${Math.round(mood)}</b></div>
@@ -14059,7 +14203,8 @@ function renderNeg(){
      <div class="divider" style="margin:12px 0"></div>
      <div style="display:flex;justify-content:space-between;font-size:12px">
        <span class="sub">${t('signBonus')} · %${commissionPct()}</span>
-       <b class="num" style="color:var(--gold)">${fmtK(Math.round(negCtx.wage*52*negCtx.years*commissionRate()))}</b></div>
+       <b class="num" style="color:var(--gold)">${fmtK(signFeeFor(p,negCtx.wage,negCtx.years,commissionRate()))}</b></div>
+     <div class="faint" style="font-size:11px;margin-top:4px">${t('feeBasis')}</div>
    </div>
    <button class="btn p" onclick="negSubmit()">${t('send')}</button>
    <button class="btn s" style="margin-top:8px" onclick="closeModal()">${t('walkAway')}</button>`);
@@ -14068,13 +14213,21 @@ function negSubmit(){
   const p=byId(negCtx.pid);
   const ratio=negCtx.wage/negCtx.max;
   /* accepting the club's own counter (or less) always seals the deal */
-  const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02);
+  /* Karşı teklif maaşla birlikte süreyi de taşıyor: yalnız maaşı tutturup süreyi
+     beş yılda bırakmak kesin anlaşma sayılsaydı, süre cezası ilk red sonrasında
+     bedelsiz aşılırdı. */
+  const meetsCounter=negCtx.counter&&negCtx.wage<=Math.ceil(negCtx.counter*1.02)
+    &&negCtx.years<=negCtx.cYears;
   /* Ekrandaki çubukla birebir aynı hesap — gördüğün oran gerçek oran. */
   const acc=meetsCounter?1:negChance(p,negCtx.wage,negCtx.patience);
   if(RF()<acc){
-    /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar */
+    /* anlaşma sağlandı — imzalar birkaç hafta içinde atılır, komisyon imzada yatar.
+       Pay ANLAŞMA anında hesaplanıp kayda yazılıyor: ekranda görülen tutar odur ve
+       imzaya kadar geçen haftalarda oyuncunun kalan yılı değişirse kaymamalı. */
+    const rate=commissionRate();
     S.pendC=S.pendC||[];
-    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,rate:commissionRate(),at:(S.tw||0)+R(1,2)});
+    S.pendC.push({pid:p.id,wage:negCtx.wage,years:negCtx.years,rate,
+      fee:signFeeFor(p,negCtx.wage,negCtx.years,rate),at:(S.tw||0)+R(1,2)});
     p.morale=clamp(p.morale+10,0,100);p.ignored=0;p.hm=(S.tw||0)+4;
     /* Yeni imzadan sonra kulüp uzun süre masaya oturmaz. */
     p.rnw=(S.tw||0)+45;
@@ -14090,6 +14243,9 @@ function negSubmit(){
     } else {
       const counter=Math.round(negCtx.max*(0.82+RF()*0.12));
       negCtx.counter=counter;
+      /* Kulüp kendi rahat ettiği süreyi geçmez; daha kısasını istediysen o kalır. */
+      negCtx.cYears=Math.min(negCtx.years,clubYears(p));
+      negCtx.years=negCtx.cYears;
       negCtx.wage=Math.min(negCtx.wage,Math.round(counter*1.15));
       toast(`${t('counter')}: ${fmtK(counter)}/${t('wk')}`);
       renderNeg();
@@ -14328,42 +14484,83 @@ function doTransfer(p,b,fee,quiet,terms){
 /* ================= PITCH / CLIENTS ================= */
 /* ===== representation meeting: talk your way in ===== */
 const REACT={
- good:{tr:['"Bunu duymak güzel."','"İşte bunu bekliyordum."','"Ciddi olduğunu görebiliyorum."','"Devam et, dinliyorum..."'],
-       en:['"Good to hear that."','"That\'s what I was waiting for."','"I can see you\'re serious."','"Go on, I\'m listening..."']},
+ good:{tr:['"Bak bu hoşuma gitti."','"İşte bunu bekliyordum."','"Ciddisin, belli."','"Devam et, dinliyorum..."'],
+       en:['"Now that I like."','"That\'s what I was waiting for."','"You mean it. I can tell."','"Go on, I\'m listening..."']},
  mid: {tr:['"Hmm... olabilir."','"Dinliyorum."','"Bakalım."'],
        en:['"Hmm... maybe."','"I\'m listening."','"We\'ll see."']},
  bad: {tr:['"Bana masal anlatma."','"Bunu her menajer söylüyor."','"Pek inandırıcı değil."'],
        en:['"Don\'t tell me fairy tales."','"Every agent says that."','"Not very convincing."']}
 };
 const LINES=[
- {tr:'“Seni oynayacağın, gelişeceğin kulüplere taşıyacağım — kulübede çürümek yok.”',
-  en:'“I\'ll move you to clubs where you actually play and grow — no rotting on the bench.”',
+ {tr:'“Seni oynayacağın, gelişeceğin kulüplere taşıyacağım. Kulübede çürümek yok.”',
+  en:'“I\'ll move you to clubs where you actually play and grow. No rotting on the bench.”',
   eff:c=>c.young?10:c.veteran?-6:3},
- {tr:'“Kulübünde mutsuzsun, görüyorum. Sana hemen yeni bir takım bulurum.”',
-  en:'“I can see you\'re unhappy here. I\'ll find you a new club right away.”',
+ {tr:'“Burada işler yürümüyorsa beklemenin anlamı yok. İlk pencerede sana yeni bir kulüp bulurum.”',
+  en:'“If it isn\'t working here, there\'s no point waiting it out. I\'ll find you a new club by the next window.”',
   eff:c=>c.unhappy?12:c.ambitious?7:c.content?-8:-2},
- {tr:'“Maaşını hak ettiğin seviyeye ben çekerim — masada kimse beni geçemez.”',
-  en:'“I\'ll get your wage to the level you deserve — nobody out-negotiates me.”',
+ {tr:'“Hak ettiğin parayı almıyorsun. Aradaki farkı kulüpten ben alırım.”',
+  en:'“You\'re not being paid what you\'re worth. I\'ll get the difference out of the club.”',
   eff:c=>c.lowWage?10:c.veteran?4:-1},
- {tr:'“Portföyüm küçük ama her müşterimle birebir ilgilenirim. Sen numara olmazsın.”',
-  en:'“My roster is small, but every client gets my full attention. You won\'t be a number.”',
+ {tr:'“Sen aradığında telefonu ben açarım, asistanım değil.”',
+  en:'“When you call, I pick up. Not an assistant.”',
   eff:c=>(S.rep<30?8:4)+(c.content?2:0)},
- {tr:'“Kariyerini uzun vadeli planlarız — acele kararlarla geleceğini yakmayız.”',
-  en:'“We\'ll plan your career long-term — no rushed moves that burn your future.”',
+ {tr:'“Acele etmeyiz. Yanlış kulüpte geçen bir sezonu kimse sana geri vermez.”',
+  en:'“We don\'t rush. Nobody gives you back a season spent at the wrong club.”',
   eff:c=>c.unhappy?-7:c.veteran?9:c.content?6:1},
- {tr:'“Büyük kulüplerle bağlantılarım var — doğru kapıları açarım.”',
-  en:'“I have connections at the big clubs — I open the right doors.”',
+ {tr:'“Büyük kulüplerle bağlantılarım var. Doğru kapıları açarım.”',
+  en:'“I have connections at the big clubs. I open the right doors.”',
   eff:c=>S.rep>=45?(c.ambitious?11:5):-9},
- {tr:'“Komisyonum düşüktür — kazandığın senin cebinde kalır.”',
-  en:'“My commission is low — what you earn stays in your pocket.”',
+ {tr:'“Ben senin kazandığından pay alırım. Sen kazanmadan ben kazanmam.”',
+  en:'“I take a cut of what you earn. If you don\'t earn, neither do I.”',
   eff:c=>c.lowWage?6:c.veteran?5:2},
- {tr:'“Seni haftalardır izliyorum — sahadaki gelişimin gerçekten etkileyici.”',
-  en:'“I\'ve been watching you for weeks — your progress on the pitch is impressive.”',
+ {tr:'“Seni tesadüfen bulmadım. Haftalardır maçlarını izliyorum.”',
+  en:'“I didn\'t find you by accident. I\'ve been watching your games for weeks.”',
   eff:c=>(c.form>65?7:2)+(c.ambitious?2:0)},
  {tr:'“Acele etme. Ailenle konuş, kararını içine sinerek ver.”',
   en:'“Take your time. Talk to your family, decide when it feels right.”',
-  eff:c=>c.unhappy?-6:c.content?8:c.veteran?5:1}
+  eff:c=>c.unhappy?-6:c.content?8:c.veteran?5:1},
+ {tr:'“İlk iki sene para konuşmayız, dakika konuşuruz.”',
+  en:'“First two years we don\'t talk money. We talk minutes.”',
+  eff:c=>c.veteran?-7:c.young?(c.lowWage?3:10):c.lowWage?-6:1},
+ {tr:'“Bu kulüp sana küçük geliyor, ikimiz de biliyoruz.”',
+  en:'“This club is too small for you. We both know it.”',
+  eff:c=>c.ambitious?11:c.content?-8:c.unhappy?5:-2},
+ {tr:'“Son sözleşmen en iyi sözleşmen olmalı.”',
+  en:'“Your last contract should be your best one.”',
+  eff:c=>c.veteran?10:c.young?-6:0},
+ {tr:'“Futbol bitince telefonun susmasın. Onu da şimdiden düşünürüz.”',
+  en:'“The phone shouldn\'t go quiet when you retire. We plan for that now.”',
+  eff:c=>c.veteran?8:c.young?-5:-1},
+ {tr:'“Söz vermem. Olanı da olmayanı da yüzüne söylerim.”',
+  en:'“I don\'t make promises. Good news or bad, you hear it from me.”',
+  eff:c=>c.unhappy?-5:c.veteran?6:c.content?5:2},
+ {tr:'“Kötü bir dönemdesin. Ben oyuncuyu iyi gününde değil, böyle günde imzalarım.”',
+  en:'“You\'re in a rough patch. That\'s when I sign a player, not on his good days.”',
+  eff:c=>c.form<45?(c.unhappy?12:9):c.form>65?-8:c.unhappy?5:0},
+ {tr:'“Seni izleyen tek kişi ben değilim. Teklif gelecek, hazırlıklı olalım.”',
+  en:'“I\'m not the only one watching you. Offers are coming. Let\'s be ready.”',
+  eff:c=>c.form>65?(c.ambitious?11:8):c.form<45?-7:c.ambitious?3:1},
+ {tr:'“Yerinden memnunsan kimse seni zorla götüremez. Ben sadece kapıyı açık tutarım.”',
+  en:'“If you\'re happy here, nobody moves you. I just keep the door open.”',
+  eff:c=>c.unhappy?-8:c.content?9:2}
 ];
+/* Havuz dokuzdan büyük: her görüşme 9 cümle çeker, yani ekrana gelen küme
+   görüşmeden görüşmeye değişir. Tek kural her turda en az bir işe yarar cümle
+   bulunması — üç seçeneğin üçü de eksiyse tur beceri değil şans olur.
+   Eşik 4: pickLine()'daki ±2 oynama onu eksiye çeviremez. */
+const MEET_GOOD=4;
+function meetOrder(ctx){
+  const sh=a=>a.sort(()=>RF()-0.5);
+  const all=LINES.map((l,i)=>({i,e:l.eff(ctx)}));
+  let good=all.filter(x=>x.e>=MEET_GOOD);
+  /* Eşiği geçen üç cümle yoksa en iyi üçü çapa olur: garanti zayıflar ama tur boş kalmaz. */
+  if(good.length<3)good=all.slice().sort((a,b)=>b.e-a.e).slice(0,3);
+  const anchors=sh(good.slice()).slice(0,3).map(x=>x.i);
+  const rest=sh(all.map(x=>x.i).filter(i=>!anchors.includes(i))).slice(0,6);
+  const order=[];
+  for(let r=0;r<3;r++)order.push(...sh([anchors[r],rest[r*2],rest[r*2+1]]));
+  return order;
+}
 function meetCtxOf(p){
   return {young:p.age<=21&&p.pot-p.r>=8, unhappy:p.morale<40,
     lowWage:p.wage<marketWage(p.r)*0.75, veteran:p.age>=30,
@@ -14382,8 +14579,8 @@ function openMeeting(pid){
   if(S.clients.length>=maxClients()){toast(t('full'));return;}
   if(pitchCd(p)>0){toast(t('rejectedCd'));return;}
   if(S.cash<pitchCost(p)){toast(t('noCash'));return;}
-  const order=LINES.map((_,i)=>i).sort(()=>RF()-0.5);
-  MT={pid,ctx:meetCtxOf(p),chance:Math.round(pitchChance(p)*100),round:0,order,react:null};
+  const ctx=meetCtxOf(p);
+  MT={pid,ctx,chance:Math.round(pitchChance(p)*100),round:0,order:meetOrder(ctx),react:null};
   renderMeeting();
 }
 function pickLine(li){
@@ -18271,7 +18468,8 @@ function evChoose(i){
     S.evCur=null;save();closeModal();render();
     return;
   }
-  const r=opt.eff(c)||{};
+  /* Bedel ajansın büyüklüğüne göre ölçekleniyor (bkz. events.js: evScaled). */
+  const r=evScaled(opt.eff(c)||{});
   const changes=applyEff(r,c);
   S.evCur=null;
   const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form'),

@@ -651,7 +651,7 @@ async function tCidSlotsAndCapacity() {
     for (const sk of ['[]', "['ag2']", "['ag2','ag4']"]) {
       for (const ag of ['{}', '{cap:1}', '{cap:3}']) {
         const got = a.R('S.rep=' + rep + ';S.skills=' + sk + ';S.ag=' + ag + ';maxClients()');
-        const want = a.R("2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')");
+        const want = a.R("2+repSlots()+skillBonus('cap')+agMod('cap')");
         n++;
         if (got !== want) bad.push(rep + '/' + sk + '/' + ag + ': ' + got + '≠' + want);
       }
@@ -2837,7 +2837,7 @@ async function tShopAndIap() {
     ok(a.R('iapCapOwned()') === 10, '(4) tavan bağlıyor');
     ok(a.R('iapCapLeft()') === 0, '(4) kalan hak sıfır');
     ok(a.R("iapState('cap1')") === 'full', '(4) tavanda ürün "doldu" diyor');
-    const base = a.R("2+Math.floor(S.rep/18)+skillBonus('cap')+agMod('cap')");
+    const base = a.R("2+repSlots()+skillBonus('cap')+agMod('cap')");
     ok(a.R('maxClients()') === base + 10, '(4) kapasite formüle TEK toplama olarak giriyor');
     a.R('delete S.iap;');
     ok(a.R('maxClients()') === base, '(4) defter yokken eski sonuç');

@@ -3755,7 +3755,8 @@ function evChoose(i){
     S.evCur=null;save();closeModal();render();
     return;
   }
-  const r=opt.eff(c)||{};
+  /* Bedel ajansın büyüklüğüne göre ölçekleniyor (bkz. events.js: evScaled). */
+  const r=evScaled(opt.eff(c)||{});
   const changes=applyEff(r,c);
   S.evCur=null;
   const lbl={cash:t('cash'),rep:t('rep'),morale:t('morale'),trust:t('trustL'),form:t('form'),
