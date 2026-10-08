@@ -352,42 +352,83 @@ function doTransfer(p,b,fee,quiet,terms){
 /* ================= PITCH / CLIENTS ================= */
 /* ===== representation meeting: talk your way in ===== */
 const REACT={
- good:{tr:['"Bunu duymak güzel."','"İşte bunu bekliyordum."','"Ciddi olduğunu görebiliyorum."','"Devam et, dinliyorum..."'],
-       en:['"Good to hear that."','"That\'s what I was waiting for."','"I can see you\'re serious."','"Go on, I\'m listening..."']},
+ good:{tr:['"Bak bu hoşuma gitti."','"İşte bunu bekliyordum."','"Ciddisin, belli."','"Devam et, dinliyorum..."'],
+       en:['"Now that I like."','"That\'s what I was waiting for."','"You mean it. I can tell."','"Go on, I\'m listening..."']},
  mid: {tr:['"Hmm... olabilir."','"Dinliyorum."','"Bakalım."'],
        en:['"Hmm... maybe."','"I\'m listening."','"We\'ll see."']},
  bad: {tr:['"Bana masal anlatma."','"Bunu her menajer söylüyor."','"Pek inandırıcı değil."'],
        en:['"Don\'t tell me fairy tales."','"Every agent says that."','"Not very convincing."']}
 };
 const LINES=[
- {tr:'“Seni oynayacağın, gelişeceğin kulüplere taşıyacağım — kulübede çürümek yok.”',
-  en:'“I\'ll move you to clubs where you actually play and grow — no rotting on the bench.”',
+ {tr:'“Seni oynayacağın, gelişeceğin kulüplere taşıyacağım. Kulübede çürümek yok.”',
+  en:'“I\'ll move you to clubs where you actually play and grow. No rotting on the bench.”',
   eff:c=>c.young?10:c.veteran?-6:3},
- {tr:'“Kulübünde mutsuzsun, görüyorum. Sana hemen yeni bir takım bulurum.”',
-  en:'“I can see you\'re unhappy here. I\'ll find you a new club right away.”',
+ {tr:'“Burada işler yürümüyorsa beklemenin anlamı yok. İlk pencerede sana yeni bir kulüp bulurum.”',
+  en:'“If it isn\'t working here, there\'s no point waiting it out. I\'ll find you a new club by the next window.”',
   eff:c=>c.unhappy?12:c.ambitious?7:c.content?-8:-2},
- {tr:'“Maaşını hak ettiğin seviyeye ben çekerim — masada kimse beni geçemez.”',
-  en:'“I\'ll get your wage to the level you deserve — nobody out-negotiates me.”',
+ {tr:'“Hak ettiğin parayı almıyorsun. Aradaki farkı kulüpten ben alırım.”',
+  en:'“You\'re not being paid what you\'re worth. I\'ll get the difference out of the club.”',
   eff:c=>c.lowWage?10:c.veteran?4:-1},
- {tr:'“Portföyüm küçük ama her müşterimle birebir ilgilenirim. Sen numara olmazsın.”',
-  en:'“My roster is small, but every client gets my full attention. You won\'t be a number.”',
+ {tr:'“Sen aradığında telefonu ben açarım, asistanım değil.”',
+  en:'“When you call, I pick up. Not an assistant.”',
   eff:c=>(S.rep<30?8:4)+(c.content?2:0)},
- {tr:'“Kariyerini uzun vadeli planlarız — acele kararlarla geleceğini yakmayız.”',
-  en:'“We\'ll plan your career long-term — no rushed moves that burn your future.”',
+ {tr:'“Acele etmeyiz. Yanlış kulüpte geçen bir sezonu kimse sana geri vermez.”',
+  en:'“We don\'t rush. Nobody gives you back a season spent at the wrong club.”',
   eff:c=>c.unhappy?-7:c.veteran?9:c.content?6:1},
- {tr:'“Büyük kulüplerle bağlantılarım var — doğru kapıları açarım.”',
-  en:'“I have connections at the big clubs — I open the right doors.”',
+ {tr:'“Büyük kulüplerle bağlantılarım var. Doğru kapıları açarım.”',
+  en:'“I have connections at the big clubs. I open the right doors.”',
   eff:c=>S.rep>=45?(c.ambitious?11:5):-9},
- {tr:'“Komisyonum düşüktür — kazandığın senin cebinde kalır.”',
-  en:'“My commission is low — what you earn stays in your pocket.”',
+ {tr:'“Ben senin kazandığından pay alırım. Sen kazanmadan ben kazanmam.”',
+  en:'“I take a cut of what you earn. If you don\'t earn, neither do I.”',
   eff:c=>c.lowWage?6:c.veteran?5:2},
- {tr:'“Seni haftalardır izliyorum — sahadaki gelişimin gerçekten etkileyici.”',
-  en:'“I\'ve been watching you for weeks — your progress on the pitch is impressive.”',
+ {tr:'“Seni tesadüfen bulmadım. Haftalardır maçlarını izliyorum.”',
+  en:'“I didn\'t find you by accident. I\'ve been watching your games for weeks.”',
   eff:c=>(c.form>65?7:2)+(c.ambitious?2:0)},
  {tr:'“Acele etme. Ailenle konuş, kararını içine sinerek ver.”',
   en:'“Take your time. Talk to your family, decide when it feels right.”',
-  eff:c=>c.unhappy?-6:c.content?8:c.veteran?5:1}
+  eff:c=>c.unhappy?-6:c.content?8:c.veteran?5:1},
+ {tr:'“İlk iki sene para konuşmayız, dakika konuşuruz.”',
+  en:'“First two years we don\'t talk money. We talk minutes.”',
+  eff:c=>c.veteran?-7:c.young?(c.lowWage?3:10):c.lowWage?-6:1},
+ {tr:'“Bu kulüp sana küçük geliyor, ikimiz de biliyoruz.”',
+  en:'“This club is too small for you. We both know it.”',
+  eff:c=>c.ambitious?11:c.content?-8:c.unhappy?5:-2},
+ {tr:'“Son sözleşmen en iyi sözleşmen olmalı.”',
+  en:'“Your last contract should be your best one.”',
+  eff:c=>c.veteran?10:c.young?-6:0},
+ {tr:'“Futbol bitince telefonun susmasın. Onu da şimdiden düşünürüz.”',
+  en:'“The phone shouldn\'t go quiet when you retire. We plan for that now.”',
+  eff:c=>c.veteran?8:c.young?-5:-1},
+ {tr:'“Söz vermem. Olanı da olmayanı da yüzüne söylerim.”',
+  en:'“I don\'t make promises. Good news or bad, you hear it from me.”',
+  eff:c=>c.unhappy?-5:c.veteran?6:c.content?5:2},
+ {tr:'“Kötü bir dönemdesin. Ben oyuncuyu iyi gününde değil, böyle günde imzalarım.”',
+  en:'“You\'re in a rough patch. That\'s when I sign a player, not on his good days.”',
+  eff:c=>c.form<45?(c.unhappy?12:9):c.form>65?-8:c.unhappy?5:0},
+ {tr:'“Seni izleyen tek kişi ben değilim. Teklif gelecek, hazırlıklı olalım.”',
+  en:'“I\'m not the only one watching you. Offers are coming. Let\'s be ready.”',
+  eff:c=>c.form>65?(c.ambitious?11:8):c.form<45?-7:c.ambitious?3:1},
+ {tr:'“Yerinden memnunsan kimse seni zorla götüremez. Ben sadece kapıyı açık tutarım.”',
+  en:'“If you\'re happy here, nobody moves you. I just keep the door open.”',
+  eff:c=>c.unhappy?-8:c.content?9:2}
 ];
+/* Havuz dokuzdan büyük: her görüşme 9 cümle çeker, yani ekrana gelen küme
+   görüşmeden görüşmeye değişir. Tek kural her turda en az bir işe yarar cümle
+   bulunması — üç seçeneğin üçü de eksiyse tur beceri değil şans olur.
+   Eşik 4: pickLine()'daki ±2 oynama onu eksiye çeviremez. */
+const MEET_GOOD=4;
+function meetOrder(ctx){
+  const sh=a=>a.sort(()=>RF()-0.5);
+  const all=LINES.map((l,i)=>({i,e:l.eff(ctx)}));
+  let good=all.filter(x=>x.e>=MEET_GOOD);
+  /* Eşiği geçen üç cümle yoksa en iyi üçü çapa olur: garanti zayıflar ama tur boş kalmaz. */
+  if(good.length<3)good=all.slice().sort((a,b)=>b.e-a.e).slice(0,3);
+  const anchors=sh(good.slice()).slice(0,3).map(x=>x.i);
+  const rest=sh(all.map(x=>x.i).filter(i=>!anchors.includes(i))).slice(0,6);
+  const order=[];
+  for(let r=0;r<3;r++)order.push(...sh([anchors[r],rest[r*2],rest[r*2+1]]));
+  return order;
+}
 function meetCtxOf(p){
   return {young:p.age<=21&&p.pot-p.r>=8, unhappy:p.morale<40,
     lowWage:p.wage<marketWage(p.r)*0.75, veteran:p.age>=30,
@@ -406,8 +447,8 @@ function openMeeting(pid){
   if(S.clients.length>=maxClients()){toast(t('full'));return;}
   if(pitchCd(p)>0){toast(t('rejectedCd'));return;}
   if(S.cash<pitchCost(p)){toast(t('noCash'));return;}
-  const order=LINES.map((_,i)=>i).sort(()=>RF()-0.5);
-  MT={pid,ctx:meetCtxOf(p),chance:Math.round(pitchChance(p)*100),round:0,order,react:null};
+  const ctx=meetCtxOf(p);
+  MT={pid,ctx,chance:Math.round(pitchChance(p)*100),round:0,order:meetOrder(ctx),react:null};
   renderMeeting();
 }
 function pickLine(li){
