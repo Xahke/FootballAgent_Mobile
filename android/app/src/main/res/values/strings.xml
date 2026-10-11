@@ -7,8 +7,8 @@
     <!-- Google Mobile Ads uygulama kimligi: bu uygulamanin GERCEK AdMob
          kimligi. UMP izin mesaji AdMob'da bu uygulama kaydina baglandigi icin
          gercek formun cizilebilmesi buna bagli.
-         Reklam BIRIMI bundan ayri ve hala Google'in ORNEK odullu birimi
-         (js/ads.js ADS.unit), istekler de isTesting ile gidiyor: gercek reklam
-         yayinlamaya gecis DEGIL. -->
+         Reklam BIRIMLERI bundan ayri (js/ads.js ADS.unit / ADS.iUnit) ve
+         onlar da gercek. Yalniz debug paketi ornek birim ister
+         (src/debug/.../ads-testcfg.js, testAds). -->
     <string name="admob_app_id">ca-app-pub-6695238757557885~9045271955</string>
 </resources>

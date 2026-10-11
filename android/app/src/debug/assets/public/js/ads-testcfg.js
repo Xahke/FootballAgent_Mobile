@@ -16,10 +16,15 @@
    yalnız SDK'nın gerçek cevabından geliyor; form yine Google'ın aracı
    tarafından çiziliyor ve kullanıcının seçimi olduğu gibi okunuyor.
 
+   testAds: reklam İSTEKLERİ isTesting ile gidiyor, yani eklenti gerçek birim
+   yerine Google'ın örnek birimini istiyor (js/ads.js adsTestAds). Emülatörde
+   ve CI'ın debug APK'sında gerçek birime istek atmak, geliştiricinin kendi
+   reklamını izlemesi demek olurdu — AdMob bunu geçersiz trafik sayar.
+
    Test cihazı kimliği de yok: UMP 2.2.0'dan beri emülatörler zaten varsayılan
    test cihazı, bu yüzden gerçek bir cihazın kimliğini depoya yazmak gerekmiyor.
 
    AdmobConsentDebugGeography.EEA = 1 (@capacitor-community/admob 8.1.0,
    consent/consent-debug-geography.enum) — sayı doğrudan yazılıyor çünkü bu
    dosya eklentinin modül kapsamına erişmiyor. */
-const ADS_TESTCFG = { debugGeography: 1 };
+const ADS_TESTCFG = { debugGeography: 1, testAds: true };

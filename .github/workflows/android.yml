@@ -239,9 +239,9 @@ jobs:
             :app:mergeReleaseAssets \
             :app:processReleaseMainManifest
 
-      # isTesting:true burada hata SAYILMAZ: paket hâlâ bilerek test reklam
-      # birimleriyle çalışıyor. Sorulan tek şey debug ayarının release'e
-      # taşınmadığı.
+      # Sorulan tek şey debug ayarının release'e taşınmadığı. O ayar iki şey
+      # taşıyor: AEA test coğrafyası ve test reklamı (testAds). Release null
+      # taşır ve gerçek reklam birimini ister.
       - name: release-2-yapilandirma
         run: node tools/check-release-config.js
 

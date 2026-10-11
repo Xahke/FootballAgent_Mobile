@@ -216,27 +216,37 @@ function simWeekRun(){
   });
   simCups();
 }
-/* ================= SEZON GEÇİŞİ REKLAM ARASI =================
-   İki gerçek geçiş var ve ikisi de FİKSTÜRDEN türüyor, sabit bir hafta
-   sayısından değil: sezon ortası transfer döneminin açıldığı hafta (core.js
-   midWeek(), yani ceil(totalWeeks()/2)+1) ve sezonun bittiği an (S.week
-   totalWeeks()'i aşınca). Lig uzunluğu değişirse ikisi de kendiliğinden kayar.
+/* ================= REKLAM ARASI =================
+   Her AD_BREAK.gap oynanan haftada bir. Sayaç S.tw — kariyer boyunca hiç
+   sıfırlanmayan toplam hafta — olduğu için aralık sezon sınırından da aynı
+   şekilde geçiyor: sezonun 36. haftasındaki aradan sonraki ara yeni sezonun
+   8. haftasında.
 
-   Hak KARİYER/SEZON BAŞINA BİRER. İşaret kariyer kaydında (S.adb) duruyor ve
-   save()'den ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi
-   ya da uygulamanın yeniden açılması aynı geçişi ikinci kez üretemesin.
+   Eskiden sezon başına iki ara vardı (sezon ortası ve sezon sonu). Seyrekti ve
+   kırılgandı: o iki andan birinde reklam yüklü değilse hak yanıyor, bir sonraki
+   fırsat yarım sezon sonra geliyordu — "reklam hiç çıkmıyor" şikâyetinin bir
+   yolu buydu. Kısa aralıkta kaçan bir ara yalnız gap hafta kaybettiriyor.
 
-   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa geçiş beklemiyor ve o
-   geçişin hakkı orada yanıyor — alternatifi, reklamı sonradan alakasız bir
-   ekranda açmaktı ve istenen tam olarak bunun olmaması.
+   İşaret kariyer kaydında (S.adb.w, son aranın S.tw'si) duruyor ve save()'den
+   ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi ya da
+   uygulamanın yeniden açılması aynı arayı ikinci kez üretemesin.
 
-   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor. */
-function adBreakClaim(kind,se){
+   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa hafta beklemiyor ve o
+   aranın hakkı orada yanıyor; reklam sonradan, alakasız bir ekranda açılmıyor.
+
+   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor ve ilk ara
+   hemen veriliyor. Eski biçimin m/e alanları okunmuyor, silinmiyor da. */
+const AD_BREAK={gap:10};
+function adBreakClaim(){
   if(!S)return '';
   const b=(S.adb&&typeof S.adb==='object')?S.adb:(S.adb={});
-  if(b[kind]===se)return '';
-  b[kind]=se;
-  return kind;
+  const tw=S.tw||0;
+  /* Sayı olmayan ya da ileride duran bir işaret "hiç ara verilmedi" sayılıyor:
+     bozuk bir alan reklamı sonsuza kadar kapatmasın. */
+  const last=(typeof b.w==='number'&&b.w>=0&&b.w<=tw)?b.w:0;
+  if(tw-last<AD_BREAK.gap)return '';
+  b.w=tw;
+  return 'w';
 }
 function nextWeek(){
   if(!S.agent){render();return;}
@@ -363,10 +373,9 @@ function nextWeek(){
   }
   S.week++;
   const seasonOver=S.week>totalWeeks();
-  /* Reklam arası hakkı endSeason()'dan ÖNCE isteniyor: endSeason() S.season'ı
-     artırıyor, sonra sorulsaydı biten sezonun hakkı yeni sezona yazılırdı. */
-  const brk=seasonOver?adBreakClaim('e',S.season)
-    :(S.week===midWeek()?adBreakClaim('m',S.season):'');
+  /* Reklam arası hakkı save()'den ÖNCE isteniyor: işaret diske bu haftayla
+     birlikte düşmeli. */
+  const brk=adBreakClaim();
   if(seasonOver)endSeason();
   const newN=S.inbox.filter(m=>!m.read).length-unreadBefore;
   if(newN>0&&cur().v!=='inbox'&&cur().v!=='dash')toast(newN+' '+t('newNotifsT'));
@@ -384,12 +393,14 @@ function nextWeek(){
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
-  /* EN SON: sezon ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
+  /* EN SON: hafta ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
      pencereleri sıraya girdi. Reklamın hiçbir sonucu buraya geri dönmüyor —
      kapanış ve hata yalnız js/ads.js'teki kilidi açıyor, oyun durumuna hiç
-     dokunmuyor — bu yüzden bir gösterim sezon ilerlemesini ikinci kez
-     çalıştıramaz. Hazır reklam yoksa adsInterShow() sessizce 'none' döner. */
-  if(brk&&typeof adsInterShow==='function')adsInterShow();
+     dokunmuyor — bu yüzden bir gösterim haftayı ikinci kez çalıştıramaz.
+     Hazır reklam yoksa adsInterShow() sessizce 'none' döner. Ara olmayan
+     haftalarda yalnız yüklü reklamın bayatlayıp bayatlamadığına bakılıyor. */
+  if(brk){if(typeof adsInterShow==='function')adsInterShow();}
+  else if(typeof adsInterKeep==='function')adsInterKeep();
 }
 function endSeason(){
   const myLgs=new Set(S.clients.map(id=>teamOf(byId(id)).lg));

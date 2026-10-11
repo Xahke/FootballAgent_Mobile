@@ -95,7 +95,7 @@ call time. The parts that are load-time real:
 | `js/i18n.js` | `L`, `STR{tr,en}` (548 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
-| `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + season-transition interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
+| `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
@@ -496,20 +496,30 @@ start regardless of our code. Those are separate measurements and they have not 
 `js/ads.js` gathers UMP consent, then plays a rewarded ad through
 `@capacitor-community/admob` (pinned to exactly `8.1.0`, which pulls
 `com.google.android.ump:user-messaging-platform:4.0.0`) and hands the result to the
-existing entitlement accounting in `js/reward.js`. It is a **technical trial**, not a
-shipped feature: no mediation is configured and **no real ad unit is wired** — both the
-rewarded and the interstitial requests use Google's *sample* ad units with
-`isTesting: true`. `js/ads.js` never touches `S.cash` — the only money path is still
-`rwEarned()`.
+existing entitlement accounting in `js/reward.js`. No mediation is configured. **The ad
+units are real since `versionCode 6`**: `ADS.unit` (`…/1522575976`, rewarded) and
+`ADS.iUnit` (`…/9143889001`, interstitial) belong to this app's own AdMob account, and a
+release build requests them with `isTesting: false`. Everything measured on a device
+before that — every "measured on the emulator" paragraph below — was measured against
+Google's *sample* units, and **the real units have not been measured on a device yet.**
+`js/ads.js` never touches `S.cash` — the only money path is still `rwEarned()`.
 
-**The AdMob *application* id is real and the *ad units* are samples. They are different
-things and the distinction is load-bearing.** `admob_app_id` in `strings.xml` is
-`ca-app-pub-6695238757557885~9045271955`, this app's own AdMob registration, and it has
-been since commit `fe390d5` — a UMP consent message can only be published against a real
-app registration, so the real form cannot be drawn without it. The ad units stay
-`ca-app-pub-3940256099942544/...`, which is what keeps this a test and not ad serving.
-There is no debug/release override of either: one `strings.xml` in `main`, no `resValue`,
-no `manifestPlaceholders`. If a doc line or a report ever says "sample app id", check
+**The debug package still asks for sample ads, and the split is the same asset override
+as the test geography.** `adsTestAds()` reads `ADS_TESTCFG.testAds`; only the debug
+source set's `ads-testcfg.js` sets it, and with `isTesting: true` the plugin discards the
+unit it was handed and requests Google's sample unit instead
+(`AdViewIdHelper.getFinalAdId`). The reason is account safety, not revenue: a real-unit
+request from an emulator or the CI debug APK is the developer watching their own ad. It
+is a separate reader from `adsTestOpts()` on purpose — that one builds the consent
+query's options, this one only the ad request — and anything other than a strict `true`
+is `false`.
+
+**The AdMob *application* id and the *ad units* are different things.** `admob_app_id` in
+`strings.xml` is `ca-app-pub-6695238757557885~9045271955` (note the `~`), this app's own
+AdMob registration since commit `fe390d5` — a UMP consent message can only be published
+against a real app registration. The ad units carry a `/` and live in `js/ads.js`.
+There is no debug/release override of the app id: one `strings.xml` in `main`, no
+`resValue`, no `manifestPlaceholders`. If a doc line or a report ever says "sample app id", check
 `strings.xml` before repeating it — this file said exactly that for one commit too long.
 
 **Two lifetimes, and conflating them is the easy bug.** `ADS.cur` is the *on-screen*
@@ -549,40 +559,50 @@ two needs a native change the plugin does not have today — a caller-supplied i
 the events plus a way for a new JS session to query and settle a pending result. That is
 a separate decision and nothing in this branch pretends it is solved.
 
-### Season transitions get one ad each, and the season engine owns the right
+### An ad break every ten played weeks, and the week engine owns the right
 
-There are exactly **two** automatic ad moments in a career-season, and both are read out
-of the fixture rather than assumed from a week number: the week the mid-season transfer
-window opens (`midWeek()` in core.js, `ceil(totalWeeks()/2)+1`) and the moment the season
-ends (`S.week > totalWeeks()`). Change the league length and both move on their own.
+The automatic interstitial comes up once every `AD_BREAK.gap` (10) **played** weeks. The
+counter is `S.tw` — the career's total week count, which never resets — so the interval
+runs straight through a season boundary: a break in week 36 is followed by one in week 8
+of the next season, not by an extra one at the rollover.
+
+It used to be two moments per season (the mid-season window and the season end). That
+was sparse *and* brittle: if no ad happened to be loaded at one of those two moments the
+right was spent anyway and the next chance was half a season away, which is one of the
+ways "the ads never show" came about. With a shorter interval a missed break costs ten
+weeks. (The interval was 5 for one uncommitted pass and was widened to 10 on request.) The function names in `js/ads.js` still say *inter*/"geçiş" from that era.
 
 **The right and the showing are two different jobs, in two different files.**
-`adBreakClaim(kind, season)` lives in `js/sim.js` because *which moment is a transition*
-and *whether that transition still has its ad* are season-engine facts; `adsInterShow()`
-lives in `js/ads.js` and only answers "can I show one right now". Neither asks the other's
-question.
+`adBreakClaim()` lives in `js/sim.js` because *which week is a break* and *whether that
+break still has its ad* are week-engine facts; `adsInterShow()` lives in `js/ads.js` and
+only answers "can I show one right now". Neither asks the other's question.
 
 | | |
 |---|---|
-| `S.adb` | `{m: <season>, e: <season>}` — the transitions already spent. Absent on every old save; built on first use |
+| `S.adb` | `{w: <S.tw of the last break>}`. Absent on every old save; built on first use, and an old save gets its first break on the first week it plays. The pre-interval `m`/`e` fields are neither read nor deleted. A `w` that is not a number, or lies in the future, counts as "never" so a damaged field cannot switch ads off for good |
 | `ADS.iSt` | `off` / `load` / `ready` / `show` — the *preloaded* ad's life. Never reaches the save |
+| `ADS.iAt` | when the loaded ad became `ready` (ms). Only for the staleness check below |
 
-Five properties, each of which a different mistake would break:
+Six properties, each of which a different mistake would break:
 
 - **The claim is written before `save()`, not after the ad.** So a redraw, a reload of the
-  same slot, or reopening the app cannot produce the same transition's ad twice — the
-  marker is already on disk. It is also claimed *before* `endSeason()` runs, because
-  `endSeason()` increments `S.season` and asking afterwards would bill the ending season's
-  ad to the new one.
+  same slot, or reopening the app cannot produce the same break's ad twice — the marker is
+  already on disk.
 - **No ad is ever waited for.** `adsInterShow()` shows only when `ADS.iSt === 'ready'`;
   otherwise it returns `'none'` and the week advances exactly as it would have. That is the
-  reason for preloading at all: loading at the transition would mean either blocking the
+  reason for preloading at all: loading at the break would mean either blocking the
   screen or opening an ad later, on some unrelated screen. The claim is spent either way —
-  a transition that found no ad loaded does **not** keep its right for later.
+  a break that found no ad loaded does **not** keep its right for later.
+- **A loaded ad goes stale.** Google invalidates a loaded interstitial after an hour, and
+  showing an expired one ends in `FailedToShow` with the break's right already spent. The
+  ad is loaded at launch, so a long session really does get there. `adsInterKeep()` runs on
+  every week that is *not* a break and replaces a `ready` ad older than `AD_INTER_TTL`
+  (50 minutes). It never starts a show and never retries a *failed* load — `'off'` is left
+  for the next break.
 - **Nothing about the ad touches game state.** `adsInterShow()` is the last statement of
   `nextWeek()`, after `save()` and `render()`, and the dismissal/failure events only
   release `ADS.iSt`. There is no callback that advances a week or a season, so a close or
-  an error cannot run the transition a second time.
+  an error cannot run the week a second time.
 - **It cannot collide with the rewarded ad or a consent form.** `adsBusy()` returns
   `'inter'` while `ADS.iSt === 'show'`, which closes `adsReady()` and makes
   `adsConsentFlow()`/`adsPrivacy()` bail; in the other direction `adsInterShow()` returns
@@ -593,23 +613,36 @@ Five properties, each of which a different mistake would break:
   A declaration that changes while a load is in flight is caught by `adsAgeHolds()`, and
   the loaded ad is then simply never shown — 8.1.0 still has no way to discard one.
 
-**Re-arming has three triggers and no timer**: SDK initialisation, `adsApply()` when
-eligibility is newly won, and a transition being handled (after a show, or instead of one
-when nothing was loaded). At most two of those exist per season, so a failed load is
-retried rarely and never in a loop.
+**Re-arming has four triggers and no timer**: SDK initialisation, `adsApply()` when
+eligibility is newly won, a break being handled (after a show, or instead of one when
+nothing was loaded) and `adsInterKeep()` finding the loaded ad stale. A failed load is
+retried at the next break — once per ten played weeks — and never in a loop.
+
+**The age gate is why most players will never see one.** The birth year is asked only when
+the player taps the `+` for the rewarded ad, and with no declaration `adsInit()` returns
+`'noage'` before any native call: no consent read, no SDK, no interstitial, for the whole
+life of the install. That is the designed behaviour, not a fault in the break logic — but
+it means "no ad appeared" from a tester is first a question about whether they ever
+declared a year.
+
+**The interval is in played weeks, not in minutes.** Ten weeks can be tapped through in
+a minute or two. Nothing in the code spaces breaks in real time; if that turns out to
+be too dense, the place for a floor is AdMob's own frequency cap on the unit, or a
+real-time term added next to `AD_BREAK.gap`.
 
 `iapNoAds()` (core.js) is the single read site for the purchased removal, checked at the
 top of both `adsInterPrep()` and `adsInterShow()` — so the product turns off *loading* as
 well as showing. It never touches the rewarded ad: that one the player starts themselves
 and gets paid for.
 
-**Measured on the emulator** (Android 17 / API 37, debug APK, Google's sample interstitial
-unit `…/1033173712` with `isTesting: true`): a real `AdActivity` opened at the mid-season
-week and again at the season end, the week and the season advanced without waiting, closing
-the ad moved neither, re-rendering and re-reaching the same transition — including after a
-`loadSlot()` round-trip — opened nothing, and the next season's transition opened one again.
-`tools/savetest.js` block **22** holds the same contract deterministically, including the
-"loaded late, never shown" case and the no-retry-loop case.
+**The device measurement predates the interval.** On the emulator (Android 17 / API 37,
+debug APK, Google's sample interstitial unit `…/1033173712` with `isTesting: true`) a real
+`AdActivity` opened at the two per-season moments, the week advanced without waiting and
+closing the ad moved nothing. The show path is the same code, but **the ten-week cadence
+and the staleness refresh have not been measured on a device.** `tools/savetest.js` block
+**22** holds the contract deterministically: the exact interval from a new career, the
+run through a season boundary, the "loaded late, never shown" case, the no-retry-loop
+case, old and damaged `S.adb` shapes, and scenario (10) for the stale reload.
 
 ### Consent has three states, and the ad gate is none of them
 
@@ -674,7 +707,8 @@ That file is `null` in the repo, so web, PWA, single-file and the Android **rele
 package all send `{}` exactly as before.
 
 The one place it is not null is `android/app/src/debug/assets/public/js/ads-testcfg.js`,
-which sets `{debugGeography: 1}` (EEA). **The separation is Android's asset merging, not
+which sets `{debugGeography: 1, testAds: true}` (EEA, and sample ads — see *Rewarded ads*
+above). **The separation is Android's asset merging, not
 a comment and not a preference key**: a build-type source set overrides `main`, so the
 debug package ships the EEA file and the release package ships the null one — there is no
 file to override it. Verified by running `:app:mergeDebugAssets` and
@@ -688,7 +722,8 @@ the device is. **It does not give, refuse or assume consent** — `canRequestAds
 only from the SDK's real answer. No test-device id is carried either: UMP 2.2.0+ already
 treats emulators as test devices, so no real device id needs to live in the repo.
 
-`adsTestOpts()` passes **one** field. `tagForUnderAgeOfConsent`, a test-device list and
+`adsTestOpts()` passes **one** field (`testAds` is read elsewhere, by `adsTestAds()`, and
+never reaches the consent query). `tagForUnderAgeOfConsent`, a test-device list and
 anything else that could colour the consent decision are not read, and a malformed value
 falls back to `{}`.
 
@@ -727,7 +762,7 @@ options**. Tapping *Consent* resolves the form with `status: OBTAINED` and
 `canRequestAds: true`, and that value is adopted with `src: 'form'` — **no extra
 `requestConsentInfo` is issued**, which is the one thing this branch of the flow exists to
 avoid. `initialize()` runs only after that, `adsPrivacyState()` becomes `'go'`, and the
-reward and season-transition paths open.
+reward and ad-break paths open.
 
 Two things this measurement settles, because both had been claimed wrongly before:
 
@@ -1402,7 +1437,7 @@ add an archetype *without* moving the threshold, expect the newcomers to fill up
 from weekly signings instead.
 
 The three fields this branch added follow the same rule and are all absent by default:
-`S.adb` (which season transitions have spent their ad), `S.iap` (the career purchase
+`S.adb` (the week of the last ad break), `S.iap` (the career purchase
 ledger) and `PREFS.iap` (the device one). Every reader falls to a default —
 `adBreakClaim()` builds `S.adb` on first use, `iapTokens()` returns `null`.
 
@@ -1549,11 +1584,11 @@ janky on a phone. Any future view with live listeners needs the same moves.
   partially delivered, not acknowledged and not consumed (see *There is no reservation*
   above). It is also the URL a UMP message points at. **This file said the opposite —
   "no ad SDK and no UMP are integrated" — for far too long, so read the page before
-  repeating anything about what it claims.** Exactly one thing on it is written against
-  today's build rather than the shipped one: it says the app uses Google's **sample ad
-  units with no mediation**, three places per language. That is true today and it is the
-  wording that has to change in the same release as a real ad unit — not before, and not
-  after. The web/PWA/single-file builds are
+  repeating anything about what it claims.** One thing on it is **out of date as of
+  `versionCode 6`**: it says the app uses Google's **sample ad units with no mediation**,
+  three places per language. The release build now requests real units (still no
+  mediation), so that wording has to be corrected before `versionCode 6` reaches any
+  public track — check the page rather than assuming it was done. The web/PWA/single-file builds are
   unaffected: no Capacitor, no plugin, no requests. `tools/build-geo.js` does download its
   source, but it is a developer tool that is never loaded by the app; its output is
   committed instead.
@@ -1640,7 +1675,7 @@ close-out for a gameplay change:
    needs `cd android && ./gradlew :capgo-native-purchases:compileDebugJavaWithJavac` — the
    module against the real Billing/Capacitor/Android artifacts. Then
    `node tools/savetest.js` blocks **18–24** cover the rewarded
-   adapter, the consent flow, the age gate, the privacy feedback, the season-transition
+   adapter, the consent flow, the age gate, the privacy feedback, the ad-break
    contract and the store's scope/ceiling rules — including block 24 **(51)–(56)**, which
    hold that a failed payment leaves nothing on disk and every pack still buyable, that
    repeated declines do not accumulate, that the +10 ceiling is enforced at delivery with no
@@ -1722,8 +1757,10 @@ Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep
 with no keystore at all, so don't "fix" that path by making the config mandatory.
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
-twice. Ads are planned for the store release and are not implemented yet, so don't claim
-the app is ad-free.
+twice. It is 7 today; 5 is what the closed-test track carried on 2 October 2026. A 6
+bundle was built on 9 October 2026 and may have been uploaded, so 7 was taken rather
+than risk a duplicate number. The
+Android build carries ads, so don't claim the app is ad-free.
 
 ### Every icon and the splash come from one source file
 

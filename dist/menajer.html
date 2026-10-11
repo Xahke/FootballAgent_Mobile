@@ -5384,7 +5384,7 @@ shopCap5:'+5 müşteri kapasitesi',
 shopCap10:'+10 müşteri kapasitesi',
 shopAdSec:'Reklamlar',
 shopNoAds:'Otomatik reklamları kaldır',
-shopNoAdsDesc:'Sezon ortası ve sezon sonu geçişlerinde çıkan tam ekran reklamları kapatır.',
+shopNoAdsDesc:'Hafta ilerlerken birkaç haftada bir çıkan tam ekran reklamları kapatır.',
 shopNoAdsKeep:'İsteğe bağlı ödüllü reklam açık kalır: onu sen başlatırsın ve karşılığında ödül alırsın.',
 shopBuy:'Satın al',
 shopOff:'Satın alma şu anda kullanılamıyor',
@@ -5680,7 +5680,7 @@ shopCap5:'+5 client capacity',
 shopCap10:'+10 client capacity',
 shopAdSec:'Ads',
 shopNoAds:'Remove automatic ads',
-shopNoAdsDesc:'Turns off the full-screen ads shown at the mid-season and end-of-season transitions.',
+shopNoAdsDesc:'Turns off the full-screen ads that appear every few weeks as you advance.',
 shopNoAdsKeep:'The optional rewarded ad stays available: you start it yourself and it pays a reward.',
 shopBuy:'Buy',
 shopOff:'Purchasing is unavailable right now',
@@ -7196,7 +7196,7 @@ function rwSync(now){
   return Promise.resolve('idle');
 }
 
-/* js/ads-testcfg.js — UMP izin sorgusunun TEST yapılandırması.
+/* js/ads-testcfg.js — izin sorgusunun ve reklam isteğinin TEST yapılandırması.
 
    ===== BU DOSYANIN TAMAMI YAYIN İÇİN ETKİSİZDİR =====
 
@@ -7223,7 +7223,15 @@ function rwSync(now){
 
    ===== NE GEÇEBİLİR, NE GEÇEMEZ =====
 
-   Buradan geçebilen TEK alan debugGeography. Rıza kararını etkileyen hiçbir
+   Buradan geçebilen İKİ alan var ve ikisinin okuyucusu ayrı:
+
+     debugGeography   adsTestOpts() → yalnız izin sorgusunun seçeneği
+     testAds          adsTestAds()  → yalnız reklam isteğinin isTesting'i
+
+   testAds true iken eklenti gerçek birim yerine Google'ın örnek birimini
+   istiyor. Burada null olduğu için yayın paketi GERÇEK birim ister.
+
+   Rıza kararını etkileyen hiçbir
    şey — tagForUnderAgeOfConsent, canRequestAds, test cihazı listesi — bu
    dosyadan verilmiyor ve adsTestOpts() tarafından okunmuyor. debugGeography
    yalnız UMP'ye "bu cihazı şu bölgedeymiş gibi değerlendir" diyor; kullanıcının
@@ -7239,15 +7247,14 @@ const ADS_TESTCFG = null;
 
    ===== NE OLDUĞU, NE OLMADIĞI =====
 
-   Bu dosya YALNIZCA bir teknik deneme kapsamıdır: Android'de Google'ın ÖRNEK
-   (test) uygulama kimliği ve ÖRNEK ödüllü reklam birimiyle çalışır, izin
+   Android'de uygulamanın GERÇEK AdMob kimliği ve GERÇEK reklam birimleriyle
+   çalışır (yalnız debug paketi örnek birim ister — bkz. adsTestAds), izin
    akışını kurar ve ödülü js/reward.js'in mevcut hak ve teslimat muhasebesine
    bağlar. Para muhasebesi burada YOK — bu dosya S.cash'e hiç dokunmuyor, tek
    yaptığı doğru anda rwRequest/rwEarned/rwAbandon çağırmak.
 
-   Kapsam dışı ve bilerek yok: mediation, otomatik geçiş reklamı, banner,
-   satın alma, gerçek reklam birimi, yaş/hedef kitle bayrağı (
-   tagForUnderAgeOfConsent) ve debugGeography/test cihazı yapılandırması.
+   Kapsam dışı ve bilerek yok: mediation, banner, yaş/hedef kitle bayrağı (
+   tagForUnderAgeOfConsent) ve test cihazı listesi.
    requestConsentInfo BOŞ seçenekle çağrılıyor: bir bölge ya da yaş tercihini
    kod tarafında varsaymak, o tercihi kullanıcı adına vermek olurdu.
 
@@ -7436,13 +7443,15 @@ const ADS_EV = ['onRewardedVideoAdDismissed', 'onRewardedVideoAdFailedToShow',
 const ADS_IEV = ['interstitialAdDismissed', 'interstitialAdFailedToShow',
                  'interstitialAdFailedToLoad'];
 
+/* Yüklü bir geçiş reklamının kullanılabilir sayıldığı süre. Google'ın sınırı
+   60 dakika; pay bırakılıyor çünkü yenisinin yüklenmesi de zaman alıyor. */
+const AD_INTER_TTL = 50 * 60 * 1000;
+
 const ADS = {
-  /* Google'ın yayımladığı ÖRNEK ödüllü reklam birimi (Android). Gerçek birim
-     değil ve bu kapsamda gerçek birim kullanılmıyor. Örnek birimler hesaba
-     bağlı değildir, bu yüzden ileride gerçek bir uygulama kimliğiyle birlikte
-     de kullanılabilirler.
-     developers.google.com/admob/android/test-ads */
-  unit: 'ca-app-pub-3940256099942544/5224354917',
+  /* Bu uygulamanın GERÇEK ödüllü reklam birimi (AdMob: rewarded_daily).
+     Debug paketinde bu kimlik köprüye yine gidiyor ama eklenti onu Google'ın
+     örnek birimiyle değiştiriyor — bkz. adsTestAds(). */
+  unit: 'ca-app-pub-6695238757557885/1522575976',
 
   /* ===== İZİN ANLIK GÖRÜNTÜSÜ ===== */
   /* SDK'dan son BAŞARILI okuma: {can,status,avail,src,seq}. null = hiç
@@ -7484,15 +7493,16 @@ const ADS = {
   ageSeq: 0,
 
   /* ===== SEZON GEÇİŞİ REKLAMI ===== */
-  /* Google'ın yayımladığı ÖRNEK interstitial birimi (Android). Ödüllü birimle
-     aynı gerekçe: gerçek birim bu kapsamda kullanılmıyor.
-     developers.google.com/admob/android/test-ads */
-  iUnit: 'ca-app-pub-3940256099942544/1033173712',
+  /* Bu uygulamanın GERÇEK geçiş reklamı birimi (AdMob: interstitial_season).
+     Debug ayrımı ödüllü birimle aynı. */
+  iUnit: 'ca-app-pub-6695238757557885/9143889001',
   /* 'off'   hazır reklam yok
      'load'  yükleme uçuşta
      'ready' yüklü ve henüz gösterilmedi — geçiş ancak bu hâlde reklam görür
      'show'  ekranda */
   iSt: 'off',
+  /* 'ready' hâline geçilen an (ms). Yalnız bayatlama ölçümü için. */
+  iAt: 0,
   iP: null,          // uçuştaki hazırlama sözü; ikinci yüklemeyi engelliyor
   /* Ekrandaki gösterim (att) ya da null. Kayda GİRMEZ — CAM/MKQ/SKTAB gibi
      yalnız görünüm durumu. */
@@ -7679,6 +7689,20 @@ function adsTestOpts() {
   if (!c || typeof c !== 'object') return {};
   const g = c.debugGeography;
   return (g === 1 || g === 2 || g === 3 || g === 4) ? { debugGeography: g } : {};
+}
+/* Reklam İSTEKLERİ test kipinde mi? Yayın yapısında her zaman false: gerçek
+   birim isteniyor. Yalnız Android debug paketindeki ads-testcfg.js testAds:true
+   taşıyor ve o hâlde eklenti verilen kimliği yok sayıp Google'ın örnek birimini
+   istiyor (AdViewIdHelper.getFinalAdId). Sebebi gelir değil hesap güvenliği:
+   emülatörde ve CI paketinde gerçek birime istek atmak, kendi reklamını
+   izlemek demek.
+
+   adsTestOpts()'tan AYRI bir okuyucu ve bilerek öyle: o fonksiyon izin
+   sorgusunun seçeneklerini üretiyor, bu ise yalnız reklam isteğini. Kesin
+   true dışındaki her değer — 1, 'true', eksik alan — false'tur. */
+function adsTestAds() {
+  const c = (typeof ADS_TESTCFG === 'undefined') ? null : ADS_TESTCFG;
+  return !!c && typeof c === 'object' && c.testAds === true;
 }
 function adsAsk(P, src, op) {
   try { return P.requestConsentInfo(adsTestOpts()).then(i => adsAdopt(i, src, op), () => false); }
@@ -8005,10 +8029,11 @@ function adsWatch() {
   const att = { n: nonce, rw: false, cl: false, seq: ADS.cs.seq, ageSeq: ADS.ageSeq };
   ADS.cur = att;                               // buradan itibaren adsBusy()==='ad'
   adsRepaint();                                // düğme kilitli görünsün
-  P.prepareRewardVideoAd({ adId: ADS.unit, isTesting: true }).then(() => {
-    /* adId VERİLMİYOR ve verilmemeli: preparedAds haritası reklamın GERÇEKTEN
-       yüklendiği birimle anahtarlanıyor, isTesting altında bu örnek birimdir.
-       İstenen id'yi göndermek aramayı boşa düşürür (AdRewardExecutor). */
+  P.prepareRewardVideoAd({ adId: ADS.unit, isTesting: adsTestAds() }).then(() => {
+    /* Gösterimde adId VERİLMİYOR ve verilmemeli: preparedAds haritası reklamın
+       GERÇEKTEN yüklendiği birimle anahtarlanıyor ve debug paketinde bu,
+       istediğimiz değil örnek birimdir. İstenen id'yi göndermek orada aramayı
+       boşa düşürür (AdRewardExecutor); kimliksiz çağrı son hazırlananı bulur. */
     if (!adsEligible() || !adsAgeHolds(att.ageSeq)) {
       /* Yükleme ile gösterim arasında uygunluk ya da yaş kapısı düştü. Kilit
          sayesinde bu aralıkta bir izin işlemi başlayamaz, yine de kapı burada
@@ -8061,11 +8086,11 @@ function adsReward(att) {
 /* ================= SEZON GEÇİŞİ REKLAMI =================
 
    ===== KAPSAM =====
-   Sezon ortası ve sezon sonu geçişlerinde, KARİYER/SEZON BAŞINA EN FAZLA BİRER
-   kez. Hangi anın geçiş olduğuna ve o geçişin hakkının kullanılıp
-   kullanılmadığına bu dosya karar VERMİYOR: ikisi de sezon motorunun bilgisi ve
-   js/sim.js'te (adBreakClaim) duruyor. Burada yalnız "gösterebiliyor muyum"
-   sorusu var.
+   Her AD_BREAK.gap oynanan haftada bir (js/sim.js). Hangi haftanın ara olduğuna
+   ve o aranın hakkının kullanılıp kullanılmadığına bu dosya karar VERMİYOR:
+   ikisi de hafta motorunun bilgisi ve js/sim.js'te (adBreakClaim) duruyor.
+   Burada yalnız "gösterebiliyor muyum" sorusu var. Adlardaki "geçiş", aranın
+   yalnız sezon ortası ve sezon sonunda verildiği günlerden kalma.
 
    ===== NEDEN ÖN YÜKLEME =====
    Şart şuydu: hazır reklam yoksa geçiş BEKLEMEYECEK, ve o geçişin reklamı daha
@@ -8075,10 +8100,18 @@ function adsReward(att) {
    "yüklü mü" diye bakılıyor; değilse o geçiş sessizce reklamsız geçiyor.
 
    ===== DÖNGÜ YOK =====
-   Yükleme yalnız üç doğal tetikleyicide deneniyor: SDK başlatıldığında, uygunluk
-   yeni kazanıldığında (adsApply) ve bir geçiş işlendiğinde (gösterildiyse
-   sonrası için, gösterilemediyse bir sonraki için). Zamanlayıcı yok, başarısız
-   bir yüklemeyi tekrarlayan bir sarmal yok.
+   Yükleme yalnız dört doğal tetikleyicide deneniyor: SDK başlatıldığında,
+   uygunluk yeni kazanıldığında (adsApply), bir ara işlendiğinde (gösterildiyse
+   sonrası için, gösterilemediyse bir sonraki için) ve yüklü reklam bayatladığında
+   (adsInterKeep). Zamanlayıcı yok, başarısız bir yüklemeyi tekrarlayan bir sarmal
+   yok: düşen bir yükleme ancak bir sonraki arada yeniden deneniyor.
+
+   ===== YÜKLÜ REKLAMIN ÖMRÜ VAR =====
+   Google yüklenmiş bir interstitial'ı bir saat sonra geçersiz sayıyor; süresi
+   dolmuş reklamı göstermeye çalışmak FailedToShow ile biter ve o aranın hakkı
+   boşa yanar. Reklam açılışta yüklendiği için uzun bir oturumda bu gerçekten
+   oluyor. ADS.iAt yükleme anını tutuyor; adsInterKeep() her hafta ilerleyişinde
+   ona bakıp AD_INTER_TTL'i aşmış reklamın yerine yenisini istiyor.
 
    ===== İKİ ÖMÜR AYRI =====
    ADS.cur ödüllü gösterimin kilidi, ADS.iSt geçiş reklamınınki. Terminal
@@ -8101,13 +8134,14 @@ function adsInterPrep() {
   if (ADS.iP) return ADS.iP;                              // uçuştaki yükleme tekilleştiriliyor
   ADS.iSt = 'load';
   const tok = ADS.ageSeq;
-  ADS.iP = P.prepareInterstitial({ adId: ADS.iUnit, isTesting: true }).then(() => {
+  ADS.iP = P.prepareInterstitial({ adId: ADS.iUnit, isTesting: adsTestAds() }).then(() => {
     ADS.iP = null;
     /* Yükleme sürerken beyan ya da uygunluk düştüyse reklam yüklü KALIR ama
        gösterilmez: 8.1.0'da yüklenmiş bir reklamı atma yolu yok (ödüllü
        reklamda da aynı durum). 'off' kalması adsInterShow()'u hiç başlatmıyor. */
     if (!adsAgeHolds(tok) || !adsEligible()) { ADS.iSt = 'off'; return 'off'; }
     ADS.iSt = 'ready';
+    ADS.iAt = Date.now();
     return 'ready';
   }, () => {
     /* Eklenti ayrıca interstitialAdFailedToLoad da yayıyor; o olay 'load'
@@ -8126,9 +8160,9 @@ function adsInterShow() {
   if (!P) return 'none';
   if (typeof iapNoAds === 'function' && iapNoAds()) return 'none';
   if (ADS.iSt !== 'ready') {
-    /* Hazır reklam yok → geçiş BEKLEMİYOR. Bir sonraki geçiş için kuruluyor;
-       tek seferlik, çünkü bunu tetikleyen şey bir zamanlayıcı değil geçişin
-       kendisi ve sezon başına en fazla iki geçiş var. */
+    /* Hazır reklam yok → hafta BEKLEMİYOR. Bir sonraki ara için kuruluyor;
+       tek seferlik, çünkü bunu tetikleyen şey bir zamanlayıcı değil aranın
+       kendisi ve o da AD_BREAK.gap haftada bir geliyor. */
     adsInterPrep();
     return 'none';
   }
@@ -8138,6 +8172,18 @@ function adsInterShow() {
   adsRepaint();
   P.showInterstitial().then(() => {}, () => adsInterDone());
   return 'shown';
+}
+
+/* Ara OLMAYAN haftalarda js/sim.js çağırıyor. Tek işi bayatlamış yüklü reklamı
+   yenilemek; gösterim başlatmıyor ve düşmüş bir yüklemeyi yeniden denemiyor
+   ('off' hâline dokunmuyor — o, bir sonraki aranın işi). Yeni yükleme gelene
+   kadar eski reklam eklentide duruyor ama iSt 'ready' olmadığı için
+   gösterilmiyor. Kapıların hepsi adsInterPrep()'in başında. */
+function adsInterKeep() {
+  if (ADS.iSt !== 'ready') return;
+  if (Date.now() - (ADS.iAt || 0) < AD_INTER_TTL) return;
+  ADS.iSt = 'off';
+  adsInterPrep();
 }
 
 /* Terminal olay: kapandı, gösterilemedi ya da (gösterim isteğinde) yüklü reklam
@@ -12350,27 +12396,37 @@ function simWeekRun(){
   });
   simCups();
 }
-/* ================= SEZON GEÇİŞİ REKLAM ARASI =================
-   İki gerçek geçiş var ve ikisi de FİKSTÜRDEN türüyor, sabit bir hafta
-   sayısından değil: sezon ortası transfer döneminin açıldığı hafta (core.js
-   midWeek(), yani ceil(totalWeeks()/2)+1) ve sezonun bittiği an (S.week
-   totalWeeks()'i aşınca). Lig uzunluğu değişirse ikisi de kendiliğinden kayar.
+/* ================= REKLAM ARASI =================
+   Her AD_BREAK.gap oynanan haftada bir. Sayaç S.tw — kariyer boyunca hiç
+   sıfırlanmayan toplam hafta — olduğu için aralık sezon sınırından da aynı
+   şekilde geçiyor: sezonun 36. haftasındaki aradan sonraki ara yeni sezonun
+   8. haftasında.
 
-   Hak KARİYER/SEZON BAŞINA BİRER. İşaret kariyer kaydında (S.adb) duruyor ve
-   save()'den ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi
-   ya da uygulamanın yeniden açılması aynı geçişi ikinci kez üretemesin.
+   Eskiden sezon başına iki ara vardı (sezon ortası ve sezon sonu). Seyrekti ve
+   kırılgandı: o iki andan birinde reklam yüklü değilse hak yanıyor, bir sonraki
+   fırsat yarım sezon sonra geliyordu — "reklam hiç çıkmıyor" şikâyetinin bir
+   yolu buydu. Kısa aralıkta kaçan bir ara yalnız gap hafta kaybettiriyor.
 
-   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa geçiş beklemiyor ve o
-   geçişin hakkı orada yanıyor — alternatifi, reklamı sonradan alakasız bir
-   ekranda açmaktı ve istenen tam olarak bunun olmaması.
+   İşaret kariyer kaydında (S.adb.w, son aranın S.tw'si) duruyor ve save()'den
+   ÖNCE yazılıyor: bir yeniden çizim, aynı kaydın yeniden yüklenmesi ya da
+   uygulamanın yeniden açılması aynı arayı ikinci kez üretemesin.
 
-   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor. */
-function adBreakClaim(kind,se){
+   İşaret GÖSTERİMDEN BAĞIMSIZ konuyor. Hazır reklam yoksa hafta beklemiyor ve o
+   aranın hakkı orada yanıyor; reklam sonradan, alakasız bir ekranda açılmıyor.
+
+   Alan eski kayıtlarda yok ve olmak zorunda değil: yokken kuruluyor ve ilk ara
+   hemen veriliyor. Eski biçimin m/e alanları okunmuyor, silinmiyor da. */
+const AD_BREAK={gap:10};
+function adBreakClaim(){
   if(!S)return '';
   const b=(S.adb&&typeof S.adb==='object')?S.adb:(S.adb={});
-  if(b[kind]===se)return '';
-  b[kind]=se;
-  return kind;
+  const tw=S.tw||0;
+  /* Sayı olmayan ya da ileride duran bir işaret "hiç ara verilmedi" sayılıyor:
+     bozuk bir alan reklamı sonsuza kadar kapatmasın. */
+  const last=(typeof b.w==='number'&&b.w>=0&&b.w<=tw)?b.w:0;
+  if(tw-last<AD_BREAK.gap)return '';
+  b.w=tw;
+  return 'w';
 }
 function nextWeek(){
   if(!S.agent){render();return;}
@@ -12497,10 +12553,9 @@ function nextWeek(){
   }
   S.week++;
   const seasonOver=S.week>totalWeeks();
-  /* Reklam arası hakkı endSeason()'dan ÖNCE isteniyor: endSeason() S.season'ı
-     artırıyor, sonra sorulsaydı biten sezonun hakkı yeni sezona yazılırdı. */
-  const brk=seasonOver?adBreakClaim('e',S.season)
-    :(S.week===midWeek()?adBreakClaim('m',S.season):'');
+  /* Reklam arası hakkı save()'den ÖNCE isteniyor: işaret diske bu haftayla
+     birlikte düşmeli. */
+  const brk=adBreakClaim();
   if(seasonOver)endSeason();
   const newN=S.inbox.filter(m=>!m.read).length-unreadBefore;
   if(newN>0&&cur().v!=='inbox'&&cur().v!=='dash')toast(newN+' '+t('newNotifsT'));
@@ -12518,12 +12573,14 @@ function nextWeek(){
     const ev=rollEvent();
     if(ev)pushModal(()=>showEvent(ev));
   }
-  /* EN SON: sezon ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
+  /* EN SON: hafta ilerlemesi tamamlandı, kaydedildi, çizildi ve haftanın
      pencereleri sıraya girdi. Reklamın hiçbir sonucu buraya geri dönmüyor —
      kapanış ve hata yalnız js/ads.js'teki kilidi açıyor, oyun durumuna hiç
-     dokunmuyor — bu yüzden bir gösterim sezon ilerlemesini ikinci kez
-     çalıştıramaz. Hazır reklam yoksa adsInterShow() sessizce 'none' döner. */
-  if(brk&&typeof adsInterShow==='function')adsInterShow();
+     dokunmuyor — bu yüzden bir gösterim haftayı ikinci kez çalıştıramaz.
+     Hazır reklam yoksa adsInterShow() sessizce 'none' döner. Ara olmayan
+     haftalarda yalnız yüklü reklamın bayatlayıp bayatlamadığına bakılıyor. */
+  if(brk){if(typeof adsInterShow==='function')adsInterShow();}
+  else if(typeof adsInterKeep==='function')adsInterKeep();
 }
 function endSeason(){
   const myLgs=new Set(S.clients.map(id=>teamOf(byId(id)).lg));

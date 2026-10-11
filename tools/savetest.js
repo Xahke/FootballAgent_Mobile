@@ -2501,8 +2501,8 @@ async function tPrivacyFeedback() {
 
     const dbg = path.join(ROOT, 'android', 'app', 'src', 'debug', 'assets', 'public', 'js', 'ads-testcfg.js');
     ok(fs.existsSync(dbg), '(6) debug varyant dosyası yerinde');
-    ok(/const ADS_TESTCFG = \{ debugGeography: 1 \};/.test(fs.readFileSync(dbg, 'utf8')),
-       '(6) debug sürümü EEA veriyor');
+    ok(/const ADS_TESTCFG = \{ debugGeography: 1, testAds: true \};/.test(fs.readFileSync(dbg, 'utf8')),
+       '(6) debug sürümü EEA ve test reklamı veriyor');
 
     /* Release paketine giden her yol null sürümü taşımalı. */
     const bad = [];
@@ -2529,34 +2529,37 @@ async function tPrivacyFeedback() {
   }
 }
 
-/* ================= [22] SEZON GEÇİŞİ REKLAMI =================
+/* ================= [22] REKLAM ARASI =================
    Ölçülen sözleşme:
 
-   - Geçiş noktaları SEZON MOTORUNDAN geliyor, sabit bir hafta sayısından değil:
-     sezon ortası core.js midWeek(), sezon sonu S.week > totalWeeks().
-   - Kariyer/sezon başına en fazla BİRER gösterim; işaret kayda save()'den önce
-     düşüyor, bu yüzden yeniden çizim / yeniden yükleme / yeniden açılış aynı
-     geçişi ikinci kez üretmiyor.
+   - Ara, oynanan her AD_BREAK.gap haftada bir (js/sim.js adBreakClaim). Sayaç
+     S.tw olduğu için aralık sezon sınırından da aynı şekilde geçiyor.
+   - İşaret (S.adb.w) kayda save()'den önce düşüyor, bu yüzden yeniden çizim /
+     yeniden yükleme / yeniden açılış aynı arayı ikinci kez üretmiyor.
    - Uygun yaş beyanı ve canRequestAds olmadan ne hazırlama ne gösterim var.
-   - Hazır reklam yoksa geçiş BEKLEMİYOR ve o reklam sonradan açılmıyor.
+   - Hazır reklam yoksa hafta BEKLEMİYOR ve o reklam sonradan açılmıyor.
    - Ödüllü reklam / izin formu ile çakışmıyor.
-   - Gösterimin kapanışı ya da hatası sezon ilerlemesine HİÇ dokunmuyor.
+   - Gösterimin kapanışı ya da hatası hafta ilerlemesine HİÇ dokunmuyor.
+   - Bayatlamış yüklü reklam ara olmayan bir haftada yenileniyor; düşmüş bir
+     yükleme ise yalnız arada yeniden deneniyor.
 
    Taklit, gerçek eklentinin gözlenen davranışını taşıyor: prepareInterstitial
    yüklenince çözülüyor, showInterstitial ise KAPANIŞTA değil gösterim
    başlayınca. Neyin gerçekten reklam gösterdiği ancak cihazda ölçülür; burada
    ölçülen şey köprüye hangi çağrının gittiği. */
 
-/* Haftayı geçişin bir öncesine kurup tek bir nextWeek() koşturuyoruz. Yirmi
-   haftayı simüle etmenin ölçülen şeye kattığı bir şey yok: test geçiş
-   TESPİTİNİ ölçüyor, sezon simülasyonunu değil (o [8]'de). */
-async function atMid(a) { a.R('S.week=midWeek()-1;nextWeek();'); await tick(); }
-async function atEnd(a) { a.R('S.week=totalWeeks();nextWeek();'); await tick(); }
+/* Sayacı aranın bir öncesine kurup tek bir nextWeek() koşturuyoruz: atBreak
+   sıradan bir haftada, atEnd sezonun son haftasında ara doğuruyor. wk() sayaca
+   dokunmadan bir hafta ilerletiyor. */
+const PRE_BREAK = 'S.tw=((S.adb&&S.adb.w)||0)+AD_BREAK.gap-1;';
+async function atBreak(a) { a.R(PRE_BREAK + 'nextWeek();'); await tick(); }
+async function atEnd(a) { a.R(PRE_BREAK + 'S.week=totalWeeks();nextWeek();'); await tick(); }
+async function wk(a) { a.R('nextWeek();'); await tick(); }
 
 async function tSeasonBreakAds() {
-  console.log('\n[22] sezon geçişi reklamı: iki nokta, birer kez, geçiş beklemiyor');
+  console.log('\n[22] reklam arası: 10 haftada bir, hafta beklemiyor');
 
-  /* (1) İKİ GEÇİŞ, İKİ GÖSTERİM — ve ikisi de gerçekten o noktada. */
+  /* (1) ARALIK — ara tam gap haftada bir, arada hiç, sezon sınırından da geçiyor. */
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
@@ -2565,49 +2568,76 @@ async function tSeasonBreakAds() {
     await tick();
     ok(a.R('ADS.iSt') === 'ready', '(1) geçiş reklamı ÖNCEDEN yüklendi');
     ok(fake.stat.iprepares === 1, '(1) tek hazırlama çağrısı');
-    ok(fake.stat.iprepOpts[0].isTesting === true
+    ok(fake.stat.iprepOpts[0].isTesting === false
       && fake.stat.iprepOpts[0].adId === a.R('ADS.iUnit'),
-      '(1) Google test birimi ve isTesting:true ile istendi');
-    ok(a.R('ADS.iUnit') === 'ca-app-pub-3940256099942544/1033173712',
-      '(1) birim Google belgesindeki ÖRNEK interstitial birimi');
+      '(1) yayın yapılandırmasında gerçek birim, isTesting:false ile istendi');
+    ok(a.R('ADS.iUnit') === 'ca-app-pub-6695238757557885/9143889001'
+      && a.R('ADS.unit') === 'ca-app-pub-6695238757557885/1522575976',
+      '(1) iki birim de uygulamanın kendi AdMob hesabında');
+    ok(!/3940256099942544/.test(a.R('ADS.unit') + a.R('ADS.iUnit')),
+      '(1) Google örnek birimi yayın kaynağında yok');
+    /* adsTestAds yalnız KESİN true'yu kabul ediyor; fonksiyonun kaynağı,
+       verilen bir ADS_TESTCFG ile ayrıca değerlendiriliyor. */
+    {
+      const src = fs.readFileSync(path.join(ROOT, 'js', 'ads.js'), 'utf8');
+      const fn = src.slice(src.indexOf('function adsTestAds'), src.indexOf('function adsAsk'));
+      const run = cfg => new Function('ADS_TESTCFG', fn + '; return adsTestAds();')(cfg);
+      ok(run(null) === false && run({}) === false && run({ debugGeography: 1 }) === false,
+        '(1) adsTestAds: null / boş / yalnız coğrafya → false');
+      ok(run({ testAds: 1 }) === false && run({ testAds: 'true' }) === false,
+        '(1) adsTestAds: true olmayan değer → false');
+      ok(run({ debugGeography: 1, testAds: true }) === true,
+        '(1) adsTestAds: debug yapılandırması → true');
+    }
 
-    const se = a.R('S.season'), mid = a.R('midWeek()');
-    await atMid(a);
-    ok(a.R('S.week') === mid, '(1) sezon ortası geçişi gerçekten oldu');
-    ok(fake.stat.ishows === 1, '(1) sezon ortasında bir gösterim');
-    ok(a.R('S.adb.m') === se, '(1) hak biten sezona işaretlendi');
+    const se = a.R('S.season'), gap = a.R('AD_BREAK.gap'), tw0 = a.R('S.tw||0');
+    ok(gap === 10, '(1) aralık 10 hafta');
+    ok(tw0 === 0, '(1) yeni kariyer sayacı sıfırda');
+    /* Yeni kariyer: ilk gap-1 haftada ara yok, gap'inci haftada var. */
+    for (let i = 0; i < gap - 1; i++) await wk(a);
+    ok(fake.stat.ishows === 0, '(1) ilk ' + (gap - 1) + ' haftada gösterim yok');
+    await wk(a);
+    ok(a.R('S.tw') === gap, '(1) ' + gap + '. hafta oynandı');
+    ok(fake.stat.ishows === 1, '(1) ' + gap + '. haftada bir gösterim');
+    ok(a.R('S.adb.w') === gap, '(1) işaret aranın haftasına yazıldı');
     ok(a.R("adsBusy()") === 'inter', '(1) gösterim sürerken kilit kapalı');
 
     fake.emit('interstitialAdDismissed'); await tick();
     ok(a.R('ADS.iSt') === 'ready', '(1) kapanışta kilit açıldı ve sonraki kuruldu');
-    ok(fake.stat.iprepares === 2, '(1) bir sonraki geçiş için yeniden yüklendi');
+    ok(fake.stat.iprepares === 2, '(1) bir sonraki ara için yeniden yüklendi');
+
+    for (let i = 0; i < gap - 1; i++) await wk(a);
+    ok(fake.stat.ishows === 1, '(1) aradaki ' + (gap - 1) + ' haftada gösterim yok');
+    await wk(a);
+    ok(fake.stat.ishows === 2 && a.R('S.adb.w') === 2 * gap, '(1) tam ' + gap + ' hafta sonra ikinci gösterim');
+    fake.emit('interstitialAdDismissed'); await tick();
 
     await atEnd(a);
     ok(a.R('S.season') === se + 1, '(1) sezon gerçekten değişti');
-    ok(fake.stat.ishows === 2, '(1) sezon sonunda ikinci gösterim');
-    ok(a.R('S.adb.e') === se, '(1) hak BİTEN sezona yazıldı, yenisine değil');
+    ok(fake.stat.ishows === 3, '(1) sezonun bittiği haftaya denk gelen ara da gösterildi');
+    fake.emit('interstitialAdDismissed'); await tick();
+    await wk(a);
+    ok(fake.stat.ishows === 3, '(1) sayaç sezon değişiminde sıfırlanmadı: yeni sezonun ilk haftası ara değil');
   }
 
-  /* (2) AYNI GEÇİŞ İKİNCİ KEZ REKLAM DOĞURMUYOR — yeniden çizim, aynı noktaya
-         yeniden gelme ve yeniden yükleme. */
+  /* (2) AYNI ARA İKİNCİ KEZ REKLAM DOĞURMUYOR — yeniden çizim, yeniden sorma
+         ve yeniden yükleme. */
   {
     const disk = newDisk(), ls = {};
     const a = session(disk, ls, {});
     await a.booted; await careerIn(a, 1);
     const fake = fakeAdMobAged(a);
     await a.R('adsInit()'); await tick();
-    const se = a.R('S.season');
-    await atMid(a);
-    ok(fake.stat.ishows === 1, '(2) ilk geçişte bir gösterim');
+    await atBreak(a);
+    const w = a.R('S.tw');
+    ok(fake.stat.ishows === 1, '(2) arada bir gösterim');
     fake.emit('interstitialAdDismissed'); await tick();
 
     a.R('render();render();');
     ok(fake.stat.ishows === 1, '(2) yeniden çizim reklam doğurmadı');
 
-    /* Aynı sezonda aynı noktaya yeniden gelmek (hangi yolla olursa olsun). */
-    await atMid(a);
-    ok(fake.stat.ishows === 1, '(2) aynı geçiş ikinci kez reklam doğurmadı');
-    ok(a.R("adBreakClaim('m'," + se + ")") === '', '(2) hak yeniden verilmiyor');
+    ok(a.R('adBreakClaim()') === '', '(2) hak yeniden verilmiyor');
+    ok(a.R('S.adb.w') === w, '(2) boş soru işareti kıpırdatmadı');
 
     a.R('save();'); await a.R('saveDrain()');
     const b = session(disk, ls, {});
@@ -2615,12 +2645,12 @@ async function tSeasonBreakAds() {
     await b.R('loadSlot(1)');
     const fake2 = fakeAdMobAged(b);
     await b.R('adsInit()'); await tick();
-    ok(b.R('S.adb.m') === se, '(2) işaret kayıttan geri geldi');
-    await atMid(b);
+    ok(b.R('S.adb.w') === w && b.R('S.tw') === w, '(2) işaret kayıttan geri geldi');
+    await wk(b);
     ok(fake2.stat.ishows === 0, '(2) uygulamayı yeniden açmak da doğurmadı');
   }
 
-  /* (3) HAZIR REKLAM YOKSA GEÇİŞ BEKLEMİYOR — ve o reklam sonradan açılmıyor. */
+  /* (3) HAZIR REKLAM YOKSA HAFTA BEKLEMİYOR — ve o reklam sonradan açılmıyor. */
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
@@ -2628,11 +2658,11 @@ async function tSeasonBreakAds() {
     await a.R('adsInit()'); await tick();
     ok(a.R('ADS.iSt') === 'load', '(3) yükleme hâlâ uçuşta');
 
-    const se = a.R('S.season'), mid = a.R('midWeek()');
-    await atMid(a);
-    ok(a.R('S.week') === mid, '(3) geçiş BEKLEMEDİ, hafta ilerledi');
+    const w0 = a.R('S.week');
+    await atBreak(a);
+    ok(a.R('S.week') === w0 + 1, '(3) hafta BEKLEMEDİ, ilerledi');
     ok(fake.stat.ishows === 0, '(3) gösterim yok');
-    ok(a.R('S.adb.m') === se, '(3) hak yine de o geçişte yandı');
+    ok(a.R('S.adb.w') === a.R('S.tw'), '(3) hak yine de o arada yandı');
 
     fake.finishInterPrepare(); await tick(); await tick();
     ok(a.R('ADS.iSt') === 'ready', '(3) reklam sonradan yüklendi');
@@ -2640,8 +2670,10 @@ async function tSeasonBreakAds() {
     a.R('render();'); await tick();
     ok(fake.stat.ishows === 0, '(3) sonraki çizimlerde de açılmadı');
 
-    await atEnd(a);
-    ok(fake.stat.ishows === 1, '(3) yüklü reklam ancak SONRAKİ geçişte gösterildi');
+    await wk(a);
+    ok(fake.stat.ishows === 0, '(3) ara olmayan haftada da açılmadı');
+    await atBreak(a);
+    ok(fake.stat.ishows === 1, '(3) yüklü reklam ancak SONRAKİ arada gösterildi');
   }
 
   /* (4) YÜKLEME HATASI DÖNGÜ KURMUYOR. */
@@ -2654,9 +2686,11 @@ async function tSeasonBreakAds() {
     const n0 = fake.stat.iprepares;
     a.R('render();render();render();'); await tick();
     ok(fake.stat.iprepares === n0, '(4) çizim yeniden deneme başlatmadı');
-    await atMid(a);
+    await wk(a); await wk(a);
+    ok(fake.stat.iprepares === n0, '(4) ara olmayan haftalar yeniden deneme başlatmadı');
+    await atBreak(a);
     ok(fake.stat.ishows === 0, '(4) gösterim yok');
-    ok(fake.stat.iprepares === n0 + 1, '(4) yalnız geçişin kendisi bir deneme daha açtı');
+    ok(fake.stat.iprepares === n0 + 1, '(4) yalnız aranın kendisi bir deneme daha açtı');
   }
 
   /* (5) KAPILAR — yaş beyanı ve canRequestAds. İkisi de AYRI terim. */
@@ -2665,7 +2699,7 @@ async function tSeasonBreakAds() {
     await a.booted; await careerIn(a, 1);
     const fake = fakeAdMob(a.ctx, {});                 // beyan YOK
     ok(await a.R('adsInit()') === 'noage', '(5) yaş kapısı kapalı');
-    await atMid(a); await atEnd(a);
+    await atBreak(a); await atEnd(a);
     ok(fake.stat.iprepares === 0 && fake.stat.ishows === 0,
       '(5) beyan yokken ne hazırlama ne gösterim');
   }
@@ -2676,7 +2710,7 @@ async function tSeasonBreakAds() {
                                     formConsent: { canRequestAds: false } });
     await a.R('adsInit()'); await tick();
     ok(a.R('adsEligible()') === false, '(5) canRequestAds false');
-    await atMid(a); await atEnd(a);
+    await atBreak(a); await atEnd(a);
     ok(fake.stat.iprepares === 0 && fake.stat.ishows === 0,
       '(5) rıza yokken ne hazırlama ne gösterim');
   }
@@ -2690,7 +2724,7 @@ async function tSeasonBreakAds() {
     await a.R('adsInit()'); await tick();
     a.R('adsWatch();'); await tick();
     ok(a.R('adsBusy()') === 'ad', '(6) ödüllü reklam kilidi kapalı');
-    await atMid(a);
+    await atBreak(a);
     ok(fake.stat.ishows === 0, '(6) geçiş reklamı ödüllü reklamın üstüne açılmadı');
     ok(a.R('ADS.iSt') === 'ready', '(6) yüklü reklam yerinde kaldı');
   }
@@ -2699,7 +2733,7 @@ async function tSeasonBreakAds() {
     await a.booted; await careerIn(a, 1);
     const fake = fakeAdMobAged(a, { consent: { privacyOptionsRequirementStatus: 'REQUIRED' } });
     await a.R('adsInit()'); await tick();
-    await atMid(a);
+    await atBreak(a);
     ok(a.R('ADS.iSt') === 'show' && a.R('adsBusy()') === 'inter', '(6) geçiş reklamı ekranda');
     const shows0 = fake.stat.shows, privs0 = fake.stat.privs;
     a.R('adsWatch();'); await tick();
@@ -2740,23 +2774,61 @@ async function tSeasonBreakAds() {
     const fake = fakeAdMobAged(a);
     await a.R('adsInit()'); await tick();
     ok(fake.stat.iprepares === 0, '(8) hazırlama hiç yapılmadı');
-    await atMid(a); await atEnd(a);
-    ok(fake.stat.ishows === 0, '(8) iki geçişte de gösterim yok');
+    await atBreak(a); await atEnd(a);
+    ok(fake.stat.ishows === 0, '(8) iki arada da gösterim yok');
     /* Ödüllü reklam ETKİLENMİYOR: isteğe bağlı ve karşılığında ödül var. */
     ok(a.R('adsRowState()') === 'go', '(8) ödüllü reklam yolu açık kaldı');
   }
 
-  /* (9) Eski kayıt: S.adb yokken ilk geçiş çalışıyor ve alanı kendisi kuruyor. */
+  /* (9) Eski kayıt: S.adb yokken ya da yalnız eski m/e alanlarını taşırken ilk
+         hafta ara veriyor, alanı kendisi kuruyor ve eski alanlara dokunmuyor. */
   {
     const a = session(newDisk(), {}, {});
     await a.booted; await careerIn(a, 1);
-    a.R('delete S.adb;');
+    a.R('delete S.adb;S.tw=60;');
     const fake = fakeAdMobAged(a);
     await a.R('adsInit()'); await tick();
     ok(a.R('S.adb===undefined') === true, '(9) alan gerçekten yok');
-    await atMid(a);
-    ok(fake.stat.ishows === 1, '(9) eski kayıtta da geçiş çalıştı');
-    ok(a.R('typeof S.adb') === 'object', '(9) alan yokken kuruldu');
+    await wk(a);
+    ok(fake.stat.ishows === 1, '(9) eski kayıtta ilk hafta ara verdi');
+    ok(a.R('S.adb.w') === 61, '(9) alan yokken kuruldu');
+  }
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R('S.adb={m:2,e:1};S.tw=60;');
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    await wk(a);
+    ok(fake.stat.ishows === 1, '(9) eski biçimli işaret arayı kapatmadı');
+    ok(a.R('S.adb.m') === 2 && a.R('S.adb.e') === 1 && a.R('S.adb.w') === 61,
+      '(9) eski alanlar yerinde, yenisi eklendi');
+    fake.emit('interstitialAdDismissed'); await tick();
+    /* Bozuk işaret (sayı değil / ileride) reklamı sonsuza kadar kapatmıyor. */
+    a.R("S.adb.w='x';"); await wk(a);
+    ok(fake.stat.ishows === 2, '(9) sayı olmayan işaret "hiç ara verilmedi" sayıldı');
+    fake.emit('interstitialAdDismissed'); await tick();
+    a.R('S.adb.w=S.tw+500;'); await wk(a);
+    ok(fake.stat.ishows === 3, '(9) ilerideki işaret de öyle');
+  }
+
+  /* (10) BAYATLAMA — yüklü reklam bir saate yaklaşınca ara olmayan bir haftada
+          yenileniyor; taze olan yeniden istenmiyor; gösterim başlamıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeAdMobAged(a);
+    await a.R('adsInit()'); await tick();
+    ok(a.R('ADS.iSt') === 'ready' && a.R('ADS.iAt') > 0, '(10) yükleme anı kaydedildi');
+    await wk(a);
+    ok(fake.stat.iprepares === 1, '(10) taze reklam yeniden istenmedi');
+    a.R('ADS.iAt=Date.now()-AD_INTER_TTL-1;');
+    await wk(a);
+    ok(fake.stat.iprepares === 2, '(10) bayat reklamın yerine yenisi istendi');
+    ok(fake.stat.ishows === 0, '(10) yenileme gösterim başlatmadı');
+    ok(a.R('ADS.iSt') === 'ready' && Date.now() - a.R('ADS.iAt') < 60000, '(10) yenisi hazır');
+    await wk(a);
+    ok(fake.stat.iprepares === 2, '(10) yenileme tekrarlanmadı');
   }
 }
 

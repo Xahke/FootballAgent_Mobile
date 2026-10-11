@@ -1,5 +1,5 @@
 'use strict';
-/* js/ads-testcfg.js — UMP izin sorgusunun TEST yapılandırması.
+/* js/ads-testcfg.js — izin sorgusunun ve reklam isteğinin TEST yapılandırması.
 
    ===== BU DOSYANIN TAMAMI YAYIN İÇİN ETKİSİZDİR =====
 
@@ -26,7 +26,15 @@
 
    ===== NE GEÇEBİLİR, NE GEÇEMEZ =====
 
-   Buradan geçebilen TEK alan debugGeography. Rıza kararını etkileyen hiçbir
+   Buradan geçebilen İKİ alan var ve ikisinin okuyucusu ayrı:
+
+     debugGeography   adsTestOpts() → yalnız izin sorgusunun seçeneği
+     testAds          adsTestAds()  → yalnız reklam isteğinin isTesting'i
+
+   testAds true iken eklenti gerçek birim yerine Google'ın örnek birimini
+   istiyor. Burada null olduğu için yayın paketi GERÇEK birim ister.
+
+   Rıza kararını etkileyen hiçbir
    şey — tagForUnderAgeOfConsent, canRequestAds, test cihazı listesi — bu
    dosyadan verilmiyor ve adsTestOpts() tarafından okunmuyor. debugGeography
    yalnız UMP'ye "bu cihazı şu bölgedeymiş gibi değerlendir" diyor; kullanıcının

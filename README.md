@@ -114,10 +114,11 @@ No framework, no bundler, no runtime dependencies. Plain HTML, CSS and JavaScrip
   `WebSocket` anywhere in `js/`. In the browser build that is the whole story, so it
   is fully playable with no connection.
 - **The Android build is not offline-only.** It is packaged with Capacitor and talks
-  to Google through two plugins: ad consent (UMP) plus rewarded and season-transition
+  to Google through two plugins: ad consent (UMP) plus rewarded and periodic interstitial
   ads, and Google Play Billing for in-app purchases. That traffic belongs to the
   Google Play services client, not to `js/` — but the app does go online, and its
-  privacy policy says so. Ads currently use Google's sample ad units.
+  privacy policy says so. Release builds request the app's own ad units; debug builds
+  request Google's sample units.
 - **Sound is synthesised** with Web Audio — no audio files shipped.
 - **Fully bilingual**: 548 translation keys, Turkish and English both complete.
 

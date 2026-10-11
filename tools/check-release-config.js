@@ -134,8 +134,9 @@ if (!relFiles.length) {
      alarm üretirdi. Aranan, null OLMAYAN bir ADS_TESTCFG ATAMASI: anlamı olan
      tek şey o.
 
-     isTesting'e bakılmıyor: paket hâlâ bilerek test reklam birimleriyle
-     çalışıyor ve bu bir hata değil. */
+     Reklam isteğinin isTesting'i de AYNI nesneden geliyor (testAds →
+     adsTestAds): ADS_TESTCFG null ise release gerçek birim ister. Yani bu
+     kontrol iki şeyi birden tutuyor — test coğrafyası ve test reklamı. */
   const assigns = [];
   for (const p of relFiles) {
     if (!/\.js$/i.test(p)) continue;

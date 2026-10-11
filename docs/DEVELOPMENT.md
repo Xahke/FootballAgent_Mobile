@@ -102,8 +102,9 @@ uğruna zayıflatılmadı; yukarıdaki üç görev kapının desenine girmediği
 çalışıyor. Yani CI "release kodu derleniyor ve release varlıkları doğru" diyor,
 "imzalı bir AAB üretilebiliyor" DEMİYOR.
 
-`isTesting: true` bir hata sayılmıyor: paket hâlâ bilerek test reklam birimleriyle
-çalışıyor. Sorulan tek şey debug'ın AEA test coğrafyasının release'e taşınmadığı.
+Sorulan tek şey debug ayarının release'e taşınmadığı. O ayar iki şey taşıyor: AEA test
+coğrafyası ve test reklamı (`testAds`). Release `null` taşır ve gerçek reklam birimini
+ister.
 
 Tanım: `.github/workflows/android.yml`
 
@@ -481,7 +482,7 @@ hiçbiri CI'da yeşil görünmez:
 | Beklemede (PENDING) | Yavaş ödeme yöntemi | Hak YAZILMIYOR ve işlem kuyrukta kalıyor mu |
 | Otomatik iade | Onaylanmayan satın alma ~3 dk sonra iade edilir (bkz. *Lisans testinde dikkat*) | "hak yazıldı ama kapanış tutmadı" aşaması |
 
-Reklam tarafı da aynı durumda: rewarded ve sezon geçişi reklamlarının gerçekten
+Reklam tarafı da aynı durumda: rewarded ve hafta arası (10 haftada bir) reklamlarının gerçekten
 çizildiği yalnız cihazda/emülatörde ölçülebilir. Kaynak taraması ve mock testleri
 bunun yerine geçmez.
 
