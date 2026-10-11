@@ -46,3 +46,6 @@ GoogleService-Info.plist
 # tanımı değil — makinenin ve kullanıcının tercihleri. Kural burada, kökte,
 # çünkü hem ./.idea hem android/.idea aynı sebeple dışarıda kalmalı.
 .idea/
+
+# node tools/playtest.js çıktısı (CSV, ham JSON, özet). Her koşuda yeniden üretilir.
+playtest-out/
