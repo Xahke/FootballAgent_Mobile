@@ -10,6 +10,14 @@ from the three header lines above — **edit both together, or they drift.**
 A football **agent** simulation — you manage players' careers, not a club. Text-based,
 mobile-first, runs entirely client-side and offline. Turkish and English.
 
+**The first launch picks its language from the device, and only as a default.**
+`sysLang()` in `js/i18n.js` answers Turkish when the device points at Turkey by any one
+of three signs — a `tr` language, a `-TR` region, or the `Europe/Istanbul` time zone —
+and English everywhere else. The time zone is there because an English-language phone in
+Turkey says so nowhere else, and geo-IP would be a network request. The result is **never
+written to `PREFS.lang`**: a choice made in Settings always wins, and someone who never
+chose follows their device. `tools/savetest.js` block **30** holds it.
+
 Public MIT repo, still in development. Android/iOS store releases are planned, so
 anything committed here is visible to the world.
 
@@ -1757,9 +1765,9 @@ Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep
 with no keystore at all, so don't "fix" that path by making the config mandatory.
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
-twice. It is 7 today; 5 is what the closed-test track carried on 2 October 2026. A 6
-bundle was built on 9 October 2026 and may have been uploaded, so 7 was taken rather
-than risk a duplicate number. The
+twice. It is 8 today; 5 is what the closed-test track carried on 2 October 2026.
+Bundles numbered 6 (9 October) and 7 (11 October) were built and may have been
+uploaded, so each next build took a new number rather than risk a duplicate. The
 Android build carries ads, so don't claim the app is ad-free.
 
 ### Every icon and the splash come from one source file

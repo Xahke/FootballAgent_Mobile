@@ -52,7 +52,8 @@ function savePrefs(){
 }
 function pref(k,d){return PREFS[k]===undefined?d:PREFS[k];}
 function setPref(k,v){PREFS[k]=v;savePrefs();}
-/* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı */
+/* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı.
+   Tercih yoksa L, i18n.js'in cihazdan okuduğu varsayılanda kalıyor (sysLang). */
 if(PREFS.lang)L=PREFS.lang;
 
 /* ================= KARİYER KİMLİĞİ =================
@@ -204,8 +205,9 @@ function loadSlot(n){
        bilmediği bir şeyi de rapor etmemeli. Yazma tutmazsa kimlik bellekte
        kalır ve bir sonraki açılışta yeniden denenir. */
     if(ensureCid(S))saveToSlot(n);
-    /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
-    L=PREFS.lang||S.lang||'tr';
+    /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar),
+       o da yoksa cihazın gösterdiği varsayılan. */
+    L=PREFS.lang||S.lang||sysLang();
     /* Bekleyen bir satın alma bu kariyeri hedefliyor olabilir: hedefi artık
        bulunabilir durumda. Beklenmiyor — teslimat kullanıcının bu ekranı
        görmesine bağlanamaz, yalnız burada bir fırsat daha doğuyor. */

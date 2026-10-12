@@ -5958,6 +5958,66 @@ async function tIapQueueMerge() {
   }
 }
 
+/* ================= [30] AÇILIŞ DİLİ =================
+   İlk açılışta dil cihazdan okunuyor: Türkiye'yi gösteren üç işaretten biri
+   (dil, bölge, saat dilimi) varsa Türkçe, yoksa İngilizce. Bu yalnız varsayılan:
+   kullanıcının seçimi her zaman kazanıyor ve tespit tercihlere yazılmıyor. */
+async function tSysLang() {
+  console.log('\n[30] açılış dili: cihaz Türkiye\'yi gösteriyorsa Türkçe, yoksa İngilizce');
+  const NY = 'America/New_York', IST = 'Europe/Istanbul';
+  const fakeIntl = tz => ({ DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: tz }) }) });
+  const boot = async (nav, tz, ls) => {
+    const a = session(newDisk(), ls || {}, { pre: ctx => { ctx.navigator = nav; ctx.Intl = fakeIntl(tz); } });
+    await a.booted; return a;
+  };
+
+  /* (1) Saf karar tablosu. */
+  {
+    const a = session(newDisk(), {}, {}); await a.booted;
+    const f = (langs, tz) => a.R('sysLang(' + JSON.stringify({ languages: langs, language: langs[0] }) + ',' + JSON.stringify(tz) + ')');
+    ok(f(['tr-TR'], IST) === 'tr' && f(['tr'], NY) === 'tr', '(1) Türkçe cihaz → Türkçe (yurt dışında da)');
+    ok(f(['en-TR'], NY) === 'tr' && f(['de_TR'], NY) === 'tr', '(1) bölgesi Türkiye olan cihaz → Türkçe');
+    ok(f(['en-US'], IST) === 'tr' && f(['en-US'], 'Asia/Istanbul') === 'tr', '(1) yabancı dilli cihaz, Türkiye saati → Türkçe');
+    ok(f(['en-US'], NY) === 'en' && f(['de-DE'], 'Europe/Berlin') === 'en' && f(['fr-FR', 'en'], 'Europe/Paris') === 'en',
+      '(1) başka her yer → İngilizce');
+    ok(f(['en-US', 'tr-TR'], NY) === 'tr', '(1) ikincil dil Türkçe ise yine Türkçe');
+    ok(f(['trv-TW'], NY) === 'en' && f(['en-TT'], NY) === 'en', '(1) "tr" ile başlayan / "T" içeren başka kodlar Türkçe sayılmıyor');
+    ok(a.R("sysLang(null,'')") === 'tr' && a.R("sysLang({},'')") === 'tr', '(1) hiç işaret yoksa oyunun kendi dili');
+    ok(a.R("sysLang({get languages(){throw new Error('x')}},'')") === 'tr', '(1) okuma patlarsa çökmüyor');
+  }
+
+  /* (2) Gerçek açılış: tercih yokken menü tespit edilen dilde, tercihlere yazılmadan. */
+  {
+    const ls = {};
+    const a = await boot({ language: 'en-US', languages: ['en-US'], userAgent: 'node' }, NY, ls);
+    ok(a.R('L') === 'en', '(2) yabancı cihazda ilk açılış İngilizce');
+    ok(a.R('PREFS.lang') === undefined, '(2) tespit tercihlere yazılmadı');
+    await careerIn(a, 1);
+    ok(a.R('L') === 'en', '(2) kariyer açılınca da İngilizce kaldı');
+  }
+  {
+    const a = await boot({ language: 'tr-TR', languages: ['tr-TR'], userAgent: 'node' }, IST);
+    ok(a.R('L') === 'tr', '(2) Türkiye cihazında ilk açılış Türkçe');
+  }
+
+  /* (3) Kullanıcının seçimi tespiti eziyor — iki yönde de, yeniden açılışta da. */
+  {
+    const ls = {};
+    const a = await boot({ language: 'en-US', languages: ['en-US'], userAgent: 'node' }, NY, ls);
+    a.R("setLangTo('tr');");
+    ok(a.R('L') === 'tr' && a.R('PREFS.lang') === 'tr', '(3) seçim yazıldı');
+    const b = await boot({ language: 'en-US', languages: ['en-US'], userAgent: 'node' }, NY, ls);
+    ok(b.R('L') === 'tr', '(3) yabancı cihazda seçilen Türkçe yeniden açılışta korundu');
+  }
+  {
+    const ls = {};
+    const a = await boot({ language: 'tr-TR', languages: ['tr-TR'], userAgent: 'node' }, IST, ls);
+    a.R("setLangTo('en');");
+    const b = await boot({ language: 'tr-TR', languages: ['tr-TR'], userAgent: 'node' }, IST, ls);
+    ok(b.R('L') === 'en', '(3) Türkiye cihazında seçilen İngilizce yeniden açılışta korundu');
+  }
+}
+
 /* ================= koşu ================= */
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
@@ -5968,7 +6028,7 @@ async function tIapQueueMerge() {
                  tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
                  tSeasonBreakAds, tShopAndIap, tPlayBilling,
                  tStorageFallback, tSameCidFork, tForkRestoreCost, tIapQueueLoad,
-                 tIapQueueMerge];
+                 tIapQueueMerge, tSysLang];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

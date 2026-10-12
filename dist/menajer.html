@@ -5773,7 +5773,41 @@ pfWait:'Cooldown',
 pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
-let L='tr';
+/* İlk açılışın dili: cihaz Türkiye'yi gösteriyorsa Türkçe, başka her yerde
+   İngilizce. "Türkiye" üç işaretten HERHANGİ biriyle anlaşılıyor:
+
+     dil      tr / tr-TR / tr-CY   Türkçe kullanan cihaz, nerede olursa olsun
+     bölge    en-TR / de-TR        bölgesi Türkiye'ye ayarlı cihaz
+     saat     Europe/Istanbul      dili de bölgesi de yabancı ama Türkiye'de
+
+   Üçü de cihazın kendi ayarı; ağ isteği yok ve olmayacak (IP'den konum, oyunun
+   hiçbir istek atmama kuralını bozardı). Saat dilimi bu yüzden var: İngilizce
+   kurulmuş bir telefon Türkiye'de olduğunu başka hiçbir yerden söylemiyor.
+
+   Bu yalnız bir VARSAYILAN. PREFS.lang'e yazılmıyor: kullanıcı Ayarlar'dan dil
+   seçtiği an o seçim kazanır (saves.js) ve bu fonksiyonun sonucu bir daha
+   okunmaz. Yazılmadığı için de, hiç seçim yapmamış biri cihazının dilini
+   değiştirirse oyun onu izler.
+
+   Hiçbir işaret okunamıyorsa oyunun yazıldığı dil kalıyor. Parametreler yalnız
+   test için; üretimde argümansız çağrılıyor. */
+function sysLang(nav,tz){
+  try{
+    if(nav===undefined)nav=(typeof navigator!=='undefined')?navigator:null;
+    if(tz===undefined){
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){tz='';}
+    }
+    const ls=[];
+    if(nav){
+      if(Array.isArray(nav.languages))nav.languages.forEach(x=>ls.push(String(x)));
+      if(nav.language)ls.push(String(nav.language));
+    }
+    if(ls.some(x=>/^tr([-_]|$)/i.test(x)||/[-_]TR([-_]|$)/.test(x)))return 'tr';
+    if(/^(Europe\/Istanbul|Asia\/Istanbul|Turkey)$/.test(String(tz||'')))return 'tr';
+    return (ls.length||tz)?'en':'tr';
+  }catch(e){return 'tr';}
+}
+let L=sysLang();
 const t=k=>STR[L][k]||k;
 /* Oyunun tek dış bağlantısı: mağazanın istediği gizlilik metni. Dile göre ayrı sayfa.
    Çeviri değil adres olduğu için STR'de değil, {tr,en} tablosu olarak burada duruyor —
@@ -6284,7 +6318,8 @@ function savePrefs(){
 }
 function pref(k,d){return PREFS[k]===undefined?d:PREFS[k];}
 function setPref(k,v){PREFS[k]=v;savePrefs();}
-/* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı */
+/* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı.
+   Tercih yoksa L, i18n.js'in cihazdan okuduğu varsayılanda kalıyor (sysLang). */
 if(PREFS.lang)L=PREFS.lang;
 
 /* ================= KARİYER KİMLİĞİ =================
@@ -6436,8 +6471,9 @@ function loadSlot(n){
        bilmediği bir şeyi de rapor etmemeli. Yazma tutmazsa kimlik bellekte
        kalır ve bir sonraki açılışta yeniden denenir. */
     if(ensureCid(S))saveToSlot(n);
-    /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar). */
-    L=PREFS.lang||S.lang||'tr';
+    /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar),
+       o da yoksa cihazın gösterdiği varsayılan. */
+    L=PREFS.lang||S.lang||sysLang();
     /* Bekleyen bir satın alma bu kariyeri hedefliyor olabilir: hedefi artık
        bulunabilir durumda. Beklenmiyor — teslimat kullanıcının bu ekranı
        görmesine bağlanamaz, yalnız burada bir fırsat daha doğuyor. */
