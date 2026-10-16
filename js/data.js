@@ -115,67 +115,67 @@ const NAT2CTRY={tr:'TR',en:'EN',es:'ES',de:'DE',it:'IT',fr:'FR',nl:'NL',pt:'PT',
  us:'US',mx:'MX',sa:'SA',jp:'JP',ng:'WAF',sn:'WAF',gh:'WAF',cm:'WAF',eg:'NAF',ma:'NAF',
  be:'NL',hr:'IT',rs:'IT',pl:'DE',cz:'DE',gr:'IT',no:'EN',se:'EN',dk:'DE',ch:'DE',at:'DE',ua:'DE',ro:'IT',sct:'EN',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP'};
 const NATNAME={
- tr:{tr:'Türkiye',en:'Türkiye'},en:{tr:'İngiltere',en:'England'},es:{tr:'İspanya',en:'Spain'},
- de:{tr:'Almanya',en:'Germany'},it:{tr:'İtalya',en:'Italy'},fr:{tr:'Fransa',en:'France'},
- br:{tr:'Brezilya',en:'Brazil'},ar:{tr:'Arjantin',en:'Argentina'},nl:{tr:'Hollanda',en:'Netherlands'},
- pt:{tr:'Portekiz',en:'Portugal'},us:{tr:'ABD',en:'USA'},mx:{tr:'Meksika',en:'Mexico'},
- sa:{tr:'S. Arabistan',en:'Saudi Arabia'},jp:{tr:'Japonya',en:'Japan'},
- ng:{tr:'Nijerya',en:'Nigeria'},sn:{tr:'Senegal',en:'Senegal'},gh:{tr:'Gana',en:'Ghana'},
- cm:{tr:'Kamerun',en:'Cameroon'},eg:{tr:'Mısır',en:'Egypt'},ma:{tr:'Fas',en:'Morocco'},
- be:{tr:'Belçika',en:'Belgium'},
- hr:{tr:'Hırvatistan',en:'Croatia'},
- rs:{tr:'Sırbistan',en:'Serbia'},
- pl:{tr:'Polonya',en:'Poland'},
- cz:{tr:'Çekya',en:'Czechia'},
- gr:{tr:'Yunanistan',en:'Greece'},
- no:{tr:'Norveç',en:'Norway'},
- se:{tr:'İsveç',en:'Sweden'},
- dk:{tr:'Danimarka',en:'Denmark'},
- ch:{tr:'İsviçre',en:'Switzerland'},
- at:{tr:'Avusturya',en:'Austria'},
- ua:{tr:'Ukrayna',en:'Ukraine'},
- ro:{tr:'Romanya',en:'Romania'},
- sct:{tr:'İskoçya',en:'Scotland'},
- ie:{tr:'İrlanda',en:'Ireland'},
- ru:{tr:'Rusya',en:'Russia'},
- co:{tr:'Kolombiya',en:'Colombia'},
- uy:{tr:'Uruguay',en:'Uruguay'},
- cl:{tr:'Şili',en:'Chile'},
- pe:{tr:'Peru',en:'Peru'},
- ec:{tr:'Ekvador',en:'Ecuador'},
- py:{tr:'Paraguay',en:'Paraguay'},
- ve:{tr:'Venezuela',en:'Venezuela'},
- ci:{tr:'Fildişi Sahili',en:'Ivory Coast'},
- dz:{tr:'Cezayir',en:'Algeria'},
- tn:{tr:'Tunus',en:'Tunisia'},
- ml:{tr:'Mali',en:'Mali'},
- cd:{tr:'Kongo DC',en:'DR Congo'},
- kr:{tr:'G. Kore',en:'South Korea'},
- ir:{tr:'İran',en:'Iran'},
- au:{tr:'Avustralya',en:'Australia'},
- cn:{tr:'Çin',en:'China'}};
+ tr:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},en:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},es:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
+ de:{tr:'Almanya',en:'Germany',es:'Alemania',pt:'Alemanha',de:'Deutschland',fr:'Allemagne',it:'Germania'},it:{tr:'İtalya',en:'Italy',es:'Italia',pt:'Itália',de:'Italien',fr:'Italie',it:'Italia'},fr:{tr:'Fransa',en:'France',es:'Francia',pt:'França',de:'Frankreich',fr:'France',it:'Francia'},
+ br:{tr:'Brezilya',en:'Brazil',es:'Brasil',pt:'Brasil',de:'Brasilien',fr:'Brésil',it:'Brasile'},ar:{tr:'Arjantin',en:'Argentina',es:'Argentina',pt:'Argentina',de:'Argentinien',fr:'Argentine',it:'Argentina'},nl:{tr:'Hollanda',en:'Netherlands',es:'Países Bajos',pt:'Holanda',de:'Niederlande',fr:'Pays-Bas',it:'Paesi Bassi'},
+ pt:{tr:'Portekiz',en:'Portugal',es:'Portugal',pt:'Portugal',de:'Portugal',fr:'Portugal',it:'Portogallo'},us:{tr:'ABD',en:'USA',es:'EE. UU.',pt:'EUA',de:'USA',fr:'États-Unis',it:'Stati Uniti'},mx:{tr:'Meksika',en:'Mexico',es:'México',pt:'México',de:'Mexiko',fr:'Mexique',it:'Messico'},
+ sa:{tr:'S. Arabistan',en:'Saudi Arabia',es:'Arabia Saudí',pt:'Arábia Saudita',de:'Saudi-Arabien',fr:'Arabie saoudite',it:'Arabia Saudita'},jp:{tr:'Japonya',en:'Japan',es:'Japón',pt:'Japão',de:'Japan',fr:'Japon',it:'Giappone'},
+ ng:{tr:'Nijerya',en:'Nigeria',es:'Nigeria',pt:'Nigéria',de:'Nigeria',fr:'Nigeria',it:'Nigeria'},sn:{tr:'Senegal',en:'Senegal',es:'Senegal',pt:'Senegal',de:'Senegal',fr:'Sénégal',it:'Senegal'},gh:{tr:'Gana',en:'Ghana',es:'Ghana',pt:'Gana',de:'Ghana',fr:'Ghana',it:'Ghana'},
+ cm:{tr:'Kamerun',en:'Cameroon',es:'Camerún',pt:'Camarões',de:'Kamerun',fr:'Cameroun',it:'Camerun'},eg:{tr:'Mısır',en:'Egypt',es:'Egipto',pt:'Egito',de:'Ägypten',fr:'Égypte',it:'Egitto'},ma:{tr:'Fas',en:'Morocco',es:'Marruecos',pt:'Marrocos',de:'Marokko',fr:'Maroc',it:'Marocco'},
+ be:{tr:'Belçika',en:'Belgium',es:'Bélgica',pt:'Bélgica',de:'Belgien',fr:'Belgique',it:'Belgio'},
+ hr:{tr:'Hırvatistan',en:'Croatia',es:'Croacia',pt:'Croácia',de:'Kroatien',fr:'Croatie',it:'Croazia'},
+ rs:{tr:'Sırbistan',en:'Serbia',es:'Serbia',pt:'Sérvia',de:'Serbien',fr:'Serbie',it:'Serbia'},
+ pl:{tr:'Polonya',en:'Poland',es:'Polonia',pt:'Polônia',de:'Polen',fr:'Pologne',it:'Polonia'},
+ cz:{tr:'Çekya',en:'Czechia',es:'Chequia',pt:'Tchéquia',de:'Tschechien',fr:'Tchéquie',it:'Cechia'},
+ gr:{tr:'Yunanistan',en:'Greece',es:'Grecia',pt:'Grécia',de:'Griechenland',fr:'Grèce',it:'Grecia'},
+ no:{tr:'Norveç',en:'Norway',es:'Noruega',pt:'Noruega',de:'Norwegen',fr:'Norvège',it:'Norvegia'},
+ se:{tr:'İsveç',en:'Sweden',es:'Suecia',pt:'Suécia',de:'Schweden',fr:'Suède',it:'Svezia'},
+ dk:{tr:'Danimarka',en:'Denmark',es:'Dinamarca',pt:'Dinamarca',de:'Dänemark',fr:'Danemark',it:'Danimarca'},
+ ch:{tr:'İsviçre',en:'Switzerland',es:'Suiza',pt:'Suíça',de:'Schweiz',fr:'Suisse',it:'Svizzera'},
+ at:{tr:'Avusturya',en:'Austria',es:'Austria',pt:'Áustria',de:'Österreich',fr:'Autriche',it:'Austria'},
+ ua:{tr:'Ukrayna',en:'Ukraine',es:'Ucrania',pt:'Ucrânia',de:'Ukraine',fr:'Ukraine',it:'Ucraina'},
+ ro:{tr:'Romanya',en:'Romania',es:'Rumanía',pt:'Romênia',de:'Rumänien',fr:'Roumanie',it:'Romania'},
+ sct:{tr:'İskoçya',en:'Scotland',es:'Escocia',pt:'Escócia',de:'Schottland',fr:'Écosse',it:'Scozia'},
+ ie:{tr:'İrlanda',en:'Ireland',es:'Irlanda',pt:'Irlanda',de:'Irland',fr:'Irlande',it:'Irlanda'},
+ ru:{tr:'Rusya',en:'Russia',es:'Rusia',pt:'Rússia',de:'Russland',fr:'Russie',it:'Russia'},
+ co:{tr:'Kolombiya',en:'Colombia',es:'Colombia',pt:'Colômbia',de:'Kolumbien',fr:'Colombie',it:'Colombia'},
+ uy:{tr:'Uruguay',en:'Uruguay',es:'Uruguay',pt:'Uruguai',de:'Uruguay',fr:'Uruguay',it:'Uruguay'},
+ cl:{tr:'Şili',en:'Chile',es:'Chile',pt:'Chile',de:'Chile',fr:'Chili',it:'Cile'},
+ pe:{tr:'Peru',en:'Peru',es:'Perú',pt:'Peru',de:'Peru',fr:'Pérou',it:'Perù'},
+ ec:{tr:'Ekvador',en:'Ecuador',es:'Ecuador',pt:'Equador',de:'Ecuador',fr:'Équateur',it:'Ecuador'},
+ py:{tr:'Paraguay',en:'Paraguay',es:'Paraguay',pt:'Paraguai',de:'Paraguay',fr:'Paraguay',it:'Paraguay'},
+ ve:{tr:'Venezuela',en:'Venezuela',es:'Venezuela',pt:'Venezuela',de:'Venezuela',fr:'Venezuela',it:'Venezuela'},
+ ci:{tr:'Fildişi Sahili',en:'Ivory Coast',es:'Costa de Marfil',pt:'Costa do Marfim',de:'Elfenbeinküste',fr:"Côte d'Ivoire",it:"Costa d'Avorio"},
+ dz:{tr:'Cezayir',en:'Algeria',es:'Argelia',pt:'Argélia',de:'Algerien',fr:'Algérie',it:'Algeria'},
+ tn:{tr:'Tunus',en:'Tunisia',es:'Túnez',pt:'Tunísia',de:'Tunesien',fr:'Tunisie',it:'Tunisia'},
+ ml:{tr:'Mali',en:'Mali',es:'Malí',pt:'Mali',de:'Mali',fr:'Mali',it:'Mali'},
+ cd:{tr:'Kongo DC',en:'DR Congo',es:'RD Congo',pt:'RD Congo',de:'DR Kongo',fr:'RD Congo',it:'RD del Congo'},
+ kr:{tr:'G. Kore',en:'South Korea',es:'Corea del Sur',pt:'Coreia do Sul',de:'Südkorea',fr:'Corée du Sud',it:'Corea del Sud'},
+ ir:{tr:'İran',en:'Iran',es:'Irán',pt:'Irã',de:'Iran',fr:'Iran',it:'Iran'},
+ au:{tr:'Avustralya',en:'Australia',es:'Australia',pt:'Austrália',de:'Australien',fr:'Australie',it:'Australia'},
+ cn:{tr:'Çin',en:'China',es:'China',pt:'China',de:'China',fr:'Chine',it:'Cina'}};
 /* ================= LEAGUES / TEAMS ================= */
 const CONTS=[
- ['eu', {tr:'Avrupa',en:'Europe'}],
- ['sam',{tr:'G. Amerika',en:'S. America'}],
- ['nam',{tr:'K. Amerika',en:'N. America'}],
- ['as', {tr:'Asya',en:'Asia'}],
- ['af', {tr:'Afrika',en:'Africa'}],
- ['cup',{tr:'Kupalar',en:'Cups'}]];
+ ['eu', {tr:'Avrupa',en:'Europe',es:'Europa',pt:'Europa',de:'Europa',fr:'Europe',it:'Europa'}],
+ ['sam',{tr:'G. Amerika',en:'S. America',es:'Sudamérica',pt:'Am. do Sul',de:'Südamerika',fr:'Am. du Sud',it:'Sudamerica'}],
+ ['nam',{tr:'K. Amerika',en:'N. America',es:'Norteamérica',pt:'Am. do Norte',de:'Nordamerika',fr:'Am. du Nord',it:'Nordamerica'}],
+ ['as', {tr:'Asya',en:'Asia',es:'Asia',pt:'Ásia',de:'Asien',fr:'Asie',it:'Asia'}],
+ ['af', {tr:'Afrika',en:'Africa',es:'África',pt:'África',de:'Afrika',fr:'Afrique',it:'Africa'}],
+ ['cup',{tr:'Kupalar',en:'Cups',es:'Copas',pt:'Copas',de:'Pokale',fr:'Coupes',it:'Coppe'}]];
 const CUPS=[
- {c:'EC1', n:{tr:'Kıta Kupası',en:'Continental Cup'}},
- {c:'EC2', n:{tr:'Birlik Kupası',en:'Union Cup'}},
- {c:'EC3', n:{tr:'Bölge Kupası',en:'Regional Cup'}}];
+ {c:'EC1', n:{tr:'Kıta Kupası',en:'Continental Cup',es:'Copa Continental',pt:'Copa Continental',de:'Kontinentalpokal',fr:'Coupe continentale',it:'Coppa Continentale'}},
+ {c:'EC2', n:{tr:'Birlik Kupası',en:'Union Cup',es:'Copa de la Unión',pt:'Copa da União',de:'Unionspokal',fr:"Coupe de l'Union",it:"Coppa dell'Unione"}},
+ {c:'EC3', n:{tr:'Bölge Kupası',en:'Regional Cup',es:'Copa Regional',pt:'Copa Regional',de:'Regionalpokal',fr:'Coupe régionale',it:'Coppa Regionale'}}];
 const CUPWKS=[8,14,24,32]; // R16, QF, SF, Final
 const TIERS=[['TR1','TR2'],['EN1','EN2'],['ES1','ES2'],['DE1','DE2'],['IT1','IT2'],['FR1','FR2']];
 const CTRYS={
- TR:{tr:'Türkiye',en:'Türkiye'},EN:{tr:'İngiltere',en:'England'},ES:{tr:'İspanya',en:'Spain'},
- DE:{tr:'Almanya',en:'Germany'},IT:{tr:'İtalya',en:'Italy'},FR:{tr:'Fransa',en:'France'},
- NL:{tr:'Hollanda',en:'Netherlands'},PT:{tr:'Portekiz',en:'Portugal'},
- BR:{tr:'Brezilya',en:'Brazil'},AR:{tr:'Arjantin',en:'Argentina'},
- US:{tr:'ABD',en:'USA'},MX:{tr:'Meksika',en:'Mexico'},
- SA:{tr:'S. Arabistan',en:'Saudi Arabia'},JP:{tr:'Japonya',en:'Japan'},
- NAF:{tr:'Kuzey Afrika',en:'North Africa'},WAF:{tr:'Batı Afrika',en:'West Africa'}};
+ TR:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},EN:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},ES:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
+ DE:{tr:'Almanya',en:'Germany',es:'Alemania',pt:'Alemanha',de:'Deutschland',fr:'Allemagne',it:'Germania'},IT:{tr:'İtalya',en:'Italy',es:'Italia',pt:'Itália',de:'Italien',fr:'Italie',it:'Italia'},FR:{tr:'Fransa',en:'France',es:'Francia',pt:'França',de:'Frankreich',fr:'France',it:'Francia'},
+ NL:{tr:'Hollanda',en:'Netherlands',es:'Países Bajos',pt:'Holanda',de:'Niederlande',fr:'Pays-Bas',it:'Paesi Bassi'},PT:{tr:'Portekiz',en:'Portugal',es:'Portugal',pt:'Portugal',de:'Portugal',fr:'Portugal',it:'Portogallo'},
+ BR:{tr:'Brezilya',en:'Brazil',es:'Brasil',pt:'Brasil',de:'Brasilien',fr:'Brésil',it:'Brasile'},AR:{tr:'Arjantin',en:'Argentina',es:'Argentina',pt:'Argentina',de:'Argentinien',fr:'Argentine',it:'Argentina'},
+ US:{tr:'ABD',en:'USA',es:'EE. UU.',pt:'EUA',de:'USA',fr:'États-Unis',it:'Stati Uniti'},MX:{tr:'Meksika',en:'Mexico',es:'México',pt:'México',de:'Mexiko',fr:'Mexique',it:'Messico'},
+ SA:{tr:'S. Arabistan',en:'Saudi Arabia',es:'Arabia Saudí',pt:'Arábia Saudita',de:'Saudi-Arabien',fr:'Arabie saoudite',it:'Arabia Saudita'},JP:{tr:'Japonya',en:'Japan',es:'Japón',pt:'Japão',de:'Japan',fr:'Japon',it:'Giappone'},
+ NAF:{tr:'Kuzey Afrika',en:'North Africa',es:'África del Norte',pt:'Norte da África',de:'Nordafrika',fr:'Afrique du Nord',it:'Nord Africa'},WAF:{tr:'Batı Afrika',en:'West Africa',es:'África Occidental',pt:'África Ocidental',de:'Westafrika',fr:"Afrique de l'Ouest",it:'Africa occidentale'}};
 const LEAGUES=[
  {c:'TR1',nat:'tr', con:'eu', ctry:'TR',tier:1},
  {c:'EN1',nat:'en', con:'eu', ctry:'EN',tier:1},
@@ -187,8 +187,8 @@ const LEAGUES=[
  {c:'PT1',nat:'pt', con:'eu', ctry:'PT',tier:1},
  {c:'TR2',nat:'tr', con:'eu', ctry:'TR',tier:2},
  {c:'BR1',nat:'br', con:'sam',ctry:'BR',tier:1},
- {c:'AR1',nat:'ar', con:'sam',ctry:'AR',tier:1, grp:2, gl:[{tr:'Kuzey Bölgesi',en:'Northern Zone'},{tr:'Güney Bölgesi',en:'Southern Zone'}]},
- {c:'US1',nat:'us', con:'nam',ctry:'US',tier:1, grp:2, gl:[{tr:'Doğu',en:'Eastern'},{tr:'Batı',en:'Western'}]},
+ {c:'AR1',nat:'ar', con:'sam',ctry:'AR',tier:1, grp:2, gl:[{tr:'Kuzey Bölgesi',en:'Northern Zone',es:'Zona Norte',pt:'Zona Norte',de:'Zone Nord',fr:'Zone Nord',it:'Zona Nord'},{tr:'Güney Bölgesi',en:'Southern Zone',es:'Zona Sur',pt:'Zona Sul',de:'Zone Süd',fr:'Zone Sud',it:'Zona Sud'}]},
+ {c:'US1',nat:'us', con:'nam',ctry:'US',tier:1, grp:2, gl:[{tr:'Doğu',en:'Eastern',es:'Este',pt:'Leste',de:'Ost',fr:'Est',it:'Est'},{tr:'Batı',en:'Western',es:'Oeste',pt:'Oeste',de:'West',fr:'Ouest',it:'Ovest'}]},
  {c:'MX1',nat:'mx', con:'nam',ctry:'MX',tier:1},
  {c:'SA1',nat:'sa', con:'as', ctry:'SA',tier:1},
  {c:'JP1',nat:'jp', con:'as', ctry:'JP',tier:1},
@@ -443,12 +443,12 @@ const TEAMS=[
 /* Uyruk → kıta. Kurulum ekranı önce kıta, sonra ülke sorar; 52 ülkeyi tek listede
    göstermek okunmuyordu. Futbol federasyonu esas alındı: Türkiye ve Rusya Avrupa. */
 const NCONTS=[
- ['eu', {tr:'Avrupa',en:'Europe'}],
- ['sam',{tr:'Güney Amerika',en:'South America'}],
- ['nam',{tr:'Kuzey Amerika',en:'North America'}],
- ['af', {tr:'Afrika',en:'Africa'}],
- ['as', {tr:'Asya',en:'Asia'}],
- ['oc', {tr:'Okyanusya',en:'Oceania'}]];
+ ['eu', {tr:'Avrupa',en:'Europe',es:'Europa',pt:'Europa',de:'Europa',fr:'Europe',it:'Europa'}],
+ ['sam',{tr:'Güney Amerika',en:'South America',es:'Sudamérica',pt:'América do Sul',de:'Südamerika',fr:'Amérique du Sud',it:'Sudamerica'}],
+ ['nam',{tr:'Kuzey Amerika',en:'North America',es:'Norteamérica',pt:'América do Norte',de:'Nordamerika',fr:'Amérique du Nord',it:'Nordamerica'}],
+ ['af', {tr:'Afrika',en:'Africa',es:'África',pt:'África',de:'Afrika',fr:'Afrique',it:'Africa'}],
+ ['as', {tr:'Asya',en:'Asia',es:'Asia',pt:'Ásia',de:'Asien',fr:'Asie',it:'Asia'}],
+ ['oc', {tr:'Okyanusya',en:'Oceania',es:'Oceanía',pt:'Oceania',de:'Ozeanien',fr:'Océanie',it:'Oceania'}]];
 const NATCON={
  tr:'eu',en:'eu',es:'eu',de:'eu',it:'eu',fr:'eu',nl:'eu',pt:'eu',be:'eu',hr:'eu',rs:'eu',pl:'eu',
  cz:'eu',gr:'eu',no:'eu',se:'eu',dk:'eu',ch:'eu',at:'eu',ua:'eu',ro:'eu',sct:'eu',ie:'eu',ru:'eu',
@@ -458,5 +458,5 @@ const NATCON={
  sa:'as',jp:'as',kr:'as',ir:'as',cn:'as',
  au:'oc'};
 const POS=['KL','DF','OS','FV'];
-const POSL={tr:{KL:'KL',DF:'DF',OS:'OS',FV:'FV'},en:{KL:'GK',DF:'DF',OS:'MF',FV:'FW'}};
-const POSFULL={tr:{KL:'Kaleci',DF:'Defans',OS:'Orta Saha',FV:'Forvet'},en:{KL:'Goalkeeper',DF:'Defender',OS:'Midfielder',FV:'Forward'}};
+const POSL={tr:{KL:'KL',DF:'DF',OS:'OS',FV:'FV'},en:{KL:'GK',DF:'DF',OS:'MF',FV:'FW'},es:{KL:'POR',DF:'DEF',OS:'MED',FV:'DEL'},pt:{KL:'GOL',DF:'DEF',OS:'MEI',FV:'ATA'},de:{KL:'TW',DF:'AB',OS:'MF',FV:'ST'},fr:{KL:'GB',DF:'DÉF',OS:'MIL',FV:'ATT'},it:{KL:'POR',DF:'DIF',OS:'CEN',FV:'ATT'}};
+const POSFULL={tr:{KL:'Kaleci',DF:'Defans',OS:'Orta Saha',FV:'Forvet'},en:{KL:'Goalkeeper',DF:'Defender',OS:'Midfielder',FV:'Forward'},es:{KL:'Portero',DF:'Defensa',OS:'Centrocampista',FV:'Delantero'},pt:{KL:'Goleiro',DF:'Defensor',OS:'Meio-campista',FV:'Atacante'},de:{KL:'Torwart',DF:'Verteidiger',OS:'Mittelfeldspieler',FV:'Stürmer'},fr:{KL:'Gardien',DF:'Défenseur',OS:'Milieu',FV:'Attaquant'},it:{KL:'Portiere',DF:'Difensore',OS:'Centrocampista',FV:'Attaccante'}};

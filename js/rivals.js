@@ -87,67 +87,137 @@ function rivScale(){const n=(S&&S.rivals&&S.rivals.length)||RIV.tuneN;return RIV
    taşındı, yoksa yeni bir bölgesel arketip eklemek kod değiştirmeyi gerektirirdi. */
 const RIV_ARCH=[
  {id:'shark',   poach:1.5, chase:0.9, youth:0.2, elite:1.3, comm:0.22, loyal:0.6, size:0.9, rep:[45,70],
-  n:{tr:'Vurguncu',en:'The Shark'},
+  n:{tr:'Vurguncu',en:'The Shark',es:'El Tiburón',pt:'O Tubarão',de:'Der Hai',fr:'Le Requin',it:'Lo Squalo'},
   dsc:{tr:'Yüksek komisyonla çalışır, yıldızın peşinden gider ve kimseye sormadan telefon açar. Müşterisi de aynı hızla kapıyı bulur.',
-       en:'Works on a fat percentage, chases the stars and calls anyone without asking. His clients leave just as fast.'}},
+       en:'Works on a fat percentage, chases the stars and calls anyone without asking. His clients leave just as fast.',
+       es:'Trabaja con un porcentaje gordo, persigue a las estrellas y llama a quien haga falta sin pedir permiso. Sus clientes se le van igual de rápido.',
+       pt:'Trabalha com uma porcentagem gorda, corre atrás das estrelas e liga para qualquer um sem pedir licença. Os clientes dele vão embora na mesma velocidade.',
+       de:'Arbeitet mit fetter Provision, jagt den Stars hinterher und ruft jeden an, ohne zu fragen. Seine Klienten sind genauso schnell wieder weg.',
+       fr:"Il travaille avec un gros pourcentage, court après les stars et appelle n'importe qui sans demander. Ses clients repartent aussi vite.",
+       it:'Lavora con una percentuale grassa, insegue le stelle e chiama chiunque senza chiedere il permesso. I suoi assistiti se ne vanno altrettanto in fretta.'}},
  {id:'youth',   poach:0.5, chase:1.4, youth:1.6, elite:0.3, comm:0.10, loyal:1.1, size:1.1, rep:[20,45],
-  n:{tr:'Fidanlık',en:'The Nursery'},
+  n:{tr:'Fidanlık',en:'The Nursery',es:'La Cantera',pt:'A Base',de:'Die Talentschmiede',fr:'La Pépinière',it:'Il Vivaio'},
   dsc:{tr:'On altı yaşındakileri toplar, on yıl bekler. Yıldızlarla işi yok — yıldızı kendi yetiştirir.',
-       en:'Signs sixteen-year-olds and waits a decade. No interest in stars — he grows his own.'}},
+       en:'Signs sixteen-year-olds and waits a decade. No interest in stars — he grows his own.',
+       es:'Ficha a chavales de dieciséis años y espera una década. Las estrellas no le interesan: se las fabrica él.',
+       pt:'Assina com garotos de dezesseis anos e espera uma década. Estrela não interessa: ele forma as próprias.',
+       de:'Nimmt Sechzehnjährige unter Vertrag und wartet ein Jahrzehnt. Stars interessieren ihn nicht — er zieht sich seine eigenen heran.',
+       fr:"Il signe des gamins de seize ans et attend dix ans. Les stars ne l'intéressent pas : il fabrique les siennes.",
+       it:'Prende ragazzini di sedici anni e aspetta dieci anni. Delle stelle non gli importa: se le costruisce da solo.'}},
  {id:'boutique',poach:1.0, chase:0.4, youth:0.3, elite:1.6, comm:0.15, loyal:1.4, size:0.3, rep:[50,80],
-  n:{tr:'Butik Ajans',en:'The Boutique'},
+  n:{tr:'Butik Ajans',en:'The Boutique',es:'La Boutique',pt:'A Boutique',de:'Die Boutique',fr:'La Boutique',it:'La Boutique'},
   dsc:{tr:'Az sayıda, çok pahalı isim. Kapısı herkese açık değil; bir oyuncuyu istiyorsa sebebi vardır.',
-       en:'A handful of very expensive names. The door isn\'t open to everyone — if he wants a player, there\'s a reason.'}},
+       en:'A handful of very expensive names. The door isn\'t open to everyone — if he wants a player, there\'s a reason.',
+       es:'Un puñado de nombres carísimos. Su puerta no está abierta para todos: si quiere a un jugador, es por algo.',
+       pt:'Um punhado de nomes caríssimos. A porta dele não está aberta para todo mundo: se ele quer um jogador, tem motivo.',
+       de:'Eine Handvoll sehr teurer Namen. Seine Tür steht nicht jedem offen — wenn er einen Spieler will, hat das einen Grund.',
+       fr:"Une poignée de noms hors de prix. Sa porte n'est pas ouverte à tout le monde : s'il veut un joueur, il y a une raison.",
+       it:"Una manciata di nomi carissimi. La sua porta non è aperta a tutti: se vuole un giocatore, c'è un motivo."}},
  {id:'corp',    poach:1.1, chase:1.2, youth:0.8, elite:1.0, comm:0.13, loyal:0.9, size:2.2, rep:[55,85],
-  n:{tr:'Kurumsal Grup',en:'The Corporation'},
+  n:{tr:'Kurumsal Grup',en:'The Corporation',es:'La Corporación',pt:'A Corporação',de:'Der Konzern',fr:'La Multinationale',it:'Il Colosso'},
   dsc:{tr:'Dört kıtada ofisi, basında adamı var. Kalabalık bir portföy taşır; kimse tek tek ilgilenmez ama kapılar açıktır.',
-       en:'Offices on four continents and friends in the press. A crowded roster — nobody gets personal attention, but every door opens.'}},
+       en:'Offices on four continents and friends in the press. A crowded roster — nobody gets personal attention, but every door opens.',
+       es:'Oficinas en cuatro continentes y amigos en la prensa. Una cartera abarrotada: nadie recibe atención personal, pero todas las puertas se abren.',
+       pt:'Escritórios em quatro continentes e amigos na imprensa. Uma carteira lotada: ninguém recebe atenção individual, mas todas as portas se abrem.',
+       de:'Büros auf vier Kontinenten und Freunde in der Presse. Ein voller Kader — niemand wird persönlich betreut, aber jede Tür geht auf.',
+       fr:"Des bureaux sur quatre continents et des amis dans la presse. Un portefeuille bondé : personne n'a d'attention personnelle, mais toutes les portes s'ouvrent.",
+       it:'Uffici in quattro continenti e amici nella stampa. Una scuderia affollata: nessuno riceve attenzioni personali, ma tutte le porte si aprono.'}},
  {id:'family',  poach:0.3, chase:0.8, youth:0.9, elite:0.5, comm:0.07, loyal:1.5, size:0.45, rep:[15,40],
   home:3.5, away:0.15,
-  n:{tr:'Aile Ajansı',en:'The Family Firm'},
+  n:{tr:'Aile Ajansı',en:'The Family Firm',es:'La Empresa Familiar',pt:'A Empresa Familiar',de:'Der Familienbetrieb',fr:'La Maison familiale',it:"L'Azienda di Famiglia"},
   dsc:{tr:'Kendi şehrinden çıkmaz, düşük komisyonla çalışır, kimsenin müşterisine göz dikmez. Bıraktığı oyuncu da olmaz.',
-       en:'Never leaves his own city, works for a small cut and covets nobody\'s client. He rarely loses one either.'}},
+       en:'Never leaves his own city, works for a small cut and covets nobody\'s client. He rarely loses one either.',
+       es:'Nunca sale de su ciudad, trabaja por una comisión pequeña y no codicia el cliente de nadie. Tampoco suele perder ninguno.',
+       pt:'Nunca sai da própria cidade, trabalha por uma comissão pequena e não cobiça o cliente de ninguém. Também quase nunca perde um.',
+       de:'Verlässt nie seine Stadt, arbeitet für eine kleine Provision und schielt auf niemandes Klienten. Er verliert auch selten einen.',
+       fr:"Il ne quitte jamais sa ville, travaille pour une petite commission et ne convoite le client de personne. Il en perd rarement un, d'ailleurs.",
+       it:'Non esce mai dalla sua città, lavora per una commissione piccola e non punta gli assistiti di nessuno. Raramente ne perde uno.'}},
  {id:'fixer',   poach:1.2, chase:1.1, youth:0.6, elite:0.7, comm:0.18, loyal:0.8, size:1.3, rep:[30,60],
-  n:{tr:'Aracı',en:'The Fixer'},
+  n:{tr:'Aracı',en:'The Fixer',es:'El Conseguidor',pt:'O Atravessador',de:'Der Strippenzieher',fr:"L'Arrangeur",it:'Il Faccendiere'},
   dsc:{tr:'Her kulüpte bir tanıdığı, her masada bir payı var. Orta seviye oyuncuyu çok taşır; ikna etmek için parayı masaya koyar.',
-       en:'A contact at every club and a slice of every table. Moves a lot of mid-level players and puts money on the table to persuade.'}},
+       en:'A contact at every club and a slice of every table. Moves a lot of mid-level players and puts money on the table to persuade.',
+       es:'Un contacto en cada club y una tajada en cada mesa. Mueve a muchos jugadores de nivel medio y pone dinero sobre la mesa para convencer.',
+       pt:'Um contato em cada clube e uma fatia em cada mesa. Movimenta muitos jogadores de nível médio e põe dinheiro na mesa para convencer.',
+       de:'Einen Kontakt in jedem Verein und ein Stück von jedem Kuchen. Bewegt viele Spieler aus dem Mittelfeld der Liga und legt Geld auf den Tisch, um zu überzeugen.',
+       fr:'Un contact dans chaque club et une part à chaque table. Il fait bouger beaucoup de joueurs moyens et met de l’argent sur la table pour convaincre.',
+       it:'Un contatto in ogni club e una fetta a ogni tavolo. Muove tanti giocatori di medio livello e mette soldi sul tavolo per convincere.'}},
  /* Aşağıdakiler piyasayı kalabalıklaştırmak için eklendi. Tek ölçüt şuydu: her biri
     hedef seçiminde ya da davranışında yukarıdakilerden en az bir eksende ayrılsın —
     yoksa yeni ajans yalnızca yeni bir ad olurdu. Saldırganlık ortalaması bilerek
     aşağı çekildi (poach ortalaması 0.93 → 0.88), erken oyun ezilmesin. */
  {id:'expro',   poach:0.6, chase:1.0, youth:1.0, elite:0.7, comm:0.09, loyal:1.3, size:0.8, rep:[30,60],
-  n:{tr:'Eski Futbolcu',en:'The Ex-Pro'},
+  n:{tr:'Eski Futbolcu',en:'The Ex-Pro',es:'El Exfutbolista',pt:'O Ex-Jogador',de:'Der Ex-Profi',fr:"L'Ancien Pro",it:"L'Ex Calciatore"},
   dsc:{tr:'Sahayı içeriden bilir, soyunma odasının dilini konuşur. Az komisyon ister; oyuncular ona kolay güvenir, kolay bırakmaz.',
-       en:'He knows the game from the inside and speaks the dressing room\'s language. Asks for little, and players trust him easily.'}},
+       en:'He knows the game from the inside and speaks the dressing room\'s language. Asks for little, and players trust him easily.',
+       es:'Conoce el juego desde dentro y habla el idioma del vestuario. Pide poco, y los jugadores confían en él enseguida.',
+       pt:'Conhece o jogo por dentro e fala a língua do vestiário. Pede pouco, e os jogadores confiam nele logo de cara.',
+       de:'Er kennt das Spiel von innen und spricht die Sprache der Kabine. Verlangt wenig, und die Spieler vertrauen ihm schnell.',
+       fr:"Il connaît le jeu de l'intérieur et parle la langue du vestiaire. Il demande peu, et les joueurs lui font vite confiance.",
+       it:'Conosce il calcio da dentro e parla la lingua dello spogliatoio. Chiede poco, e i giocatori si fidano subito di lui.'}},
  {id:'lawyer',  poach:0.9, chase:0.7, youth:0.2, elite:1.1, vet:1.1, comm:0.16, loyal:1.35, size:0.7, rep:[40,70],
-  n:{tr:'Sözleşme Avukatı',en:'The Lawyer'},
+  n:{tr:'Sözleşme Avukatı',en:'The Lawyer',es:'El Abogado',pt:'O Advogado',de:'Der Anwalt',fr:"L'Avocat",it:"L'Avvocato"},
   dsc:{tr:'Oyuncuyla değil sözleşmeyle ilgilenir. Kariyerinin son büyük imzasını arayan tecrübelilere maddelerin arasından yol açar.',
-       en:'He cares about the contract, not the player. Finds the veterans chasing one last big deal a way through the small print.'}},
+       en:'He cares about the contract, not the player. Finds the veterans chasing one last big deal a way through the small print.',
+       es:'Le importa el contrato, no el jugador. A los veteranos que buscan un último gran contrato les abre camino entre la letra pequeña.',
+       pt:'O que importa para ele é o contrato, não o jogador. Para os veteranos atrás de um último grande contrato, ele abre caminho nas letras miúdas.',
+       de:'Ihn interessiert der Vertrag, nicht der Spieler. Veteranen auf der Jagd nach dem letzten großen Deal bahnt er einen Weg durchs Kleingedruckte.',
+       fr:"C'est le contrat qui l'intéresse, pas le joueur. Aux vétérans en quête d'un dernier gros contrat, il ouvre un chemin entre les petites lignes.",
+       it:'Gli interessa il contratto, non il giocatore. Ai veterani a caccia di un ultimo grande contratto apre una strada tra le clausole in piccolo.'}},
  {id:'media',   poach:1.4, chase:1.0, youth:0.4, elite:1.5, comm:0.20, loyal:0.7, size:0.5, rep:[45,75],
-  n:{tr:'Medya Menajeri',en:'The Publicist'},
+  n:{tr:'Medya Menajeri',en:'The Publicist',es:'El Publicista',pt:'O Marqueteiro',de:'Der PR-Mann',fr:'Le Communicant',it:'Il Comunicatore'},
   dsc:{tr:'Oyuncuyu değil imajını satar. Kamera önündeki isimlerin peşinde; kameranın söndüğü gün ilgisi de söner.',
-       en:'He sells the image, not the player. Chases the names the cameras follow — and loses interest the day they look away.'}},
+       en:'He sells the image, not the player. Chases the names the cameras follow — and loses interest the day they look away.',
+       es:'Vende la imagen, no al jugador. Persigue los nombres que siguen las cámaras, y pierde el interés el día que miran a otro lado.',
+       pt:'Vende a imagem, não o jogador. Corre atrás dos nomes que as câmeras seguem, e perde o interesse no dia em que elas olham para outro lado.',
+       de:'Er verkauft das Image, nicht den Spieler. Jagt den Namen hinterher, denen die Kameras folgen — und verliert das Interesse, sobald sie wegschauen.',
+       fr:"Il vend l'image, pas le joueur. Il court après les noms que suivent les caméras, et s'en désintéresse le jour où elles regardent ailleurs.",
+       it:"Vende l'immagine, non il giocatore. Insegue i nomi che seguono le telecamere, e perde interesse il giorno in cui guardano altrove."}},
  {id:'pipeline',poach:0.6, chase:1.3, youth:1.3, elite:0.5, comm:0.12, loyal:0.9, size:1.4, rep:[25,55],
   home:2.0, away:0.7,
-  n:{tr:'Transfer Hattı',en:'The Pipeline'},
+  n:{tr:'Transfer Hattı',en:'The Pipeline',es:'La Ruta',pt:'A Rota',de:'Die Pipeline',fr:'La Filière',it:'Il Corridoio'},
   dsc:{tr:'Kendi bölgesinden Avrupa\'ya oyuncu taşır. Tek tek isimlerle değil, akan bir hatla ilgilenir.',
-       en:'He moves players from his own region to Europe. Not interested in names one by one — only in keeping the line flowing.'}},
+       en:'He moves players from his own region to Europe. Not interested in names one by one — only in keeping the line flowing.',
+       es:'Lleva jugadores de su región a Europa. Los nombres uno a uno no le interesan: solo que la ruta no se detenga.',
+       pt:'Leva jogadores da região dele para a Europa. Nome por nome não interessa: só que a rota não pare.',
+       de:'Er bringt Spieler aus seiner Region nach Europa. Einzelne Namen interessieren ihn nicht — nur, dass der Strom nicht abreißt.',
+       fr:"Il fait passer des joueurs de sa région vers l'Europe. Les noms un par un ne l'intéressent pas : seulement que la filière continue de tourner.",
+       it:"Porta giocatori dalla sua regione in Europa. I nomi uno per uno non gli interessano: solo che il flusso non si fermi."}},
  {id:'free',    poach:0.4, chase:1.5, youth:0.2, elite:0.4, vet:1.6, comm:0.08, loyal:0.6, size:1.5, rep:[15,45],
-  n:{tr:'Bonservis Simsarı',en:'The Free-Agent Broker'},
+  n:{tr:'Bonservis Simsarı',en:'The Free-Agent Broker',es:'El Cazalibres',pt:'O Corretor de Livres',de:'Der Ablösefrei-Makler',fr:'Le Courtier des libres',it:'Il Mediatore degli Svincolati'},
   dsc:{tr:'Sözleşmesi bitenlerin listesini herkesten önce alır. Kapıda bekleyen kalabalık bir portföyü var; kaybettiğine de üzülmez.',
-       en:'He gets the list of expiring contracts before anyone else. A crowded roster of men waiting by the phone — and no tears when one leaves.'}},
+       en:'He gets the list of expiring contracts before anyone else. A crowded roster of men waiting by the phone — and no tears when one leaves.',
+       es:'Tiene la lista de contratos que vencen antes que nadie. Una cartera abarrotada de hombres esperando junto al teléfono, y ni una lágrima cuando se va uno.',
+       pt:'Recebe a lista dos contratos que vão vencer antes de todo mundo. Uma carteira lotada de gente esperando o telefone tocar, e nenhuma lágrima quando um vai embora.',
+       de:'Er hat die Liste der auslaufenden Verträge vor allen anderen. Ein voller Kader von Männern, die neben dem Telefon warten — und keine Träne, wenn einer geht.',
+       fr:"Il a la liste des contrats qui expirent avant tout le monde. Un portefeuille bondé de types qui attendent près du téléphone, et pas une larme quand l'un s'en va.",
+       it:"Ha la lista dei contratti in scadenza prima di chiunque altro. Una scuderia affollata di uomini in attesa accanto al telefono, e nessuna lacrima quando uno se ne va."}},
  {id:'fund',    poach:1.3, chase:1.2, youth:1.1, elite:1.2, comm:0.19, loyal:0.8, size:1.6, rep:[50,85],
-  n:{tr:'Yatırım Fonu',en:'The Fund'},
+  n:{tr:'Yatırım Fonu',en:'The Fund',es:'El Fondo',pt:'O Fundo',de:'Der Fonds',fr:'Le Fonds',it:'Il Fondo'},
   dsc:{tr:'Oyuncuya kariyer değil portföy kalemi diye bakar. Yükselecek ismi erken alır, zirvede satar; komisyonu da ona göredir.',
-       en:'He sees a position, not a career. Buys the name on the way up and sells it at the peak — and prices himself accordingly.'}},
+       en:'He sees a position, not a career. Buys the name on the way up and sells it at the peak — and prices himself accordingly.',
+       es:'Ve una inversión, no una carrera. Compra el nombre cuando sube y lo vende en la cima, y cobra en consecuencia.',
+       pt:'Enxerga um ativo, não uma carreira. Compra o nome na subida e vende no auge, e cobra de acordo.',
+       de:'Er sieht eine Anlage, keine Karriere. Kauft den Namen auf dem Weg nach oben und verkauft ihn am Gipfel — und lässt sich entsprechend bezahlen.',
+       fr:"Il voit un placement, pas une carrière. Il achète le nom quand il monte, le revend au sommet, et se fait payer en conséquence.",
+       it:"Vede un investimento, non una carriera. Compra il nome mentre sale e lo vende al massimo, e si fa pagare di conseguenza."}},
  {id:'journey', poach:0.7, chase:1.4, youth:0.5, elite:0.4, vet:0.7, comm:0.11, loyal:0.7, size:1.8, rep:[20,50],
-  n:{tr:'Gezgin Menajer',en:'The Journeyman\'s Agent'},
+  n:{tr:'Gezgin Menajer',en:'The Journeyman\'s Agent',es:'El Agente Trotamundos',pt:'O Empresário dos Rodados',de:'Der Berater der Wandervögel',fr:"L'Agent des globe-trotteurs",it:'Il Procuratore dei Giramondo'},
   dsc:{tr:'Kimsenin uğraşmadığı orta direk oyuncuyu taşır; yüzlercesini tanır, hiçbirini uzun tutamaz. İşi hacimden çıkar.',
-       en:'He carries the squad players nobody else bothers with — knows hundreds, keeps none for long. The money is in the volume.'}},
+       en:'He carries the squad players nobody else bothers with — knows hundreds, keeps none for long. The money is in the volume.',
+       es:'Lleva a los jugadores de plantilla de los que nadie se ocupa: conoce a cientos y no se queda con ninguno mucho tiempo. El negocio está en el volumen.',
+       pt:'Cuida dos jogadores de elenco que ninguém quer: conhece centenas e não segura nenhum por muito tempo. O dinheiro está no volume.',
+       de:'Er betreut die Kaderspieler, um die sich sonst keiner kümmert — kennt Hunderte, hält keinen lange. Das Geld steckt in der Masse.',
+       fr:"Il s'occupe des joueurs de complément dont personne ne veut : il en connaît des centaines et n'en garde aucun longtemps. L'argent est dans le volume.",
+       it:"Segue i giocatori di rosa di cui nessun altro si occupa: ne conosce centinaia e non ne tiene nessuno a lungo. I soldi stanno nei numeri."}},
  {id:'oldhand', poach:0.8, chase:0.5, youth:0.3, elite:1.4, vet:0.8, comm:0.14, loyal:1.5, size:0.4, rep:[60,90],
-  n:{tr:'Eski Tüfek',en:'The Old Hand'},
+  n:{tr:'Eski Tüfek',en:'The Old Hand',es:'El Veterano',pt:'O Velho Lobo',de:'Der alte Hase',fr:'Le Vieux Briscard',it:'La Vecchia Volpe'},
   dsc:{tr:'Otuz yıldır bu işte. Yeni müşteri aramaz, müşteri onu arar; elindekini de kimseye kaptırmaz.',
-       en:'Thirty years in the game. He doesn\'t look for clients, they look for him — and nobody takes one off him.'}}
+       en:'Thirty years in the game. He doesn\'t look for clients, they look for him — and nobody takes one off him.',
+       es:'Treinta años en esto. No busca clientes, los clientes le buscan a él, y nadie le quita uno.',
+       pt:'Trinta anos no ramo. Ele não procura clientes, os clientes é que procuram por ele, e ninguém tira um dele.',
+       de:'Dreißig Jahre im Geschäft. Er sucht keine Klienten, sie suchen ihn — und niemand nimmt ihm einen weg.',
+       fr:"Trente ans dans le métier. Il ne cherche pas de clients, ce sont eux qui le cherchent, et personne ne lui en prend un.",
+       it:"Trent'anni nel mestiere. Non cerca assistiti, sono loro a cercare lui, e nessuno gliene porta via uno."}}
 ];
 function archById(id){return RIV_ARCH.find(a=>a.id===id)||RIV_ARCH[0];}
 /* Listede ajansın ne aradığını tek kelimeyle söyleyen etiket. Saklanmıyor, katsayılardan
@@ -155,23 +225,23 @@ function archById(id){return RIV_ARCH.find(a=>a.id===id)||RIV_ARCH[0];}
    burada, RIV_ARCH'ın adları gibi iki dilli; STR'ye girmiyor ki arketip verisi tek
    dosyada kalsın. */
 function archFocus(a){
-  if((a.vet||0)>=1)          return {tr:'Tecrübeli oyuncu',en:'Veterans'};
-  if(a.size<=0.4)            return {tr:'Seçilmiş birkaç isim',en:'A select few'};
-  if((a.home||1.6)>=2.2)     return {tr:'Kendi bölgesi',en:'Its own region'};
-  if(a.youth>=1.2)           return {tr:'Genç yetenek',en:'Young talent'};
-  if(a.elite>=1.3)           return {tr:'Yıldız oyuncu',en:'Star players'};
-  if(a.size>=1.4)            return {tr:'Geniş portföy',en:'Volume'};
-  return {tr:'Orta seviye',en:'Mid-tier'};
+  if((a.vet||0)>=1)          return {tr:'Tecrübeli oyuncu',en:'Veterans',es:'Veteranos',pt:'Veteranos',de:'Routiniers',fr:'Vétérans',it:'Veterani'};
+  if(a.size<=0.4)            return {tr:'Seçilmiş birkaç isim',en:'A select few',es:'Unos pocos elegidos',pt:'Poucos e escolhidos',de:'Wenige Auserwählte',fr:'Quelques élus',it:'Pochi eletti'};
+  if((a.home||1.6)>=2.2)     return {tr:'Kendi bölgesi',en:'Its own region',es:'Su propia región',pt:'A própria região',de:'Die eigene Region',fr:'Sa propre région',it:'La propria regione'};
+  if(a.youth>=1.2)           return {tr:'Genç yetenek',en:'Young talent',es:'Talento joven',pt:'Jovens talentos',de:'Junge Talente',fr:'Jeunes talents',it:'Giovani talenti'};
+  if(a.elite>=1.3)           return {tr:'Yıldız oyuncu',en:'Star players',es:'Estrellas',pt:'Estrelas',de:'Stars',fr:'Stars',it:'Stelle'};
+  if(a.size>=1.4)            return {tr:'Geniş portföy',en:'Volume',es:'Volumen',pt:'Volume',de:'Masse',fr:'Volume',it:'Numeri'};
+  return {tr:'Orta seviye',en:'Mid-tier',es:'Nivel medio',pt:'Nível médio',de:'Mittelklasse',fr:'Milieu de gamme',it:'Fascia media'};
 }
 
 /* Ajans adı saklanmıyor, üretiliyor: iki dilde de doğru olsun diye ek ayrı tutuluyor
    (bkz. lgName — aynı gerekçe). Adlar soyadı havuzundan geliyor, gerçek bir ajans
    markasına yaklaşmıyor. */
 const RIV_SFX={
-  mg:{tr:'Menajerlik',   en:'Management'},
-  gr:{tr:'Spor Grup',    en:'Sports Group'},
-  pt:{tr:'ve Ortakları', en:'& Partners'},
-  aj:{tr:'Ajans',        en:'Agency'}
+  mg:{tr:'Menajerlik',   en:'Management',es:'Gestión Deportiva {b}',pt:'{b} Gestão Esportiva',de:'{b} Sportmanagement',fr:'{b} Sport Management',it:'{b} Sport Management'},
+  gr:{tr:'Spor Grup',    en:'Sports Group',es:'Grupo Deportivo {b}',pt:'Grupo {b}',de:'{b} Sportgruppe',fr:'Groupe {b}',it:'Gruppo {b}'},
+  pt:{tr:'ve Ortakları', en:'& Partners',es:'{b} y Asociados',pt:'{b} & Associados',de:'{b} & Partner',fr:'{b} & Associés',it:'{b} & Associati'},
+  aj:{tr:'Ajans',        en:'Agency',es:'Agencia {b}',pt:'Agência {b}',de:'Agentur {b}',fr:'Agence {b}',it:'Agenzia {b}'}
 };
 const RIV_SFXK=Object.keys(RIV_SFX);
 function rivalName(r){
@@ -435,23 +505,43 @@ function openPoach(){
      eff : applyEff'in anladığı sonuç (cash/rep/trust/morale)
    Karar burada duruyor çünkü denge verisi; çizimi arayüzün işi. */
 const POACH_OPT=[
- {t:{tr:'Komisyonundan feda et',en:'Give up part of your cut'},
+ {t:{tr:'Komisyonundan feda et',en:'Give up part of your cut',es:'Sacrifica parte de tu comisión',pt:'Abra mão de parte da sua comissão',de:'Verzichte auf einen Teil deiner Provision',fr:'Sacrifie une partie de ta commission',it:'Rinuncia a una parte della tua commissione'},
   run:c=>({d:-0.35,
     eff:{cash:-Math.max(30,Math.round(c.p.wage*10)),trust:10,morale:3},
     msg:{tr:'Rakamı gösterdin. "Bu adam benim için ne kadar önemli, gör." Cebinden çıktı ama masada kaldı.',
-         en:'You showed him the number. "See how much you matter to me." It cost you, but he stayed at your table.'}})},
- {t:{tr:'Yüz yüze konuş, ilişkiye güven',en:'Sit down with him and trust the relationship'},
+         en:'You showed him the number. "See how much you matter to me." It cost you, but he stayed at your table.',
+         es:'Le enseñaste la cifra. «Mira lo que me importas». Te costó, pero se quedó en tu mesa.',
+         pt:'Você mostrou o valor. "Veja o quanto você é importante para mim." Saiu do seu bolso, mas ele ficou do seu lado.',
+         de:'Du hast ihm die Zahl gezeigt. „Sieh, wie viel du mir wert bist.“ Es hat dich gekostet, aber er ist bei dir geblieben.',
+         fr:"Tu lui as montré le chiffre. « Regarde à quel point tu comptes pour moi. » Ça t'a coûté, mais il est resté avec toi.",
+         it:"Gli hai mostrato la cifra. «Guarda quanto conti per me.» Ti è costato, ma è rimasto con te."}})},
+ {t:{tr:'Yüz yüze konuş, ilişkiye güven',en:'Sit down with him and trust the relationship',es:'Siéntate con él y confía en la relación',pt:'Sente com ele e confie na relação',de:'Setz dich mit ihm hin und vertrau auf eure Beziehung',fr:'Assieds-toi avec lui et fais confiance à votre relation',it:'Siediti con lui e fidati del vostro rapporto'},
   run:c=>RF()<0.35+trustOf(c.p)/160
     ?{d:-0.30,eff:{trust:8},
       msg:{tr:'Uzun bir akşam yemeği. Anlattıklarını dinledi, sen de onunkileri. Aranızdaki bağ para istemedi.',
-           en:'A long dinner. He listened, and so did you. The bond held without money changing hands.'}}
+           en:'A long dinner. He listened, and so did you. The bond held without money changing hands.',
+           es:'Una cena larga. Él escuchó, y tú también. El vínculo aguantó sin que cambiara de manos ni un euro.',
+           pt:'Um jantar longo. Ele ouviu, e você também. O laço se manteve sem nenhum dinheiro trocar de mãos.',
+           de:'Ein langes Abendessen. Er hat zugehört, und du auch. Die Bindung hielt, ohne dass Geld den Besitzer wechselte.',
+           fr:"Un long dîner. Il a écouté, et toi aussi. Le lien a tenu sans qu'un centime change de mains.",
+           it:"Una lunga cena. Lui ha ascoltato, e tu pure. Il legame ha tenuto senza che passasse di mano un euro."}}
     :{d:-0.05,eff:{trust:-4},
       msg:{tr:'Konuştunuz ama karşındaki zaten kararını vermiş gibiydi. Sözlerin havada kaldı.',
-           en:'You talked, but he seemed to have made his mind up already. Your words hung in the air.'}}},
- {t:{tr:'Aldırma, işini yapmaya devam et',en:'Ignore it and get on with your work'},
+           en:'You talked, but he seemed to have made his mind up already. Your words hung in the air.',
+           es:'Hablasteis, pero parecía que ya lo tenía decidido. Tus palabras se quedaron en el aire.',
+           pt:'Vocês conversaram, mas ele parecia já ter se decidido. Suas palavras ficaram no ar.',
+           de:'Ihr habt geredet, aber er schien sich schon entschieden zu haben. Deine Worte verhallten.',
+           fr:"Vous avez parlé, mais il semblait avoir déjà pris sa décision. Tes mots sont restés en l'air.",
+           it:"Avete parlato, ma sembrava che avesse già deciso. Le tue parole sono rimaste sospese."}}},
+ {t:{tr:'Aldırma, işini yapmaya devam et',en:'Ignore it and get on with your work',es:'Ignóralo y sigue a lo tuyo',pt:'Ignore e siga trabalhando',de:'Ignorier es und mach deine Arbeit',fr:'Ignore ça et continue ton travail',it:'Lascia perdere e continua a lavorare'},
   run:()=>({d:0.12,eff:{},
     msg:{tr:'Telefonu açmadın, konuyu hiç açmadın. Bazen doğru olan budur — bazen değil.',
-         en:'You didn\'t call and never raised it. Sometimes that\'s right — sometimes it isn\'t.'}})}
+         en:'You didn\'t call and never raised it. Sometimes that\'s right — sometimes it isn\'t.',
+         es:'No llamaste y nunca sacaste el tema. A veces es lo correcto, y a veces no.',
+         pt:'Você não ligou e nunca tocou no assunto. Às vezes é o certo, às vezes não.',
+         de:'Du hast nicht angerufen und das Thema nie angesprochen. Manchmal ist das richtig — manchmal nicht.',
+         fr:"Tu n'as pas appelé et tu n'as jamais abordé le sujet. Parfois c'est la bonne chose à faire, parfois non.",
+         it:"Non hai chiamato e non hai mai tirato fuori l'argomento. A volte è la cosa giusta, a volte no."}})}
 ];
 /* Müşteriyi kaybetmenin tek yolu: burada toplanıyor ki itibar kaybı ve haber
    tek yerden geçsin. */

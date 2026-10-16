@@ -40,6 +40,7 @@ const ctx = { navigator: { language: 'en', languages: ['en'] }, Intl, console };
 vm.createContext(ctx);
 vm.runInContext(rd('js/i18n.js'), ctx, { filename: 'js/i18n.js' });
 langFiles.forEach(f => vm.runInContext(rd('js/' + f), ctx, { filename: 'js/' + f }));
+vm.runInContext(rd('js/data.js'), ctx, { filename: 'js/data.js' });   // CTRYS: CTRYG denetimi için
 const R = c => vm.runInContext(c, ctx);
 const CODES = JSON.parse(R('JSON.stringify(LANGS.map(l=>l.c))'));
 const STR = R('STR'), NEWS = R('NEWS');
@@ -51,8 +52,15 @@ for (const c of CODES) {
   const miss = Object.keys(STR.tr).filter(k => !(k in STR[c]));
   const extra = Object.keys(STR[c]).filter(k => !(k in STR.tr));
   const empty = Object.keys(STR[c]).filter(k => typeof STR[c][k] !== 'string' || !STR[c][k].trim());
-  const phx = Object.keys(STR.tr).filter(k => k in STR[c] && ph(STR.tr[k]) !== ph(STR[c][k]))
+  /* lgFmt serbest: dil {c} (ülke adı) ya da {g} ("-in" hâli, CTRYG) seçebilir;
+     {t} (kademe) ve ikisinden biri şart, başka yer tutucu yok. */
+  const lgOk = s => { const p = ph(s).split(' '); return p.indexOf('{t}') >= 0 && (p.indexOf('{c}') >= 0 || p.indexOf('{g}') >= 0) && p.every(x => /^\{[cgt]\}$/.test(x)); };
+  const phx = Object.keys(STR.tr).filter(k => k in STR[c] && (k === 'lgFmt' ? !lgOk(STR[c][k]) : ph(STR.tr[k]) !== ph(STR[c][k])))
     .map(k => k + ': tr[' + ph(STR.tr[k]) + '] ' + c + '[' + ph(STR[c][k]) + ']');
+  if (STR[c].lgFmt && STR[c].lgFmt.indexOf('{g}') >= 0) {
+    const G = R('CTRYG.' + c + '||null'), CT = R('Object.keys(CTRYS)');
+    report('HATA', c + ': lgFmt {g} kullanıyor ama CTRYG eksik', G ? CT.filter(k => !G[k]) : ['CTRYG.' + c]);
+  }
   report('HATA', c + ': STR anahtarı eksik', miss);
   report('HATA', c + ': STR\'de Türkçede olmayan anahtar', extra);
   report('HATA', c + ': STR değeri boş', empty);
@@ -156,7 +164,8 @@ function objectsWithKeys(src) {
                    (kullanıcı kararı, 17 Ekim 2026).
      badges.js   — amblem/çerçeve/desen adları oyunda hiç çizilmiyor; yalnız
                    geliştirici aracı tools/badge-lab.js okuyor, o da tr/en. */
-const EXEMPT = [/^const PRIVACY_URL=/];
+const EXEMPT = [/^const PRIVACY_URL=/,
+  /^const (STR|NEWS)=\{/];   // diğer diller js/lang-*.js'ten dolduruyor; bütünlükleri yukarıda ölçülüyor
 const EXEMPT_FILES = ['badges.js'];
 const jsFiles = fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js') && !/^lang-/.test(f) && f !== 'worldgeo.js');
 const incomplete = [];

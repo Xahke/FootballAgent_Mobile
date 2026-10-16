@@ -376,18 +376,38 @@ function cmDeleteSlot(n){closeModal();askDeleteSlot(n);}
    Her tema css/themes/*.css içinde ayrı bir stylesheet; tools/build-themes.js
    hepsini html[data-theme="ad"] altına kapsamlayıp css/style.css'i üretir. */
 const THEMES=[
- {id:'dosya',   bg:'#f7f8f9', sw:['#f7f8f9','#ffffff','#1c6b52'], n:{tr:'Dosya',   en:'Dossier'},
+ {id:'dosya',   bg:'#f7f8f9', sw:['#f7f8f9','#ffffff','#1c6b52'], n:{tr:'Dosya',   en:'Dossier',es:'Expediente',pt:'Dossiê',de:'Akte',fr:'Dossier',it:'Dossier'},
   d:{tr:'Açık nötr zemin, geniş boşluk. Uzun oturumlarda en dinlendirici.',
-     en:'Light neutral ground, generous spacing. Easiest over long sessions.'}},
- {id:'gazete',  bg:'#faf8f4', sw:['#faf8f4','#ece8df','#1f6b4a'], n:{tr:'Gazete',  en:'Newsprint'},
+     en:'Light neutral ground, generous spacing. Easiest over long sessions.',
+     es:'Fondo claro y neutro, mucho aire. Lo más descansado para sesiones largas.',
+     pt:'Fundo claro e neutro, bastante respiro. O mais confortável em sessões longas.',
+     de:'Heller, neutraler Grund, viel Luft. Am angenehmsten bei langen Sitzungen.',
+     fr:'Fond clair et neutre, espacement généreux. Le plus reposant pour les longues sessions.',
+     it:'Fondo chiaro e neutro, spazi ampi. Il più riposante nelle sessioni lunghe.'}},
+ {id:'gazete',  bg:'#faf8f4', sw:['#faf8f4','#ece8df','#1f6b4a'], n:{tr:'Gazete',  en:'Newsprint',es:'Periódico',pt:'Jornal',de:'Zeitung',fr:'Journal',it:'Giornale'},
   d:{tr:'Sıcak kağıt zemin, serif başlıklar, mürekkep yeşili.',
-     en:'Warm paper stock, serif headings, ink green.'}},
- {id:'terminal',bg:'#0d0e10', sw:['#0d0e10','#1a1c20','#4f9c6b'], n:{tr:'Terminal',en:'Terminal'},
+     en:'Warm paper stock, serif headings, ink green.',
+     es:'Papel cálido, titulares con serifa, verde tinta.',
+     pt:'Papel quente, títulos com serifa, verde-tinta.',
+     de:'Warmes Papier, Serifen-Überschriften, Tintengrün.',
+     fr:"Papier chaud, titres à empattements, vert d'encre.",
+     it:"Carta calda, titoli con grazie, verde inchiostro."}},
+ {id:'terminal',bg:'#0d0e10', sw:['#0d0e10','#1a1c20','#4f9c6b'], n:{tr:'Terminal',en:'Terminal',es:'Terminal',pt:'Terminal',de:'Terminal',fr:'Terminal',it:'Terminale'},
   d:{tr:'Koyu nötr, monospace rakamlar, hizalı kolonlar. En yoğun.',
-     en:'Dark neutral, monospace figures, aligned columns. Densest.'}},
- {id:'saha',    bg:'#0b111e', sw:['#0b111e','#131b2e','#1ec97e'], n:{tr:'Saha',    en:'Pitch'},
+     en:'Dark neutral, monospace figures, aligned columns. Densest.',
+     es:'Oscuro y neutro, cifras monoespaciadas, columnas alineadas. El más denso.',
+     pt:'Escuro e neutro, números monoespaçados, colunas alinhadas. O mais denso.',
+     de:'Dunkel und neutral, Ziffern in fester Breite, ausgerichtete Spalten. Am dichtesten.',
+     fr:'Sombre et neutre, chiffres à chasse fixe, colonnes alignées. Le plus dense.',
+     it:'Scuro e neutro, cifre monospaziate, colonne allineate. Il più denso.'}},
+ {id:'saha',    bg:'#0b111e', sw:['#0b111e','#131b2e','#1ec97e'], n:{tr:'Saha',    en:'Pitch',es:'Césped',pt:'Gramado',de:'Rasen',fr:'Pelouse',it:'Prato'},
   d:{tr:'İlk tasarım: koyu lacivert, emerald vurgu, yumuşak gölgeler.',
-     en:'The original: deep navy, emerald accent, soft shadows.'}}
+     en:'The original: deep navy, emerald accent, soft shadows.',
+     es:'El diseño original: azul marino profundo, acento esmeralda, sombras suaves.',
+     pt:'O design original: azul-marinho profundo, destaque esmeralda, sombras suaves.',
+     de:'Das Original: tiefes Marineblau, smaragdgrüner Akzent, weiche Schatten.',
+     fr:"L'original : bleu marine profond, accent émeraude, ombres douces.",
+     it:"L'originale: blu notte profondo, accento smeraldo, ombre morbide."}}
 ];
 const DEFTHEME='saha';
 /* Tema artık cihaz tercihi (PREFS): ana menüde açık bir kariyer yokken de
@@ -615,37 +635,37 @@ function adsPrivacyRowHtml(){
    de sözlükte yeri olmayan anahtarları toplayan yedek kova. */
 const IB_CAT=[
   {id:'transfer',grp:'players',ic:'assets/ui/inbox-transfer.webp',
-   n:{tr:'Transfer',en:'Transfer'},
+   n:{tr:'Transfer',en:'Transfer',es:'Traspaso',pt:'Transferência',de:'Transfer',fr:'Transfert',it:'Trasferimento'},
    keys:['transfer','agreedWait','offerRej','clubOffer']},
   {id:'contract',grp:'players',ic:'assets/ui/inbox-contract.webp',
-   n:{tr:'Sözleşme',en:'Contract'},
+   n:{tr:'Sözleşme',en:'Contract',es:'Contrato',pt:'Contrato',de:'Vertrag',fr:'Contrat',it:'Contratto'},
    keys:['contractAgreed','contractSigned','renewed','released','expire']},
   {id:'finance',grp:'finance',ic:'assets/ui/inbox-finance.webp',
-   n:{tr:'Finans',en:'Finance'},
+   n:{tr:'Finans',en:'Finance',es:'Finanzas',pt:'Finanças',de:'Finanzen',fr:'Finances',it:'Finanze'},
    keys:['instPay','gbPaid','soPaid','inDebt']},
   {id:'client',grp:'players',ic:'assets/ui/inbox-client.webp',
-   n:{tr:'Müşteri',en:'Client'},
+   n:{tr:'Müşteri',en:'Client',es:'Cliente',pt:'Cliente',de:'Klient',fr:'Client',it:'Assistito'},
    keys:['sign','retire','firedYou']},
   {id:'rival',grp:'players',ic:'assets/ui/inbox-rival.webp',
-   n:{tr:'Rakip Ajans',en:'Rival Agency'},
+   n:{tr:'Rakip Ajans',en:'Rival Agency',es:'Agencia rival',pt:'Agência rival',de:'Rivalisierende Agentur',fr:'Agence rivale',it:'Agenzia rivale'},
    keys:['firedRival','chaseOn','chaseLost','poachWarn','poached','poachHeld']},
   {id:'growth',grp:'players',ic:'assets/ui/inbox-growth.webp',
-   n:{tr:'Gelişim',en:'Development'},
+   n:{tr:'Gelişim',en:'Development',es:'Progresión',pt:'Evolução',de:'Entwicklung',fr:'Progression',it:'Crescita'},
    keys:['valUp','valDown','devUp']},
   {id:'status',grp:'players',ic:'assets/ui/inbox-status.webp',
-   n:{tr:'Oyuncu Durumu',en:'Squad Status'},
+   n:{tr:'Oyuncu Durumu',en:'Squad Status',es:'Situación en la plantilla',pt:'Situação no elenco',de:'Kaderstatus',fr:"Statut dans l'effectif",it:'Situazione in rosa'},
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
   {id:'trophy',grp:'world',ic:'assets/ui/inbox-trophy.webp',
-   n:{tr:'Şampiyonluk',en:'Silverware'},
+   n:{tr:'Şampiyonluk',en:'Silverware',es:'Títulos',pt:'Títulos',de:'Titel',fr:'Trophées',it:'Trofei'},
    keys:['champ','finalN','cupWin','wcWin']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
-   n:{tr:'Lig',en:'League'},
+   n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
    keys:['promoted','relegated']},
   {id:'scout',grp:'world',ic:'assets/ui/inbox-scout.webp',
-   n:{tr:'Keşif Ağı',en:'Scouting'},
+   n:{tr:'Keşif Ağı',en:'Scouting',es:'Ojeo',pt:'Observação',de:'Scouting',fr:'Recrutement',it:'Osservatori'},
    keys:['scoutDone']},
   {id:'system',grp:'world',ic:null,
-   n:{tr:'Ajans',en:'Agency'},
+   n:{tr:'Ajans',en:'Agency',es:'Agencia',pt:'Agência',de:'Agentur',fr:'Agence',it:'Agenzia'},
    keys:['tut']}
 ];
 /* anahtar → kategori; sözlükten bir kez türetiliyor */
@@ -3537,12 +3557,12 @@ function useSahaEvent(){return themeOf()==='saha';}
    Renkler rozetin kendi baskın tonundan seçildi; rozetin renklerine hiç
    dokunulmuyor, vurgu yalnız yazıda ve halede taşınıyor. */
 const EV_CAT={
-  media  :{ic:'assets/ui/event-media.webp',  n:{tr:'Medya',en:'Media'},    c:'var(--warn)'},
-  player :{ic:'assets/ui/event-player.webp', n:{tr:'Oyuncu',en:'Player'},  c:'var(--acc)'},
-  club   :{ic:'assets/ui/event-club.webp',   n:{tr:'Kulüp',en:'Club'},     c:'var(--blue)'},
-  agency :{ic:'assets/ui/event-agency.webp', n:{tr:'Ajans',en:'Agency'},   c:'var(--viol)'},
-  finance:{ic:'assets/ui/event-finance.webp',n:{tr:'Finans',en:'Finance'}, c:'var(--gold)'},
-  crisis :{ic:'assets/ui/event-crisis.webp', n:{tr:'Kriz',en:'Crisis'},    c:'var(--bad)'}
+  media  :{ic:'assets/ui/event-media.webp',  n:{tr:'Medya',en:'Media',es:'Medios',pt:'Mídia',de:'Medien',fr:'Médias',it:'Media'},    c:'var(--warn)'},
+  player :{ic:'assets/ui/event-player.webp', n:{tr:'Oyuncu',en:'Player',es:'Jugador',pt:'Jogador',de:'Spieler',fr:'Joueur',it:'Giocatore'},  c:'var(--acc)'},
+  club   :{ic:'assets/ui/event-club.webp',   n:{tr:'Kulüp',en:'Club',es:'Club',pt:'Clube',de:'Verein',fr:'Club',it:'Club'},     c:'var(--blue)'},
+  agency :{ic:'assets/ui/event-agency.webp', n:{tr:'Ajans',en:'Agency',es:'Agencia',pt:'Agência',de:'Agentur',fr:'Agence',it:'Agenzia'},   c:'var(--viol)'},
+  finance:{ic:'assets/ui/event-finance.webp',n:{tr:'Finans',en:'Finance',es:'Finanzas',pt:'Finanças',de:'Finanzen',fr:'Finances',it:'Finanze'}, c:'var(--gold)'},
+  crisis :{ic:'assets/ui/event-crisis.webp', n:{tr:'Kriz',en:'Crisis',es:'Crisis',pt:'Crise',de:'Krise',fr:'Crise',it:'Crisi'},    c:'var(--bad)'}
 };
 const EV_REPORT_IC='assets/ui/event-weekly-report.webp';
 function evCatOf(ev){return EV_CAT[evCat(ev)];}

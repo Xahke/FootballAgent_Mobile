@@ -646,8 +646,13 @@ tut:'You start in a tiny office. Find young talent in lower leagues and Africa, 
    düşüyor. Tersi de korunuyor — kayıtta bu sürümün tanımadığı bir dil kodu
    (daha yeni bir sürümden, ya da bozuk bir değer) langOk()'tan geçemiyor. */
 const LANGS=[
-  {c:'tr',n:'Türkçe', loc:'tr',dec:'.',pct:'%{n}'},
-  {c:'en',n:'English',loc:'en',dec:'.',pct:'{n}%'}
+  {c:'tr',n:'Türkçe',   loc:'tr',   dec:'.',pct:'%{n}'},
+  {c:'en',n:'English',  loc:'en',   dec:'.',pct:'{n}%'},
+  {c:'es',n:'Español',  loc:'es',   dec:',',pct:'{n}%'},
+  {c:'pt',n:'Português',loc:'pt-BR',dec:',',pct:'{n}%'},
+  {c:'de',n:'Deutsch',  loc:'de',   dec:',',pct:'{n} %'},
+  {c:'fr',n:'Français', loc:'fr',   dec:',',pct:'{n} %'},
+  {c:'it',n:'Italiano', loc:'it',   dec:',',pct:'{n}%'}
 ];
 function langOk(c){return typeof c==='string'&&LANGS.some(l=>l.c===c);}
 function langOf(c){return LANGS.find(l=>l.c===c)||LANGS[1];}
