@@ -119,7 +119,7 @@ function cmIni(c){
      ekranda iki farklı işaret taşımasın.
      Büyütme dile duyarlı: Türkçede 'i' -> 'İ', İngilizcede 'i' -> 'I'. Düz
      toUpperCase() "İsmail"i "ISMAIL" yapıyordu. */
-  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toLocaleUpperCase(L);
+  return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toLocaleUpperCase(langLoc());
 }
 /* "2 dk önce" gibi bir satır ancak ts varsa çizilir. Cihaz saati geri alınmışsa
    gelecekten bir kayıt görünür; "-3 dk önce" yazmak yerine tarihe düşüyoruz. */
@@ -135,7 +135,7 @@ function cmAgo(ts){
   if(dd<7)return t('cmDayAgo').replace('{n}',dd);
   return cmDate(ts);
 }
-function cmDate(ts){try{return new Date(ts).toLocaleDateString(L);}catch(e){return '';}}
+function cmDate(ts){try{return new Date(ts).toLocaleDateString(langLoc());}catch(e){return '';}}
 /* Sezon çubuğu: kartın ayıracı aynı zamanda ölçü. Payda SEASONW — en kalabalık
    ligin çift devresi, yani sezonun tam uzunluğu; metaOf() haftayı zaten en uzun
    fikstüre kırpıp yazıyor, bu yüzden oran gerçek. Veri değişip en uzun lig
@@ -160,7 +160,7 @@ function cmTopHtml(){
   return `<div class="cmTop">
     <div class="cmTools">
       <button class="cmTool" onclick="pushV('settings')" aria-label="${esc(t('settings'))}">${ICONS.settings}</button>
-      <button class="cmTool wide" onclick="toggleLang()" aria-label="${esc(t('langLbl'))}">${ICONS.globe}<span>${L==='tr'?'English':'Türkçe'}</span></button>
+      <button class="cmTool wide" onclick="langPickOpen()" aria-label="${esc(t('langLbl'))}">${ICONS.globe}<span>${esc(langOf(L).n)}</span></button>
     </div>
     <h1 class="cmTitle">${t('cmTitle')}</h1>
     <div class="cmSub">${t('cmSub')}</div>
@@ -742,7 +742,7 @@ function playerRow(p,opts){
       ?` · <span style="color:var(--txt3)">${t('rep')} ${repNeedFor(profileOf(p))}+</span>`
       :pitchCd(p)>0
       ?` · <span style="color:var(--txt3)">${pitchCd(p)} ${t('wk')}</span>`
-      :` · <span style="color:var(--acc)">%${Math.round(pitchChance(p)*100)}</span>`)
+      :` · <span style="color:var(--acc)">${pctOf(pitchChance(p))}</span>`)
     :'';
   /* Rakip aynı oyuncuyla görüşüyorsa listede görünsün: acele etmenin sebebi bu. */
   const ch=p.agent===null?chaseFor(p.id):null;
@@ -754,14 +754,14 @@ function playerRow(p,opts){
     ${opts.noBadge?'':tmBadge(tm,34)}
     <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
       <span class="natc">${NATS[p.nat].c}</span></div>
-    <div class="psub">${lgTag}${POSL[L][p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}${chTag}</div></div>
+    <div class="psub">${lgTag}${tx(POSL)[p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}${chTag}</div></div>
     <div class="mood"><i style="height:${Math.round(p.morale)}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
 }
 function listWrap(html){return `<div class="list">${html}</div>`;}
 function msgHtml(m){
   const i=S.inbox.indexOf(m);
-  const txt=NEWS[L][m.key]?NEWS[L][m.key](m.params):t(m.key);
+  const txt=newsTxt(m.key,m.params);
   return `<div class="msg ${m.type}">
     <div class="mw">${t('season')} ${m.se} · ${t('week')} ${m.w}</div>
     <div class="mt">${txt}</div>
@@ -837,7 +837,7 @@ function ibIconFail(img){
 function ibMsgHtml(m){
   const i=S.inbox.indexOf(m);
   const c=ibCat(m.key);
-  const txt=NEWS[L][m.key]?NEWS[L][m.key](m.params):t(m.key);
+  const txt=newsTxt(m.key,m.params);
   const un=!m.read;
   /* Kart dokunuşu yalnız aksiyonsuz mesajda: aksiyonlu kartta okundu işareti
      kararın kendisinden gelmeli, kartı sıyırmaktan değil. */
@@ -848,7 +848,7 @@ function ibMsgHtml(m){
       :''}${ICONS.inbox}</span>
     <div class="ibMain">
       <div class="ibHead">
-        <span class="ibCat">${c.n[L]}</span>
+        <span class="ibCat">${tx(c.n)}</span>
         <span class="ibWhen num">${t('season')} ${m.se} · ${t('week')} ${m.w}</span>
         ${un?'<i class="ibDot"></i>':''}
       </div>
@@ -937,10 +937,10 @@ function setF(k,v){S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};S.
 /* ================= VIEWS ================= */
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
-    `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${nm[L]}</button>`).join('')}</div>`;
+    `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
   const ci=S.curCup||0;
   const cupChips=`<div class="chips">${CUPS.map((cp,i)=>
-    `<button class="${ci===i?'on':''}" onclick="setCup(${i})">${cp.n[L]}</button>`).join('')}
+    `<button class="${ci===i?'on':''}" onclick="setCup(${i})">${tx(cp.n)}</button>`).join('')}
     <button class="${ci===3?'on':''}" onclick="setCup(3)">${t('wcLbl')}</button></div>`;
   const RL=[t('r16'),t('qf'),t('sf'),t('finalLbl')];
   let body='';
@@ -1088,7 +1088,7 @@ function clCard(p){
     ${clAvatar(p,tm)}
     <span class="clBody">
       <span class="clName">${esc(p.n)}</span>
-      <span class="clMeta">${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
       <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b>${isFree(p)?''
         :`<i></i><span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
       ${st?`<span class="clStat">${ICONS[st.ic]}<span>${st.lbl(p)}</span></span>`:''}
@@ -1133,7 +1133,7 @@ function mkState(p){for(let i=0;i<MK_ST.length;i++)if(MK_ST[i].is(p))return MK_S
    koruyor: market() onlar için hiç dallanmıyor. */
 function useSahaMarket(){return themeOf()==='saha';}
 /* Yüzde işareti Türkçede önde, İngilizcede arkada durur (ana ekranla aynı kural). */
-function pctOf(x){const n=Math.round(x*100);return L==='tr'?'%'+n:n+'%';}
+function pctOf(x){return pctFmt(Math.round(x*100));}
 
 /* Arama metni ve filtre panelinin açıklığı yalnızca arayüz durumu; CLFILTER ve
    atlas.js'teki CAM ile aynı gerekçe — S'ye yazsaydık kayıt biçimini büyütürdü
@@ -1179,8 +1179,8 @@ function mkData(){
   else if(f.age==='o25')list=list.filter(p=>p.age>=25);
   /* Arama yalnız ada bakıyor; yeni bir sorgu dili yok. Küçültme dile duyarlı:
      Türkçede 'I' -> 'ı', İngilizcede 'I' -> 'i'. */
-  const q=useSahaMarket()?MKQ.trim().toLocaleLowerCase(L):'';
-  if(q)list=list.filter(p=>String(p.n).toLocaleLowerCase(L).indexOf(q)>=0);
+  const q=useSahaMarket()?MKQ.trim().toLocaleLowerCase(langLoc()):'';
+  if(q)list=list.filter(p=>String(p.n).toLocaleLowerCase(langLoc()).indexOf(q)>=0);
   const sorts={r:(a,b)=>b.r-a.r,pot:(a,b)=>b.pot-a.pot||b.r-a.r,age:(a,b)=>a.age-b.age||b.pot-a.pot,ch:(a,b)=>pitchChance(b)-pitchChance(a)||b.r-a.r};
   list.sort(sorts[f.sort]||sorts.r);
   return {f:f,total:list.length,rows:list.slice(0,MK_PAGE)};
@@ -1211,7 +1211,7 @@ function mkCard(p){
     ${clAvatar(p,tm)}
     <span class="clBody">
       <span class="clName">${esc(p.n)}${gem}</span>
-      <span class="clMeta">${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
       <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b><i></i>${isFree(p)
         ?`<span class="mkFree">${t('faShort')}</span>`
         :`<span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
@@ -1251,7 +1251,7 @@ function mkLgSel(f){
     ${Object.keys(CTRYS).map(cc=>{
       const opts=LEAGUES.map((lg,i)=>lg.ctry===cc&&knownLg(i)?
         `<option value="${i}" ${String(f.lg)===String(i)?'selected':''}>${lgName(i)}</option>`:'').join('');
-      return opts?`<optgroup label="${CTRYS[cc][L]}">${opts}</optgroup>`:'';
+      return opts?`<optgroup label="${tx(CTRYS[cc])}">${opts}</optgroup>`:'';
     }).join('')}
     </select></label>`;
 }
@@ -1306,7 +1306,7 @@ function mkSahaView(d){
   ${MKF?`<div class="mkPanel">
     <div class="fgrid">
       ${mkLgSel(f)}
-      ${sel('pos',[['all',t('all')],['KL',POSFULL[L].KL],['DF',POSFULL[L].DF],['OS',POSFULL[L].OS],['FV',POSFULL[L].FV]])}
+      ${sel('pos',[['all',t('all')],['KL',tx(POSFULL).KL],['DF',tx(POSFULL).DF],['OS',tx(POSFULL).OS],['FV',tx(POSFULL).FV]])}
       ${sel('age',[['all',t('all')],['u18','≤ 18'],['u21','≤ 21'],['u24','≤ 24'],['o25','25+']])}
       ${sel('sort',[['r',t('sortR')],['pot',t('sortPot')],['age',t('sortAge')],['ch',t('sortCh')]])}
     </div>
@@ -1375,7 +1375,7 @@ function lgLegend(lg,total){
   const seen=[];
   for(let p=1;p<=total;p++){const z=lgZoneOf(lg,p,total);if(z&&seen.indexOf(z)<0)seen.push(z);}
   const lbl={ch:t('champion'),up:t('lgUpZone'),down:t('lgDownZone'),
-    ec1:(CUPS[0]||{n:{}}).n[L]||'',ec2:(CUPS[1]||{n:{}}).n[L]||'',ec3:(CUPS[2]||{n:{}}).n[L]||''};
+    ec1:tx((CUPS[0]||{n:{}}).n)||'',ec2:tx((CUPS[1]||{n:{}}).n)||'',ec3:tx((CUPS[2]||{n:{}}).n)||''};
   if(!seen.length)return '';
   return `<div class="lgKeys">${seen.map(z=>
     `<span class="lgKey z-${z}"><i></i>${esc(lbl[z]||'')}</span>`).join('')}</div>`;
@@ -1414,11 +1414,11 @@ function lgPickOpen(){
       `<button class="lgOpt${i===cur&&(S.curCon||'eu')!=='cup'?' on':''}" onclick="lgPickSet(${i})">
         ${lgMark(i)}<span class="lgOptT">${esc(lgName(i))}</span>
         <span class="lgOptN">${S.teams.filter(tm=>tm&&tm.lg===i).length}</span></button>`:'').join('');
-    return items?`<div class="lgGrp">${esc(nm[L])}</div>${items}`:'';
+    return items?`<div class="lgGrp">${esc(tx(nm))}</div>${items}`:'';
   }).join('');
-  const cupBtn=`<div class="lgGrp">${esc((CONTS.find(x=>x[0]==='cup')||[,{}])[1][L]||'')}</div>
+  const cupBtn=`<div class="lgGrp">${esc(tx((CONTS.find(x=>x[0]==='cup')||[,{}])[1])||'')}</div>
     <button class="lgOpt${(S.curCon||'eu')==='cup'?' on':''}" onclick="lgPickCup()">
-      <span class="lgMark">EC</span><span class="lgOptT">${esc(CUPS.map(c=>c.n[L]).join(' · '))}</span></button>`;
+      <span class="lgMark">EC</span><span class="lgOptT">${esc(CUPS.map(c=>tx(c.n)).join(' · '))}</span></button>`;
   openModal(`<h2>${t('lgPick')}</h2><div class="lgPickList">${groups}${cupBtn}</div>`);
 }
 function lgPickSet(i){closeModal();setCurLg(i);}
@@ -1532,7 +1532,7 @@ function lgFeatHtml(lg){
 /* --- puan durumu --- */
 function lgTableHtml(lg,isLive,aEntry,l2){
   const cnt=lgClientTeams();
-  const glbl=g=>l2.gl?l2.gl[g][L==='tr'?0:1]:null;
+  const glbl=g=>l2.gl?tx(l2.gl[g]):null;
   const toRows=tbl=>tbl.map(tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga]);
   let parts=null;
   if(isLive){
@@ -1649,7 +1649,7 @@ function lgLegacyTab(lg,tab,isLive,aEntry){
       return `<div class="pitem" onclick="pushV('team',${to.id})">
         ${tmBadge(to,34)}
         <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${x.n}</span>
-          <span class="natc">${POSL[L][x.pos]}</span></div>
+          <span class="natc">${tx(POSL)[x.pos]}</span></div>
         <div class="psub">${from} → <b style="color:var(--txt2)">${to.n}</b> · ${x.age} · S${x.se}/${t('wk')}${x.w}</div></div>
         <div style="text-align:right;flex-shrink:0">
           <div class="num" style="font-size:12px;font-weight:800;color:var(--gold)">${x.f?fmtM(x.f):t('freeFee')}</div>
@@ -1778,8 +1778,7 @@ function pfAgentHtml(p){
 /* Sonuç harfi oyunun kendi dilinde: TR'de G/M/B, EN'de W/L/D. Renk üçlüsü
    sabit — galibiyet yeşil, mağlubiyet kırmızı, beraberlik amber. */
 function pfResCh(res){
-  return L==='en'?(res==='W'?'W':res==='L'?'L':'D')
-                 :(res==='W'?'G':res==='L'?'M':'B');
+  return res==='W'?t('W'):res==='L'?t('L'):t('D');
 }
 function pfResCls(res){return res==='W'?'w':res==='L'?'l':'d';}
 function pfRtCls(rt){return rt>=7.5?'g':rt>=6.5?'y':'o';}
@@ -1825,7 +1824,7 @@ function pfHeadHtml(p,tm,cx){
       ${tmBadge(tm,46)}
       <span class="pfIdT">
         <span class="pfName">${esc(p.n)}</span>
-        <span class="pfMeta">${p.age} ${L==='tr'?'yaş':'yrs'} · ${POSFULL[L][p.pos]} · ${NATNAME[p.nat][L]}</span>
+        <span class="pfMeta">${p.age} ${t('ageU')} · ${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
       </span>
       <span class="pfRt ${rtClass(p.r)}"><b class="num">${p.r}</b><em>${t('rating')}</em></span>
     </div>
@@ -1953,7 +1952,7 @@ function pfMtHtml(p,tm,cx){
     ${seasons.map(s=>`<div class="pfSeason">
       <span class="pfSeasonS num">S${s.se}</span>
       <span class="pfSeasonT">${esc(s.tm)}</span>
-      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} G · ${s.a} A${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}</span>
+      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}</span>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -2164,9 +2163,9 @@ dash(){
   const deals=(S.offers||[]).length+(S.pending||[]).length;
   /* Yüzde işareti Türkçede önde, İngilizcede arkada durur. */
   const knownPct=Math.round((S.known||[]).length/LEAGUES.length*100);
-  const pctStr=L==='tr'?'%'+knownPct:knownPct+'%';
+  const pctStr=pctFmt(knownPct);
   /* Büyütme dile duyarlı — cmIni() ile aynı gerekçe ve aynı sonuç. */
-  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toLocaleUpperCase(L):'—';
+  const ini=S.agent?((S.agent.fn||' ')[0]+(S.agent.ln||' ')[0]).toLocaleUpperCase(langLoc()):'—';
 
   /* Etiket ve sayı tek sarmalayıcıda: 360px'te ikon + metin + oku aynı satıra
      dizmek metni kırpıyordu, ok köşeye alınınca metne yer kaldı. */
@@ -2368,7 +2367,7 @@ market(){
    <button class="btn b" style="margin-bottom:12px" onclick="pushV('atlas')">${t('scoutNet')} · ${S.known.length}/${LEAGUES.length} ${t('knownLbl')}</button>
    <div class="fgrid">
      ${lgSel}
-     ${sel('pos',[['all',t('all')],['KL',POSFULL[L].KL],['DF',POSFULL[L].DF],['OS',POSFULL[L].OS],['FV',POSFULL[L].FV]])}
+     ${sel('pos',[['all',t('all')],['KL',tx(POSFULL).KL],['DF',tx(POSFULL).DF],['OS',tx(POSFULL).OS],['FV',tx(POSFULL).FV]])}
      ${sel('age',[['all',t('all')],['u18','≤ 18'],['u21','≤ 21'],['u24','≤ 24'],['o25','25+']])}
      ${sel('sort',[['r',t('sortR')],['pot',t('sortPot')],['age',t('sortAge')],['ch',t('sortCh')]])}
    </div>
@@ -2403,7 +2402,7 @@ league(){
   if(tab==='table'){
     const myTeams=new Set(S.clients.map(id=>byId(id).team));
     const l2=LEAGUES[lg];
-    const glbl=g=>l2.gl?l2.gl[g][L==='tr'?0:1]:null;
+    const glbl=g=>l2.gl?tx(l2.gl[g]):null;
     const toRows=tbl=>tbl.map(tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga]);
     const rowsHtml=(rows,grouped)=>`<table>
     <tr><th></th><th>${t('team')}</th><th class="c">${t('P')}</th><th class="c">${t('W')}</th><th class="c">${t('D')}</th><th class="c">${t('L')}</th><th class="c">${t('GD')}</th><th class="c">${t('PTS')}</th></tr>
@@ -2461,9 +2460,9 @@ league(){
     S.curLg=first;return VIEWS.league();
   }
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
-    `<button class="${con===cc?'on':''}" onclick="setCon('${cc}')">${nm[L]}</button>`).join('')}</div>`;
+    `<button class="${con===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
   const ctryChips=`<div class="chips">${ctryList.map(cc=>
-    `<button class="${ctry===cc?'on':''}" onclick="setCtry('${cc}')">${CTRYS[cc][L]}</button>`).join('')}</div>`;
+    `<button class="${ctry===cc?'on':''}" onclick="setCtry('${cc}')">${tx(CTRYS[cc])}</button>`).join('')}</div>`;
   const lgRow=`<div class="chips">${LEAGUES.map((l2,i)=>l2.ctry===ctry?
     `<button class="${lg===i?'on':''}" onclick="setCurLg(${i})">${lgName(i)}</button>`:'').join('')}</div>`;
   return `${conChips}${ctryChips}${lgRow}
@@ -2507,7 +2506,7 @@ team(id){
     const win=mine>opp, loss=mine<opp;
     const col=win?'var(--acc)':loss?'var(--bad)':'var(--warn)';
     const bg=win?'rgba(13,159,110,.11)':loss?'rgba(220,38,38,.09)':'rgba(192,124,16,.11)';
-    const ch=L==='en'?(win?'W':loss?'L':'D'):(win?'G':loss?'M':'B');
+    const ch=win?t('W'):loss?t('L'):t('D');
     return `<span class="formsq" style="color:${col};background:${bg}">${ch}</span>`;
   }).join('');
   return `
@@ -2516,7 +2515,7 @@ team(id){
     <div class="row">
       ${tmBadge(tm,48)}
       <div style="flex:1"><div class="hname">${tm.n}</div>
-      <div class="hsub">${lgName(tm.lg)}${LEAGUES[tm.lg].gl?' · '+LEAGUES[tm.lg].gl[tm.grp||0][L==='tr'?0:1]:''} · #${pos} · ${tm.pts} ${t('PTS')} · ${tm.w}${t('W')} ${tm.d}${t('D')} ${tm.l}${t('L')} · ${tm.gf}:${tm.ga}</div></div>
+      <div class="hsub">${lgName(tm.lg)}${LEAGUES[tm.lg].gl?' · '+tx(LEAGUES[tm.lg].gl[tm.grp||0]):''} · #${pos} · ${tm.pts} ${t('PTS')} · ${tm.w}${t('W')} ${tm.d}${t('D')} ${tm.l}${t('L')} · ${tm.gf}:${tm.ga}</div></div>
       <div class="bigrt"><span class="n">${avg}</span><span class="l">${t('avgRating')}</span></div>
     </div>
     ${last5.length?`<div style="margin-top:14px" class="row"><span class="sub">${t('form')}</span><span>${formHtml}</span></div>`:''}
@@ -2540,7 +2539,7 @@ skills(){
     const got=branchTaken(b.id), tot=branchTotal(b.id);
     return `<div class="skchip${got?' on':''}" style="--skc:var(--sk-${b.id})">
       <span class="skdot">${arrow(b.dir)}</span>
-      <div class="skchipT"><b>${b.n[L]}</b>
+      <div class="skchipT"><b>${tx(b.n)}</b>
       <span>${t('skBranchProg').replace('{a}',got).replace('{b}',tot)}</span></div></div>`;
   }).join('');
   return `<h2 class="sec">${t('skills')}</h2>
@@ -2581,7 +2580,7 @@ rivals(){
               :x.r.rel<=-8?`<span style="color:var(--warn)"> · ${t('relTense')}</span>`:'';
      return `<div class="pitem" onclick="pushV('rival',${x.r.id})">
        <div class="pinfo"><div class="pname">${esc(rivalName(x.r))}</div>
-       <div class="psub">${a.n[L]} · ${archFocus(a)[L]} · ${t('portfolio')} ${rivalCount(x.r.id)}${rel}</div></div>
+       <div class="psub">${tx(a.n)} · ${tx(archFocus(a))} · ${t('portfolio')} ${rivalCount(x.r.id)}${rel}</div></div>
        <div class="rt ${rtClass(Math.round(x.rep))}">${Math.round(x.rep)}</div></div>`;
    }).join(''))}
    <div class="sub" style="margin-top:10px">${t('rankLbl')}: <b>#${me}</b>/${rows.length}</div>`;
@@ -2601,17 +2600,17 @@ rival(id){
     <div class="row">
       <div style="flex:1;min-width:0">
         <div class="pname" style="font-size:17px">${esc(rivalName(r))}</div>
-        <div class="psub">${a.n[L]} · ${CTRYS[r.ctry][L]}</div>
+        <div class="psub">${tx(a.n)} · ${tx(CTRYS[r.ctry])}</div>
       </div>
       <div class="rt ${rtClass(Math.round(r.rep))}">${Math.round(r.rep)}</div>
     </div>
-    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${a.dsc[L]}</span></div>
-    <div class="kv" style="margin-top:8px"><span class="k">${t('charLbl')}</span><span class="v">${archFocus(a)[L]}</span></div>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${tx(a.dsc)}</span></div>
+    <div class="kv" style="margin-top:8px"><span class="k">${t('charLbl')}</span><span class="v">${tx(archFocus(a))}</span></div>
     <div class="divider"></div>
     <div class="grid3">
       <div class="stat"><div class="v">${Math.round(r.rep)}</div><div class="l">${t('rep')}</div></div>
       <div class="stat"><div class="v">${rivalCount(r.id)}</div><div class="l">${t('portfolio')}</div></div>
-      <div class="stat"><div class="v">%${Math.round(a.comm*100)}</div><div class="l">${t('commission')}</div></div>
+      <div class="stat"><div class="v">${pctOf(a.comm)}</div><div class="l">${t('commission')}</div></div>
     </div>
   </div>
   <div class="card">
@@ -2642,13 +2641,11 @@ settings(){
   <div class="sub" style="margin:-4px 2px 10px">${t('themeHint')}</div>
   ${listWrap(THEMES.map(th=>`<div class="pitem${th.id===cur?' mine':''}" onclick="setTheme('${th.id}')">
     ${swatch(th)}
-    <div class="pinfo"><div class="pname">${th.n[L]}${th.id===cur?'<span class="star">★</span>':''}</div>
-    <div class="psub" style="white-space:normal;line-height:1.45">${th.d[L]}</div></div>
+    <div class="pinfo"><div class="pname">${tx(th.n)}${th.id===cur?'<span class="star">★</span>':''}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${tx(th.d)}</div></div>
     <span class="trk${th.id===cur?' on':''}">${th.id===cur?'✓':''}</span></div>`).join(''))}
   <div class="sect">${t('langLbl')}</div>
-  ${listWrap(['tr','en'].map(lc=>`<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')">
-    <div class="pinfo"><div class="pname">${lc==='tr'?'Türkçe':'English'}</div></div>
-    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`).join(''))}
+  ${langListHtml()}
   <button class="ftoggle ${pref('sfxOn',true)!==false?'on':''}" onclick="setPref('sfxOn',${pref('sfxOn',true)===false});render()">
     <span class="sw"></span>${t('sfxSetting')}</button>
   <div class="sub" style="margin:-4px 2px 12px">${t('sfxHint')}</div>
@@ -2670,7 +2667,7 @@ settings(){
   <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
   <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}
   <div class="sect">${t('aboutLbl')}</div>
-  ${listWrap(`<a class="pitem" href="${PRIVACY_URL[L]}" target="_blank" rel="noopener noreferrer"
+  ${listWrap(`<a class="pitem" href="${tx(PRIVACY_URL)}" target="_blank" rel="noopener noreferrer"
     style="text-decoration:none;color:inherit">
     <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
@@ -2792,7 +2789,7 @@ player(id){
   const p=byId(id),tm=teamOf(p),mine=p.agent==='you';
   const tags=[];
   if(mine)tags.push(`<span class="tag g">${t('myClient')}</span>`);
-  tags.push(`<span class="tag pos">${POSFULL[L][p.pos]}</span>`);
+  tags.push(`<span class="tag pos">${tx(POSFULL)[p.pos]}</span>`);
   tags.push(`<span class="tag n">${NATS[p.nat].c}</span>`);
   if(p.yrs<=1)tags.push(`<span class="tag w">${t('expiring')}</span>`);
   if(mine&&p.morale<40)tags.push(`<span class="tag b">${p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')}</span>`);
@@ -2809,7 +2806,7 @@ player(id){
     <div class="row">
       ${tmBadge(tm,44)}
       <div style="flex:1;min-width:0"><div class="hname">${p.n}</div>
-      <div class="hsub">${p.age} ${L==='tr'?'yaş':'years'} · ${POSFULL[L][p.pos]} · ${NATS[p.nat].c}</div></div>
+      <div class="hsub">${p.age} ${t('ageUL')} · ${tx(POSFULL)[p.pos]} · ${NATS[p.nat].c}</div></div>
       <div class="bigrt ${rtClass(p.r)}"><span class="n">${p.r}</span><span class="l">${t('rating')}</span></div>
     </div>
     <div style="margin-top:14px">${tags.join('')}</div>
@@ -2848,7 +2845,7 @@ player(id){
     ${p.l5.slice().reverse().map(m5=>{
       const o=S.teams[m5.o];
       const rc=m5.rt>=7.5?'var(--acc)':m5.rt>=6.5?'var(--warn)':'var(--bad)';
-      const resCh=L==='en'?(m5.res==='W'?'W':m5.res==='L'?'L':'D'):(m5.res==='W'?'G':m5.res==='L'?'M':'B');
+      const resCh=pfResCh(m5.res);
       const resCol=m5.res==='W'?'var(--acc)':m5.res==='L'?'var(--bad)':'var(--warn)';
       return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="pushV('team',${o.id})">
         ${tmBadge(o,26)}
@@ -2890,7 +2887,7 @@ player(id){
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
     ${hist.map(h=>`<div class="kv"><span class="k">S${h.se} · ${t('transferH')}</span><span class="v">${h.a} → ${h.b} (${fmtM(h.f)})</span></div>`).join('')}
-    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' M · '+(s.min||0)+"' · ":''}${s.g} G · ${s.a} A${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}</span></div>`).join('')}
+    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}</span></div>`).join('')}
   </div>`:''}
   ${mine?`
     <div class="grid2">
@@ -2918,7 +2915,7 @@ player(id){
     <button class="btn s" disabled>${t('repLock')} · ${t('rep')} ${repNeedFor(profileOf(p))}+</button>`
    :pitchCd(p)>0?`
     <button class="btn s" disabled>${t('rejectedCd')} · ${pitchCd(p)} ${t('wk')}</button>`:`
-    <button class="btn p" onclick="pitchPlayer(${p.id})">${t('pitch')} · ${fmtK(pitchCost(p))} · %${Math.round(pitchChance(p)*100)}</button>`)
+    <button class="btn p" onclick="pitchPlayer(${p.id})">${t('pitch')} · ${fmtK(pitchCost(p))} · ${pctOf(pitchChance(p))}</button>`)
   :`<div class="empty" style="padding:18px">${t('hasAgent')}</div>`}`;
 }
 };
@@ -2952,7 +2949,7 @@ function skLevelCard(){
   const nxt=lp.need
     /* Küçültme dile duyarlı: Türkçede düz toLowerCase() "İtibar"ı birleşen
        noktayla "i̇tibar" yapıyordu. Saha karşılığı (skSahaView) zaten böyle. */
-    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(L)}`
+    ? `${t('skNext')} · <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(langLoc())}`
     : t('skMaxLv');
   return `<div class="card sklvc">
     ${skLevelRing(74)}
@@ -2986,7 +2983,7 @@ function skTreeSvg(){
            <circle r="14"/><text y="6">${sk.cost}</text></g>`;
     return `<g class="sknode ${st}${just===sk.id?' just':''}" style="--skc:var(--sk-${sk.br||'hub'})"
        transform="translate(${p.x},${p.y})" onclick="skOpen('${sk.id}')" role="button"
-       aria-label="${esc(sk.n[L])}">
+       aria-label="${esc(tx(sk.n))}">
       <circle class="skhit" r="${SK_GEO.hit}"/>
       <circle class="skburst" r="${r}"/>
       <circle class="skdisc" r="${r}"/>
@@ -3008,7 +3005,7 @@ function skOpen(id){
   const st=skillState(sk), br=skBranch(sk.br);
   const effs=Object.keys(sk.eff||{}).map(k=>
     `<span class="tag ${st==='owned'?'g':'n'}">${skEffLabel(k,sk.eff[k])}</span>`).join('');
-  const reqs=(sk.req||[]).map(r=>skById(r)).filter(Boolean).map(x=>x.n[L]).join(' · ');
+  const reqs=(sk.req||[]).map(r=>skById(r)).filter(Boolean).map(x=>tx(x.n)).join(' · ');
   const foot=
     st==='owned' ? `<div class="skfoot"><span class="tag g">${t('skOwned')}</span></div>`
    :st==='open'  ? `<button class="btn p" onclick="skillBuy('${sk.id}')">${t('skUnlockBtn')} · ${sk.cost} ${sk.cost>1?t('skPts'):t('skPt')}</button>`
@@ -3020,11 +3017,11 @@ function skOpen(id){
        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
          stroke-linecap="round" stroke-linejoin="round">${SKICONS[sk.br||'hub']||SKICONS.hub}</svg></div>
      <div style="flex:1;min-width:0">
-       <h2>${sk.n[L]}</h2>
-       <div class="sub">${br?br.n[L]:t('agency')}${sk.cost?' · '+sk.cost+' '+(sk.cost>1?t('skPts'):t('skPt')):''}</div>
+       <h2>${tx(sk.n)}</h2>
+       <div class="sub">${br?tx(br.n):t('agency')}${sk.cost?' · '+sk.cost+' '+(sk.cost>1?t('skPts'):t('skPt')):''}</div>
      </div>
    </div>
-   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${sk.dsc[L]}</span></div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${tx(sk.dsc)}</span></div>
    ${effs?`<div class="sect" style="margin-top:14px">${t('skEffects')}</div><div>${effs}</div>`:''}
    ${reqs&&st!=='owned'?`<div class="sub" style="margin-top:10px">${t('skReq')}: ${reqs}</div>`:''}
    <div style="margin-top:16px">${foot}</div>`);
@@ -3069,7 +3066,7 @@ const SK_LOCKI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function skFoot(sk,st){
   if(st==='owned')return {ic:SK_TICK,t:t('skOwned')};
   if(st==='lock'){
-    const r=(sk.req||[]).map(x=>skById(x)).filter(Boolean).map(x=>x.n[L]).join(' / ');
+    const r=(sk.req||[]).map(x=>skById(x)).filter(Boolean).map(x=>tx(x.n)).join(' / ');
     return {ic:SK_LOCKI,t:t('skReq')+': '+r};
   }
   if(st==='poor')return {ic:'',t:t('skPoorShort')};
@@ -3089,14 +3086,14 @@ function skCardHtml(sk){
   const effs=Object.keys(sk.eff||{}).map(k=>
     `<span class="skCardE">${skEffLabel(k,sk.eff[k])}</span>`).join('');
   return `<button class="skCard ${st}" style="--skc:var(--sk-${sk.br||'hub'})"
-    onclick="skOpen('${sk.id}')" aria-label="${esc(sk.n[L])} · ${esc(f.t)}">
+    onclick="skOpen('${sk.id}')" aria-label="${esc(tx(sk.n))} · ${esc(f.t)}">
     <span class="skCardH">
       <span class="skCardIc">${skSvg(skNodeIcon(sk))}</span>
       ${st==='owned'
         ?`<span class="skCost ok">${SK_TICK}</span>`
         :`<span class="skCost"><b class="num">${sk.cost}</b>${ICONS.gem}</span>`}
     </span>
-    <span class="skCardN">${sk.n[L]}</span>
+    <span class="skCardN">${tx(sk.n)}</span>
     <span class="skCardEs">${effs}</span>
     <span class="skCardF">${f.ic?`<i>${f.ic}</i>`:''}<span>${f.t}</span></span>
   </button>`;
@@ -3111,14 +3108,14 @@ function skSahaView(){
     return `<button class="skTab${b.id===br?' on':''}" style="--skc:var(--sk-${b.id})"
       onclick="skSetTab('${b.id}')" aria-pressed="${b.id===br?'true':'false'}">
       <span class="skTabIc">${skSvg(skBranchIcon(b.id)||SKICONS[b.id])}</span>
-      <span class="skTabN">${b.n[L]}</span>
+      <span class="skTabN">${tx(b.n)}</span>
       <span class="skTabP num">${got}/${tot}</span></button>`;
   }).join('');
   /* Seviye satırı puanın NEREDEN geldiğini söylüyor: puan seviyeden, seviye
      itibardan. Onsuz özet kart "9" diyor ve onuncunun nereden geleceğini
      söylemiyor. */
   const lvLine=lp.need
-    ? `${t('skLvShort')} ${lp.lv} · ${t('skNext')} <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(L)}`
+    ? `${t('skLvShort')} ${lp.lv} · ${t('skNext')} <b class="num">${Math.floor(lp.cur)}/${lp.need}</b> ${t('rep').toLocaleLowerCase(langLoc())}`
     : `${t('skLvShort')} ${lp.lv} · ${t('skMaxLv')}`;
   const bpct=total?Math.round(spent/total*100):0;
   return `<div class="skTop">
@@ -3138,7 +3135,7 @@ function skSahaView(){
     </div>
   </div>
   <div class="skTabs">${tabs}</div>
-  <div class="skBrD">${skBranch(br).d[L]}</div>
+  <div class="skBrD">${tx(skBranch(br).d)}</div>
   <div class="skGrid">${SKILLS.filter(sk=>sk.br===br).map(skCardHtml).join('')}</div>
   <div class="skNote">${t('skHint').replace('{n}',LV.bonus)}</div>`;
 }
@@ -3153,7 +3150,7 @@ function skSahaSheet(sk){
      uzunluğu kadar kesiliyor. Yüzde işaretinin dile göre yer değiştirmesi gibi
      kurallar tek yerde, skills.js'te kalıyor. */
   const effs=Object.keys(sk.eff||{}).map(k=>{
-    const n=SK_KEY[k]?SK_KEY[k].n[L]:k, full=skEffLabel(k,sk.eff[k]);
+    const n=SK_KEY[k]?tx(SK_KEY[k].n):k, full=skEffLabel(k,sk.eff[k]);
     return `<div class="skDE"><span>${n}</span><b>${full.slice(n.length+1)||full}</b></div>`;
   }).join('');
   const cta=
@@ -3169,11 +3166,11 @@ function skSahaSheet(sk){
     <div class="skSheetH">
       <span class="skSheetIc">${skSvg(skNodeIcon(sk))}</span>
       <div class="skSheetT">
-        <h2>${sk.n[L]}</h2>
-        <div class="sub">${br?br.n[L]:t('agency')} · <b class="num">${skCostTxt(sk.cost)}</b></div>
+        <h2>${tx(sk.n)}</h2>
+        <div class="sub">${br?tx(br.n):t('agency')} · <b class="num">${skCostTxt(sk.cost)}</b></div>
       </div>
     </div>
-    <div class="skSheetD">${sk.dsc[L]}</div>
+    <div class="skSheetD">${tx(sk.dsc)}</div>
     ${effs?`<div class="sect">${t('skEffects')}</div><div class="skDEs">${effs}</div>`:''}
     ${st==='lock'?`<div class="skSheetR"><i>${SK_LOCKI}</i><span>${f.t}</span></div>`:''}
     ${cta}
@@ -3253,8 +3250,8 @@ function fillNatSel(con){
   const sel=document.getElementById('sel_nat');
   if(!sel)return;
   const list=NATKEYS.filter(n=>NATCON[n]===setupCon)
-    .sort((a,b)=>NATNAME[a][L].localeCompare(NATNAME[b][L],L));
-  sel.innerHTML=list.map(n=>`<option value="${n}">${NATNAME[n][L]}</option>`).join('');
+    .sort((a,b)=>tx(NATNAME[a]).localeCompare(tx(NATNAME[b]),langLoc()));
+  sel.innerHTML=list.map(n=>`<option value="${n}">${tx(NATNAME[n])}</option>`).join('');
 }
 /* ================= SAHA: MENAJER OLUŞTURMA =================
    Kapı diğer saha ekranlarıyla aynı desende (useSahaMarket/useSahaInbox/
@@ -3287,7 +3284,7 @@ function setupKnownLgs(nat){
 function setupSahaHtml(){
   const con=NCONTS.map(([c,nm])=>`<button type="button" class="mcConB${c===setupCon?' on':''}"
     data-con="${c}" aria-pressed="${c===setupCon?'true':'false'}"
-    onclick="setupConPick('${c}')">${esc(nm[L])}</button>`).join('');
+    onclick="setupConPick('${c}')">${esc(tx(nm))}</button>`).join('');
   return `
   <div class="mcWrap">
     <div class="mcEye">${t('mcLic')}</div>
@@ -3341,7 +3338,7 @@ function setupSahaHtml(){
       <div class="mcMiss" id="mcMiss">${ICONS.alert}<span>${t('fillName')}</span></div>
       <button class="mcGo" id="mcGo" aria-describedby="mcMiss"
         onclick="startCareer()">${t('startBtn')}</button>
-      <button class="mcLang" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>
+      <button class="mcLang" onclick="langPickOpen()" aria-label="${esc(t('langLbl'))}">${esc(langOf(L).n)}</button>
     </div>
   </div>`;
 }
@@ -3378,14 +3375,14 @@ function setupSync(){
   if(nm){nm.textContent=ready?fn+' '+ln:t('mcNoName');nm.classList.toggle('ph',!ready);}
   const ini=g('mcIni');
   /* cmIni ile aynı hesap ve aynı dile duyarlı büyütme. */
-  if(ini)ini.textContent=ready?((fn[0]||'')+(ln[0]||'')).toLocaleUpperCase(L):'—';
+  if(ini)ini.textContent=ready?((fn[0]||'')+(ln[0]||'')).toLocaleUpperCase(langLoc()):'—';
   const agn=g('mcAg');
   if(agn)agn.textContent=ln?agencyNameFor(ln,ag):'';
   /* Boş bırakılırsa ne yazılacağı yer tutucuda duruyor: kullanıcı tahmin etmesin. */
   if(agEl)agEl.placeholder=ln?agencyNameFor(ln,''):'—';
 
   const lgs=nat?setupKnownLgs(nat):[];
-  const natN=(nat&&NATNAME[nat])?NATNAME[nat][L]:'';
+  const natN=(nat&&NATNAME[nat])?tx(NATNAME[nat]):'';
   const nt=g('mcNat');if(nt)nt.textContent=natN;
   const lc=g('mcLgN');if(lc)lc.textContent=lgs.length+' '+t('knownLbl');
   const box=g('mcLgs');
@@ -3412,7 +3409,7 @@ function setupHtml(){
       <input class="finp" id="inp_ln" maxlength="18" placeholder="${t('lname')}"></div>
     <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('contL')}</span>
       <select class="fsel" id="sel_con" onchange="fillNatSel(this.value)">
-      ${NCONTS.map(([c,nm])=>`<option value="${c}" ${c===setupCon?'selected':''}>${nm[L]}</option>`).join('')}
+      ${NCONTS.map(([c,nm])=>`<option value="${c}" ${c===setupCon?'selected':''}>${tx(nm)}</option>`).join('')}
       </select></div>
     <div class="fitem" style="margin-bottom:10px"><span style="font-size:9.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('natL')}</span>
       <select class="fsel" id="sel_nat"></select></div>
@@ -3421,7 +3418,7 @@ function setupHtml(){
   </div>
   <div class="card"><div class="sub">${t('setupHint')}</div></div>
   <button class="btn p" onclick="startCareer()">${t('startBtn')}</button>
-  <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="toggleLang()">${L==='tr'?'English':'Türkçe'}</button>`;
+  <button class="langbtn" style="width:100%;margin-top:12px;text-align:center" onclick="langPickOpen()" aria-label="${esc(t('langLbl'))}">${esc(langOf(L).n)}</button>`;
 }
 let lastSig=null;
 /* Üst çubukta yalnızca oyun içinde anlamlı olan parçalar. Kabukta gizleniyorlar;
@@ -3487,6 +3484,7 @@ function render(){
   const bs=document.getElementById('btnSet');
   if(bs){
     bs.classList.add('show');
+    bs.setAttribute('aria-label',t('settings'));
     if(!bs.firstChild){bs.innerHTML=ICONS.settings;const sv=bs.querySelector('svg');if(sv){sv.style.width='17px';sv.style.height='17px';}}
   }
   /* Sepet YALNIZ ana ekranda. Diğer kariyer ekranlarında üst çubuk zaten geri +
@@ -3497,6 +3495,7 @@ function render(){
   const bsh=document.getElementById('btnShop');
   if(bsh){
     bsh.classList.toggle('show',c.v==='dash');
+    bsh.setAttribute('aria-label',t('shop'));
     if(!bsh.firstChild){bsh.innerHTML=ICONS.cart;const cv=bsh.querySelector('svg');if(cv){cv.style.width='18px';cv.style.height='18px';}}
   }
   document.getElementById('btnNext').textContent=t('next');
@@ -3600,7 +3599,7 @@ function wkSahaCell(v,lbl){
 }
 function wkSahaCard(r){
   const tm=S.teams[r.tid],opp=S.teams[r.opp];
-  const resCh=r.res==='W'?(L==='en'?'W':'G'):r.res==='L'?(L==='en'?'L':'M'):(L==='en'?'D':'B');
+  const resCh=pfResCh(r.res);
   const resCls=r.res==='W'?'w':r.res==='L'?'l':'d';
   const stat=(v,lbl,cls)=>'<i class="wrStat'+(cls?' '+cls:'')+'"><b class="num">'+v+'</b><em>'+lbl+'</em></i>';
   const body=r.dnp
@@ -3676,15 +3675,15 @@ function evSahaAsk(ev,c){
   openModal(
     '<div class="evTop">'
     +evBadgeHtml(k.ic,'',k.c)
-    +'<div class="evCat" style="--evc:'+k.c+'">'+k.n[L]+'</div>'
+    +'<div class="evCat" style="--evc:'+k.c+'">'+tx(k.n)+'</div>'
     +'<div class="evLock">'+evSvg(EV_ICON.lock)+'<span>'+t('evNeed')+'</span></div>'
     +'</div>'
-    +'<h2 class="evTtl">'+ev.ttl(c)[L]+'</h2>'
+    +'<h2 class="evTtl">'+tx(ev.ttl(c))+'</h2>'
     +evWhoHtml(c)
-    +'<div class="evCtx">'+ev.txt(c)[L]+'</div>'
+    +'<div class="evCtx">'+tx(ev.txt(c))+'</div>'
     +'<div class="evAsk">'+t('evAnswer')+'</div>'
     +'<div class="evOpts">'+ev.opts.map((o,i)=>
-      '<button class="evOpt" onclick="evChoose('+i+')"><span class="evOptT">'+o.t[L]+'</span>'
+      '<button class="evOpt" onclick="evChoose('+i+')"><span class="evOptT">'+tx(o.t)+'</span>'
       +evSvg(EV_ICON.chev,'evChev')+'</button>').join('')+'</div>',true);
 }
 function evSahaResult(ev,c,r,changes,lbl){
@@ -3697,7 +3696,7 @@ function evSahaResult(ev,c,r,changes,lbl){
        azalış iyi — eski davranışın birebir aynısı. */
     const isPct=x.k==='ag_comm'||x.k==='ag_cost';
     const good=x.k==='ag_cost'?x.v<0:x.v>0;
-    const v=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?'%'+Math.round(Math.abs(x.v)*100):Math.abs(x.v);
+    const v=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?pctFmt(Math.round(Math.abs(x.v)*100)):Math.abs(x.v);
     const perm=x.k.indexOf('ag_')===0?'<i class="evPerm">'+t('permanent')+'</i>':'';
     return '<div class="evEff '+(good?'g':'b')+'">'
       +'<span class="evEffIc">'+evEffSvg(x.k)+'</span>'
@@ -3707,11 +3706,11 @@ function evSahaResult(ev,c,r,changes,lbl){
   openModal(
     '<div class="evTop">'
     +evBadgeHtml(k.ic,val,k.c)
-    +'<div class="evCat" style="--evc:'+k.c+'">'+k.n[L]+'</div>'
+    +'<div class="evCat" style="--evc:'+k.c+'">'+tx(k.n)+'</div>'
     +'<div class="evVerdict '+val+'">'+verdict+'</div>'
     +'</div>'
-    +'<h2 class="evTtl">'+ev.ttl(c)[L]+'</h2>'
-    +'<div class="evOut '+val+'">'+(r.msg?r.msg[L]:'')+'</div>'
+    +'<h2 class="evTtl">'+tx(ev.ttl(c))+'</h2>'
+    +'<div class="evOut '+val+'">'+(r.msg?tx(r.msg):'')+'</div>'
     +evWhoHtml(c)
     +(effs?'<div class="evAsk">'+t('evImpact')+'</div><div class="evEffs">'+effs+'</div>':'')
     +'<button class="btn p evGo" onclick="closeModal()">'+evSvg(EV_ICON.ok)+'<span>'+t('evCont')+'</span></button>');
@@ -3733,14 +3732,14 @@ function showEvent(ref){
   if(useSahaEvent()){evSahaAsk(ev,c);return;}
   const head=c.p
     ? `<div class="row">${tmBadge(c.tm,42)}
-        <div style="flex:1;min-width:0"><h2>${ev.ttl(c)[L]}</h2>
+        <div style="flex:1;min-width:0"><h2>${tx(ev.ttl(c))}</h2>
         <div class="sub">${c.p.n} · ${c.tm.n}</div></div>
         <div class="rt ${rtClass(c.p.r)}">${c.p.r}</div></div>`
-    : `<h2>${ev.ttl(c)[L]}</h2>`;
+    : `<h2>${tx(ev.ttl(c))}</h2>`;
   openModal(`${head}
-    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${ev.txt(c)[L]}</span></div>
+    <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${tx(ev.txt(c))}</span></div>
     <div class="sect" style="margin-top:14px">${t('evPick')}</div>
-    ${ev.opts.map((o,i)=>`<button class="dchoice" onclick="evChoose(${i})">${o.t[L]}</button>`).join('')}`,true);
+    ${ev.opts.map((o,i)=>`<button class="dchoice" onclick="evChoose(${i})">${tx(o.t)}</button>`).join('')}`,true);
 }
 function evChoose(i){
   const ref=S.evCur;
@@ -3766,12 +3765,12 @@ function evChoose(i){
     /* Kalıcı ajans değişiklikleri oran olarak yazılır; giderde artış kötü, azalış iyi. */
     const isPct=x.k==='ag_comm'||x.k==='ag_cost';
     const good=x.k==='ag_cost'?x.v<0:x.v>0;
-    const val=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?'%'+Math.round(Math.abs(x.v)*100):Math.abs(x.v);
+    const val=x.k==='cash'?fmtK(Math.abs(x.v)):isPct?pctFmt(Math.round(Math.abs(x.v)*100)):Math.abs(x.v);
     const perm=x.k.indexOf('ag_')===0?' · '+t('permanent'):'';
     return `<span class="tag ${good?'g':'b'}">${lbl[x.k]} ${x.v>0?'+':'−'}${val}${perm}</span>`;
   }).join('');
-  openModal(`<h2>${ev.ttl(c)[L]}</h2>
-    <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?r.msg[L]:''}</div>
+  openModal(`<h2>${tx(ev.ttl(c))}</h2>
+    <div class="dquote ${changes.some(x=>x.v<0)?(changes.some(x=>x.v>0)?'mid':'bad'):'good'}" style="margin-top:12px">${r.msg?tx(r.msg):''}</div>
     ${chips?`<div style="margin-top:14px">${chips}</div>`:''}
     <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
   save();render();
@@ -3795,11 +3794,11 @@ function showPoach(){
      <div style="flex:1;min-width:0"><h2>${t('poachT')}</h2>
      <div class="sub">${p.n} · ${esc(rivalName(r))}</div></div>
      <div class="rt ${rtClass(p.r)}">${p.r}</div></div>
-   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${rivalArch(r).dsc[L]}</span></div>
+   <div class="dctx" style="margin-top:12px">${ICONS.alert}<span>${tx(rivalArch(r).dsc)}</span></div>
    <div class="negbox" style="margin-top:10px">
      <div class="row" style="justify-content:space-between;font-size:11px">
        <span class="sub" style="font-weight:800;text-transform:uppercase;letter-spacing:.06em">${t('poachT')}</span>
-       <b class="num" style="color:${col};font-size:15px">%${risk}</b></div>
+       <b class="num" style="color:${col};font-size:15px">${pctFmt(risk)}</b></div>
      <div class="moodbar"><div style="width:${risk}%;background:${col}"></div></div>
      <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px">
        <span class="sub">${t('trustL')}</span><b class="num">${Math.round(trustOf(p))}</b></div>
@@ -3807,7 +3806,7 @@ function showPoach(){
        <span class="sub">${t('morale')}</span><b class="num">${Math.round(p.morale)}</b></div>
    </div>
    <div class="sect" style="margin-top:14px">${t('evPick')}</div>
-   ${POACH_OPT.map((o,i)=>`<button class="dchoice" onclick="poachChoose(${i})">${o.t[L]}</button>`).join('')}`,true);
+   ${POACH_OPT.map((o,i)=>`<button class="dchoice" onclick="poachChoose(${i})">${tx(o.t)}</button>`).join('')}`,true);
 }
 function poachChoose(i){
   const pc=S.poach;
@@ -3828,9 +3827,9 @@ function poachChoose(i){
     pushNews('poachHeld',{n:p.n,pid:p.id,a:rivalName(r),ri:r.id},'good');
   }
   openModal(`<h2>${t('poachT')}</h2>
-    <div class="dquote ${lost?'bad':'good'}" style="margin-top:12px">${out.msg?out.msg[L]:''}</div>
+    <div class="dquote ${lost?'bad':'good'}" style="margin-top:12px">${out.msg?tx(out.msg):''}</div>
     <div class="dquote ${lost?'bad':'good'}" style="margin-top:8px">${
-      lost?(NEWS[L].poached({n:p.n,a:esc(rivalName(r))})):(NEWS[L].poachHeld({n:p.n,a:esc(rivalName(r))}))}</div>
+      lost?(newsTxt('poached',{n:p.n,a:esc(rivalName(r))})):(newsTxt('poachHeld',{n:p.n,a:esc(rivalName(r))}))}</div>
     <button class="btn p" style="margin-top:16px" onclick="closeModal()">${t('gotIt')}</button>`);
   save();render();
 }
@@ -3842,7 +3841,7 @@ function showWeekReport(wk){
   const rows=(S.wkRep||[]).slice().sort((a,b)=>(b.rt||0)-(a.rt||0));
   if(!rows.length)return;
   if(useSahaWeekReport()){wkSahaReport(wk);return;}
-  const resCh=res=>L==='en'?res:(res==='W'?'G':res==='L'?'M':'B');
+  const resCh=pfResCh;
   const resCol=res=>res==='W'?'var(--acc)':res==='L'?'var(--bad)':'var(--warn)';
   /* Sayılar oyuncunun hizasında sabit kolonlarda dursun — satırlar arası göz
      taraması ancak böyle çalışıyor. Kolon genişlikleri başlıkla birebir aynı. */
@@ -3896,9 +3895,24 @@ function showSeasonModal(champs){
 }
 /* Dil de cihaz tercihi; kayda da yazılıyor ki kayıt başka bir cihaza taşınırsa
    kendi dilini yanında getirsin. Okumada prefs önce gelir. */
-function toggleLang(){setLangTo(L==='tr'?'en':'tr');}
-function setLang(lc){if(lc!==L)setLangTo(lc);else render();}
+/* Dil listesi: Ayarlar ekranı ve menü/kurulumdaki küre düğmesinin açtığı pencere
+   aynı işaretlemeyi kullanıyor. İki dil varken düğme öbürüne geçiyordu; yedi dilde
+   sırayla dolaşmak istenen dile altı dokunuş demek, liste tek dokunuş. Her dil
+   kendi adıyla yazılı ki dili okuyamayan biri de kendi dilini bulsun. */
+function langListHtml(){
+  return listWrap(LANGS.map(lg=>{const lc=lg.c;return `<div class="pitem${L===lc?' mine':''}" onclick="setLang('${lc}')" lang="${lc}">
+    <div class="pinfo"><div class="pname">${esc(lg.n)}</div></div>
+    <span class="trk${L===lc?' on':''}">${L===lc?'✓':''}</span></div>`;}).join(''));
+}
+function langPickOpen(){
+  openModal(`<h2>${t('langLbl')}</h2><div style="margin-top:12px">${langListHtml()}</div>`);
+}
+function setLang(lc){
+  if(modalOpen())closeModal();
+  if(lc!==L)setLangTo(lc);else render();
+}
 function setLangTo(lc){
+  if(!langOk(lc))return;
   L=lc;setPref('lang',lc);
   if(S){S.lang=lc;save();}
   render();
@@ -4197,7 +4211,7 @@ function trSahaOpen(p,buyers,v,free){
     /* Kulüpsüz oyuncuda takım adı FREETM.n, yani bir tire — mevkiden sonra
        yarım kalmış bir satır olurdu. Onun yerine durumun kendisi yazıyor. */
     +'<span class="tfHT"><span class="tfName">'+esc(p.n)+'</span>'
-    +'<span class="tfMeta">'+POSFULL[L][p.pos]+' · '+(free?t('faShort'):esc(tm.n))+'</span></span>'
+    +'<span class="tfMeta">'+tx(POSFULL)[p.pos]+' · '+(free?t('faShort'):esc(tm.n))+'</span></span>'
     +'<span class="tfRt '+rtClass(p.r)+'"><b class="num">'+p.r+'</b><em>'+t('rating')+'</em></span>'
     +'</div>'
     +'<div class="tfPills">'
@@ -4237,7 +4251,7 @@ function trSahaOpen(p,buyers,v,free){
         return {v:n,l:String(n),s:t('gbGoals')};})),t('goalBonusL'))
     +'<div class="tfSub">'+t('nextSaleL')+'</div>'
     +tfChips('trSo',0,[{v:0,l:t('none')}].concat(SOTIERS.map(function(n){
-        return {v:n,l:'%'+n,s:n>=30?t('soHard'):''};})),t('nextSaleL'))
+        return {v:n,l:pctFmt(n),s:n>=30?t('soHard'):''};})),t('nextSaleL'))
     +'<div class="tfHint">'+t('clauseHint')+'</div>';
 
   const fixer='<div class="sect tfSectGap">'+t('fixerL')+'</div>'
@@ -4278,11 +4292,11 @@ function trSahaOpen(p,buyers,v,free){
    doğuyor; bonservisli transferde transferCutFor()'un verdiği gerçek tutar. */
 function trSahaFin(p,free,fee,fix,fixCost,short){
   const comm=document.getElementById('tfComm');
-  if(comm)comm.textContent=p.tpo?'%0':free?'%'+transferPct():'~'+fmtK(transferCutFor(p,fee,false));
+  if(comm)comm.textContent=p.tpo?pctFmt(0):free?pctFmt(transferPct()):'~'+fmtK(transferCutFor(p,fee,false));
   const note=document.getElementById('tfCommN');
   if(note)note.textContent=p.tpo?t('tpoSold')
     :free?t('commAfterContract')
-    :'%'+transferPct()+' · '+t('commEst');
+    :pctFmt(transferPct())+' · '+t('commEst');
   /* Operasyon dökümü: kademe seçilmemişken satır hiç yazılmıyor — "0K €"
      boş bir bilgi. Kademe seçiliyse toplam da, kulüp başı da yazıyor; hiç kulüp
      seçilmemişken bile birim fiyat görünür kalıyor. Formül trFin'in kendi

@@ -34,7 +34,7 @@ function evCtx(pid){
    eski isimsiz metne düşer — olay yine de anlamlıdır. */
 function evRivalName(c){
   const rs=(S&&S.rivals)||[];
-  if(!rs.length)return L==='tr'?'başka bir menajer':'another agent';
+  if(!rs.length)return t('anotherAgent');
   /* Aynı olayın metni ve seçenekleri aynı ajansı görsün: oyuncunun id'sinden
      türetilen sabit bir seçim, hafta içinde değişmez. */
   const r=rs[((c&&c.p?c.p.id:0)+(S.tw||0))%rs.length];

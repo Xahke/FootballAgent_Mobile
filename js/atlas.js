@@ -40,7 +40,7 @@ function atlCache(){
 function terrList(){return atlCache().order;}
 function terrOf(i){const l=LEAGUES[i];return l?l.ctry:null;}
 function terrLeagues(c){return atlCache().byTerr[c]||[];}
-function terrName(c){return CTRYS[c]?CTRYS[c][L]:c;}
+function terrName(c){return CTRYS[c]?tx(CTRYS[c]):c;}
 
 /* ===== türetilmiş durum ===== */
 function terrDiscovered(c){return terrLeagues(c).some(i=>knownLg(i));}

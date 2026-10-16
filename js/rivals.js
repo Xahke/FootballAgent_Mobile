@@ -177,7 +177,10 @@ const RIV_SFXK=Object.keys(RIV_SFX);
 function rivalName(r){
   if(!r)return '';
   const sfx=RIV_SFX[r.sfx]||RIV_SFX.mg;
-  return r.base+' '+sfx[L];
+  /* Ek kalıp taşıyorsa ({b} = soyad) sözcük sırası dile ait: "Gestión {b}".
+     Kalıpsız ek eskisi gibi soyadın arkasına geliyor. */
+  const s=tx(sfx);
+  return s.indexOf('{b}')>=0?fmtStr(s,{b:r.base}):r.base+' '+s;
 }
 
 /* ================= KURULUŞ ================= */

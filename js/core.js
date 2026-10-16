@@ -6,8 +6,8 @@ let stack=[{v:'dash'}];
 const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const RF=()=>Math.random();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const fmtK=v=>v>=1000?(v/1000).toFixed(2).replace(/\.?0+$/,'')+'M €':Math.round(v)+'K €';
-const fmtM=v=>v.toFixed(1).replace(/\.0$/,'')+'M €';
+const fmtK=v=>v>=1000?decFmt((v/1000).toFixed(2).replace(/\.?0+$/,''))+'M €':Math.round(v)+'K €';
+const fmtM=v=>decFmt(v.toFixed(1).replace(/\.0$/,''))+'M €';
 /* ===== piyasa eğrileri =====
    Modern futbolun ölçeğine yakın dursun: alt liglerde birkaç bin, üst düzeyde
    yüz binlerce euro haftalık; bonservisler on milyonlarla yüz milyonlar arasında.
@@ -236,7 +236,7 @@ function simCups(){
     if(winners.length>1)cp.rounds.push(consPair(winners));
     else{
       const champ=S.teams[winners[0]];
-      const cupN=CUPS.find(x=>x.c===cp.c).n[L];
+      const cupN=tx(CUPS.find(x=>x.c===cp.c).n);
       pushNews('cupWin',{c:champ.n,tid:champ.id,cup:cupN,ci:cci},'good');
       S.cupHist=S.cupHist||{};
       (S.cupHist[cp.c]=S.cupHist[cp.c]||[]).push({se:S.season,tid:champ.id});
@@ -266,7 +266,12 @@ function lgWeeks(lg){return S.fx[lg].length;}
 function lgName(i){
   const l=LEAGUES[i];
   if(!l)return '';
-  return CTRYS[l.ctry][L]+' '+t(l.tier===2?'tier2':'tier1');
+  const c=tx(CTRYS[l.ctry]);
+  /* {g}: ülkenin "-in" hâli. Fransızca/İtalyanca/Portekizcede edat ülkeyle
+     kaynaşıyor (d'Angleterre, del Brasile, da Espanha); tablo dil dosyasında,
+     yoksa ülke adı. */
+  const g=(tx(CTRYG)&&tx(CTRYG)[l.ctry])||c;
+  return fmtStr(t('lgFmt'),{c,g,t:t(l.tier===2?'tier2':'tier1')});
 }
 function byId(id){return S.players.find(p=>p.id===id);}
 /* ===== serbest oyuncular =====
@@ -470,7 +475,7 @@ function scoutPending(i){return (S.scout||[]).find(x=>x.lg===i);}
    duruyor çünkü kurulum ekranı da bunu çağırıp kullanıcıya boş bıraktığında
    ne yazılacağını önceden gösteriyor — iki yerde iki kopya olsaydı biri
    düzeltilip diğeri unutulduğunda sessizce ayrışırlardı. */
-function agencyNameFor(ln,ag){return ag||(ln+(L==='tr'?' Menajerlik':' Management'));}
+function agencyNameFor(ln,ag){return ag||fmtStr(t('agFmt'),{n:ln});}
 function createAgent(fn,ln,nat,ag){
   S.agent={fn,ln,nat,agency:agencyNameFor(ln,ag)};
   const home=NAT2CTRY[nat]||'WAF';
@@ -520,7 +525,7 @@ function openScout(){
     const pend=scoutPending(i);
     return `<div class="pitem" style="cursor:default">
       <div class="pinfo"><div class="pname">${lgName(i)}</div>
-      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLocaleLowerCase(L)}</div></div>
+      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLocaleLowerCase(langLoc())}</div></div>
       ${pend?`<span class="tag w">${t('scoutPendingT')} · ${Math.max(1,pend.done-(S.tw||0))} ${t('wk')}</span>`
         :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuild')} · ${fmtK(scoutCost(i))}</button>`}
     </div>`;

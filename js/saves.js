@@ -53,8 +53,11 @@ function savePrefs(){
 function pref(k,d){return PREFS[k]===undefined?d:PREFS[k];}
 function setPref(k,v){PREFS[k]=v;savePrefs();}
 /* dil tercihi kayıttan önce gelir: menü daha S yüklenmeden doğru dilde açılmalı.
-   Tercih yoksa L, i18n.js'in cihazdan okuduğu varsayılanda kalıyor (sysLang). */
-if(PREFS.lang)L=PREFS.lang;
+   Tercih yoksa L, i18n.js'in cihazdan okuduğu varsayılanda kalıyor (sysLang).
+   langOk: bu sürümün tanımadığı bir kod (daha yeni bir sürümde seçilmiş bir dil,
+   bozuk bir değer) L'ye yazılmıyor; yazılsaydı her metin okuması onu arardı.
+   Değer PREFS'te olduğu gibi kalıyor — tanıyan bir sürüm onu yine okur. */
+if(langOk(PREFS.lang))L=PREFS.lang;
 
 /* ================= KARİYER KİMLİĞİ =================
    Bir kariyeri bugüne kadar yalnız yuva numarası tanımlıyordu. Ama yuva
@@ -206,8 +209,8 @@ function loadSlot(n){
        kalır ve bir sonraki açılışta yeniden denenir. */
     if(ensureCid(S))saveToSlot(n);
     /* Dil cihaz tercihi; yoksa kaydın kendi dili devralınır (eski kayıtlar),
-       o da yoksa cihazın gösterdiği varsayılan. */
-    L=PREFS.lang||S.lang||sysLang();
+       o da yoksa cihazın gösterdiği varsayılan. Tanınmayan kod atlanıyor. */
+    L=[PREFS.lang,S.lang].find(langOk)||sysLang();
     /* Bekleyen bir satın alma bu kariyeri hedefliyor olabilir: hedefi artık
        bulunabilir durumda. Beklenmiyor — teslimat kullanıcının bu ekranı
        görmesine bağlanamaz, yalnız burada bir fırsat daha doğuyor. */
@@ -607,10 +610,10 @@ function migrateLegacy(){
       META.s1=metaOf(d.S);metaDirty();
       /* Cihaz tercihleri o güne dek kaydın içindeydi; ilk kez dışarı taşınıyor. */
       if(PREFS.theme===undefined&&d.S.theme)PREFS.theme=d.S.theme;
-      if(PREFS.lang===undefined&&d.S.lang)PREFS.lang=d.S.lang;
+      if(PREFS.lang===undefined&&langOk(d.S.lang))PREFS.lang=d.S.lang;
       if(PREFS.sfxOn===undefined&&d.S.sfxOn!==undefined)PREFS.sfxOn=d.S.sfxOn;
       savePrefs();
-      if(PREFS.lang)L=PREFS.lang;
+      if(langOk(PREFS.lang))L=PREFS.lang;
       lsDel(LEGACYKEY);
       return true;
     })

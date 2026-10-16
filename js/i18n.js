@@ -326,6 +326,13 @@ pfNoMt:'Bu oyuncunun kayıtlı maçı yok.',
 pfNow:'Şu an',pfRepBy:'{a} temsil ediyor.',
 pfWait:'Bekleme süresi',
 pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.',
+/* Eskiden kodun içinde L==='tr'?…:… olarak duran parçalar. Kalıplar ({c} {t},
+   {n} Menajerlik) sözcük sırasını dile bırakıyor; tek harfli kısaltmalar da
+   dile göre değişiyor (G/A/M → Tore/Vorlagen/Spiele…). */
+negMatchHint:'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.',
+agFmt:'{n} Menajerlik',anotherAgent:'başka bir menajer',
+ageU:'yaş',ageUL:'yaş',lgFmt:'{c} {t}',
+gShort:'G',aShort:'A',mShort:'M',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -617,10 +624,35 @@ pfNoMt:'No matches recorded for this player.',
 pfNow:'Now',pfRepBy:'Represented by {a}.',
 pfWait:'Cooldown',
 pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.',
+negMatchHint:'Match the wage and length (or go lower) to seal the deal.',
+agFmt:'{n} Management',anotherAgent:'another agent',
+ageU:'yrs',ageUL:'years',lgFmt:'{c} {t}',
+gShort:'G',aShort:'A',mShort:'M',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
-/* İlk açılışın dili: cihaz Türkiye'yi gösteriyorsa Türkçe, başka her yerde
-   İngilizce. "Türkiye" üç işaretten HERHANGİ biriyle anlaşılıyor:
+/* ================= DİLLER =================
+   Oyunun sunduğu dillerin TEK listesi. Seçici, ilk açılış, kayıttan okunan dilin
+   doğrulanması ve testler hep buradan okuyor; bir dil ancak burada varsa vardır.
+
+     c    kod: STR/NEWS anahtarı ve {tr,en,…} nesnelerindeki alan adı
+     n    dilin KENDİ dilindeki adı — seçicide herkes kendi dilini tanısın
+     loc  Intl/toLocale* yerel ayarı. tr/en için kasten çıplak kod: bu çağrılar
+          eskiden L ile yapılıyordu, tarih ve sıralama çıktısı aynı kalsın
+     dec  paradaki ondalık ayırıcı. tr/en "12.4M €" yazmaya devam ediyor; maç
+          puanı gibi spor rakamları her dilde noktalı kalıyor (bkz. decFmt)
+     pct  yüzde kalıbı: Türkçede işaret önde, çoğu dilde sonda
+
+   Listede olup dosyası yüklenmemiş bir dil çökmez: t() ve tx() İngilizceye
+   düşüyor. Tersi de korunuyor — kayıtta bu sürümün tanımadığı bir dil kodu
+   (daha yeni bir sürümden, ya da bozuk bir değer) langOk()'tan geçemiyor. */
+const LANGS=[
+  {c:'tr',n:'Türkçe', loc:'tr',dec:'.',pct:'%{n}'},
+  {c:'en',n:'English',loc:'en',dec:'.',pct:'{n}%'}
+];
+function langOk(c){return typeof c==='string'&&LANGS.some(l=>l.c===c);}
+function langOf(c){return LANGS.find(l=>l.c===c)||LANGS[1];}
+/* İlk açılışın dili. Önce Türkiye: cihaz Türkiye'yi gösteriyorsa Türkçe.
+   "Türkiye" üç işaretten HERHANGİ biriyle anlaşılıyor:
 
      dil      tr / tr-TR / tr-CY   Türkçe kullanan cihaz, nerede olursa olsun
      bölge    en-TR / de-TR        bölgesi Türkiye'ye ayarlı cihaz
@@ -629,6 +661,9 @@ tut:'You start in a tiny office. Find young talent in lower leagues and Africa, 
    Üçü de cihazın kendi ayarı; ağ isteği yok ve olmayacak (IP'den konum, oyunun
    hiçbir istek atmama kuralını bozardı). Saat dilimi bu yüzden var: İngilizce
    kurulmuş bir telefon Türkiye'de olduğunu başka hiçbir yerden söylemiyor.
+
+   Türkiye değilse cihazın dil tercihleri SIRAYLA geziliyor ve ana alt etiketi
+   LANGS'ta olan ilki seçiliyor (pt-PT de pt'ye düşer). Hiçbiri yoksa İngilizce.
 
    Bu yalnız bir VARSAYILAN. PREFS.lang'e yazılmıyor: kullanıcı Ayarlar'dan dil
    seçtiği an o seçim kazanır (saves.js) ve bu fonksiyonun sonucu bir daha
@@ -650,11 +685,37 @@ function sysLang(nav,tz){
     }
     if(ls.some(x=>/^tr([-_]|$)/i.test(x)||/[-_]TR([-_]|$)/.test(x)))return 'tr';
     if(/^(Europe\/Istanbul|Asia\/Istanbul|Turkey)$/.test(String(tz||'')))return 'tr';
+    for(const x of ls){
+      const c=x.toLowerCase().split(/[-_]/)[0];
+      if(langOk(c))return c;
+    }
     return (ls.length||tz)?'en':'tr';
   }catch(e){return 'tr';}
 }
 let L=sysLang();
-const t=k=>STR[L][k]||k;
+/* Metin okumanın yolları, hepsi İngilizceye düşüyor: eksik bir çeviri ekrana
+   anahtar adı ya da "undefined" basmasın, o yer İngilizce görünsün.
+   tools/i18n-check.js eksikleri ayrıca sayıyor — geri dönüş bir güvenlik ağı,
+   çevirinin yerine geçmiyor. */
+const t=k=>{const s=STR[L];return (s&&s[k])||STR.en[k]||k;};
+/* {tr,en,…} nesnesi (olay metni, tema adı, arketip…) ya da dil→tablo eşlemesi
+   (POSFULL, REACT havuzu). null/undefined olduğu gibi döner. */
+function tx(o){return o==null?o:(o[L]!==undefined?o[L]:o.en);}
+/* Haber metni. Kayıtta yalnız anahtar ve parametre var, metin çizimde
+   üretiliyor; tanınmayan anahtar t()'ye düşüyor. */
+function newsFn(key){return (NEWS[L]&&NEWS[L][key])||NEWS.en[key]||null;}
+function newsTxt(key,params){const f=newsFn(key);return f?f(params||{}):t(key);}
+/* {a}, {n}… yer tutucularını doldurur. Sözcük sırası dile göre değiştiği için
+   ("Türkiye Üst Lig" / "Primera División de España") birleştirme kalıpta duruyor. */
+function fmtStr(s,o){return String(s).replace(/\{([a-z]+)\}/gi,(m,k)=>o&&o[k]!==undefined?o[k]:m);}
+/* Ülkenin "-in" hâli, dil başına: lgFmt'teki {g}. Edatın ülkeyle kaynaştığı
+   dillerde (d'Angleterre, del Brasile, da Espanha) dil dosyası doldurur;
+   tr/en'de yok, lgName() ülke adına düşüyor. */
+const CTRYG={};
+function langLoc(){return langOf(L).loc;}
+function pctFmt(n){return langOf(L).pct.replace('{n}',n);}
+/* Yalnız para için: "12.4" → "12,4". İlk noktayı çeviriyor; binlik ayırıcı yok. */
+function decFmt(s){const d=langOf(L).dec;return d==='.'?String(s):String(s).replace('.',d);}
 /* Oyunun tek dış bağlantısı: mağazanın istediği gizlilik metni. Dile göre ayrı sayfa.
    Çeviri değil adres olduğu için STR'de değil, {tr,en} tablosu olarak burada duruyor —
    tema/arketip nesneleriyle aynı biçim, [L] ile okunuyor. Bağlantı yalnız kullanıcı

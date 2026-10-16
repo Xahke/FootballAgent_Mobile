@@ -73,13 +73,13 @@ const SK_KEY={
 function skEffLabel(k,v){
   const m=SK_KEY[k];
   if(!m)return '';
-  const n=m.n[L];
+  const n=tx(m.n);
   if(m.f==='flat')return n+' +'+v;
   if(m.f==='wk')return n+' −'+v+' '+t('wk');
   if(m.f==='pp')return n+' +'+Math.round(v*100)+' '+t('skPp');
   const pct=Math.round(v*100);
   const sign=m.f==='pctD'?'−':'+';
-  return n+' '+sign+(L==='tr'?'%'+pct:pct+'%');
+  return n+' '+sign+pctFmt(pct);
 }
 
 /* ===== dallar =====
@@ -376,7 +376,7 @@ function skillBuy(id){
   if(skillPoints()<sk.cost){toast(t('skNoPoints'));return;}
   S.skills=skillsTaken().concat([id]);
   skJustTaken=id;
-  toast(t('skUnlocked').replace('{n}',sk.n[L]));
+  toast(t('skUnlocked').replace('{n}',tx(sk.n)));
   closeModal();save();render();
 }
 /* Etkilerin tek okuma noktası — oyunun geri kalanı buradan geçer. */
