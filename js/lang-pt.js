@@ -1,9 +1,9 @@
 'use strict';
 /* js/lang-pt.js — Portekizce (Brezilya): arayüz metinleri (STR), haber şablonları
-   (NEWS) ve ülkelerin "-in" hâli (CTRYG). Anahtarlar Türkçeyle birebir aynı;
+   (NEWS). Anahtarlar Türkçeyle birebir aynı;
    tools/i18n-check.js denetliyor. Hitap "você", Brezilya futbol dili
    (empresário, artilheiro, luvas). Portekiz cihazları da bu dosyayı alıyor. */
-STR.pt={week:'Semana',season:'Temporada',cash:'Caixa',rep:'Fama',dash:'Início',clients:'Clientes',market:'Mercado',league:'Liga',inbox:'Mensagens',
+STR.pt={week:'Semana',season:'Temporada',cash:'Caixa',rep:'Fama',dash:'Início',clients:'Clientes',market:'Mercado',league:'Liga',inbox:'Entrada',
 next:'Continuar',agency:'Resumo da agência',weeklyIncome:'Receita semanal',clientCount:'Clientes',
 weeklyCostL:'Despesas semanais',weeklyNet:'Saldo semanal',weeklyForecast:'Previsão semanal',
 noClients:'Você ainda não tem clientes. Converse com jogadores sem empresário na aba Mercado.',
@@ -42,7 +42,7 @@ sendOffers:'Enviar propostas',
 history:'Histórico',titles:'títulos',mostTitles:'Recorde',noHist:'Ainda não há temporadas concluídas.',
 archLbl:'Arquivo',notArch:'Esta temporada não está no arquivo.',liveLbl:'Em andamento',finalLbl:'Final',
 r16:'Oitavas de final',qf:'Quartas de final',sf:'Semifinais',wcLbl:'Copa das Nações',nextWc:'Próxima Copa das Nações',
-tier1:'Primeira Divisão',tier2:'Segunda Divisão',
+tier1:'1ª Divisão',tier2:'2ª Divisão',
 noCupYet:'O torneio ainda não começou.',
 notifs:'Notificações',allNotifs:'Ver todas',newNotifsT:'notificação(ões) nova(s)',viewProfile:'Perfil',
 ibUnread:'não lidas',ibAllRead:'Tudo em dia',ibReadAll:'Marcar tudo como lido',
@@ -51,7 +51,7 @@ ibNoneF:'Nenhuma mensagem neste filtro.',
 setupTitle:'Comece sua carreira',fname:'Nome',lname:'Sobrenome',contL:'Continente',natL:'Nacionalidade',agencyN:'Nome da agência (opcional)',
 startBtn:'Começar carreira',
 setupHint:'Você conhece o futebol do seu país: sua rede começa ali. Para conhecer outras ligas, você vai investir em redes de olheiros conforme for ganhando dinheiro.',
-scoutNet:'Rede de olheiros',scoutBuild:'Montar rede',scoutPendingT:'em montagem',scoutLock:'Você não tem rede de olheiros nesta liga',
+scoutNet:'Rede de olheiros',scoutBuild:'Montar rede',scoutBuy:'Montar',scoutPendingT:'em montagem',scoutLock:'Você não tem rede de olheiros nesta liga',
 mapFull:'Rede ativa',mapPartial:'Expansível',mapOpen:'Inexplorado',mapFog:'Sem ligas',mapRecentre:'Centralizar o mapa',
 mapHint:'As regiões em cor sólida são suas. As mais claras ainda não foram exploradas: dá para montar uma rede em qualquer lugar do mundo, se o dinheiro der.',
 mapListTmp:'lista',
@@ -291,15 +291,9 @@ pfWait:'Em espera',
 pfWaitTx:'Um contrato recém-assinado fica fechado para renovação por mais {n} semanas.',
 negMatchHint:'Iguale o salário e a duração (ou peça menos) e o acordo é seu.',
 agFmt:'Agência {n}',anotherAgent:'outro empresário',
-ageU:'anos',ageUL:'anos',lgFmt:'{t} {g}',
+ageU:'anos',ageUL:'anos',lgFmt:'{c} · {t}',seWk:'Temp. {s} · Sem. {w}',
 gShort:'G',aShort:'A',mShort:'J',potShort:'Pot',
 tut:'Você começa num escritório minúsculo. Encontre talentos jovens nas divisões de baixo e na África, faça-os crescer nos clubes certos e leve-os mais alto conforme amadurecem. Cada passo bem dado aumenta sua fama, e as grandes estrelas vão acabar batendo à sua porta.'};
-
-/* Ülkenin "-in" hâli: lgFmt'teki {g}. Portekizcede edat ülkenin cinsiyetiyle
-   kaynaşıyor (da Inglaterra, do Brasil, dos EUA). */
-CTRYG.pt={TR:'da Turquia',EN:'da Inglaterra',ES:'da Espanha',DE:'da Alemanha',IT:'da Itália',FR:'da França',
-  NL:'da Holanda',PT:'de Portugal',BR:'do Brasil',AR:'da Argentina',US:'dos EUA',MX:'do México',
-  SA:'da Arábia Saudita',JP:'do Japão',NAF:'do Norte da África',WAF:'da África Ocidental'};
 
 NEWS.pt={goal:p=>`${lkP(p.pid,p.n)} marcou ${p.g} nesta semana. A fase está melhorando.`,
 sign:p=>`${lkP(p.pid,p.n)} agora é seu cliente.`,
@@ -315,12 +309,12 @@ wantsOutMsg:p=>`${lkP(p.pid,p.n)} está infeliz no clube e quer ser transferido.
 expire:p=>`O contrato de ${lkP(p.pid,p.n)} termina em ${p.y} temporada(s). Mexa-se.`,
 firedYou:p=>`${lkP(p.pid,p.n)} demitiu você: você ignorou os pedidos dele por tempo demais.`,
 champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} é campeão!`+(p.s?` Artilheiro: ${lkP(p.sid,p.s)} (${p.g} gols)`:''),
-finalN:p=>`Final da ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg} x ${p.ag} ${lkT(p.aid,p.a)}. Campeão: ${lkT(p.cid,p.c)}!`,
+finalN:p=>`Final · ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg} x ${p.ag} ${lkT(p.aid,p.a)}. Campeão: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} levanta a taça!`,
 wcWin:p=>`${p.n} vence a ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} subiu de divisão. Nova casa: ${lkL(p.li,lgName(p.li))}!`,
 relegated:p=>`${lkT(p.tid,p.c)} foi rebaixado. Nova casa: ${lkL(p.li,lgName(p.li))}.`,
-scoutDone:p=>`Sua rede de olheiros na ${lkL(p.li,lgName(p.li))} está no ar: os jogadores de lá agora aparecem no seu mercado.`,
+scoutDone:p=>`Sua rede de olheiros está no ar (${lkL(p.li,lgName(p.li))}): os jogadores de lá agora aparecem no seu mercado.`,
 perf:p=>`${lkP(p.pid,p.n)} contra ${lkT(p.oid,p.opp)}: ${[p.g?p.g+' gol(s)':'',p.a?p.a+' assistência(s)':''].filter(Boolean).join(', ')}${(p.g||p.a)&&p.mm?' e ':''}${p.mm?'Craque do jogo':''} — nota ${p.rt}`,
 contractAgreed:p=>`${lkP(p.pid,p.n)} ACERTOU um contrato de ${p.y} anos com ${lkT(p.tid,p.c)} (${p.w}/sem). A assinatura sai em algumas semanas.`,
 contractSigned:p=>`${lkP(p.pid,p.n)} ASSINOU o novo contrato: ${lkT(p.tid,p.c)}, ${p.y} anos, ${p.w}/sem. Comissão: ${p.f}`,

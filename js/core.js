@@ -266,12 +266,9 @@ function lgWeeks(lg){return S.fx[lg].length;}
 function lgName(i){
   const l=LEAGUES[i];
   if(!l)return '';
-  const c=tx(CTRYS[l.ctry]);
-  /* {g}: ülkenin "-in" hâli. Fransızca/İtalyanca/Portekizcede edat ülkeyle
-     kaynaşıyor (d'Angleterre, del Brasile, da Espanha); tablo dil dosyasında,
-     yoksa ülke adı. */
-  const g=(tx(CTRYG)&&tx(CTRYG)[l.ctry])||c;
-  return fmtStr(t('lgFmt'),{c,g,t:t(l.tier===2?'tier2':'tier1')});
+  /* Ülke önde: dar listelerde ad kesildiğinde ayırt edici kısım kalsın
+     ("Primera División de A…" Almanya mı Arjantin mi söylemiyordu). */
+  return fmtStr(t('lgFmt'),{c:tx(CTRYS[l.ctry]),t:t(l.tier===2?'tier2':'tier1')});
 }
 function byId(id){return S.players.find(p=>p.id===id);}
 /* ===== serbest oyuncular =====
@@ -525,9 +522,9 @@ function openScout(){
     const pend=scoutPending(i);
     return `<div class="pitem" style="cursor:default">
       <div class="pinfo"><div class="pname">${lgName(i)}</div>
-      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('team').toLocaleLowerCase(langLoc())}</div></div>
+      <div class="psub">${t('avgRating')} ~${Math.round(lgAvgStr(i))} · ${S.teams.filter(tm=>tm.lg===i).length} ${t('lgTeamsN')}</div></div>
       ${pend?`<span class="tag w">${t('scoutPendingT')} · ${Math.max(1,pend.done-(S.tw||0))} ${t('wk')}</span>`
-        :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuild')} · ${fmtK(scoutCost(i))}</button>`}
+        :`<button class="btn b" style="width:auto;padding:9px 14px" onclick="buyScout(${i})">${t('scoutBuy')} · ${fmtK(scoutCost(i))}</button>`}
     </div>`;
   }).join('');
   openModal(`<h2>${t('scoutNet')}</h2>

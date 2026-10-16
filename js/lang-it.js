@@ -1,6 +1,6 @@
 'use strict';
-/* js/lang-it.js — İtalyanca: arayüz metinleri (STR), haber şablonları (NEWS) ve
-   ülkelerin "-in" hâli (CTRYG). Anahtarlar Türkçeyle birebir aynı;
+/* js/lang-it.js — İtalyanca: arayüz metinleri (STR) ve haber şablonları (NEWS).
+   Anahtarlar Türkçeyle birebir aynı;
    tools/i18n-check.js denetliyor. Hitap "tu"; futbol dili procuratore /
    assistiti / cartellino / svincolato. Menajerin cinsiyeti bilinmediği için
    çekimli kalıplardan kaçınıldı ("Sei sicuro?" yerine "Confermi?").
@@ -44,7 +44,7 @@ sendOffers:"Invia le offerte",
 history:"Albo d'oro",titles:"titoli",mostTitles:"Record",noHist:"Nessuna stagione conclusa finora.",
 archLbl:"Archivio",notArch:"Questa stagione non è in archivio.",liveLbl:"In corso",finalLbl:"Finale",
 r16:"Ottavi di finale",qf:"Quarti di finale",sf:"Semifinali",wcLbl:"Coppa delle Nazioni",nextWc:"Prossima Coppa delle Nazioni",
-tier1:"Prima divisione",tier2:"Seconda divisione",
+tier1:"1ª divisione",tier2:"2ª divisione",
 noCupYet:"Il torneo non è ancora cominciato.",
 notifs:"Notifiche",allNotifs:"Vedi tutte",newNotifsT:"nuova/e notifica/he",viewProfile:"Profilo",
 ibUnread:"da leggere",ibAllRead:"Tutto letto",ibReadAll:"Segna tutto come letto",
@@ -53,7 +53,7 @@ ibNoneF:"Nessun messaggio con questo filtro.",
 setupTitle:"Inizia la tua carriera",fname:"Nome",lname:"Cognome",contL:"Continente",natL:"Nazionalità",agencyN:"Nome dell'agenzia (facoltativo)",
 startBtn:"Inizia la carriera",
 setupHint:"Il calcio del tuo paese lo conosci: la tua rete parte da lì. Per conoscere altri campionati investirai in reti di osservatori man mano che guadagni.",
-scoutNet:"Rete di osservatori",scoutBuild:"Crea la rete",scoutPendingT:"in allestimento",scoutLock:"Nessuna rete di osservatori in questo campionato",
+scoutNet:"Rete di osservatori",scoutBuild:"Crea la rete",scoutBuy:"Attiva",scoutPendingT:"in allestimento",scoutLock:"Nessuna rete di osservatori in questo campionato",
 mapFull:"Rete attiva",mapPartial:"Espandibile",mapOpen:"Inesplorato",mapFog:"Nessun campionato",mapRecentre:"Centra la mappa",
 mapHint:"Le regioni a colore pieno sono tue. Quelle più chiare sono ancora da esplorare: puoi creare una rete ovunque nel mondo, se te lo puoi permettere.",
 mapListTmp:"elenco",
@@ -264,7 +264,7 @@ forkFail:"Al momento non è stato possibile sistemare la copia; è ancora lì.",
 cmTitle:"Le mie carriere",cmSub:"Riprendi il tuo percorso",
 cmNow:"proprio ora",cmMinAgo:"{n} min fa",cmHourAgo:"{n} h fa",cmDayAgo:"{n} g fa",
 cmOpts:"Opzioni della carriera",
-hmAdvance:"Avanza di una settimana",hmToday:"In agenda oggi",hmLevel:"Livello carriera",
+hmAdvance:"Avanza settimana",hmToday:"In agenda oggi",hmLevel:"Livello carriera",
 hmBalance:"Saldo",hmRiser:"Assistito in ascesa",hmMyPlayers:"I miei giocatori",
 hmTransfers:"Trasferimenti",hmEvPending:"C'è una decisione che ti aspetta",
 hmPoach:"Un'agenzia rivale gira intorno a {n}",hmChase:"Corsa alla firma di {n}",
@@ -293,15 +293,9 @@ pfWait:"Attesa",
 pfWaitTx:"Un contratto appena firmato non si può rinnovare per altre {n} settimane.",
 negMatchHint:"Pareggia ingaggio e durata (o chiedi meno) e l'affare è fatto.",
 agFmt:"Agenzia {n}",anotherAgent:"un altro procuratore",
-ageU:"anni",ageUL:"anni",lgFmt:"{t} {g}",
+ageU:"anni",ageUL:"anni",lgFmt:"{c} · {t}",seWk:"Stag. {s} · Sett. {w}",
 gShort:"G",aShort:"A",mShort:"P",potShort:"Pot",
 tut:"Parti da un ufficio minuscolo. Trova giovani talenti nelle serie minori e in Africa, falli crescere nei club giusti e portali più in alto man mano che maturano. Ogni passo riuscito aumenta la tua fama, e prima o poi le grandi stelle busseranno alla tua porta."};
-
-/* Ülkenin "-in" hâli: lgFmt'teki {g}. İtalyancada edat artikelle kaynaşıyor
-   (d'Inghilterra, del Brasile, degli Stati Uniti). */
-CTRYG.it={TR:"di Turchia",EN:"d'Inghilterra",ES:"di Spagna",DE:"di Germania",IT:"d'Italia",FR:"di Francia",
-  NL:"dei Paesi Bassi",PT:"del Portogallo",BR:"del Brasile",AR:"dell'Argentina",US:"degli Stati Uniti",MX:"del Messico",
-  SA:"dell'Arabia Saudita",JP:"del Giappone",NAF:"del Nord Africa",WAF:"dell'Africa occidentale"};
 
 NEWS.it={goal:p=>`${lkP(p.pid,p.n)} ha segnato ${p.g} gol questa settimana. La sua forma è in crescita.`,
 sign:p=>`${lkP(p.pid,p.n)} ora è un tuo assistito.`,
@@ -317,12 +311,12 @@ wantsOutMsg:p=>`${lkP(p.pid,p.n)} è scontento nel suo club e vuole essere cedut
 expire:p=>`Il contratto di ${lkP(p.pid,p.n)} scade tra ${p.y} stagione/i. Muoviti.`,
 firedYou:p=>`${lkP(p.pid,p.n)} non vuole più lavorare con te: hai ignorato le sue richieste troppo a lungo.`,
 champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} è campione.`+(p.s?` Capocannoniere: ${lkP(p.sid,p.s)} (${p.g} gol)`:''),
-finalN:p=>`Finale della ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg}-${p.ag} ${lkT(p.aid,p.a)}. Vince ${lkT(p.cid,p.c)}!`,
+finalN:p=>`Finale · ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg}-${p.ag} ${lkT(p.aid,p.a)}. Vince ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} alza il trofeo!`,
 wcWin:p=>`${p.n} vince la ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} è promosso: nuova casa, ${lkL(p.li,lgName(p.li))}!`,
 relegated:p=>`${lkT(p.tid,p.c)} retrocede: nuova casa, ${lkL(p.li,lgName(p.li))}.`,
-scoutDone:p=>`La tua rete di osservatori nella ${lkL(p.li,lgName(p.li))} è operativa: i suoi giocatori ora compaiono nel tuo mercato.`,
+scoutDone:p=>`La tua rete di osservatori è operativa (${lkL(p.li,lgName(p.li))}): i suoi giocatori ora compaiono nel tuo mercato.`,
 perf:p=>`${lkP(p.pid,p.n)} contro ${lkT(p.oid,p.opp)}: ${[p.g?p.g+' gol':'',p.a?p.a+' assist':''].filter(Boolean).join(', ')}${(p.g||p.a)&&p.mm?' e ':''}${p.mm?'migliore in campo':''} — voto ${p.rt}`,
 contractAgreed:p=>`${lkP(p.pid,p.n)} HA TROVATO L'ACCORDO per ${p.y} anni con ${lkT(p.tid,p.c)} (${p.w}/sett.). La firma arriverà tra qualche settimana.`,
 contractSigned:p=>`${lkP(p.pid,p.n)} HA FIRMATO il nuovo contratto: ${lkT(p.tid,p.c)}, ${p.y} anni, ${p.w}/sett. Commissione: ${p.f}`,

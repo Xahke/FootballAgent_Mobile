@@ -54,7 +54,7 @@ ibNoneF:'Bu filtrede mesaj yok.',
 setupTitle:'Kariyerine Başla',fname:'Ad',lname:'Soyad',contL:'Kıta',natL:'Uyruk',agencyN:'Ajans Adı (isteğe bağlı)',
 startBtn:'Kariyere Başla',
 setupHint:'Memleketinin futbolunu tanıyorsun — ağın orada kurulu. Diğer ligleri tanımak için ilerleyen dönemde para harcayıp keşif ağları kuracaksın.',
-scoutNet:'Keşif Ağı',scoutBuild:'Ağ Kur',scoutPendingT:'kuruluyor',scoutLock:'Bu ligde keşif ağın yok',
+scoutNet:'Keşif Ağı',scoutBuild:'Ağ Kur',scoutBuy:'Ağ Kur',scoutPendingT:'kuruluyor',scoutLock:'Bu ligde keşif ağın yok',
 mapFull:'Ağın var',mapPartial:'Genişletilebilir',mapOpen:'Keşfedilmemiş',mapFog:'Ligi yok',mapRecentre:'Haritayı ortala',
 mapHint:'Koyu bölgelerde ağın kurulu. Soluk olanların ligleri henüz keşfedilmedi — paran yettiği sürece dünyanın herhangi bir yerinde ağ kurabilirsin.',
 mapListTmp:'liste',
@@ -331,7 +331,7 @@ pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.
    dile göre değişiyor (G/A/M → Tore/Vorlagen/Spiele…). */
 negMatchHint:'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.',
 agFmt:'{n} Menajerlik',anotherAgent:'başka bir menajer',
-ageU:'yaş',ageUL:'yaş',lgFmt:'{c} {t}',
+ageU:'yaş',ageUL:'yaş',lgFmt:'{c} {t}',seWk:'Sezon {s} · Hafta {w}',
 gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
@@ -382,7 +382,7 @@ ibNoneF:'No messages in this filter.',
 setupTitle:'Start Your Career',fname:'First Name',lname:'Last Name',contL:'Continent',natL:'Nationality',agencyN:'Agency Name (optional)',
 startBtn:'Start Career',
 setupHint:'You know your homeland\'s football — your network starts there. To learn other leagues, you\'ll invest in scouting networks as you earn.',
-scoutNet:'Scouting Network',scoutBuild:'Build Network',scoutPendingT:'building',scoutLock:'No scouting network in this league',
+scoutNet:'Scouting Network',scoutBuild:'Build Network',scoutBuy:'Build Network',scoutPendingT:'building',scoutLock:'No scouting network in this league',
 mapFull:'Network active',mapPartial:'Expandable',mapOpen:'Uncharted',mapFog:'No leagues',mapRecentre:'Recentre the map',
 mapHint:'Solid regions are yours. Faint ones are still unscouted — you can build a network anywhere in the world you can afford.',
 mapListTmp:'list',
@@ -626,7 +626,7 @@ pfWait:'Cooldown',
 pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.',
 negMatchHint:'Match the wage and length (or go lower) to seal the deal.',
 agFmt:'{n} Management',anotherAgent:'another agent',
-ageU:'yrs',ageUL:'years',lgFmt:'{c} {t}',
+ageU:'yrs',ageUL:'years',lgFmt:'{c} {t}',seWk:'Season {s} · Week {w}',
 gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
@@ -711,12 +711,8 @@ function tx(o){return o==null?o:(o[L]!==undefined?o[L]:o.en);}
 function newsFn(key){return (NEWS[L]&&NEWS[L][key])||NEWS.en[key]||null;}
 function newsTxt(key,params){const f=newsFn(key);return f?f(params||{}):t(key);}
 /* {a}, {n}… yer tutucularını doldurur. Sözcük sırası dile göre değiştiği için
-   ("Türkiye Üst Lig" / "Primera División de España") birleştirme kalıpta duruyor. */
+   ("Gestión Deportiva {b}" / "{b} & Partner") birleştirme kalıpta duruyor. */
 function fmtStr(s,o){return String(s).replace(/\{([a-z]+)\}/gi,(m,k)=>o&&o[k]!==undefined?o[k]:m);}
-/* Ülkenin "-in" hâli, dil başına: lgFmt'teki {g}. Edatın ülkeyle kaynaştığı
-   dillerde (d'Angleterre, del Brasile, da Espanha) dil dosyası doldurur;
-   tr/en'de yok, lgName() ülke adına düşüyor. */
-const CTRYG={};
 function langLoc(){return langOf(L).loc;}
 function pctFmt(n){return langOf(L).pct.replace('{n}',n);}
 /* Yalnız para için: "12.4" → "12,4". İlk noktayı çeviriyor; binlik ayırıcı yok. */

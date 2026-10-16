@@ -3486,7 +3486,7 @@ function render(){
   }
   showChrome(true);
   document.getElementById('hBack').classList.toggle('show',stack.length>1);
-  let t1='Menajer',t2=t('season')+' '+S.season+' · '+t('week')+' '+Math.min(S.week,totalWeeks());
+  let t1='Menajer',t2=fmtStr(t('seWk'),{s:S.season,w:Math.min(S.week,totalWeeks())});
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');

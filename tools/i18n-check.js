@@ -40,7 +40,6 @@ const ctx = { navigator: { language: 'en', languages: ['en'] }, Intl, console };
 vm.createContext(ctx);
 vm.runInContext(rd('js/i18n.js'), ctx, { filename: 'js/i18n.js' });
 langFiles.forEach(f => vm.runInContext(rd('js/' + f), ctx, { filename: 'js/' + f }));
-vm.runInContext(rd('js/data.js'), ctx, { filename: 'js/data.js' });   // CTRYS: CTRYG denetimi için
 const R = c => vm.runInContext(c, ctx);
 const CODES = JSON.parse(R('JSON.stringify(LANGS.map(l=>l.c))'));
 const STR = R('STR'), NEWS = R('NEWS');
@@ -52,15 +51,11 @@ for (const c of CODES) {
   const miss = Object.keys(STR.tr).filter(k => !(k in STR[c]));
   const extra = Object.keys(STR[c]).filter(k => !(k in STR.tr));
   const empty = Object.keys(STR[c]).filter(k => typeof STR[c][k] !== 'string' || !STR[c][k].trim());
-  /* lgFmt serbest: dil {c} (ülke adı) ya da {g} ("-in" hâli, CTRYG) seçebilir;
-     {t} (kademe) ve ikisinden biri şart, başka yer tutucu yok. */
-  const lgOk = s => { const p = ph(s).split(' '); return p.indexOf('{t}') >= 0 && (p.indexOf('{c}') >= 0 || p.indexOf('{g}') >= 0) && p.every(x => /^\{[cgt]\}$/.test(x)); };
-  const phx = Object.keys(STR.tr).filter(k => k in STR[c] && (k === 'lgFmt' ? !lgOk(STR[c][k]) : ph(STR.tr[k]) !== ph(STR[c][k])))
+  const phx = Object.keys(STR.tr).filter(k => k in STR[c] && ph(STR.tr[k]) !== ph(STR[c][k]))
     .map(k => k + ': tr[' + ph(STR.tr[k]) + '] ' + c + '[' + ph(STR[c][k]) + ']');
-  if (STR[c].lgFmt && STR[c].lgFmt.indexOf('{g}') >= 0) {
-    const G = R('CTRYG.' + c + '||null'), CT = R('Object.keys(CTRYS)');
-    report('HATA', c + ': lgFmt {g} kullanıyor ama CTRYG eksik', G ? CT.filter(k => !G[k]) : ['CTRYG.' + c]);
-  }
+  /* Lig adı ülkeyle başlamalı: dar listelerde ({c} … kesilince) ayırt edici
+     kısım ülke. Kademeyle başlayan bir kalıp "1.ª División de A…" bırakıyordu. */
+  if (STR[c].lgFmt && STR[c].lgFmt.indexOf('{c}') !== 0) report('HATA', c + ': lgFmt ülkeyle ({c}) başlamıyor', [STR[c].lgFmt]);
   report('HATA', c + ': STR anahtarı eksik', miss);
   report('HATA', c + ': STR\'de Türkçede olmayan anahtar', extra);
   report('HATA', c + ': STR değeri boş', empty);

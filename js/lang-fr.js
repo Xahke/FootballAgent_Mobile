@@ -1,12 +1,12 @@
 'use strict';
-/* js/lang-fr.js — Fransızca: arayüz metinleri (STR), haber şablonları (NEWS) ve
-   ülkelerin "-in" hâli (CTRYG). Anahtarlar Türkçeyle birebir aynı;
+/* js/lang-fr.js — Fransızca: arayüz metinleri (STR) ve haber şablonları (NEWS).
+   Anahtarlar Türkçeyle birebir aynı;
    tools/i18n-check.js denetliyor. Hitap "tu".
 
    Fransız yazım kuralı: ? ! : ; işaretlerinden önce kesilmeyen dar boşluk
    ( ). Düz boşluk dar ekranda işareti tek başına alt satıra düşürüyordu.
    Kesme işareti bol olduğu için dizeler çift tırnakta. */
-STR.fr={week:"Semaine",season:"Saison",cash:"Caisse",rep:"Réputation",dash:"Accueil",clients:"Clients",market:"Marché",league:"Ligue",inbox:"Messages",
+STR.fr={week:"Semaine",season:"Saison",cash:"Caisse",rep:"Réputation",dash:"Accueil",clients:"Clients",market:"Marché",league:"Ligue",inbox:"Infos",
 next:"Continuer",agency:"Aperçu de l'agence",weeklyIncome:"Revenus hebdo",clientCount:"Clients",
 weeklyCostL:"Dépenses hebdo",weeklyNet:"Solde hebdo",weeklyForecast:"Prévision hebdo",
 noClients:"Pas encore de clients. Approche des joueurs sans agent depuis l'onglet Marché.",
@@ -45,7 +45,7 @@ sendOffers:"Envoyer les offres",
 history:"Historique",titles:"titres",mostTitles:"Record",noHist:"Aucune saison terminée pour l'instant.",
 archLbl:"Archives",notArch:"Cette saison n'est pas dans les archives.",liveLbl:"En cours",finalLbl:"Finale",
 r16:"Huitièmes de finale",qf:"Quarts de finale",sf:"Demi-finales",wcLbl:"Coupe des Nations",nextWc:"Prochaine Coupe des Nations",
-tier1:"Première division",tier2:"Deuxième division",
+tier1:"D1",tier2:"D2",
 noCupYet:"Le tournoi n'a pas encore commencé.",
 notifs:"Notifications",allNotifs:"Tout voir",newNotifsT:"nouvelle(s) notification(s)",viewProfile:"Profil",
 ibUnread:"non lus",ibAllRead:"Tout est lu",ibReadAll:"Tout marquer comme lu",
@@ -54,7 +54,7 @@ ibNoneF:"Aucun message avec ce filtre.",
 setupTitle:"Lance ta carrière",fname:"Prénom",lname:"Nom",contL:"Continent",natL:"Nationalité",agencyN:"Nom de l'agence (facultatif)",
 startBtn:"Lancer la carrière",
 setupHint:"Tu connais le football de ton pays : ton réseau commence là. Pour découvrir d'autres ligues, tu investiras dans des réseaux de recrutement au fil de tes gains.",
-scoutNet:"Réseau de recrutement",scoutBuild:"Créer le réseau",scoutPendingT:"en cours",scoutLock:"Aucun réseau de recrutement dans cette ligue",
+scoutNet:"Réseau de recrutement",scoutBuild:"Créer le réseau",scoutBuy:"Créer",scoutPendingT:"en cours",scoutLock:"Aucun réseau de recrutement dans cette ligue",
 mapFull:"Réseau actif",mapPartial:"Extensible",mapOpen:"Inexploré",mapFog:"Aucune ligue",mapRecentre:"Recentrer la carte",
 mapHint:"Les régions pleines sont à toi. Les plus pâles restent à explorer : tu peux monter un réseau n'importe où dans le monde si tu en as les moyens.",
 mapListTmp:"liste",
@@ -294,15 +294,9 @@ pfWait:"Délai",
 pfWaitTx:"Un contrat tout juste signé ne peut pas être renégocié avant {n} semaines.",
 negMatchHint:"Aligne-toi sur le salaire et la durée (ou demande moins) et l'affaire est conclue.",
 agFmt:"Agence {n}",anotherAgent:"un autre agent",
-ageU:"ans",ageUL:"ans",lgFmt:"{t} {g}",
+ageU:"ans",ageUL:"ans",lgFmt:"{c} · {t}",seWk:"Saison {s} · Sem. {w}",
 gShort:"B",aShort:"PD",mShort:"M",potShort:"Pot",
 tut:"Tu démarres dans un bureau minuscule. Trouve de jeunes talents dans les divisions inférieures et en Afrique, fais-les progresser dans les bons clubs et fais-les monter à mesure qu'ils grandissent. Chaque pas réussi renforce ta réputation, et les grandes stars finiront par frapper à ta porte."};
-
-/* Ülkenin "-in" hâli: lgFmt'teki {g}. Fransızcada edat ülkeyle kaynaşıyor
-   (d'Angleterre, du Brésil, des États-Unis). */
-CTRYG.fr={TR:"de Turquie",EN:"d'Angleterre",ES:"d'Espagne",DE:"d'Allemagne",IT:"d'Italie",FR:"de France",
-  NL:"des Pays-Bas",PT:"du Portugal",BR:"du Brésil",AR:"d'Argentine",US:"des États-Unis",MX:"du Mexique",
-  SA:"d'Arabie saoudite",JP:"du Japon",NAF:"d'Afrique du Nord",WAF:"d'Afrique de l'Ouest"};
 
 NEWS.fr={goal:p=>`${lkP(p.pid,p.n)} a marqué ${p.g} but(s) cette semaine. Sa forme grimpe.`,
 sign:p=>`${lkP(p.pid,p.n)} est désormais ton client.`,
@@ -318,12 +312,12 @@ wantsOutMsg:p=>`${lkP(p.pid,p.n)} est malheureux dans son club et veut partir.`,
 expire:p=>`Le contrat de ${lkP(p.pid,p.n)} expire dans ${p.y} saison(s). Agis maintenant.`,
 firedYou:p=>`${lkP(p.pid,p.n)} ne veut plus de toi : tu as ignoré ses demandes trop longtemps.`,
 champ:p=>`${lkL(p.li,lgName(p.li))} : ${lkT(p.tid,p.c)} est champion.`+(p.s?` Meilleur buteur : ${lkP(p.sid,p.s)} (${p.g} buts)`:''),
-finalN:p=>`Finale de la ${lkL(p.li,lgName(p.li))} : ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Vainqueur : ${lkT(p.cid,p.c)} !`,
+finalN:p=>`Finale · ${lkL(p.li,lgName(p.li))} : ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Vainqueur : ${lkT(p.cid,p.c)} !`,
 cupWin:p=>`${lkC(p.ci,p.cup)} : ${lkT(p.tid,p.c)} soulève le trophée !`,
 wcWin:p=>`${p.n} remporte la ${lkC(3,t("wcLbl"))} !`,
 promoted:p=>`${lkT(p.tid,p.c)} est promu : nouvelle maison, ${lkL(p.li,lgName(p.li))} !`,
 relegated:p=>`${lkT(p.tid,p.c)} est relégué : nouvelle maison, ${lkL(p.li,lgName(p.li))}.`,
-scoutDone:p=>`Ton réseau de recrutement en ${lkL(p.li,lgName(p.li))} est opérationnel : ses joueurs apparaissent maintenant sur ton marché.`,
+scoutDone:p=>`Ton réseau de recrutement est opérationnel (${lkL(p.li,lgName(p.li))}) : ses joueurs apparaissent maintenant sur ton marché.`,
 perf:p=>`${lkP(p.pid,p.n)} contre ${lkT(p.oid,p.opp)} : ${[p.g?p.g+' but(s)':'',p.a?p.a+' passe(s) décisive(s)':''].filter(Boolean).join(', ')}${(p.g||p.a)&&p.mm?' et ':''}${p.mm?'homme du match':''} — note ${p.rt}`,
 contractAgreed:p=>`${lkP(p.pid,p.n)} a TROUVÉ UN ACCORD sur ${p.y} ans avec ${lkT(p.tid,p.c)} (${p.w}/sem.). Signature d'ici quelques semaines.`,
 contractSigned:p=>`${lkP(p.pid,p.n)} a SIGNÉ son nouveau contrat : ${lkT(p.tid,p.c)}, ${p.y} ans, ${p.w}/sem. Commission : ${p.f}`,
