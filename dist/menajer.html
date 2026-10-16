@@ -5486,7 +5486,7 @@ pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.
 negMatchHint:'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.',
 agFmt:'{n} Menajerlik',anotherAgent:'başka bir menajer',
 ageU:'yaş',ageUL:'yaş',lgFmt:'{c} {t}',
-gShort:'G',aShort:'A',mShort:'M',
+gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -5781,7 +5781,7 @@ pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.'
 negMatchHint:'Match the wage and length (or go lower) to seal the deal.',
 agFmt:'{n} Management',anotherAgent:'another agent',
 ageU:'yrs',ageUL:'years',lgFmt:'{c} {t}',
-gShort:'G',aShort:'A',mShort:'M',
+gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 /* ================= DİLLER =================
@@ -17710,7 +17710,7 @@ player(id){
       <div class="stat"><div class="v" style="color:${rtAvg?(rtAvg>=7.2?'var(--acc)':rtAvg>=6.6?'var(--warn)':'var(--bad)'):'var(--txt3)'}">${rtAvg?rtAvg.toFixed(1):'—'}</div><div class="l">${t('avgRt')}</div></div>
       <div class="stat"><div class="v">${fmtM(valueOf(p))}${(()=>{const m=valueMult(p);
         return m>=1.08?'<span style="color:var(--acc);font-size:11px"> ▲</span>':m<=0.93?'<span style="color:var(--bad);font-size:11px"> ▼</span>':'';})()}</div><div class="l">${t('value')}</div></div>
-      <div class="stat"><div class="v">${p.pot}</div><div class="l">Pot</div></div>
+      <div class="stat"><div class="v">${p.pot}</div><div class="l">${t('potShort')}</div></div>
     </div>
     <div class="divider"></div>
     ${bar(t('form'),p.form)}

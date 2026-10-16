@@ -332,7 +332,7 @@ pfWaitTx:'Yeni imzalanan sözleşme {n} hafta daha yeniden görüşmeye kapalı.
 negMatchHint:'Bu rakamı ve süreyi (ya da altını) seçersen anlaşma kesin.',
 agFmt:'{n} Menajerlik',anotherAgent:'başka bir menajer',
 ageU:'yaş',ageUL:'yaş',lgFmt:'{c} {t}',
-gShort:'G',aShort:'A',mShort:'M',
+gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'Küçük bir ofiste işe başladın. Alt liglerden ve Afrika\'dan genç yetenekler bul, doğru kulüplerde geliştir, büyüdükçe üst liglere taşı. Her başarılı adım itibarını artırır — itibar arttıkça büyük yıldızlar da kapını çalar.'},
 en:{week:'Week',season:'Season',cash:'Cash',rep:'Rep',dash:'Home',clients:'Clients',market:'Market',league:'League',inbox:'Inbox',
 next:'Continue',agency:'Agency Overview',weeklyIncome:'Weekly Income',clientCount:'Clients',
@@ -627,7 +627,7 @@ pfWaitTx:'A freshly signed contract stays closed to renewal for {n} more weeks.'
 negMatchHint:'Match the wage and length (or go lower) to seal the deal.',
 agFmt:'{n} Management',anotherAgent:'another agent',
 ageU:'yrs',ageUL:'years',lgFmt:'{c} {t}',
-gShort:'G',aShort:'A',mShort:'M',
+gShort:'G',aShort:'A',mShort:'M',potShort:'Pot',
 tut:'You start in a tiny office. Find young talent in lower leagues and Africa, develop them at the right clubs, and move them up as they grow. Every successful step builds your reputation — and bigger stars will come knocking.'}
 };
 /* ================= DİLLER =================

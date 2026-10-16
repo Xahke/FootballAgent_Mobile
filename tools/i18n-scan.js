@@ -126,7 +126,47 @@ function boot(seed) {
 }
 
 /* Çizimin yazdığı düğümler. Sıra sabit; boş olanlar atlanıyor. */
-const CAP_IDS = ['hBack','hCash','hCashL','hRep','hRepL','btnNext','btnSet','btnShop','saveWarn','view','nav','sheet','toast'];
+const CAP_IDS = ['hBack','hT1','hT2','hCash','hCashL','hRep','hRepL','btnNext','btnSet','btnShop','saveWarn','view','nav','sheet','toast'];
+
+/* ================= sözde dil (--sahte) =================
+   'xx' dili: İngilizcenin her harfi benzer görünen başka bir harfe çevrilmiş
+   hâli (a→ä, k→ķ…). Çeviri yollarından (t, tx, newsTxt) geçen her metin böyle
+   görünüyor; ekranda düz ASCII harf kalıyorsa ya bir özel ad (oyuncu, kulüp,
+   ajans) ya da koda gömülü, hiçbir çeviriden geçmeyen bir metindir. Ayrıca
+   %35 uzatılıyor: Almanca gibi uzun bir dilin yerleşime ne yaptığı daha çeviri
+   gelmeden görülsün. {yer tutucu}, HTML etiketi, &varlık; ve adresler korunuyor. */
+const PSEUDO_JS = `
+(function(){
+  var A='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var B='äƀçđëƒğħïĵķļɱñöþʠŕšŧüṽŵẋÿžÄƁÇĐËƑĞĦÏĴĶĻṀÑÖṖǪŔŠŦÜṼŴẊŸŽ';
+  var MAP={};for(var i=0;i<A.length;i++)MAP[A[i]]=B[i];
+  function ps(s){
+    s=String(s);
+    if(/^https?:/.test(s))return s;
+    var out='',n=0;
+    for(var i=0;i<s.length;){
+      var c=s[i];
+      if(c==='<'){var j=s.indexOf('>',i);if(j<0)j=s.length-1;out+=s.slice(i,j+1);i=j+1;continue;}
+      if(c==='{'){var k=s.indexOf('}',i);if(k>0&&/^\\{[a-z]+\\}$/i.test(s.slice(i,k+1))){out+=s.slice(i,k+1);i=k+1;continue;}}
+      if(c==='&'){var m=/^&[#a-z0-9]+;/i.exec(s.slice(i));if(m){out+=m[0];i+=m[0].length;continue;}}
+      if(MAP[c]){out+=MAP[c];n++;}else out+=c;
+      i++;
+    }
+    var pad=Math.round(n*0.35);
+    return pad?out+'·'.repeat(pad):out;
+  }
+  function deep(v){
+    if(typeof v==='string')return ps(v);
+    if(Array.isArray(v))return v.map(deep);
+    if(v&&typeof v==='object'){var o={};for(var k in v)o[k]=deep(v[k]);return o;}
+    return v;
+  }
+  LANGS.push({c:'xx',n:'Ẋẋ',loc:'en',dec:',',pct:'{n} %'});
+  STR.xx={};for(var k in STR.en)STR.xx[k]=ps(STR.en[k]);
+  NEWS.xx={};Object.keys(NEWS.en).forEach(function(k){NEWS.xx[k]=function(p){return ps(NEWS.en[k](p));};});
+  tx=function(o){return o==null?o:(o.xx!==undefined?o.xx:deep(o.en));};
+  globalThis.__ps=ps;
+})();`;
 
 async function scan(cfg) {
   const s = boot(cfg.seed);
@@ -142,6 +182,7 @@ async function scan(cfg) {
      çizer. Menünün beklemedeki "Yükleniyor…" satırı storeReady'ye bağlı. */
   for (let i = 0; i < 50 && !s.R('storeReady'); i++) { s.flush(); await tickN(); }
   s.R('var __S0=JSON.stringify(S);');
+  if (cfg.pseudo) s.R(PSEUDO_JS);
 
   const out = {};
   const errs = [];
@@ -262,7 +303,12 @@ async function scan(cfg) {
       }
     }
   }
-  return { out, errs };
+  /* Özel adlar: sözde dilde de ASCII kalmaları doğru. */
+  const names = JSON.parse(s.R("JSON.stringify((function(){var w=[];S.players.forEach(function(p){w.push(p.n);});" +
+    "S.teams.forEach(function(t){w.push(t.n,t.ab);});(S.rivals||[]).forEach(function(r){w.push(r.base);});" +
+    "w.push(S.agent.fn,S.agent.ln,S.agent.agency,'Bot','Test','Menajer');Object.keys(NATS).forEach(function(k){w.push(NATS[k].c);});" +
+    "LEAGUES.forEach(function(l){w.push(l.c);});CUPS.forEach(function(c){w.push(c.c);});return w;})())"));
+  return { out, errs, names };
 }
 
 /* ================= denetim ================= */
@@ -275,19 +321,46 @@ function leaks(html) {
   });
 }
 
+/* Sözde dilde ASCII kalan sözcükler: özel ad değilse koda gömülü metin. */
+function suspects(out, names) {
+  const allow = new Set();
+  names.forEach(n => String(n || '').split(/[^A-Za-z]+/).forEach(w => w && allow.add(w)));
+  ['M', 'K', 'EC', 'SVG'].forEach(w => allow.add(w));   // para birimi kısaltmaları
+  const hits = {};
+  for (const k of Object.keys(out)) for (const n of Object.keys(out[k])) {
+    const html = out[k][n];
+    const attrs = [];
+    html.replace(/\s(?:aria-label|placeholder|title|alt)="([^"]*)"/g, (m, v) => { attrs.push(v); return m; });
+    const text = html.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<[^>]*>/g, ' ').replace(/&[#a-z0-9]+;/gi, ' ') + ' ' + attrs.join(' ');
+    const re = /[A-Za-zÀ-ɏḀ-ỿɐ-ʯ]+/g; let m;
+    while ((m = re.exec(text))) {
+      const w = m[0];
+      if (!/^[A-Za-z]+$/.test(w) || allow.has(w)) continue;
+      const h = hits[w] = hits[w] || { n: 0, at: n, ctx: text.slice(Math.max(0, m.index - 40), m.index + 40).replace(/\s+/g, ' ') };
+      h.n++;
+    }
+  }
+  const rows = Object.entries(hits).sort((a, b) => b[1].n - a[1].n);
+  console.log('çevrilmemiş olabilecek sözcük: ' + rows.length);
+  rows.slice(0, ARG.detay ? rows.length : 80).forEach(([w, h]) => console.log('  ' + w.padEnd(14) + String(h.n).padStart(5) + '  ' + h.at.padEnd(18) + ' …' + h.ctx + '…'));
+}
+
 (async () => {
   const cfg = {
     seed: parseInt(ARG.tohum, 10) || 1,
     seasons: Math.max(1, parseInt(ARG.sezon, 10) || 2),
     langs: list(ARG.diller, null),
-    themes: list(ARG.temalar, ['saha', 'dosya'])
+    themes: list(ARG.temalar, ['saha', 'dosya']),
+    pseudo: !!ARG.sahte
   };
+  if (cfg.pseudo) cfg.langs = ['xx'];
   if (!cfg.langs) {
     // Dil listesi oyunun kendisinden: LANGS varsa ondan, yoksa STR'nin anahtarlarından.
     const probe = boot(1);
     cfg.langs = JSON.parse(probe.R("JSON.stringify(typeof LANGS!=='undefined'?LANGS.map(l=>l.c):Object.keys(STR))"));
   }
-  const { out, errs } = await scan(cfg);
+  const { out, errs, names } = await scan(cfg);
   let nScreens = 0, nLeak = 0;
   const leakRows = [];
   for (const k of Object.keys(out)) for (const n of Object.keys(out[k])) {
@@ -300,6 +373,7 @@ function leaks(html) {
   errs.slice(0, 30).forEach(e => console.log('  ' + e));
   console.log('sızıntı: ' + nLeak);
   if (!ARG.sessiz) leakRows.slice(0, 40).forEach(r => console.log('  ' + r));
+  if (cfg.pseudo) suspects(out, names);
   if (typeof ARG.yaz === 'string') { fs.writeFileSync(ARG.yaz, JSON.stringify(out)); console.log('yazıldı: ' + ARG.yaz); }
   let nDiff = 0;
   if (typeof ARG.fark === 'string') {

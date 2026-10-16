@@ -2832,7 +2832,7 @@ player(id){
       <div class="stat"><div class="v" style="color:${rtAvg?(rtAvg>=7.2?'var(--acc)':rtAvg>=6.6?'var(--warn)':'var(--bad)'):'var(--txt3)'}">${rtAvg?rtAvg.toFixed(1):'—'}</div><div class="l">${t('avgRt')}</div></div>
       <div class="stat"><div class="v">${fmtM(valueOf(p))}${(()=>{const m=valueMult(p);
         return m>=1.08?'<span style="color:var(--acc);font-size:11px"> ▲</span>':m<=0.93?'<span style="color:var(--bad);font-size:11px"> ▼</span>':'';})()}</div><div class="l">${t('value')}</div></div>
-      <div class="stat"><div class="v">${p.pot}</div><div class="l">Pot</div></div>
+      <div class="stat"><div class="v">${p.pot}</div><div class="l">${t('potShort')}</div></div>
     </div>
     <div class="divider"></div>
     ${bar(t('form'),p.form)}

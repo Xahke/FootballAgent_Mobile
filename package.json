@@ -12,6 +12,8 @@
     "www": "node tools/build-themes.js && node tools/build-www.js",
     "serve": "npx --yes serve . -l 5173",
     "playtest": "node tools/playtest.js",
+    "i18n": "node tools/i18n-check.js",
+    "i18n:scan": "node tools/i18n-scan.js",
     "native:test": "node tools/check-native-patch.js && node tools/native-test.js",
     "android:sync": "npm run www && npx cap sync android",
     "android:open": "npm run android:sync && npx cap open android",

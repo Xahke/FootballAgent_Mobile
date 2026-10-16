@@ -5978,8 +5978,10 @@ async function tSysLang() {
     ok(f(['tr-TR'], IST) === 'tr' && f(['tr'], NY) === 'tr', '(1) Türkçe cihaz → Türkçe (yurt dışında da)');
     ok(f(['en-TR'], NY) === 'tr' && f(['de_TR'], NY) === 'tr', '(1) bölgesi Türkiye olan cihaz → Türkçe');
     ok(f(['en-US'], IST) === 'tr' && f(['en-US'], 'Asia/Istanbul') === 'tr', '(1) yabancı dilli cihaz, Türkiye saati → Türkçe');
-    ok(f(['en-US'], NY) === 'en' && f(['de-DE'], 'Europe/Berlin') === 'en' && f(['fr-FR', 'en'], 'Europe/Paris') === 'en',
-      '(1) başka her yer → İngilizce');
+    // Oyunun SUNMADIĞI diller: ja/ru LANGS'ta yok. (de/fr eskiden buradaydı; artık
+    // kendi dillerine düşüyorlar, o kural blok 31'de.)
+    ok(f(['en-US'], NY) === 'en' && f(['ja-JP'], 'Asia/Tokyo') === 'en' && f(['ru-RU', 'en'], 'Europe/Moscow') === 'en',
+      '(1) sunulmayan dilde cihaz → İngilizce');
     ok(f(['en-US', 'tr-TR'], NY) === 'tr', '(1) ikincil dil Türkçe ise yine Türkçe');
     ok(f(['trv-TW'], NY) === 'en' && f(['en-TT'], NY) === 'en', '(1) "tr" ile başlayan / "T" içeren başka kodlar Türkçe sayılmıyor');
     ok(a.R("sysLang(null,'')") === 'tr' && a.R("sysLang({},'')") === 'tr', '(1) hiç işaret yoksa oyunun kendi dili');
@@ -6018,6 +6020,97 @@ async function tSysLang() {
   }
 }
 
+/* ================= 31: dil katmanı ================= */
+/* LANGS tek liste; tanınmayan kod çökertmiyor; eksik çeviri İngilizceye düşüyor.
+   Bu blok LANGS'ın içeriğine bakmadan yazıldı: dil eklendikçe kendisi büyüyor. */
+async function tLangLayer() {
+  console.log('\n[31] dil katmanı: LANGS, doğrulama, geri dönüş, seçici');
+  const NY = 'America/New_York';
+  const fakeIntl = tz => ({ DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: tz }) }) });
+  const nav = l => ({ language: l[0], languages: l, userAgent: 'node' });
+  const boot = async (langs, ls, pre, disk) => {
+    const a = session(disk || newDisk(), ls || {}, { pre: ctx => { ctx.navigator = nav(langs); ctx.Intl = fakeIntl(NY); if (pre) pre(ctx); } });
+    await a.booted; return a;
+  };
+  const a0 = await boot(['en-US']);
+  const codes = JSON.parse(a0.R('JSON.stringify(LANGS.map(l=>l.c))'));
+
+  /* (1) Her sunulan dil kendi cihazında seçiliyor; sıra cihazın tercih sırası. */
+  {
+    const f = (langs) => a0.R('sysLang(' + JSON.stringify(nav(langs)) + ',' + JSON.stringify(NY) + ')');
+    ok(codes.indexOf('tr') === 0 && codes.indexOf('en') === 1, '(1) LANGS tr ve en ile başlıyor');
+    ok(codes.every(c => c === 'tr' || f([c + '-XX']) === c), '(1) her dil kendi bölge koduyla seçiliyor: ' + codes.join(','));
+    ok(codes.every(c => c === 'tr' || f(['ja-JP', c.toUpperCase()]) === c), '(1) sunulmayan dil atlanıp sıradakine geçiliyor');
+    ok(f(['en-GB'].concat(codes.filter(c => c !== 'en' && c !== 'tr').map(c => c + '-XX'))) === 'en', '(1) ilk sunulan dil kazanıyor');
+    ok(new Set(codes).size === codes.length, '(1) kodlar tekil');
+    ok(a0.R("LANGS.every(l=>typeof l.n==='string'&&l.n.length>1&&typeof l.loc==='string'&&(l.dec==='.'||l.dec===',')&&l.pct.indexOf('{n}')>=0)"),
+      '(1) her kaydın adı, yerel ayarı, ondalık ve yüzde kalıbı var');
+  }
+
+  /* (2) Tanınmayan kod: tercihte, kayıtta ve setLangTo'da çökertmiyor. */
+  for (const bad of ['xx', 'zz-ZZ', '', 7, null]) {
+    const ls = { menajerPrefsV1: JSON.stringify({ lang: bad }) }, disk = newDisk();
+    const a = await boot(['en-US'], ls, null, disk);
+    ok(a.R('L') === 'en', '(2) PREFS.lang=' + JSON.stringify(bad) + ' → cihaz varsayılanı');
+    await careerIn(a, 1);
+    a.R('S.lang=' + JSON.stringify(bad) + ';save();'); await a.R('saveDrain()');
+    const b = await boot(['en-US'], ls, null, disk);
+    let err = null;
+    try { await b.R('loadSlot(1)'); b.R("navTo('dash')"); } catch (e) { err = e.message; }
+    ok(!err && b.R('L') === 'en', '(2) kayıttaki S.lang=' + JSON.stringify(bad) + ' çökertmedi' + (err ? ' — ' + err : ''));
+  }
+  {
+    const ls = {};
+    const a = await boot(['en-US'], ls);
+    a.R("setLangTo('tr');setLangTo('xx');");
+    ok(a.R('L') === 'tr' && a.R('PREFS.lang') === 'tr', '(2) setLangTo tanınmayan kodu yok sayıyor');
+    // Yabancı bir değer PREFS'te kalıyor: onu tanıyan bir sürüm yine okusun.
+    const ls2 = { menajerPrefsV1: JSON.stringify({ lang: 'xx' }) };
+    const b = await boot(['en-US'], ls2);
+    ok(b.R('PREFS.lang') === 'xx', '(2) tanınmayan tercih silinmiyor, yalnız kullanılmıyor');
+  }
+
+  /* (3) Geri dönüş: listede olup çevirisi olmayan dil İngilizce görünüyor. */
+  {
+    const a = await boot(['en-US'], {}, null);
+    a.R("LANGS.push({c:'zz',n:'Zz',loc:'en',dec:',',pct:'{n} %'});STR.zz={next:'ZZ-NEXT'};NEWS.zz={};L='zz';");
+    ok(a.R("t('next')") === 'ZZ-NEXT' && a.R("t('cash')") === a.R('STR.en.cash'), '(3) t(): olan anahtar kendi dilinde, eksik olan İngilizce');
+    ok(a.R("t('yokBoyleBirAnahtar')") === 'yokBoyleBirAnahtar', '(3) t(): hiçbir dilde olmayan anahtar adıyla');
+    ok(a.R("tx({tr:'a',en:'b'})") === 'b' && a.R("tx({tr:'a',en:'b',zz:'c'})") === 'c' && a.R('tx(null)') === null,
+      '(3) tx(): eksikse en, varsa kendi, null olduğu gibi');
+    ok(a.R("tx(POSFULL).KL") === a.R('POSFULL.en.KL'), '(3) tx(): dil→tablo eşlemesi de düşüyor');
+    ok(a.R("newsTxt('retire',{n:'Q',pid:1})").indexOf('Q') >= 0 && a.R("newsTxt('yokHaber',{})") === 'yokHaber',
+      '(3) newsTxt(): eksik şablon İngilizce, bilinmeyen anahtar t()\'ye');
+    ok(a.R('pctFmt(12)') === '12 %' && a.R('decFmt("12.4")') === '12,4' && a.R('fmtM(12.4)') === '12,4M €',
+      '(3) yüzde ve para dilin kalıbını izliyor');
+    await careerIn(a, 1);
+    a.R("L='zz';navTo('dash');");
+    const h = a.nodes.view._html.replace(/\son[a-z]+="[^"]*"/g, '');
+    ok(h.length > 1000 && !/undefined|NaN|\[object /.test(h), '(3) çevirisiz dilde ana ekran temiz çiziliyor');
+  }
+
+  /* (4) Biçim yardımcıları: tr/en eski çıktıyı birebir veriyor. */
+  {
+    const a = a0;
+    a.R("L='tr'");
+    ok(a.R('pctFmt(45)') === '%45' && a.R('fmtK(12400)') === '12.4M €' && a.R('fmtM(3)') === '3M €', '(4) Türkçe: %45, 12.4M €');
+    a.R("L='en'");
+    ok(a.R('pctFmt(45)') === '45%' && a.R('fmtK(12400)') === '12.4M €', '(4) İngilizce: 45%, 12.4M €');
+    ok(a.R("fmtStr('{t} de {c}',{c:'X',t:'Y'})") === 'Y de X' && a.R("fmtStr('{q}',{})") === '{q}', '(4) fmtStr sırayı kalıptan alıyor, bilinmeyeni bırakıyor');
+  }
+
+  /* (5) Seçici: her dil kendi adıyla, seçince pencere kapanıyor. */
+  {
+    const a = await boot(['en-US'], {});
+    a.R('langPickOpen();');
+    const sh = a.nodes.sheet._html;
+    ok(JSON.parse(a.R('JSON.stringify(LANGS.map(l=>l.n))')).every(n => sh.indexOf('>' + n + '<') >= 0), '(5) seçici her dili kendi adıyla listeliyor');
+    ok(a.R("document.getElementById('modal').classList.contains('open')") === true, '(5) seçici açık');
+    a.R("setLang('tr');");
+    ok(a.R('L') === 'tr' && a.R("document.getElementById('modal').classList.contains('open')") === false, '(5) seçim uygulandı, pencere kapandı');
+  }
+}
+
 /* ================= koşu ================= */
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
@@ -6028,7 +6121,7 @@ async function tSysLang() {
                  tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
                  tSeasonBreakAds, tShopAndIap, tPlayBilling,
                  tStorageFallback, tSameCidFork, tForkRestoreCost, tIapQueueLoad,
-                 tIapQueueMerge, tSysLang];
+                 tIapQueueMerge, tSysLang, tLangLayer];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }
