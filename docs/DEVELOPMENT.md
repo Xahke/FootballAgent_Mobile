@@ -321,7 +321,10 @@ node tools/build-themes.js && node build.js   # → dist/menajer.html
 ## Dosya yapısı
 | Dosya | İçerik |
 |---|---|
-| js/i18n.js | Çeviriler, haber şablonları, haber-içi linkler |
+| js/i18n.js | Dil listesi (`LANGS`), Türkçe/İngilizce metinler, haber şablonları, `t()`/`tx()`, biçim yardımcıları, haber-içi linkler |
+| js/lang-es/pt/de/fr/it.js | O dilin arayüz metinleri (`STR.xx`) ve haber şablonları (`NEWS.xx`) |
+| tools/i18n-check.js | `npm run i18n` — eksik çeviri, farklı yer tutucu, kodda `L==='tr'`, listeye eklenmemiş dil dosyası |
+| tools/i18n-scan.js | `npm run i18n:scan` — her ekranı her dilde çizer; sızıntı, önce/sonra farkı, `--sahte` ile gömülü metin |
 | js/ads.js | Ödüllü reklam adaptörü (@capacitor-community/admob). Yalnız Android; deneme kapsamı, ayrıntılar CLAUDE.md |
 | js/data.js | İsim havuzları, ligler, takımlar, kupa tanımları (tamamı özgün) |
 | js/core.js | Oyun durumu, fikstür/kupa kurulum, keşif ağı, ekonomi |
@@ -352,11 +355,15 @@ Script sırası önemlidir (index.html'deki sırayla yüklenir). Modül/build si
 ```js
 {id:'benzersizAd', w:8, need:'client',        // need yoksa menajerle ilgili olaydır
  when:c=>c.p.age>=32,                          // isteğe bağlı ek koşul
- ttl:c=>({tr:'Başlık',en:'Title'}),
- txt:c=>({tr:'Metin…',en:'Text…'}),
- opts:[{t:{tr:'Seçenek',en:'Option'},
-        eff:c=>({cash:-50,trust:8,morale:4,msg:{tr:'Sonuç…',en:'Outcome…'}})}]}
+ ttl:c=>({tr:'Başlık',en:'Title',es:'Título',pt:'Título',de:'Titel',fr:'Titre',it:'Titolo'}),
+ txt:c=>({tr:'Metin…',en:'Text…',es:…,pt:…,de:…,fr:…,it:…}),
+ opts:[{t:{tr:'Seçenek',en:'Option',es:…,pt:…,de:…,fr:…,it:…},
+        eff:c=>({cash:-50,trust:8,morale:4,msg:{tr:'Sonuç…',en:'Outcome…',es:…,pt:…,de:…,fr:…,it:…}})}]}
 ```
+
+Her metin yedi dilde olmalı; eksik dil oyunu çökertmez (İngilizceye düşer) ama
+`npm run i18n` hata verir. Hitap samimi (tú / você / du / tu), menajerin cinsiyeti
+varsayılmaz — ayrıntılar CLAUDE.md'deki *Languages* bölümünde.
 
 Sonuçlar tek bir uygulayıcıdan (`applyEff`) geçer; kullanılabilir kaldıraçlar
 `cash`, `rep`, `morale`, `trust`, `form`. Rastgele dallanma için `eff` içinde
@@ -366,8 +373,9 @@ Sonuçlar tek bir uygulayıcıdan (`applyEff`) geçer; kullanılabilir kaldıra�
 Oyundaki hiçbir lig, kulüp, kupa veya turnuva adı gerçek bir markaya ait değildir.
 
 - **Ligler** ad olarak veride tutulmaz; `lgName()` bunları ülke adı + kademeden üretir
-  ("Türkiye Üst Lig" / "Türkiye Top Flight"). Yeni lig eklerken `ctry` ve `tier`
-  vermek yeterli, ad kendiliğinden iki dilli çıkar.
+  ("Türkiye Üst Lig" / "Türkiye Top Flight" / "Turquía · 1.ª División"). Yeni lig
+  eklerken `ctry` ve `tier` vermek yeterli, ad kendiliğinden her dilde çıkar. Ülke her
+  dilde önde durur: dar listede kesilince ayırt edici kısım o.
 - **Kulüpler** "şehir + nötr sıfat" kalıbıyla adlandırılmıştır: İstanbul Sentinels,
   Manchester Ironworks, Madrid Pioneers, Milano Northwind.
 

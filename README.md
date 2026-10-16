@@ -4,7 +4,8 @@
 Find undervalued players, move them to the right clubs, negotiate their contracts,
 and take your cut.
 
-Text-based, mobile-first, Turkish and English. The browser build runs entirely
+Text-based, mobile-first, in seven languages: Turkish, English, Spanish, Brazilian
+Portuguese, German, French and Italian. The browser build runs entirely
 client-side and offline; the Android build adds ads and in-app purchases, which do
 go online — see [Tech](#tech).
 
@@ -14,7 +15,7 @@ go online — see [Tech](#tech).
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-blue)
 ![Offline web build](https://img.shields.io/badge/web%20build-offline-blue)
-![TR / EN](https://img.shields.io/badge/language-TR%20%2F%20EN-blue)
+![TR / EN / ES / PT / DE / FR / IT](https://img.shields.io/badge/language-TR%20%2F%20EN%20%2F%20ES%20%2F%20PT%20%2F%20DE%20%2F%20FR%20%2F%20IT-blue)
 
 ---
 
@@ -120,7 +121,9 @@ No framework, no bundler, no runtime dependencies. Plain HTML, CSS and JavaScrip
   privacy policy says so. Release builds request the app's own ad units; debug builds
   request Google's sample units.
 - **Sound is synthesised** with Web Audio — no audio files shipped.
-- **Fully bilingual**: 548 translation keys, Turkish and English both complete.
+- **Seven languages, all complete**: 559 interface keys plus every event, skill and
+  rival text in Turkish, English, Spanish, Brazilian Portuguese, German, French and
+  Italian. The first launch follows the device language; Settings can change it any time.
 
 ---
 

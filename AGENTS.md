@@ -8,15 +8,18 @@ from the three header lines above — **edit both together, or they drift.**
 ## What this is
 
 A football **agent** simulation — you manage players' careers, not a club. Text-based,
-mobile-first, runs entirely client-side and offline. Turkish and English.
+mobile-first, runs entirely client-side and offline. Seven languages: Turkish, English,
+Spanish, Brazilian Portuguese, German, French and Italian — see *Languages* below.
 
 **The first launch picks its language from the device, and only as a default.**
 `sysLang()` in `js/i18n.js` answers Turkish when the device points at Turkey by any one
-of three signs — a `tr` language, a `-TR` region, or the `Europe/Istanbul` time zone —
-and English everywhere else. The time zone is there because an English-language phone in
-Turkey says so nowhere else, and geo-IP would be a network request. The result is **never
-written to `PREFS.lang`**: a choice made in Settings always wins, and someone who never
-chose follows their device. `tools/savetest.js` block **30** holds it.
+of three signs — a `tr` language, a `-TR` region, or the `Europe/Istanbul` time zone.
+Otherwise it walks the device's language list in order and takes the first one whose
+primary subtag is in `LANGS` (`pt-PT` gets the Brazilian text), and English if none is.
+The time zone is there because an English-language phone in Turkey says so nowhere else,
+and geo-IP would be a network request. The result is **never written to `PREFS.lang`**:
+a choice made in Settings always wins, and someone who never chose follows their device.
+`tools/savetest.js` blocks **30** and **31** hold it.
 
 Public MIT repo, still in development. Android/iOS store releases are planned, so
 anything committed here is visible to the world.
@@ -65,7 +68,7 @@ global, loaded in the order listed in `index.html`. A function defined in `ui.js
 call one from `core.js` because `core.js` loaded first — nothing enforces this, so
 load order is the contract.
 
-**Adding a JS file means updating four places, or things break silently:**
+**Adding a JS file means updating six places, or things break silently:**
 
 1. `index.html` — `<script>` tag, in the right position
 2. `build.js` — the `order` array (single-file build)
@@ -74,21 +77,26 @@ load order is the contract.
 4. `tools/savetest.js` — the `FILES` array. This one fails quietly in the other
    direction: the headless harness still boots, but the new file is simply absent, so
    every test that touches it passes by not running it.
+5. `tools/playtest.js` — its own copy of `FILES`, same failure mode.
+6. `tools/i18n-scan.js` — likewise.
 
-`npm run www` copies `js/` wholesale, so there is no fifth place.
+`npm run www` copies `js/` wholesale, so there is no seventh place. For a language file
+(`js/lang-xx.js`) `npm run i18n` checks all six and fails if one is missing; for any
+other file nothing does.
 
-`js/badges.js` was the most recent file to go through this, and it is a worked
-example: it sits after `data.js` (badges read a team object) and before `core.js`
-(where `tmBadge()` lives), and the same position appears in all four lists.
+`js/badges.js` was a worked example: it sits after `data.js` (badges read a team object)
+and before `core.js` (where `tmBadge()` lives), and the same position appears in every
+list. The five language files were the most recent to go through it.
 
 Load order:
-`i18n → store → saves → reward → ads-testcfg → ads → iap → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
 
-- `saves.js` reads and writes `L` while the script runs (`if(PREFS.lang)L=PREFS.lang`),
-  and `L` is declared in `i18n.js` — so `i18n.js` must come first.
+- `saves.js` reads and writes `L` while the script runs (`if(langOk(PREFS.lang))L=…`),
+  and `L` is declared in `i18n.js` — so `i18n.js` must come first. The language files
+  assign `STR.xx`/`NEWS.xx` at load, so they must follow `i18n.js` too.
 - `sfx.js` installs its capture-phase click listener at script scope.
 - `main.js` boots the app (`migrateLegacy()`, `render()`) and must be last.
 - `atlas.js` reads `GEO` (worldgeo.js) and `LEAGUES` (data.js), but only inside
@@ -100,7 +108,8 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `L`, `STR{tr,en}` (548 keys each, must stay equal), `NEWS` templates, `t()`, link helpers |
+| `js/i18n.js` | `LANGS`, `L`, `STR.tr`/`STR.en` (559 keys each), `NEWS` templates, `t()`/`tx()`/`newsTxt()`, format helpers, link helpers |
+| `js/lang-xx.js` | `STR.xx` and `NEWS.xx` for es, pt, de, fr, it — same keys as Turkish, checked by `npm run i18n` |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
@@ -275,7 +284,7 @@ the `'rival'` flag: **one named agency per archetype in `RIV_ARCH`** — fourtee
 `RIV_ARCH.length` *is* the count; there is no separate constant to keep in step.
 
 **Adding an agency is a data edit.** Append an entry to `RIV_ARCH` with its coefficients
-and its bilingual `n`/`dsc`, and the rest follows on its own: `newRivals()` gives it a home
+and its `n`/`dsc` in every language, and the rest follows on its own: `newRivals()` gives it a home
 territory and a generated surname, `claimWeight()` starts routing players to it, and
 `ensureRivals()` grows existing saves onto the new roster. No behaviour code is touched.
 The coefficients *are* the character:
@@ -291,7 +300,7 @@ The coefficients *are* the character:
 `a.id === 'family'` check inside `claimWeight()` — a regional archetype now declares itself
 in data instead of in an `if`. `archFocus(a)` derives the one-word label the roster list
 prints straight from these numbers, so it cannot drift away from the coefficients, and it
-returns an inline `{tr,en}` object rather than a `STR` key so the archetype stays one
+returns an inline `{tr,en,…}` object rather than a `STR` key so the archetype stays one
 self-contained record.
 
 **More agencies must not mean a busier world.** `RIV.signRate`, `RIV.loseRate` and
@@ -333,9 +342,11 @@ atlas.js. `S.rivals` holds only the agency records (`base`, `sfx`, `arch`, `ctry
 `rep`, `rel`, `won`, `lost`).
 
 Agency names are **generated, not stored**: `{base, sfx}` where `base` is a surname from
-the home territory's `NATS[nat].l` pool and `sfx` is a bilingual key in `RIV_SFX`.
-`rivalName(r)` renders it, so the name is correct in both languages — the problem
-`lgName()` solves for leagues. Never store a rendered agency name.
+the home territory's `NATS[nat].l` pool and `sfx` is a key in `RIV_SFX` carrying every
+language. `rivalName(r)` renders it, so the name is correct in every language — the problem
+`lgName()` solves for leagues. A suffix that contains `{b}` places the surname itself
+(`'Gestión Deportiva {b}'`, `'{b} & Partner'`); one without it goes after the surname, as
+tr/en always did. Never store a rendered agency name.
 
 Three behaviours, all driven from `simRivals()` in `nextWeek()` (before `simTransfers()`):
 
@@ -1485,11 +1496,14 @@ strands everything behind it (see `showLevelUp`).
 
 `pushNews(key, params, type, action)` is still the only writer of `S.inbox`, and the
 record is unchanged: `{w, se, key, params, type, action, read}`. Text is never stored —
-`NEWS[L][key](params)` renders it at draw time, which is why an old save reads correctly
-after a language switch.
+`newsTxt(key, params)` renders it at draw time, which is why an old save reads correctly
+after a language switch. The exception is inside `params`: a few are rendered when the
+news is pushed (a cup name, `fmtM`/`fmtK` money), so an old message keeps those fragments
+in the language and number format it was written in. Cosmetic, and new messages are
+unaffected — but pass ids, not rendered names, in any new `pushNews` call.
 
 **`IB_CAT` in `js/ui.js` is the single mapping source.** Each of the eleven categories
-carries its badge, its bilingual `{tr,en}` name, its filter group and the list of NEWS
+carries its badge, its name in every language, its filter group and the list of NEWS
 keys it owns; `IB_OF` is derived from it once, so there is no second list to keep in
 step. Adding a `pushNews` key means adding it to one `keys` array — no behaviour code is
 touched. A key with no category falls to `system`, which is also where `tut` lives and
@@ -1562,16 +1576,65 @@ the view, so a redraw doesn't yank the camera back. Panning writes the `transfor
 attribute directly instead of re-rendering; a full redraw per pointer move is visibly
 janky on a phone. Any future view with live listeners needs the same moves.
 
+### Languages: one list, English as the safety net
+
+`LANGS` in `js/i18n.js` is the only list of languages: code, the language's own name
+(what the picker shows), the `Intl` locale, the money decimal separator and the percent
+pattern. A language exists only if it is there. tr and en keep their tables in
+`js/i18n.js`; the other five each have `js/lang-xx.js` with `STR.xx` and `NEWS.xx`.
+Everything that lives inside game data carries all seven languages in place.
+
+**Nothing reads a language table directly.** `t(key)` → `STR[L][key]`, then English,
+then the key; `tx(o)` → `o[L]`, then `o.en`; `newsTxt(key, params)` the same for news.
+So a missing translation shows English, never `undefined` — but that is a safety net,
+not a licence: `npm run i18n` reports every gap. `langOk()` rejects a code this build
+does not know, wherever it comes from (`PREFS.lang`, a save's `S.lang`, `setLangTo`), so
+a value written by a newer version cannot crash an older one; the unknown value is left
+in `PREFS` for a version that knows it.
+
+**Word order belongs to the language, not the code.** Anything assembled from parts is a
+template: `lgFmt` (league = country + tier), `agFmt` (your default agency name), `seWk`
+(the header's season/week), `RIV_SFX` with `{b}` for rival names, `pctFmt()` for
+percentages (`%45` / `45%` / `45 %`). There is no `L==='tr'` left in the code.
+
+**League names lead with the country in every language** (`Almanya Üst Lig`,
+`Inglaterra · 1.ª División`, `Angleterre · D1`). The scouting list is narrow, and a
+clipped "Primera División de A…" could not say whether it was Germany or Argentina.
+`npm run i18n` fails a `lgFmt` that does not start with `{c}`. Because the name is a
+label, news templates put it after a colon or in parentheses rather than behind an
+article (`na`/`della`/`de la` would have to agree with the country).
+
+Formats: money uses the language's decimal separator (`12,4M €`; tr/en keep `12.4M €`);
+match ratings stay `7.2` everywhere, as football sites print them. French puts a narrow
+no-break space (U+202F, a literal character in the files) before `? ! : ;`.
+
+**Translation choices, so they stay consistent:** informal address (tú / você / du / tu /
+tu, like Turkish "sen"); each country's football vocabulary (empresário, luvas,
+procuratore, assistiti, cartellino, Ablöse, Handgeld); the agent's gender is never
+assumed — where a language would inflect for it, the sentence is built so it does not
+("Tu confirmes ?" rather than "Tu es sûr ?"). Players are male throughout, as in Turkish
+and English. Club names are proper names and are never translated. The privacy page
+exists only in tr/en; the other languages open the English page and the Settings row
+says so. Badge emblem names (`badges.js`) are only read by the developer badge lab and
+stay tr/en.
+
+**Adding a language:** an entry in `LANGS`; a `js/lang-xx.js` registered in the six
+lists above; the `xx` field in every in-place object (`npm run i18n -- --detay` lists them);
+then `npm run i18n:scan` and a look at 360px in all four themes — long languages break
+buttons and list rows that tr/en fit, and only a screen shows it.
+
 ## Conventions
 
 - **Code comments are in Turkish and explain *why*, not *what*.** Keep writing them
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
-- **Every user-visible string is bilingual.** Add to both `STR.tr` and `STR.en`; the
-  counts must match — 548 today (measured 7 Oct 2026), but count them rather than
-  trusting this line; it has been stale before. Objects returned from events, themes,
-  branches and rival archetypes use `{tr:…, en:…}` and are read with `[L]`. Before
-  adding a key, check it isn't taken — `archLbl` already meant "Archive" and a
-  second meaning silently overwrote it.
+- **Every user-visible string exists in all seven languages.** A new `STR` key goes into
+  `STR.tr` and `STR.en` in `js/i18n.js` **and** into each `js/lang-xx.js`; the counts
+  must match — 559 today (measured 17 Oct 2026), but `npm run i18n` counts them, trust
+  it rather than this line. Objects in game data (events, themes, branches, rival
+  archetypes, countries…) carry `{tr:…, en:…, es:…, pt:…, de:…, fr:…, it:…}` and are
+  read with `tx(o)`, never `o[L]`; `npm run i18n` fails on a missing language and on any
+  `X[L]` or `L==='tr'` that creeps back in. Before adding a key, check it isn't taken —
+  `archLbl` already meant "Archive" and a second meaning silently overwrote it.
 - **Sound is synthesised** with Web Audio (`js/sfx.js`) — no audio assets. A single
   capture-phase listener on `SFX_SEL` fires one sound per tap; don't add `SFX` calls in
   individual handlers, they'd double up.
@@ -1643,10 +1706,16 @@ There's no test suite, so changes are checked by running the game headlessly in 
 `vm` sandbox with a minimal DOM shim, then measuring rather than assuming. The standard
 close-out for a gameplay change:
 
-1. **Full-app scan** — walk every view, tab, league, cup and modal in **both languages**
-   and assert no `undefined`, `NaN` or `[object Object]` reaches the DOM. This catches
-   more real bugs than anything else here. Strip `on*="…"` attributes before the test:
-   handler bodies are code, and `buyScout(3)` is not a leaked value.
+1. **Full-app scan** — `npm run i18n:scan` walks every view, tab, league, cup and modal
+   (~200 screens) in **every language** on both HTML paths (Saha and Dosya; Gazete and
+   Terminal share Dosya's markup) and fails on any `undefined`, `NaN`, `[object Object]`
+   or unfilled `{placeholder}` in the DOM. This catches more real bugs than anything
+   else here. It strips `on*="…"` attributes first: handler bodies are code, and
+   `buyScout(3)` is not a leaked value. `--yaz=a.json` saves a snapshot and `--fark=a.json`
+   diffs against it (seeded, fixed clock — two runs are byte-identical), which is how a
+   refactor proves it changed nothing. `--sahte` renders a pseudo-language whose letters
+   are all look-alikes and lists every plain-ASCII word left on screen: text that never
+   went through `t()`/`tx()`. Also run `npm run i18n` after touching any text.
 2. **Multi-season regression** — run 6–8 seasons and check the background world holds:
    population stable (~7,000), age pyramid intact (16–36, mean ~25), free-agent pool in
    equilibrium (`FAMAX` is 60), no crash. Also track the **unrepresented pool**
