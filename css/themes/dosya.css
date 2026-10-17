@@ -182,6 +182,12 @@ th{color:var(--txt3);font-size:11px;text-transform:none;letter-spacing:0;text-al
 th.c,td.c{text-align:right}
 td{padding:12px 5px;border-bottom:1px solid var(--line);color:var(--txt2)}
 td b{color:var(--txt)}
+/* Puan tablosunun takım sütunu. Hücredeki ellipsis tek başına hiç devreye girmiyor:
+   otomatik tablo düzeninde en uzun kulüp adı sütunun en küçük genişliği oluyor ve
+   360px'te tablo kartın dışına taşıyor (İngiltere ligi 420px'e kadar). max-width:0
+   hücrenin o alt sınırını kaldırıyor, width:100% kalan yerin tamamını ona veriyor;
+   sayı sütunları kendi genişliğinde kalıyor, uzun ad üç noktayla kısalıyor. */
+td.tmc{width:100%;max-width:0}
 tr.click{cursor:pointer}
 tr.click:active td{background:var(--n1)}
 tr.hl td{background:var(--n1)}

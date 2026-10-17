@@ -2404,6 +2404,7 @@ html[data-theme="gazete"] th{color:var(--txt3);font-size:11px;text-transform:non
 html[data-theme="gazete"] th.c,html[data-theme="gazete"] td.c{text-align:right}
 html[data-theme="gazete"] td{padding:11px 4px;border-bottom:1px solid var(--line)}
 html[data-theme="gazete"] td.c{font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] td.tmc{width:100%;max-width:0}
 html[data-theme="gazete"] tr.click{cursor:pointer}
 html[data-theme="gazete"] tr.click:active td{background:var(--n1)}
 html[data-theme="gazete"] tr.hl td{background:var(--n1);font-weight:600}
@@ -3365,6 +3366,7 @@ html[data-theme="terminal"] th.c,html[data-theme="terminal"] td.c{text-align:rig
 html[data-theme="terminal"] td{padding:10px 4px;border-bottom:1px solid var(--line)}
 html[data-theme="terminal"] td.c{font-family:var(--mono);letter-spacing:-.02em;color:var(--txt2)}
 html[data-theme="terminal"] td.c b{color:var(--txt);font-weight:600}
+html[data-theme="terminal"] td.tmc{width:100%;max-width:0}
 html[data-theme="terminal"] tr.click{cursor:pointer}
 html[data-theme="terminal"] tr.click:active td{background:var(--n1)}
 html[data-theme="terminal"] tr.hl td{background:var(--n1)}
@@ -4327,6 +4329,7 @@ html[data-theme="dosya"] th{color:var(--txt3);font-size:11px;text-transform:none
 html[data-theme="dosya"] th.c,html[data-theme="dosya"] td.c{text-align:right}
 html[data-theme="dosya"] td{padding:12px 5px;border-bottom:1px solid var(--line);color:var(--txt2)}
 html[data-theme="dosya"] td b{color:var(--txt)}
+html[data-theme="dosya"] td.tmc{width:100%;max-width:0}
 html[data-theme="dosya"] tr.click{cursor:pointer}
 html[data-theme="dosya"] tr.click:active td{background:var(--n1)}
 html[data-theme="dosya"] tr.hl td{background:var(--n1)}

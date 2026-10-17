@@ -2431,7 +2431,7 @@ league(){
       const z=grouped?(i===0?'zone1':''):(i===0?'zone1':i<4?'zone2':i>=rows.length-3?'zoneR':'');
       return `<tr class="click ${myTeams.has(tm.id)?'hl':''}" onclick="pushV('team',${tm.id})">
       <td><span class="posn ${z}">${i+1}</span></td>
-      <td><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
+      <td class="tmc"><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
         <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tm.n}</b></div></td>
       <td class="c">${r[2]+r[3]+r[4]}</td><td class="c">${r[2]}</td><td class="c">${r[3]}</td><td class="c">${r[4]}</td>
       <td class="c">${r[5]-r[6]}</td><td class="c"><b>${r[1]}</b></td></tr>`;}).join('')}</table>`;

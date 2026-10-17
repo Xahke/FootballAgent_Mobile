@@ -187,6 +187,9 @@ th{color:var(--txt3);font-size:11px;text-transform:none;letter-spacing:0;text-al
 th.c,td.c{text-align:right}
 td{padding:11px 4px;border-bottom:1px solid var(--line)}
 td.c{font-variant-numeric:tabular-nums}
+/* Puan tablosunun takım sütunu — gerekçe dosya.css'te: uzun kulüp adı 360px'te
+   tabloyu taşırıyordu, bu kural adı üç noktayla kısaltıyor. */
+td.tmc{width:100%;max-width:0}
 tr.click{cursor:pointer}
 tr.click:active td{background:var(--n1)}
 tr.hl td{background:var(--n1);font-weight:600}
