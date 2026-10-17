@@ -1834,9 +1834,9 @@ Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep
 with no keystore at all, so don't "fix" that path by making the config mandatory.
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
-twice. It is 8 today; 5 is what the closed-test track carried on 2 October 2026.
-Bundles numbered 6 (9 October) and 7 (11 October) were built and may have been
-uploaded, so each next build took a new number rather than risk a duplicate. The
+twice. It is 9 today; 5 is what the closed-test track carried on 2 October 2026.
+Bundles numbered 6 (9 October), 7 (11 October) and 8 (12 October) were built and may
+have been uploaded, so each next build took a new number rather than risk a duplicate. The
 Android build carries ads, so don't claim the app is ad-free.
 
 ### Every icon and the splash come from one source file
