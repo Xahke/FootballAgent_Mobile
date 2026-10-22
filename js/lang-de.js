@@ -279,6 +279,7 @@ appSet:'App',careerSet:'Karriere',menuSub:'Wähle einen Platz, um weiterzumachen
 newCareerT:'Neue Karriere',deleteCareer:'Karriere löschen',
 rivals:'Rivalisierende Agenturen',
 rivalsSub:'Du bist nicht der einzige Berater der Welt. Wer für wen arbeitet und wer mit dir noch eine Rechnung offen hat.',
+allRivals:'Alle Agenturen',
 rivalRankT:'Ruf-Rangliste',rankLbl:'Dein Rang',charLbl:'Charakter',portfolio:'Portfolio',
 notableCl:'Bekannte Klienten',noNotable:'Keine bekannten Klienten in den Ligen, die du kennst.',
 relLbl:'Verhältnis',relHot:'Feindselig',relTense:'Angespannt',relCalm:'Neutral',

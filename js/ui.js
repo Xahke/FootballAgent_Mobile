@@ -13,6 +13,12 @@ function pushV(v,id){
   render();
 }
 function back(){if(stack.length>1){stack.pop();render();}}
+/* Ajans sayfası listeden açıldıysa liste zaten bir altta duruyor: üstüne ikinci
+   bir kopya itmek geri tuşunu liste → ajans → liste döngüsüne sokardı. */
+function toRivals(){
+  const p=stack[stack.length-2];
+  if(p&&p.v==='rivals')back();else pushV('rivals');
+}
 /* ================= ANA MENÜ =================
    Kabuk (menü / yeni kariyer / menüden açılan ayarlar) ile oyun arasındaki tek
    ayrım S: açık kariyer yoksa S null'dır. render() bunu görüp üst çubuğu ve alt
@@ -2209,14 +2215,19 @@ dash(){
     <div class="hmAv" aria-hidden="true">${esc(ini)}<img class="hmAvImg" src="assets/ui/agent-silhouette.webp" alt="" onerror="this.remove()"></div>
     <div class="hmCi">
       <div class="hmLv">${t('hmLevel')} <b>${lp.lv}</b></div>
-      <div class="hmRep">
+      ${/* Rakip ajans sıralamasının tek girişi. Eski ana ekrandaki "Sıralaman"
+         hücresi yenilemede kalkmış, liste o günden beri koddan başka hiçbir
+         yerden açılmıyordu. Sıralama itibara göre dizildiği için giriş itibar
+         satırında. Düğmenin içi span: <button> yalnız satır içi içerik alır. */''}
+      <button class="hmRep" onclick="pushV('rivals')" aria-label="${esc(t('rep')+' '+Math.round(repTotal())+' · '+t('rivalRankT'))}">
         <span class="hmShield">${ICONS.rep}</span>
-        <div class="hmRepBody">
-          <div class="hmRepL">${t('rep')}</div>
-          <div class="hmBar"><div style="width:${Math.round(lp.pct*100)}%"></div></div>
-          <div class="hmRepN"><b>${Math.round(repTotal())}</b> / ${lp.need?repForLevel(lp.lv+1):Math.round(repTotal())}</div>
-        </div>
-      </div>
+        <span class="hmRepBody">
+          <span class="hmRepL">${t('rep')}</span>
+          <span class="hmBar"><span style="width:${Math.round(lp.pct*100)}%"></span></span>
+          <span class="hmRepN"><b>${Math.round(repTotal())}</b> / ${lp.need?repForLevel(lp.lv+1):Math.round(repTotal())}</span>
+        </span>
+        <span class="hmRepGo" aria-hidden="true">›</span>
+      </button>
     </div>
     <div class="hmBal">
       <span class="hmCoin">${ICONS.cash}</span>
@@ -2641,7 +2652,8 @@ rival(id){
   </div>
   <div class="sect">${t('notableCl')}</div>
   ${seen.length?listWrap(seen.map(p=>playerRow(p,{lg:1})).join(''))
-   :`<div class="card"><div class="empty">${t('noNotable')}</div></div>`}`;
+   :`<div class="card"><div class="empty">${t('noNotable')}</div></div>`}
+  <button class="btn" style="margin-top:12px" onclick="toRivals()">${t('allRivals')}</button>`;
 },
 /* Tek görünüm iki bağlamda çalışır: ana menüden açıldığında yalnızca cihaza ait
    ayarlar (tema, dil, ses), oyun içinde ayrıca kariyere ait olanlar. Tema seçicisi

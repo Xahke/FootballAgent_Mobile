@@ -282,6 +282,7 @@ appSet:"Appli",careerSet:"Carrière",menuSub:"Choisis un emplacement pour contin
 newCareerT:"Nouvelle carrière",deleteCareer:"Supprimer la carrière",
 rivals:"Agences rivales",
 rivalsSub:"Tu n'es pas le seul agent au monde. Qui travaille pour qui, et qui a des comptes à régler avec toi.",
+allRivals:"Toutes les agences",
 rivalRankT:"Classement de réputation",rankLbl:"Ton rang",charLbl:"Profil",portfolio:"Portefeuille",
 notableCl:"Clients en vue",noNotable:"Aucun client en vue dans les ligues que tu connais.",
 relLbl:"Relation",relHot:"Hostile",relTense:"Tendue",relCalm:"Neutre",

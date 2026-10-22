@@ -704,13 +704,20 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
 .hmLv{font-size:14.5px;font-weight:600;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .hmLv b{font-size:19px;font-weight:900;color:var(--acc);margin-left:4px}
-.hmRep{display:flex;align-items:center;gap:9px;margin-top:9px}
+/* İtibar satırı rakip ajans sıralamasını açan düğme: tarayıcının düğme
+   görünümü sıfırlanıyor, satır eskisiyle aynı yerde aynı boyda kalıyor. */
+.hmRep{display:flex;align-items:center;gap:9px;margin-top:9px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.hmRep:active{opacity:.7}
+.hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.hmRepBody,.hmRepL,.hmBar,.hmBar>span,.hmRepN{display:block}
+.hmRepGo{flex-shrink:0;color:var(--txt3);font-size:17px;line-height:1}
 .hmShield{flex-shrink:0;color:var(--gold);display:flex}
 .hmShield svg{width:22px;height:22px}
 .hmRepBody{flex:1;min-width:0}
 .hmRepL{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
 .hmBar{height:7px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:5px}
-.hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
+.hmBar>span{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
 .hmRepN{font-size:11.5px;font-weight:700;color:var(--txt3);margin-top:4px;font-variant-numeric:tabular-nums}
 .hmRepN b{color:var(--gold);font-weight:800}
 .hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
@@ -887,7 +894,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin-top:8px;height:26px}
   box-shadow:inset 0 0 0 1px var(--line2),0 8px 22px -16px #000}
 .hmAv{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
   box-shadow:inset 0 0 0 1px rgba(240,199,110,.32)}
-.hmBar div{background:linear-gradient(90deg,var(--gold),#f6dfa6)}
+.hmBar>span{background:linear-gradient(90deg,var(--gold),#f6dfa6)}
 .hmShield{filter:drop-shadow(0 0 5px rgba(240,199,110,.35))}
 
 /* hızlı erişim halkaları kendi kanallarında parlıyor */

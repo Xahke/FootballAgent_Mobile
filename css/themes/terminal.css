@@ -617,14 +617,21 @@ a:hover{color:var(--acc);text-decoration-color:var(--acc)}
 .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 .hmLv b{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--txt);margin-left:5px}
-.hmRep{display:flex;align-items:center;gap:8px;margin-top:5px}
+/* İtibar satırı rakip ajans sıralamasını açan düğme: tarayıcının düğme
+   görünümü sıfırlanıyor, satır eskisiyle aynı yerde aynı boyda kalıyor. */
+.hmRep{display:flex;align-items:center;gap:8px;margin-top:5px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.hmRep:active{opacity:.7}
+.hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.hmRepBody,.hmRepL,.hmBar,.hmBar>span,.hmRepN{display:block}
+.hmRepGo{flex-shrink:0;color:var(--n4);font-size:15px;line-height:1}
 .hmShield{flex-shrink:0;color:var(--txt3);display:flex}
 .hmShield svg{width:17px;height:17px}
 .hmRepBody{flex:1;min-width:0}
 .hmRepL{font-size:10px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;
   color:var(--txt3);line-height:1.2}
 .hmBar{height:5px;border-radius:0;background:var(--n3);overflow:hidden;margin-top:4px}
-.hmBar div{height:100%;background:var(--n6);transition:width .3s ease}
+.hmBar>span{height:100%;background:var(--n6);transition:width .3s ease}
 .hmRepN{font-family:var(--mono);font-size:10.5px;font-weight:400;color:var(--txt3);
   margin-top:3px;line-height:1.2}
 .hmRepN b{color:var(--txt);font-weight:600}

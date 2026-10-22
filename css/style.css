@@ -576,13 +576,18 @@ html[data-theme="saha"] .hmCi{min-width:0}
 html[data-theme="saha"] .hmLv{font-size:14.5px;font-weight:600;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 html[data-theme="saha"] .hmLv b{font-size:19px;font-weight:900;color:var(--acc);margin-left:4px}
-html[data-theme="saha"] .hmRep{display:flex;align-items:center;gap:9px;margin-top:9px}
+html[data-theme="saha"] .hmRep{display:flex;align-items:center;gap:9px;margin-top:9px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+html[data-theme="saha"] .hmRep:active{opacity:.7}
+html[data-theme="saha"] .hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+html[data-theme="saha"] .hmRepBody,html[data-theme="saha"] .hmRepL,html[data-theme="saha"] .hmBar,html[data-theme="saha"] .hmBar>span,html[data-theme="saha"] .hmRepN{display:block}
+html[data-theme="saha"] .hmRepGo{flex-shrink:0;color:var(--txt3);font-size:17px;line-height:1}
 html[data-theme="saha"] .hmShield{flex-shrink:0;color:var(--gold);display:flex}
 html[data-theme="saha"] .hmShield svg{width:22px;height:22px}
 html[data-theme="saha"] .hmRepBody{flex:1;min-width:0}
 html[data-theme="saha"] .hmRepL{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--txt2)}
 html[data-theme="saha"] .hmBar{height:7px;border-radius:4px;background:var(--sur4);overflow:hidden;margin-top:5px}
-html[data-theme="saha"] .hmBar div{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
+html[data-theme="saha"] .hmBar>span{height:100%;border-radius:4px;background:var(--gold);transition:width .3s ease}
 html[data-theme="saha"] .hmRepN{font-size:11.5px;font-weight:700;color:var(--txt3);margin-top:4px;font-variant-numeric:tabular-nums}
 html[data-theme="saha"] .hmRepN b{color:var(--gold);font-weight:800}
 html[data-theme="saha"] .hmBal{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
@@ -721,7 +726,7 @@ html[data-theme="saha"] .hmCard{background:linear-gradient(152deg,#16223d 0%,#11
   box-shadow:inset 0 0 0 1px var(--line2),0 8px 22px -16px #000}
 html[data-theme="saha"] .hmAv{background:linear-gradient(150deg,#22304f,#151f36);color:var(--gold);
   box-shadow:inset 0 0 0 1px rgba(240,199,110,.32)}
-html[data-theme="saha"] .hmBar div{background:linear-gradient(90deg,var(--gold),#f6dfa6)}
+html[data-theme="saha"] .hmBar>span{background:linear-gradient(90deg,var(--gold),#f6dfa6)}
 html[data-theme="saha"] .hmShield{filter:drop-shadow(0 0 5px rgba(240,199,110,.35))}
 html[data-theme="saha"] .hmQ.green .hmQi{background:rgba(30,201,126,.13);box-shadow:inset 0 0 0 1px rgba(30,201,126,.34)}
 html[data-theme="saha"] .hmQ.blue  .hmQi{background:rgba(77,159,255,.13);box-shadow:inset 0 0 0 1px rgba(77,159,255,.34)}
@@ -2742,13 +2747,18 @@ html[data-theme="gazete"] .hmCi{min-width:0}
 html[data-theme="gazete"] .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 html[data-theme="gazete"] .hmLv b{font-size:18px;font-weight:700;color:var(--txt);margin-left:5px}
-html[data-theme="gazete"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px}
+html[data-theme="gazete"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+html[data-theme="gazete"] .hmRep:active{opacity:.7}
+html[data-theme="gazete"] .hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+html[data-theme="gazete"] .hmRepBody,html[data-theme="gazete"] .hmRepL,html[data-theme="gazete"] .hmBar,html[data-theme="gazete"] .hmBar>span,html[data-theme="gazete"] .hmRepN{display:block}
+html[data-theme="gazete"] .hmRepGo{flex-shrink:0;color:var(--n4);font-size:16px;line-height:1}
 html[data-theme="gazete"] .hmShield{flex-shrink:0;color:var(--txt3);display:flex}
 html[data-theme="gazete"] .hmShield svg{width:18px;height:18px}
 html[data-theme="gazete"] .hmRepBody{flex:1;min-width:0}
 html[data-theme="gazete"] .hmRepL{font-size:10.5px;font-weight:400;letter-spacing:.02em;color:var(--txt3);line-height:1.2}
 html[data-theme="gazete"] .hmBar{height:5px;border-radius:0;background:var(--n3);overflow:hidden;margin-top:4px}
-html[data-theme="gazete"] .hmBar div{height:100%;background:var(--n7);transition:width .3s ease}
+html[data-theme="gazete"] .hmBar>span{height:100%;background:var(--n7);transition:width .3s ease}
 html[data-theme="gazete"] .hmRepN{font-size:11px;font-weight:400;color:var(--txt3);margin-top:3px;
   font-variant-numeric:tabular-nums;line-height:1.2}
 html[data-theme="gazete"] .hmRepN b{color:var(--txt);font-weight:700}
@@ -3707,14 +3717,19 @@ html[data-theme="terminal"] .hmCi{min-width:0}
 html[data-theme="terminal"] .hmLv{font-size:13px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 html[data-theme="terminal"] .hmLv b{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--txt);margin-left:5px}
-html[data-theme="terminal"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px}
+html[data-theme="terminal"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+html[data-theme="terminal"] .hmRep:active{opacity:.7}
+html[data-theme="terminal"] .hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+html[data-theme="terminal"] .hmRepBody,html[data-theme="terminal"] .hmRepL,html[data-theme="terminal"] .hmBar,html[data-theme="terminal"] .hmBar>span,html[data-theme="terminal"] .hmRepN{display:block}
+html[data-theme="terminal"] .hmRepGo{flex-shrink:0;color:var(--n4);font-size:15px;line-height:1}
 html[data-theme="terminal"] .hmShield{flex-shrink:0;color:var(--txt3);display:flex}
 html[data-theme="terminal"] .hmShield svg{width:17px;height:17px}
 html[data-theme="terminal"] .hmRepBody{flex:1;min-width:0}
 html[data-theme="terminal"] .hmRepL{font-size:10px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;
   color:var(--txt3);line-height:1.2}
 html[data-theme="terminal"] .hmBar{height:5px;border-radius:0;background:var(--n3);overflow:hidden;margin-top:4px}
-html[data-theme="terminal"] .hmBar div{height:100%;background:var(--n6);transition:width .3s ease}
+html[data-theme="terminal"] .hmBar>span{height:100%;background:var(--n6);transition:width .3s ease}
 html[data-theme="terminal"] .hmRepN{font-family:var(--mono);font-size:10.5px;font-weight:400;color:var(--txt3);
   margin-top:3px;line-height:1.2}
 html[data-theme="terminal"] .hmRepN b{color:var(--txt);font-weight:600}
@@ -4666,13 +4681,18 @@ html[data-theme="dosya"] .hmCi{min-width:0}
 html[data-theme="dosya"] .hmLv{font-size:13.5px;font-weight:400;color:var(--txt2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 html[data-theme="dosya"] .hmLv b{font-size:18px;font-weight:600;color:var(--txt);margin-left:5px}
-html[data-theme="dosya"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px}
+html[data-theme="dosya"] .hmRep{display:flex;align-items:center;gap:8px;margin-top:5px;width:100%;padding:0;border:none;
+  background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+html[data-theme="dosya"] .hmRep:active{opacity:.7}
+html[data-theme="dosya"] .hmRep:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+html[data-theme="dosya"] .hmRepBody,html[data-theme="dosya"] .hmRepL,html[data-theme="dosya"] .hmBar,html[data-theme="dosya"] .hmBar>span,html[data-theme="dosya"] .hmRepN{display:block}
+html[data-theme="dosya"] .hmRepGo{flex-shrink:0;color:var(--n4);font-size:16px;line-height:1}
 html[data-theme="dosya"] .hmShield{flex-shrink:0;color:var(--txt3);display:flex}
 html[data-theme="dosya"] .hmShield svg{width:18px;height:18px}
 html[data-theme="dosya"] .hmRepBody{flex:1;min-width:0}
 html[data-theme="dosya"] .hmRepL{font-size:10.5px;font-weight:400;letter-spacing:0;color:var(--txt3);line-height:1.2}
 html[data-theme="dosya"] .hmBar{height:6px;border-radius:3px;background:var(--n3);overflow:hidden;margin-top:4px}
-html[data-theme="dosya"] .hmBar div{height:100%;border-radius:3px;background:var(--n7);transition:width .3s ease}
+html[data-theme="dosya"] .hmBar>span{height:100%;border-radius:3px;background:var(--n7);transition:width .3s ease}
 html[data-theme="dosya"] .hmRepN{font-size:11px;font-weight:400;color:var(--txt3);margin-top:3px;
   font-variant-numeric:tabular-nums;line-height:1.2}
 html[data-theme="dosya"] .hmRepN b{color:var(--txt);font-weight:600}

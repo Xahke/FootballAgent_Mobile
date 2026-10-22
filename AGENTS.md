@@ -108,7 +108,7 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `LANGS`, `L`, `STR.tr`/`STR.en` (563 keys each), `NEWS` templates, `t()`/`tx()`/`newsTxt()`, format helpers, link helpers |
+| `js/i18n.js` | `LANGS`, `L`, `STR.tr`/`STR.en` (564 keys each), `NEWS` templates, `t()`/`tx()`/`newsTxt()`, format helpers, link helpers |
 | `js/lang-xx.js` | `STR.xx` and `NEWS.xx` for es, pt, de, fr, it — same keys as Turkish, checked by `npm run i18n` |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
@@ -1672,7 +1672,7 @@ buttons and list rows that tr/en fit, and only a screen shows it.
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string exists in all seven languages.** A new `STR` key goes into
   `STR.tr` and `STR.en` in `js/i18n.js` **and** into each `js/lang-xx.js`; the counts
-  must match — 563 today (measured 23 Oct 2026), but `npm run i18n` counts them, trust
+  must match — 564 today (measured 23 Oct 2026), but `npm run i18n` counts them, trust
   it rather than this line. Objects in game data (events, themes, branches, rival
   archetypes, countries…) carry `{tr:…, en:…, es:…, pt:…, de:…, fr:…, it:…}` and are
   read with `tx(o)`, never `o[L]`; `npm run i18n` fails on a missing language and on any
