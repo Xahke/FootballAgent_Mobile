@@ -26,6 +26,7 @@
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capawesome/capacitor-app-review": "8.1.0",
     "@capgo/native-purchases": "8.7.0",
     "patch-package": "8.0.1"
   }

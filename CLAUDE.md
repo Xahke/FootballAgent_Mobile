@@ -89,7 +89,7 @@ and before `core.js` (where `tmBadge()` lives), and the same position appears in
 list. The five language files were the most recent to go through it.
 
 Load order:
-`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → review → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -108,12 +108,13 @@ call time. The parts that are load-time real:
 
 | File | Responsibility |
 |---|---|
-| `js/i18n.js` | `LANGS`, `L`, `STR.tr`/`STR.en` (559 keys each), `NEWS` templates, `t()`/`tx()`/`newsTxt()`, format helpers, link helpers |
+| `js/i18n.js` | `LANGS`, `L`, `STR.tr`/`STR.en` (563 keys each), `NEWS` templates, `t()`/`tx()`/`newsTxt()`, format helpers, link helpers |
 | `js/lang-xx.js` | `STR.xx` and `NEWS.xx` for es, pt, de, fr, it — same keys as Turkish, checked by `npm run i18n` |
 | `js/saves.js` | Three save slots, slot summaries for the main menu, device prefs (`PREFS`), legacy migration, the conflict/rescue rules when a fallback-written save meets an existing one, the same-`cid` quarantine |
 | `js/ads-testcfg.js` | `ADS_TESTCFG` — the consent query's test options. **null in every shipped build**; overridden only by the Android debug source set, see *Test geography* below |
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
+| `js/review.js` | Play's in-app review sheet: when to ask, the device-scoped ask counter, the Settings row that opens the store page — see *The review prompt* below |
 | `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
@@ -1091,6 +1092,48 @@ mentions reserved capacity in either language, that an old save's `S.iap.r` is i
 the store screen no longer speaks of held capacity, and that the reservation functions are
 gone from `js/` entirely.
 
+### The review prompt asks Play, and Play decides
+
+`js/review.js` asks for Google Play's in-app review sheet through
+`@capawesome/capacitor-app-review`, pinned to exactly `8.1.0`, which carries
+`com.google.android.play:review:2.0.2` as a fixed default (left alone, like UMP's).
+Stars and comment are drawn by Play over the game; the player never leaves it.
+
+**Play tells the app nothing, and the whole design rests on that.** `requestReview()`
+resolving does **not** mean the sheet was shown — Play answers success without drawing
+anything when its own quota is spent or the player has already reviewed — and there is
+no way at all to learn whether a rating was left. So "only ask players who have not
+rated" is Play's filter, not ours. Our part is to ask at a good moment and to ration our
+own calls, because spent calls burn Play's quota and the good moment then shows nothing.
+
+| | |
+|---|---|
+| When | `rvSeasonEnd()`, from the season summary's button **after** `closeModal()` — never while the summary is up |
+| Gates (`rvWhy()`) | bridge present; nothing in flight (`RVS.busy`); Settings never opened the store page; fewer than `RV.max` (3) asks; `RV.gapD` (30) days since the last; a career with `S.season >= RV.minSe` (2, i.e. one season finished); cash not negative; this week was not an ad break (`S.adb.w === S.tw`); `adsBusy()` empty; no modal open |
+| Record | `PREFS.rv = {n, at, st}` — device-scoped, because a Play review belongs to the install, not to a career. Absent on every old prefs; a non-number `n` is 0 and an `at` in the future counts as "never", so a damaged field cannot switch the prompt off for good |
+
+Three properties hold it together:
+
+- **The ask is counted before the call, and its result is never read.** Shown, not
+  shown or rejected, the ask is spent; refunding it on a rejection would retry every
+  season on an install Play refuses.
+- **The Settings row opens the store page, not the sheet** (`rvOpenStore()` →
+  `openAppStore({androidStorePackageName: 'com.android.vending'})`). A button that calls
+  `requestReview()` does nothing visible once the quota is spent. Opening the page sets
+  `PREFS.rv.st`, which ends the automatic asks — it is the best evidence of a review
+  there is. A failed open toasts `rateFail` and writes nothing.
+- **Nothing touches `S`, and nothing is rewarded.** Google forbids gating the sheet
+  behind "do you like the game?", rewarding a review and steering the rating; none of
+  those exist here, and block **32** (8) scans the source for writes to `S` and for any
+  reward path.
+
+The row is drawn only when the bridge exists, so web/PWA/single-file show nothing — and
+`npm run i18n:scan`, which runs without a bridge, never renders it; block 32 (7) renders
+it with a mock. **The sheet itself has not been seen on a device.** It only appears for
+an install that came from Play (a test track); the debug APK and the CI APK resolve the
+call and draw nothing, which is not a fault. The merged manifest gained no permission,
+only Play Core's own `PlayCoreDialogWrapperActivity`.
+
 ### The world runs without the player
 
 `sim.js` and `market.js` simulate all 22 leagues every week regardless of what the
@@ -1629,7 +1672,7 @@ buttons and list rows that tr/en fit, and only a screen shows it.
   that way. `docs/DEVELOPMENT.md` is Turkish; `README.md` is English and public-facing.
 - **Every user-visible string exists in all seven languages.** A new `STR` key goes into
   `STR.tr` and `STR.en` in `js/i18n.js` **and** into each `js/lang-xx.js`; the counts
-  must match — 559 today (measured 17 Oct 2026), but `npm run i18n` counts them, trust
+  must match — 563 today (measured 23 Oct 2026), but `npm run i18n` counts them, trust
   it rather than this line. Objects in game data (events, themes, branches, rival
   archetypes, countries…) carry `{tr:…, en:…, es:…, pt:…, de:…, fr:…, it:…}` and are
   read with `tx(o)`, never `o[L]`; `npm run i18n` fails on a missing language and on any
@@ -1644,7 +1687,8 @@ buttons and list rows that tr/en fit, and only a screen shows it.
   first paint, never blocking it — and `requestConsentInfo()` reaches Google's UMP servers,
   then `MobileAds.initialize()` reaches AdMob's. `iapInit()` joins it on the same terms:
   after the first paint, never awaited, and it talks to Play Billing (product prices and
-  the entitlement query). Still no `fetch` of ours — the traffic belongs to the Play
+  the entitlement query). `rvSeasonEnd()` and the Settings rate row hand Play a review
+  request or a store intent the same way. Still no `fetch` of ours — the traffic belongs to the Play
   Services client, not to `js/`. **The store listing's
   privacy claim can no longer be "the app never goes online" for the Android build**, and
   `xahke.github.io/privacy/pro-football-agent/*.html` **has been rewritten accordingly**
@@ -1781,6 +1825,10 @@ close-out for a gameplay change:
    absent"). They prove what the JS asked the bridge to
    do and nothing more; whether an ad really appeared is only measurable on a device, and
    the EEA debug variant is not the build to measure it on (see *Test geography*).
+   Block **32** covers the review prompt (`js/review.js`): no bridge means no ask and no
+   row, the real season-summary button asks only after it closes, the ask is counted on
+   disk before the call, the 30-day and three-ask limits, damaged `PREFS.rv`, every gate,
+   the Settings row, and that no path writes to `S`.
 8. **Storage fallback and migration**, if `js/store.js` or the migration paths in
    `js/saves.js` changed — blocks **25** and **26** cover the localStorage fallback, the
    conflict rescue, the destination read error, an interrupted rescue, the no-room path,
@@ -1834,9 +1882,11 @@ Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep
 with no keystore at all, so don't "fix" that path by making the config mandatory.
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
-twice. It is 9 today; 5 is what the closed-test track carried on 2 October 2026.
+twice. It is 10 today; 5 is what the closed-test track carried on 2 October 2026.
 Bundles numbered 6 (9 October), 7 (11 October) and 8 (12 October) were built and may
-have been uploaded, so each next build took a new number rather than risk a duplicate. The
+have been uploaded, so each next build took a new number rather than risk a duplicate.
+**9 is on Play** (reported 23 October 2026); the bump to 9 is commit `98fdfc8`
+(17 October). Read Play Console, not this line, before a build. The
 Android build carries ads, so don't claim the app is ad-free.
 
 ### Every icon and the splash come from one source file

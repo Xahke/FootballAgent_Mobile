@@ -162,6 +162,7 @@ skProgress:'Gelişim',skPoorShort:'Puan yetersiz',skUpgradeBtn:'Geliştir',skLoc
 settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',aboutLbl:'Hakkında',
 privacyPolicy:'Gizlilik Politikası',
 privacyHint:'Verilerin nasıl işlendiğini öğren. Tarayıcıda açılır; internet bağlantısı gerektirir.',
+rateApp:"Oyunu değerlendir",rateHint:"Google Play'de puan ver ve yorum yaz. Play Store'da açılır.",rateFail:"Play Store açılamadı.",
 /* Ödüllü reklam satırı (js/ads.js). Tutar metne gömülmüyor: RW.amount
    fmtK ile basılıyor, yoksa iki yerde iki farklı sayı olurdu. */
 adRewardTitle:'Reklam izle',
@@ -481,6 +482,7 @@ skProgress:'Progress',skPoorShort:'Not enough points',skUpgradeBtn:'Unlock',skLo
 settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',aboutLbl:'About',
 privacyPolicy:'Privacy Policy',
 privacyHint:'Learn how your data is handled. Opens in your browser; requires an internet connection.',
+rateApp:"Rate the game",rateHint:"Leave a rating and a review on Google Play. Opens in the Play Store.",rateFail:"Couldn't open the Play Store.",
 adRewardTitle:'Watch an ad',
 adRewardSub:'Once a day, for this career',
 adRewardBusy:'Preparing the ad…',

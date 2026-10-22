@@ -152,6 +152,7 @@ skProgress:"Progression",skPoorShort:"Pas assez de points",skUpgradeBtn:"Débloq
 settings:"Réglages",appearance:"Apparence",langLbl:"Langue",dataLbl:"Sauvegarde",aboutLbl:"À propos",
 privacyPolicy:"Politique de confidentialité",
 privacyHint:"Découvre comment tes données sont traitées. S'ouvre dans ton navigateur ; nécessite une connexion internet. En anglais.",
+rateApp:"Noter le jeu",rateHint:"Laisse une note et un avis sur Google Play. S'ouvre dans le Play Store.",rateFail:"Impossible d'ouvrir le Play Store.",
 adRewardTitle:"Regarder une pub",
 adRewardSub:"Une fois par jour, pour cette carrière",
 adRewardBusy:"Préparation de la pub…",

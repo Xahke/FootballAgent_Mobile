@@ -149,6 +149,7 @@ skProgress:'Progresso',skPoorShort:'Faltam pontos',skUpgradeBtn:'Desbloquear',sk
 settings:'Configurações',appearance:'Aparência',langLbl:'Idioma',dataLbl:'Jogo salvo',aboutLbl:'Sobre',
 privacyPolicy:'Política de privacidade',
 privacyHint:'Saiba como seus dados são tratados. Abre no navegador; precisa de internet. Disponível em inglês.',
+rateApp:"Avalie o jogo",rateHint:"Deixe uma nota e uma avaliação no Google Play. Abre na Play Store.",rateFail:"Não foi possível abrir a Play Store.",
 adRewardTitle:'Assistir a um anúncio',
 adRewardSub:'Uma vez por dia, nesta carreira',
 adRewardBusy:'Preparando o anúncio…',

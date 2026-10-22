@@ -29,7 +29,7 @@ const vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 // tools/savetest.js'teki FILES ile aynı liste ve aynı sıra. Yeni bir js dosyası
 // buraya da eklenmeli; eklenmezse bot onsuz çalışır ve eksikliği fark etmez.
-const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','badges','core',
+const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','review','data','worldgeo','atlas','rivals','badges','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= argümanlar ================= */

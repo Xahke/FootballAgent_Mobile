@@ -15,7 +15,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','badges','core',
+const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','review','data','worldgeo','atlas','rivals','badges','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 
 /* ================= IndexedDB taklidi ================= */
@@ -6111,6 +6111,199 @@ async function tLangLayer() {
   }
 }
 
+/* ================= [32] UYGULAMA İÇİ DEĞERLENDİRME (js/review.js) =================
+   Ölçülen sözleşme:
+
+   - Köprü yoksa (web, PWA, tek dosya) ne istek ne Ayarlar satırı var.
+   - Otomatik istek yalnız sezon özeti kapanınca, en az bir sezon bitmişken,
+     borçta değilken, reklam arası haftası değilken ve ekranda başka bir şey
+     yokken gidiyor.
+   - Cihaz başına en fazla RV.max istek, aralarında en az RV.gapD gün. Sayaç
+     PREFS'te, isteğin ÖNCESİNDE ve sonucundan bağımsız yazılıyor.
+   - Ayarlar satırı pencereyi değil mağaza sayfasını açıyor; açılınca otomatik
+     istek bitiyor, açılamazsa oyuncu bunu görüyor.
+   - Hiçbir yol oyun durumuna (S) dokunmuyor.
+
+   Taklit yalnız köprüye hangi çağrının gittiğini ölçüyor. Play'in pencereyi
+   gerçekten çizip çizmediği ancak Play'den kurulmuş bir pakette görülür. */
+function fakeReview(ctx, opt) {
+  opt = opt || {};
+  const stat = { asks: 0, opens: 0, openOpts: [], pend: [] };
+  ctx.Capacitor = {
+    Plugins: {
+      AppReview: {
+        requestReview() {
+          stat.asks++;
+          if (opt.askFail) return Promise.reject(new Error('Play Store yok'));
+          if (opt.hold) return new Promise(r => stat.pend.push(r));
+          return Promise.resolve();
+        },
+        openAppStore(o) {
+          stat.opens++; stat.openOpts.push(o);
+          return opt.openFail ? Promise.reject(new Error('ActivityNotFound')) : Promise.resolve();
+        }
+      }
+    }
+  };
+  return stat;
+}
+/* Sezon sonu durumunu kurar: ikinci sezon, borçsuz, bu hafta ara yok. */
+const RV_READY = 'S.season=2;S.cash=Math.max(S.cash||0,1000);S.tw=40;S.adb={w:35};';
+const RVDAY = 864e5;
+
+async function tInAppReview() {
+  console.log('\n[32] uygulama içi değerlendirme: sezon sonu, sınırlı, oyun durumuna dokunmuyor');
+
+  /* (1) Köprü yok: hiçbir şey olmuyor, satır çizilmiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    a.R(RV_READY);
+    ok(a.R('typeof Capacitor') === 'undefined', '(1) ortamda Capacitor yok');
+    ok(a.R('rvSeasonEnd()') === 'nobridge', '(1) köprü yokken istek yok');
+    ok(a.R('PREFS.rv') === undefined, '(1) tercihlere hiçbir şey yazılmadı');
+    a.R("navTo('settings')");
+    ok(a.nodes.view._html.indexOf(a.R("t('rateApp')")) < 0, '(1) Ayarlar satırı çizilmiyor');
+    ok(a.R('rvRowHtml()') === '', '(1) rvRowHtml boş');
+  }
+
+  /* (2) Gerçek akış: sezon sonu özeti, düğme, tek istek. */
+  {
+    const ls = {};
+    const a = session(newDisk(), ls, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeReview(a.ctx);
+    ok(a.R('rvWhy(Date.now())') === 'early', '(2) ilk sezonda sorulmuyor');
+    a.R('S.cash=Math.max(S.cash,1000);S.tw=40;S.adb={w:35};S.week=totalWeeks();nextWeek();');
+    await waitFor(() => a.R('modalOpen()'), 'sezon özeti', 3000);
+    const sh = a.nodes.sheet._html;
+    ok(a.R('S.season') === 2, '(2) sezon döndü');
+    ok(/onclick="closeModal\(\);rvSeasonEnd\(\)"/.test(sh), '(2) özetin düğmesi isteği kapanıştan SONRA çağırıyor');
+    ok(fake.asks === 0, '(2) özet açıkken istek gitmedi');
+    ok(a.R('rvSeasonEnd()') === 'modal', '(2) özet açıkken rvSeasonEnd kapıda duruyor');
+    const before = a.R('JSON.stringify(S)');
+    const t0 = Date.now();
+    ok(a.R('closeModal();rvSeasonEnd()') === 'ask', '(2) özet kapanınca istek gitti');
+    ok(fake.asks === 1, '(2) köprüye tek requestReview');
+    ok(a.R('PREFS.rv.n') === 1 && a.R('PREFS.rv.at') >= t0 && a.R('PREFS.rv.st') === false, '(2) sayaç ve zaman tercihlere yazıldı');
+    ok(JSON.parse(ls.menajerPrefsV1).rv.n === 1, '(2) sayaç diske düştü');
+    ok(a.R('JSON.stringify(S)') === before, '(2) oyun durumu bit bit aynı');
+    await tick();
+    ok(a.R('RVS.busy') === false, '(2) kilit cevapla açıldı');
+    ok(a.R('rvSeasonEnd()') === 'gap', '(2) hemen ikinci istek yok (30 gün)');
+    ok(fake.asks === 1, '(2) hâlâ tek istek');
+  }
+
+  /* (3) Havadaki istek ikinciyi engelliyor; ret de sayılıyor ve kilidi açıyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeReview(a.ctx, { hold: true });
+    a.R(RV_READY);
+    ok(a.R('rvSeasonEnd()') === 'ask', '(3) ilk istek');
+    a.R('PREFS.rv.at=0;');
+    ok(a.R('rvSeasonEnd()') === 'busy', '(3) cevap gelmeden ikinci istek yok');
+    fake.pend.forEach(r => r()); await tick();
+    ok(a.R('RVS.busy') === false && fake.asks === 1, '(3) kilit açıldı, tek çağrı');
+    const b = session(newDisk(), {}, {});
+    await b.booted; await careerIn(b, 1);
+    const fb = fakeReview(b.ctx, { askFail: true });
+    b.R(RV_READY);
+    ok(b.R('rvSeasonEnd()') === 'ask' && fb.asks === 1, '(3) reddedilen istek de gitti');
+    await tick();
+    ok(b.R('RVS.busy') === false && b.R('PREFS.rv.n') === 1, '(3) ret sayıldı, kilit açıldı');
+    ok(b.R('rvSeasonEnd()') === 'gap', '(3) ret yeniden deneme döngüsü açmıyor');
+  }
+
+  /* (4) Sınırlar: 30 gün aralık, cihaz başına RV.max. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeReview(a.ctx);
+    a.R(RV_READY);
+    const max = a.R('RV.max');
+    ok(max === 3 && a.R('RV.gapD') === 30, '(4) sınırlar: 3 istek, 30 gün');
+    for (let i = 0; i < max; i++) {
+      a.R('PREFS.rv&&(PREFS.rv.at=Date.now()-' + (31 * RVDAY) + ');');
+      ok(a.R('rvSeasonEnd()') === 'ask', '(4) ' + (i + 1) + '. istek 31 gün sonra gidiyor');
+      await tick();
+    }
+    a.R('PREFS.rv.at=Date.now()-' + (29 * RVDAY) + ';PREFS.rv.n=1;');
+    ok(a.R('rvSeasonEnd()') === 'gap', '(4) 29 gün yetmiyor');
+    a.R('PREFS.rv.at=Date.now()-' + (400 * RVDAY) + ';PREFS.rv.n=' + max + ';');
+    ok(a.R('rvSeasonEnd()') === 'max', '(4) ' + max + ' istekten sonra hiç sorulmuyor');
+    ok(fake.asks === max, '(4) toplam ' + max + ' çağrı');
+  }
+
+  /* (5) Bozuk ya da ileri tarihli kayıt isteği sonsuza kadar kapatmıyor. */
+  for (const bad of ['"x"', 'null', '{n:"a",at:"b"}', '{n:-4}', '{at:Date.now()+' + (900 * RVDAY) + '}', '[]']) {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    fakeReview(a.ctx);
+    a.R(RV_READY + 'PREFS.rv=' + bad + ';');
+    let r = null, err = null;
+    try { r = a.R('rvSeasonEnd()'); } catch (e) { err = e.message; }
+    ok(!err && r === 'ask' && a.R('PREFS.rv.n') === 1, '(5) PREFS.rv=' + bad + ' → varsayılan, istek gitti' + (err ? ' — ' + err : ''));
+  }
+
+  /* (6) Her kapı kendi nedeniyle kapatıyor ve hiçbiri çağrı üretmiyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted; await careerIn(a, 1);
+    const fake = fakeReview(a.ctx);
+    const gate = (setup, want) => {
+      a.R(RV_READY + setup);
+      const got = a.R('rvSeasonEnd()');
+      ok(got === want, '(6) ' + want + ' kapısı', 'dönen: ' + got);
+      a.R("closeModal();ADS.cur=null;ADS.busy='';");
+    };
+    gate('S.cash=-5;', 'debt');
+    gate('S.adb={w:40};', 'adbreak');
+    gate("openModal('<p>x</p>');", 'modal');
+    gate("ADS.cur={};", 'ads');
+    gate("ADS.busy='consent';", 'ads');
+    gate('S.season=1;', 'early');
+    ok(fake.asks === 0, '(6) hiçbir kapı çağrı üretmedi');
+    a.R('S=null;');
+    ok(a.R('rvSeasonEnd()') === 'nocareer' && fake.asks === 0, '(6) kariyer yokken istek yok');
+  }
+
+  /* (7) Ayarlar satırı: mağaza sayfası, otomatik isteği bitiriyor; hata görünüyor. */
+  {
+    const a = session(newDisk(), {}, {});
+    await a.booted;
+    const fake = fakeReview(a.ctx);
+    a.R("navTo('settings')");
+    ok(a.nodes.view._html.indexOf(a.R("t('rateApp')")) >= 0, '(7) satır ana menünün Ayarlar\'ında da var');
+    await careerIn(a, 1);
+    a.R("navTo('settings')");
+    const v = a.nodes.view._html;
+    ok(v.indexOf(a.R("t('rateApp')")) >= 0 && v.indexOf('rvOpenStore()') >= 0, '(7) oyun içi Ayarlar\'da satır çizildi');
+    ok(v.indexOf('rvSeasonEnd') < 0 && v.indexOf('requestReview') < 0, '(7) satır pencereyi çağırmıyor');
+    ok(await a.R('rvOpenStore()') === 'open', '(7) mağaza açıldı');
+    ok(fake.opens === 1 && fake.openOpts[0].androidStorePackageName === 'com.android.vending', '(7) Play Store paketine yönlendi');
+    ok(fake.asks === 0, '(7) requestReview çağrılmadı');
+    ok(a.R('PREFS.rv.st') === true, '(7) işaret yazıldı');
+    a.R(RV_READY);
+    ok(a.R('rvSeasonEnd()') === 'store', '(7) mağazayı açan oyuncuya otomatik istek yok');
+    const b = session(newDisk(), {}, {});
+    await b.booted;
+    fakeReview(b.ctx, { openFail: true });
+    ok(await b.R('rvOpenStore()') === 'fail', '(7) açılamayan mağaza');
+    ok(b.nodes.toast._html === b.R("t('rateFail')"), '(7) oyuncu hatayı görüyor');
+    ok(b.R('PREFS.rv') === undefined, '(7) başarısız açılış işaret yazmadı');
+  }
+
+  /* (8) Kaynak: ağ yok, oyun durumu yazımı yok, ödül yok. */
+  {
+    const src = fs.readFileSync(path.join(ROOT, 'js', 'review.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    ok(!/fetch|XMLHttpRequest|WebSocket/.test(src), '(8) review.js ağ isteği yapmıyor');
+    ok(!/\bS\.[A-Za-z_]+\s*(=[^=]|\+=|-=|\+\+|--)/.test(src), '(8) review.js S\'ye yazmıyor');
+    ok(!/repEvent|rwEarned|trustEvent|moraleEvent|applyEff/.test(src), '(8) değerlendirmeye bağlı ödül yok');
+  }
+}
+
 /* ================= koşu ================= */
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
@@ -6121,7 +6314,7 @@ async function tLangLayer() {
                  tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
                  tSeasonBreakAds, tShopAndIap, tPlayBilling,
                  tStorageFallback, tSameCidFork, tForkRestoreCost, tIapQueueLoad,
-                 tIapQueueMerge, tSysLang, tLangLayer];
+                 tIapQueueMerge, tSysLang, tLangLayer, tInAppReview];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

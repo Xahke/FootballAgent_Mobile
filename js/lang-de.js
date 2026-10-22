@@ -149,6 +149,7 @@ skProgress:'Fortschritt',skPoorShort:'Zu wenig Punkte',skUpgradeBtn:'Freischalte
 settings:'Einstellungen',appearance:'Darstellung',langLbl:'Sprache',dataLbl:'Spielstand',aboutLbl:'Über',
 privacyPolicy:'Datenschutzerklärung',
 privacyHint:'Erfahre, wie mit deinen Daten umgegangen wird. Öffnet sich im Browser; braucht eine Internetverbindung. Auf Englisch.',
+rateApp:"Spiel bewerten",rateHint:"Gib auf Google Play eine Bewertung und einen Kommentar ab. Öffnet sich im Play Store.",rateFail:"Der Play Store konnte nicht geöffnet werden.",
 adRewardTitle:'Werbung ansehen',
 adRewardSub:'Einmal am Tag, für diese Karriere',
 adRewardBusy:'Werbung wird vorbereitet…',

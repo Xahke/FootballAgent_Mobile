@@ -2687,7 +2687,7 @@ settings(){
   <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
   <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}
   <div class="sect">${t('aboutLbl')}</div>
-  ${listWrap(`<a class="pitem" href="${tx(PRIVACY_URL)}" target="_blank" rel="noopener noreferrer"
+  ${listWrap(`${rvRowHtml()}<a class="pitem" href="${tx(PRIVACY_URL)}" target="_blank" rel="noopener noreferrer"
     style="text-decoration:none;color:inherit">
     <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
@@ -3910,7 +3910,9 @@ function showSeasonModal(champs){
        <div class="psub">${lgName(c.lgi)}${c.ts?` · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})`:''}</div></div>
      </div>`).join('')}
      </div>
-     <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
+     ${/* Değerlendirme isteği özet KAPANDIKTAN sonra: önce şampiyonlar okunsun,
+          Play'in penceresi özetin üstüne binmesin. Koşullar js/review.js'te. */''}
+     <button class="btn p" onclick="closeModal();rvSeasonEnd()">${t('newSeason')}</button>
    </div>`),300);
 }
 /* Dil de cihaz tercihi; kayda da yazılıyor ki kayıt başka bir cihaza taşınırsa

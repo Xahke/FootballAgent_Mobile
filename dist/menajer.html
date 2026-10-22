@@ -2417,6 +2417,7 @@ html[data-theme="gazete"] th{color:var(--txt3);font-size:11px;text-transform:non
 html[data-theme="gazete"] th.c,html[data-theme="gazete"] td.c{text-align:right}
 html[data-theme="gazete"] td{padding:11px 4px;border-bottom:1px solid var(--line)}
 html[data-theme="gazete"] td.c{font-variant-numeric:tabular-nums}
+html[data-theme="gazete"] td.tmc{width:100%;max-width:0}
 html[data-theme="gazete"] tr.click{cursor:pointer}
 html[data-theme="gazete"] tr.click:active td{background:var(--n1)}
 html[data-theme="gazete"] tr.hl td{background:var(--n1);font-weight:600}
@@ -3378,6 +3379,7 @@ html[data-theme="terminal"] th.c,html[data-theme="terminal"] td.c{text-align:rig
 html[data-theme="terminal"] td{padding:10px 4px;border-bottom:1px solid var(--line)}
 html[data-theme="terminal"] td.c{font-family:var(--mono);letter-spacing:-.02em;color:var(--txt2)}
 html[data-theme="terminal"] td.c b{color:var(--txt);font-weight:600}
+html[data-theme="terminal"] td.tmc{width:100%;max-width:0}
 html[data-theme="terminal"] tr.click{cursor:pointer}
 html[data-theme="terminal"] tr.click:active td{background:var(--n1)}
 html[data-theme="terminal"] tr.hl td{background:var(--n1)}
@@ -4340,6 +4342,7 @@ html[data-theme="dosya"] th{color:var(--txt3);font-size:11px;text-transform:none
 html[data-theme="dosya"] th.c,html[data-theme="dosya"] td.c{text-align:right}
 html[data-theme="dosya"] td{padding:12px 5px;border-bottom:1px solid var(--line);color:var(--txt2)}
 html[data-theme="dosya"] td b{color:var(--txt)}
+html[data-theme="dosya"] td.tmc{width:100%;max-width:0}
 html[data-theme="dosya"] tr.click{cursor:pointer}
 html[data-theme="dosya"] tr.click:active td{background:var(--n1)}
 html[data-theme="dosya"] tr.hl td{background:var(--n1)}
@@ -5316,6 +5319,7 @@ skProgress:'Gelişim',skPoorShort:'Puan yetersiz',skUpgradeBtn:'Geliştir',skLoc
 settings:'Ayarlar',appearance:'Görünüm',langLbl:'Dil',dataLbl:'Kayıt',aboutLbl:'Hakkında',
 privacyPolicy:'Gizlilik Politikası',
 privacyHint:'Verilerin nasıl işlendiğini öğren. Tarayıcıda açılır; internet bağlantısı gerektirir.',
+rateApp:"Oyunu değerlendir",rateHint:"Google Play'de puan ver ve yorum yaz. Play Store'da açılır.",rateFail:"Play Store açılamadı.",
 /* Ödüllü reklam satırı (js/ads.js). Tutar metne gömülmüyor: RW.amount
    fmtK ile basılıyor, yoksa iki yerde iki farklı sayı olurdu. */
 adRewardTitle:'Reklam izle',
@@ -5635,6 +5639,7 @@ skProgress:'Progress',skPoorShort:'Not enough points',skUpgradeBtn:'Unlock',skLo
 settings:'Settings',appearance:'Appearance',langLbl:'Language',dataLbl:'Save',aboutLbl:'About',
 privacyPolicy:'Privacy Policy',
 privacyHint:'Learn how your data is handled. Opens in your browser; requires an internet connection.',
+rateApp:"Rate the game",rateHint:"Leave a rating and a review on Google Play. Opens in the Play Store.",rateFail:"Couldn't open the Play Store.",
 adRewardTitle:'Watch an ad',
 adRewardSub:'Once a day, for this career',
 adRewardBusy:'Preparing the ad…',
@@ -6118,6 +6123,7 @@ skProgress:'Progreso',skPoorShort:'Faltan puntos',skUpgradeBtn:'Desbloquear',skL
 settings:'Ajustes',appearance:'Apariencia',langLbl:'Idioma',dataLbl:'Partida',aboutLbl:'Acerca de',
 privacyPolicy:'Política de privacidad',
 privacyHint:'Descubre cómo se tratan tus datos. Se abre en tu navegador; necesita conexión a internet. Disponible en inglés.',
+rateApp:"Valora el juego",rateHint:"Deja una puntuación y una reseña en Google Play. Se abre en Play Store.",rateFail:"No se pudo abrir Play Store.",
 adRewardTitle:'Ver un anuncio',
 adRewardSub:'Una vez al día, en esta carrera',
 adRewardBusy:'Preparando el anuncio…',
@@ -6453,6 +6459,7 @@ skProgress:'Progresso',skPoorShort:'Faltam pontos',skUpgradeBtn:'Desbloquear',sk
 settings:'Configurações',appearance:'Aparência',langLbl:'Idioma',dataLbl:'Jogo salvo',aboutLbl:'Sobre',
 privacyPolicy:'Política de privacidade',
 privacyHint:'Saiba como seus dados são tratados. Abre no navegador; precisa de internet. Disponível em inglês.',
+rateApp:"Avalie o jogo",rateHint:"Deixe uma nota e uma avaliação no Google Play. Abre na Play Store.",rateFail:"Não foi possível abrir a Play Store.",
 adRewardTitle:'Assistir a um anúncio',
 adRewardSub:'Uma vez por dia, nesta carreira',
 adRewardBusy:'Preparando o anúncio…',
@@ -6788,6 +6795,7 @@ skProgress:'Fortschritt',skPoorShort:'Zu wenig Punkte',skUpgradeBtn:'Freischalte
 settings:'Einstellungen',appearance:'Darstellung',langLbl:'Sprache',dataLbl:'Spielstand',aboutLbl:'Über',
 privacyPolicy:'Datenschutzerklärung',
 privacyHint:'Erfahre, wie mit deinen Daten umgegangen wird. Öffnet sich im Browser; braucht eine Internetverbindung. Auf Englisch.',
+rateApp:"Spiel bewerten",rateHint:"Gib auf Google Play eine Bewertung und einen Kommentar ab. Öffnet sich im Play Store.",rateFail:"Der Play Store konnte nicht geöffnet werden.",
 adRewardTitle:'Werbung ansehen',
 adRewardSub:'Einmal am Tag, für diese Karriere',
 adRewardBusy:'Werbung wird vorbereitet…',
@@ -7126,6 +7134,7 @@ skProgress:"Progression",skPoorShort:"Pas assez de points",skUpgradeBtn:"Débloq
 settings:"Réglages",appearance:"Apparence",langLbl:"Langue",dataLbl:"Sauvegarde",aboutLbl:"À propos",
 privacyPolicy:"Politique de confidentialité",
 privacyHint:"Découvre comment tes données sont traitées. S'ouvre dans ton navigateur ; nécessite une connexion internet. En anglais.",
+rateApp:"Noter le jeu",rateHint:"Laisse une note et un avis sur Google Play. S'ouvre dans le Play Store.",rateFail:"Impossible d'ouvrir le Play Store.",
 adRewardTitle:"Regarder une pub",
 adRewardSub:"Une fois par jour, pour cette carrière",
 adRewardBusy:"Préparation de la pub…",
@@ -7463,6 +7472,7 @@ skProgress:"Progressi",skPoorShort:"Punti insufficienti",skUpgradeBtn:"Sblocca",
 settings:"Impostazioni",appearance:"Aspetto",langLbl:"Lingua",dataLbl:"Salvataggio",aboutLbl:"Info",
 privacyPolicy:"Informativa sulla privacy",
 privacyHint:"Scopri come vengono trattati i tuoi dati. Si apre nel browser; serve una connessione internet. In inglese.",
+rateApp:"Valuta il gioco",rateHint:"Lascia un voto e una recensione su Google Play. Si apre nel Play Store.",rateFail:"Impossibile aprire il Play Store.",
 adRewardTitle:"Guarda una pubblicità",
 adRewardSub:"Una volta al giorno, per questa carriera",
 adRewardBusy:"Preparazione della pubblicità…",
@@ -11377,6 +11387,130 @@ function iapOnCareerOpen() {
     }
   });
   return p.then(() => 'ok');
+}
+
+/* ================= UYGULAMA İÇİ DEĞERLENDİRME =================
+   Google Play'in In-App Review penceresi (@capawesome/capacitor-app-review 8.1.0,
+   Play Review 2.0.2). Yıldız ve yorum Play'in kendi arayüzünde, oyunun üstünde
+   açılıyor; oyuncu mağazaya gitmiyor.
+
+   PLAY HİÇBİR ŞEY SÖYLEMİYOR, bütün tasarım bunun üstüne kurulu:
+   - requestReview()'ün çözülmesi pencerenin GÖSTERİLDİĞİ anlamına gelmiyor.
+     Play kendi kotası dolduysa ya da oyuncu zaten değerlendirdiyse hiçbir şey
+     çizmeden yine "başarılı" diyor.
+   - Oyuncunun puan verip vermediği hiçbir yoldan öğrenilemiyor.
+   Bu yüzden "değerlendirmediyse sor" filtresini Play uyguluyor, biz değil.
+   Bizim payımız iki şey: doğru anda istemek ve kendi istek sayımızı sınırlamak —
+   sınırsız çağrı Play'in kotasını boşa harcar, sonra gerçekten iyi bir anda
+   pencere hiç çıkmaz.
+
+   Google'ın kuralı: önce "Oyunu beğendin mi?" diye sorup yalnız "evet" diyene
+   pencere açmak, değerlendirme karşılığı ödül vermek ya da puanı yönlendiren bir
+   metin koymak YASAK. Bu dosyada hiçbiri yok ve olmamalı; istek hiçbir oyun
+   durumuna (S) dokunmuyor, hiçbir para yolu buradan geçmiyor.
+
+   Kayıt CİHAZIN (PREFS.rv), kariyerin değil: Play'in değerlendirmesi kuruluma
+   ait, üç kariyer üç ayrı hak doğurmamalı. Alan eski tercihlerde yok; yokken ya
+   da bozukken varsayılana düşüyor. */
+const RV = {
+  max: 3,          // cihaz başına en fazla otomatik istek
+  gapD: 30,        // iki istek arasında en az gün
+  minSe: 2,        // sezon sonu düğmesine basıldığında S.season — yani en az bir sezon bitmiş
+  store: 'com.android.vending'
+};
+/* Çalışma zamanı kilidi; kayda girmiyor. Bir istek havadayken ikincisi açılmasın. */
+const RVS = { busy: false };
+
+/* Web, PWA ve tek dosya sürümünde Capacitor yok; eklentinin JS paketi de
+   paketlenmediği için Plugins.AppReview orada oluşmuyor. Ayrı bir bayrak yok,
+   tek kaynak bu kontrol — ads.js/iap.js ile aynı desen. */
+function rvBridge() {
+  try {
+    const C = (typeof Capacitor !== 'undefined' && Capacitor) ? Capacitor
+      : ((typeof window !== 'undefined' && window.Capacitor) ? window.Capacitor : null);
+    const P = (C && C.Plugins && C.Plugins.AppReview) || null;
+    return (P && typeof P.requestReview === 'function'
+      && typeof P.openAppStore === 'function') ? P : null;
+  } catch (e) { return null; }
+}
+
+/* PREFS.rv = {n: otomatik istek sayısı, at: son isteğin zamanı (ms), st: mağaza
+   sayfası Ayarlar'dan açıldı mı}. Sayı olmayan bir n sıfır, ileride duran bir at
+   "hiç sorulmadı" sayılıyor: saati geri alınmış ya da bozulmuş bir alan isteği
+   sonsuza kadar kapatmasın (S.adb ile aynı kural). */
+function rvState(now) {
+  const r = (typeof PREFS !== 'undefined' && PREFS && PREFS.rv && typeof PREFS.rv === 'object') ? PREFS.rv : {};
+  const n = (typeof r.n === 'number' && r.n >= 0) ? Math.floor(r.n) : 0;
+  const at = (typeof r.at === 'number' && r.at >= 0 && r.at <= now) ? r.at : 0;
+  return { n, at, st: r.st === true };
+}
+
+/* Neden sorulmayacağı; boş dize "şimdi sorulabilir". Her koşul ayrı bir dize
+   döndürüyor ki test hangi kapının kapattığını görebilsin. */
+function rvWhy(now) {
+  if (!rvBridge()) return 'nobridge';
+  if (RVS.busy) return 'busy';
+  const st = rvState(now);
+  /* Ayarlar'dan mağaza sayfasını açan oyuncu büyük olasılıkla değerlendirdi;
+     Play bunu söylemediği için elimizdeki en iyi işaret bu. Otomatik istek
+     orada bitiyor. */
+  if (st.st) return 'store';
+  if (st.n >= RV.max) return 'max';
+  if (st.at && now - st.at < RV.gapD * 864e5) return 'gap';
+  if (typeof S === 'undefined' || !S || !S.agent) return 'nocareer';
+  if ((S.season || 0) < RV.minSe) return 'early';
+  /* Borçtaki bir oyuncu kötü bir anda: Google da isteği olumlu bir ana
+     bağlamayı öneriyor. */
+  if ((S.cash || 0) < 0) return 'debt';
+  /* Bu hafta reklam arasıysa iki tam ekran pencere üst üste binmesin. Hakkın
+     reklam gösterilmese de yandığı (adBreakClaim) biliniyor; o sezonun fırsatı
+     gidiyor, bir sonrakine kalıyor — ara sezon sonuna ancak arada bir denk
+     geliyor. */
+  if (S.adb && typeof S.adb === 'object' && S.adb.w === (S.tw || 0)) return 'adbreak';
+  if (typeof adsBusy === 'function' && adsBusy()) return 'ads';
+  if (typeof modalOpen === 'function' && modalOpen()) return 'modal';
+  return '';
+}
+
+/* Sezon özeti kapandıktan sonra (showSeasonModal'ın düğmesi). Hak isteğin
+   ÖNCESİNDE yazılıyor: Play'in cevabı ne olursa olsun — çizdi, çizmedi, hata —
+   o istek sayıldı. Hata durumunda geri vermek, Play'in reddettiği bir kurulumda
+   her sezon yeniden denemek olurdu. Sonuç hiçbir yere geri dönmüyor. */
+function rvSeasonEnd() {
+  const now = Date.now();
+  const why = rvWhy(now);
+  if (why) return why;
+  const st = rvState(now);
+  setPref('rv', { n: st.n + 1, at: now, st: false });
+  RVS.busy = true;
+  const done = () => { RVS.busy = false; };
+  try { rvBridge().requestReview().then(done, done); }
+  catch (e) { done(); }
+  return 'ask';
+}
+
+/* Ayarlar satırı. Pencereyi DEĞİL mağaza sayfasını açıyor: Play'in kotası
+   dolduysa requestReview() hiçbir şey çizmez ve oyuncu düğmeye basıp hiçbir şey
+   olmadığını görür. Mağaza sayfası her zaman açılır. Satır yalnız köprü varken
+   çiziliyor — web'de ne açacağı bir Play kaydı var ne de yolu. */
+function rvRowHtml() {
+  if (!rvBridge()) return '';
+  return `<div class="pitem" onclick="rvOpenStore()">
+    <div class="pinfo"><div class="pname">${t('rateApp')}</div>
+    <div class="psub" style="white-space:normal;line-height:1.45">${t('rateHint')}</div></div>
+    <span class="faint">↗</span></div>`;
+}
+function rvOpenStore() {
+  const P = rvBridge();
+  if (!P) return Promise.resolve('nobridge');
+  const fail = () => { if (typeof toast === 'function') toast(t('rateFail')); return 'fail'; };
+  try {
+    return P.openAppStore({ androidStorePackageName: RV.store }).then(() => {
+      const st = rvState(Date.now());
+      setPref('rv', { n: st.n, at: st.at, st: true });
+      return 'open';
+    }, fail);
+  } catch (e) { return Promise.resolve(fail()); }
 }
 
 /* js/data.js — statik veri: isim havuzları, kıtalar, ülkeler, ligler, takımlar, kupalar */
@@ -19797,7 +19931,7 @@ league(){
       const z=grouped?(i===0?'zone1':''):(i===0?'zone1':i<4?'zone2':i>=rows.length-3?'zoneR':'');
       return `<tr class="click ${myTeams.has(tm.id)?'hl':''}" onclick="pushV('team',${tm.id})">
       <td><span class="posn ${z}">${i+1}</span></td>
-      <td><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
+      <td class="tmc"><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
         <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tm.n}</b></div></td>
       <td class="c">${r[2]+r[3]+r[4]}</td><td class="c">${r[2]}</td><td class="c">${r[3]}</td><td class="c">${r[4]}</td>
       <td class="c">${r[5]-r[6]}</td><td class="c"><b>${r[1]}</b></td></tr>`;}).join('')}</table>`;
@@ -20053,7 +20187,7 @@ settings(){
   <button class="btn s" onclick="askToMenu()">${t('toMenu')}</button>
   <button class="btn d" style="margin-top:8px" onclick="askDeleteCareer()">${t('deleteCareer')}</button>`}
   <div class="sect">${t('aboutLbl')}</div>
-  ${listWrap(`<a class="pitem" href="${tx(PRIVACY_URL)}" target="_blank" rel="noopener noreferrer"
+  ${listWrap(`${rvRowHtml()}<a class="pitem" href="${tx(PRIVACY_URL)}" target="_blank" rel="noopener noreferrer"
     style="text-decoration:none;color:inherit">
     <div class="pinfo"><div class="pname">${t('privacyPolicy')}</div>
     <div class="psub" style="white-space:normal;line-height:1.45">${t('privacyHint')}</div></div>
@@ -21276,7 +21410,9 @@ function showSeasonModal(champs){
        <div class="psub">${lgName(c.lgi)}${c.ts?` · ${t('topScorer')}: ${c.ts.n} (${c.ts.g})`:''}</div></div>
      </div>`).join('')}
      </div>
-     <button class="btn p" onclick="closeModal()">${t('newSeason')}</button>
+     ${/* Değerlendirme isteği özet KAPANDIKTAN sonra: önce şampiyonlar okunsun,
+          Play'in penceresi özetin üstüne binmesin. Koşullar js/review.js'te. */''}
+     <button class="btn p" onclick="closeModal();rvSeasonEnd()">${t('newSeason')}</button>
    </div>`),300);
 }
 /* Dil de cihaz tercihi; kayda da yazılıyor ki kayıt başka bir cihaza taşınırsa

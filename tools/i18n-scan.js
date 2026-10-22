@@ -24,7 +24,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 // tools/savetest.js ve tools/playtest.js'teki FILES ile aynı liste ve aynı sıra.
-const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','data','worldgeo','atlas','rivals','badges','core',
+const FILES = ['i18n','lang-es','lang-pt','lang-de','lang-fr','lang-it','store','saves','reward','ads-testcfg','ads','iap','review','data','worldgeo','atlas','rivals','badges','core',
                'sim','market','events','skills','sfx','actions','ui','main'];
 const FIXED_NOW = 1790000000000;   // 2026 sonu; cmDate ve "son oynanma" sabit kalsın
 
