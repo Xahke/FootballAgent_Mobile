@@ -167,7 +167,7 @@ adPrivacyFail:"Impossible d'ouvrir les options de confidentialité des pubs pour
 adPrivacyRetry:"Impossible d'ouvrir les options de confidentialité des pubs pour l'instant. Réessaie dans un instant.",
 adPrivacyNot:"Les options de confidentialité des pubs ne sont pas nécessaires sur cet appareil pour l'instant.",
 adAgeTitle:"Ton année de naissance",
-adAgeBody:"La pub récompensée est une fonction facultative, et nous te demandons ton année de naissance avant de l'ouvrir. Tu peux continuer sans la donner : tout le jeu, tes carrières et tes sauvegardes restent disponibles.",
+adAgeBody:"Le jeu affiche des pubs, et nous te demandons ton année de naissance avant de pouvoir en afficher. Tu peux continuer sans la donner : tout le jeu, tes carrières et tes sauvegardes restent disponibles.",
 adAgeYear:"Année",
 adAgeSave:"Enregistrer",
 adAgeSkip:"Continuer sans la donner",

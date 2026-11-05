@@ -405,9 +405,19 @@ Because the birthday is unknown the person is counted as the *younger* possible 
 sane range — text, fraction, future year — resolves to `null` and **closes** the gate.
 It is a self-declaration: not verification, and no compliance claim rests on it.
 
-**The screen never blocks launch.** The declaration is asked at first use of the optional
-ad feature, not at startup, so a game that asks for nothing else does not open with a
-question. That forces one design consequence: `adsRowState()` reads the age gate **before**
+**The question comes at launch, and it never blocks it.** It used to be asked only at first
+use of the optional ad feature (the `+`), and most players never tapped it — so no consent
+read, no SDK and no interstitial ever ran for them. `adsAgeBoot()` (ui.js, called from
+`main.js` after the first paint) now opens the same neutral birth-year screen over the menu
+when the bridge exists and `adsAgeState()` is `'ask'` (no declaration, or a damaged one).
+It goes through `pushModal`, so it queues behind anything else at boot, and it is
+skippable: **Continue without sharing** keeps the whole game open, the skip is remembered
+**in memory only** (`adsAgeAsked`) and nothing is written, so the question returns on the
+next launch until a year is declared — a decision the user made over "ask once". A
+declaration below the threshold is a declaration: it is not asked again. Web, PWA and the
+single file have no bridge and ask nothing. The screen's text (`adAgeBody`) talks about
+ads in general, not the reward. `tools/savetest.js` block **33** holds this.
+The `+` and Settings paths are unchanged, and one design consequence still holds: `adsRowState()` reads the age gate **before**
 the SDK state, because the SDK is never started while the gate is closed and the entry
 point would otherwise be undrawable — the user could never reach the question. The `'age'`
 and `'noage'` states deliberately **omit the reward amount**: showing the money and then
@@ -638,12 +648,12 @@ eligibility is newly won, a break being handled (after a show, or instead of one
 nothing was loaded) and `adsInterKeep()` finding the loaded ad stale. A failed load is
 retried at the next break — once per ten played weeks — and never in a loop.
 
-**The age gate is why most players will never see one.** The birth year is asked only when
-the player taps the `+` for the rewarded ad, and with no declaration `adsInit()` returns
-`'noage'` before any native call: no consent read, no SDK, no interstitial, for the whole
-life of the install. That is the designed behaviour, not a fault in the break logic — but
-it means "no ad appeared" from a tester is first a question about whether they ever
-declared a year.
+**The age gate still decides who sees one.** With no declaration `adsInit()` returns
+`'noage'` before any native call: no consent read, no SDK, no interstitial. The birth year
+used to be asked only behind the `+`, so most installs stayed there for good; it is now
+asked at every launch until declared (`adsAgeBoot()`, see the age gate above). A player
+who keeps skipping, or declares a year below the threshold, still sees no ads — so "no ad
+appeared" from a tester is first a question about whether they declared a year.
 
 **The interval is in played weeks, not in minutes.** Ten weeks can be tapped through in
 a minute or two. Nothing in the code spaces breaks in real time; if that turns out to
@@ -1829,6 +1839,10 @@ close-out for a gameplay change:
    row, the real season-summary button asks only after it closes, the ask is counted on
    disk before the call, the 30-day and three-ask limits, damaged `PREFS.rv`, every gate,
    the Settings row, and that no path writes to `S`.
+   Block **33** covers the launch-time age question (`adsAgeBoot()`): none without a
+   bridge, the neutral screen with no reward amount and no consent read before a
+   declaration, a skip that writes nothing and is asked again next launch, and no
+   question once any valid year is declared.
 8. **Storage fallback and migration**, if `js/store.js` or the migration paths in
    `js/saves.js` changed — blocks **25** and **26** cover the localStorage fallback, the
    conflict rescue, the destination read error, an interrupted rescue, the no-room path,

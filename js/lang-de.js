@@ -164,7 +164,7 @@ adPrivacyFail:'Die Datenschutzoptionen für Werbung konnten gerade nicht geöffn
 adPrivacyRetry:'Die Datenschutzoptionen für Werbung konnten gerade nicht geöffnet werden. Versuch es gleich noch mal.',
 adPrivacyNot:'Auf diesem Gerät sind gerade keine Datenschutzoptionen für Werbung nötig.',
 adAgeTitle:'Dein Geburtsjahr',
-adAgeBody:'Die Werbung mit Belohnung ist eine freiwillige Funktion, und wir fragen nach deinem Geburtsjahr, bevor sie sich öffnen lässt. Du kannst ohne Angabe weitermachen — das ganze Spiel, deine Karrieren und deine Spielstände bleiben verfügbar.',
+adAgeBody:'Das Spiel zeigt Werbung, und wir fragen nach deinem Geburtsjahr, bevor sie angezeigt werden kann. Du kannst ohne Angabe weitermachen — das ganze Spiel, deine Karrieren und deine Spielstände bleiben verfügbar.',
 adAgeYear:'Jahr',
 adAgeSave:'Speichern',
 adAgeSkip:'Ohne Angabe weiter',

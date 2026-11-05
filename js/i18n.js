@@ -185,7 +185,7 @@ adPrivacyNot:'Bu cihazda gizlilik seçenekleri şu anda gerekli değil.',
    önceden doldurulmuyor, "şu yaşı yaz" imâsı taşıyan bir ifade yok ve eşiğin
    altında kalan kullanıcı yukarı düzeltmeye davet edilmiyor. */
 adAgeTitle:'Doğum yılın',
-adAgeBody:'Ödüllü reklam isteğe bağlı bir özellik ve açılabilmesi için doğum yılını soruyoruz. Paylaşmadan da devam edebilirsin — oyunun tamamı, kariyerlerin ve kayıtların açık kalır.',
+adAgeBody:'Oyunda reklamlar var ve gösterilebilmeleri için doğum yılını soruyoruz. Paylaşmadan da devam edebilirsin — oyunun tamamı, kariyerlerin ve kayıtların açık kalır.',
 adAgeYear:'Yıl',
 adAgeSave:'Kaydet',
 adAgeSkip:'Paylaşmadan devam et',
@@ -498,7 +498,7 @@ adPrivacyFail:'Ad privacy options could not be opened right now. Check your conn
 adPrivacyRetry:'Ad privacy options could not be opened right now. Please try again in a moment.',
 adPrivacyNot:'Ad privacy options are not required on this device right now.',
 adAgeTitle:'Your birth year',
-adAgeBody:'The rewarded ad is an optional feature, and we ask for your birth year before it can be opened. You can continue without sharing it — the whole game, your careers and your saves stay available.',
+adAgeBody:'The game shows ads, and we ask for your birth year before any can be shown. You can continue without sharing it — the whole game, your careers and your saves stay available.',
 adAgeYear:'Year',
 adAgeSave:'Save',
 adAgeSkip:'Continue without sharing',

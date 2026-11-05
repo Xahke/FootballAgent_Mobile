@@ -6304,6 +6304,81 @@ async function tInAppReview() {
   }
 }
 
+/* ================= [33] AÇILIŞTA YAŞ SORUSU (ui.js adsAgeBoot) =================
+   Ölçülen sözleşme:
+
+   - Köprü yoksa (web, PWA, tek dosya) açılışta hiçbir şey sorulmuyor.
+   - Köprü var ve beyan yoksa nötr yaş ekranı menünün üstünde açılıyor; tutar
+     yazmıyor ve beyan gelmeden izin okuması yapılmıyor.
+   - Atlanırsa aynı oturumda yeniden sorulmuyor ve diske hiçbir şey yazılmıyor;
+     bir sonraki açılışta yeniden soruluyor.
+   - Girilen yıl kaydediliyor ve izin akışını başlatıyor.
+   - Beyan zaten varsa (eşik üstü ya da altı) açılışta sorulmuyor.
+
+   Köprü ctl.pre ile dosyalar yüklenmeden kuruluyor — gerçek Android'de olduğu
+   gibi main.js çalıştığında zaten orada. */
+async function tAdAgeBoot() {
+  console.log('\n[33] açılışta yaş sorusu: beyan yoksa bir kez, atlanabilir, her açılışta yeniden');
+  const sheet = a => a.R("document.getElementById('sheet').innerHTML");
+  const open = a => a.R('modalOpen()');
+  const boot = (ls, withBridge) => {
+    let fake = null;
+    const a = session(newDisk(), ls, withBridge ? { pre: ctx => { fake = fakeAdMob(ctx); } } : {});
+    return { a, fake: () => fake };
+  };
+
+  /* (1) Köprü yok: soru yok. */
+  {
+    const { a } = boot({}, false);
+    await a.booted;
+    ok(open(a) === false && sheet(a).indexOf('adAgeInp') === -1, '(1) köprü yokken açılışta soru yok');
+  }
+
+  /* (2) Köprü var, beyan yok: nötr ekran açılıyor; atlanınca bu oturumda bitti. */
+  const ls = {};
+  {
+    const { a, fake } = boot(ls, true);
+    await a.booted;
+    ok(open(a) === true && sheet(a).indexOf('adAgeInp') !== -1, '(2) açılışta yaş ekranı açıldı');
+    ok(sheet(a).indexOf(a.R('fmtK(RW.amount)')) === -1, '(2) ekranda ödül tutarı yok');
+    ok(sheet(a).indexOf(a.R("t('adAgeSkip')")) !== -1, '(2) paylaşmadan devam seçeneği var');
+    await tick();
+    ok(fake().stat.asks === 0 && fake().stat.inits === 0, '(2) beyan gelmeden izin okuması ve SDK yok');
+    const prefs0 = ls.menajerPrefsV1;
+    a.R('closeModal();');
+    a.R('adsAgeBoot();');
+    ok(open(a) === false, '(2) atlandıktan sonra aynı oturumda yeniden sorulmadı');
+    ok(a.R('adsBirthYear()') === null && ls.menajerPrefsV1 === prefs0, '(2) atlamak diske hiçbir şey yazmadı');
+    ok(a.nodes.view._html.length > 0, '(2) altta menü çizili');
+  }
+
+  /* (3) Yeni açılış, aynı disk: yeniden soruluyor. Yıl girilince akış başlıyor. */
+  {
+    const { a, fake } = boot(ls, true);
+    await a.booted;
+    ok(open(a) === true && sheet(a).indexOf('adAgeInp') !== -1, '(3) sonraki açılışta yeniden soruldu');
+    a.R("document.getElementById('adAgeInp').value='" + AD_Y_OK + "';adsAgeSubmit();");
+    ok(open(a) === false, '(3) kaydedince pencere kapandı');
+    ok(a.R('adsBirthYear()') === AD_Y_OK && JSON.parse(ls.menajerPrefsV1).adBY === AD_Y_OK, '(3) yıl tercihlere ve diske yazıldı');
+    await waitFor(() => fake().stat.asks >= 1, 'izin okuması', 3000);
+    ok(fake().stat.asks >= 1, '(3) beyandan sonra izin akışı başladı');
+  }
+
+  /* (4) Beyan varken açılışta sorulmuyor — eşik üstü de, altı da. */
+  for (const y of [AD_Y_OK, AD_Y_UNDER]) {
+    const { a } = boot({ menajerPrefsV1: JSON.stringify({ adBY: y }) }, true);
+    await a.booted;
+    ok(open(a) === false && sheet(a).indexOf('adAgeInp') === -1, '(4) beyan ' + y + ' varken açılışta soru yok');
+  }
+
+  /* (5) Bozuk beyan "yok" sayılıyor, o hâlde soruluyor. */
+  {
+    const { a } = boot({ menajerPrefsV1: JSON.stringify({ adBY: 'x' }) }, true);
+    await a.booted;
+    ok(open(a) === true && sheet(a).indexOf('adAgeInp') !== -1, '(5) bozuk beyanla açılışta soruldu');
+  }
+}
+
 /* ================= koşu ================= */
 (async function () {
   const tests = [tNewSaveAndRestart, tLegacySingle, tLegacySlots, tMigrationAtomicity,
@@ -6314,7 +6389,7 @@ async function tInAppReview() {
                  tAdsAdapter, tUmpConsent, tAdAgeGate, tPrivacyFeedback,
                  tSeasonBreakAds, tShopAndIap, tPlayBilling,
                  tStorageFallback, tSameCidFork, tForkRestoreCost, tIapQueueLoad,
-                 tIapQueueMerge, tSysLang, tLangLayer, tInAppReview];
+                 tIapQueueMerge, tSysLang, tLangLayer, tInAppReview, tAdAgeBoot];
   for (const t of tests) {
     try { await t(); }
     catch (e) { fail++; fails.push(t.name + ' ÇÖKTÜ: ' + e.message); console.log('  ÇÖKTÜ ' + t.name + ': ' + e.message + '\n' + (e.stack || '').split('\n').slice(1, 3).join('\n')); }

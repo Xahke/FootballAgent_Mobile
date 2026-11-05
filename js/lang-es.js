@@ -164,7 +164,7 @@ adPrivacyFail:'Ahora mismo no se han podido abrir las opciones de privacidad de 
 adPrivacyRetry:'Ahora mismo no se han podido abrir las opciones de privacidad de anuncios. Vuelve a intentarlo en un momento.',
 adPrivacyNot:'En este dispositivo no hacen falta opciones de privacidad de anuncios por ahora.',
 adAgeTitle:'Tu año de nacimiento',
-adAgeBody:'El anuncio con recompensa es una función opcional y te pedimos el año de nacimiento antes de abrirlo. Puedes seguir sin indicarlo: el juego entero, tus carreras y tus partidas siguen disponibles.',
+adAgeBody:'El juego muestra anuncios y te pedimos el año de nacimiento antes de poder mostrarlos. Puedes seguir sin indicarlo: el juego entero, tus carreras y tus partidas siguen disponibles.',
 adAgeYear:'Año',
 adAgeSave:'Guardar',
 adAgeSkip:'Seguir sin indicarlo',

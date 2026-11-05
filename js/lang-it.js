@@ -166,7 +166,7 @@ adPrivacyFail:"Al momento non è stato possibile aprire le opzioni privacy della
 adPrivacyRetry:"Al momento non è stato possibile aprire le opzioni privacy della pubblicità. Riprova tra un attimo.",
 adPrivacyNot:"Su questo dispositivo al momento non servono opzioni privacy della pubblicità.",
 adAgeTitle:"Il tuo anno di nascita",
-adAgeBody:"La pubblicità con ricompensa è una funzione facoltativa, e ti chiediamo l'anno di nascita prima di aprirla. Puoi continuare senza indicarlo: tutto il gioco, le tue carriere e i tuoi salvataggi restano disponibili.",
+adAgeBody:"Il gioco mostra pubblicità, e ti chiediamo l'anno di nascita prima di poterle mostrare. Puoi continuare senza indicarlo: tutto il gioco, le tue carriere e i tuoi salvataggi restano disponibili.",
 adAgeYear:"Anno",
 adAgeSave:"Salva",
 adAgeSkip:"Continua senza indicarlo",

@@ -600,6 +600,24 @@ function adsAgeForget(){
   adsAgeClear();
   toast(t('adAgeCleared'));
 }
+/* Açılışta bir kez sor. Beyan yalnız + düğmesinden istendiğinde oyuncuların
+   çoğu o düğmeye hiç dokunmuyordu; beyan olmayınca da izin akışı, SDK ve ara
+   reklamlar kurulumun ömrü boyunca hiç başlamıyordu.
+   Aynı nötr ekran: tutar yok, eşik yok, "paylaşmadan devam" aynı ağırlıkta.
+   Atlanırsa bu oturumda bir daha sorulmuyor; bir sonraki açılışta yeniden çıkıyor
+   (bilinçli karar — beyan girilene kadar her açılışta bir kez). Bayrak bellekte
+   ve hiçbir yere yazılmıyor. Menü ÖNCE çiziliyor, ekran onun üstüne geliyor;
+   sıraya pushModal ile giriyor ki açılışta çıkan başka bir pencereyle çakışmasın.
+   Eklenti yoksa (web, PWA, tek dosya) reklam yolu da yok — hiçbir şey sorulmuyor. */
+let adsAgeAsked=false;
+function adsAgeBoot(){
+  if(adsAgeAsked)return;
+  if(typeof adsPlugin!=='function'||!adsPlugin())return;
+  if(adsAgeState()!=='ask')return;
+  adsAgeAsked=true;
+  /* Sırası gelene kadar beyan başka bir yoldan (Ayarlar, +) girilmiş olabilir. */
+  pushModal(()=>{if(adsAgeState()==='ask')adsAgeOpen();else runNextModal();});
+}
 /* Ayarlar'daki beyan satırı. Düzeltme ile silme aynı yerde ve aynı ağırlıkta:
    aşağı düzeltmek yukarı düzeltmek kadar kolay olmalı. Eklenti yoksa (web, PWA,
    tek dosya) hiç çizilmiyor — orada reklam yolu zaten yok. */
