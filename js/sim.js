@@ -73,7 +73,16 @@ function pickWeighted(ps,wf){
   return ps[ps.length-1];
 }
 /* pick XI + subs, record apps & minutes; returns outfield players who played */
-function playMatchSide(tid){
+/* Bir maçın sayaçları nereye yazılıyor. Lig maçı oyuncunun kendi alanlarına
+   (p.app/min/g/a) yazar — gol krallığı, asist listesi, gol bonusu anlaşmaları ve
+   sezon arşivi bunları "lig" diye okuyor. Kupa maçı ayrı bir sezonluk deftere
+   (p.cs) yazar: kupa golü lig gol krallığına karışmasın. Maç puanı ise iki yerde
+   de aynı rtSum/rtN'ye giriyor — piyasa değeri büyük gecelerdeki oyunu da görsün. */
+function tallyOf(p,cp){
+  if(cp===undefined)return p;
+  return p.cs||(p.cs={app:0,min:0,g:0,a:0});
+}
+function playMatchSide(tid,cp){
   const sq=squadOf(tid);
   const sorted=sq.map(p=>({p,s:p.r+(p.form-50)*0.1+R(-6,6)})).sort((a,b)=>b.s-a.s).map(x=>x.p);
   const gk=sorted.find(p=>p.pos==='KL');
@@ -97,12 +106,94 @@ function playMatchSide(tid){
   const mins={};
   starters.forEach(p=>{
     const m=subbedOut.indexOf(p)>=0?R(55,80):90;
-    p.app=(p.app||0)+1;p.min=(p.min||0)+m;mins[p.id]=m;
+    const b=tallyOf(p,cp);b.app=(b.app||0)+1;b.min=(b.min||0)+m;mins[p.id]=m;
   });
   const subsIn=bench.slice(0,nSub);
-  subsIn.forEach(p=>{const m=R(10,35);p.app=(p.app||0)+1;p.min=(p.min||0)+m;mins[p.id]=m;});
+  subsIn.forEach(p=>{const m=R(10,35);const b=tallyOf(p,cp);b.app=(b.app||0)+1;b.min=(b.min||0)+m;mins[p.id]=m;});
   const all=starters.concat(subsIn);
   return {all,out:all.filter(p=>p.pos!=='KL'),mins};
+}
+/* ===== maç motoru: bir maçın oyuncu tarafı =====
+   Skor burada üretilmiyor, m.hg/m.ag dolu gelir. Lig ve kupa skoru farklı
+   modellerle üretiyor (kupada beraberlik olmaz) ama sahaya kimin çıktığı, golü
+   kimin attığı, maç puanı, form/moral geri beslemesi, piyasa değeri, son 5 maç,
+   Maçın Adamı ve haftalık rapor her yarışmada aynı kural. Tek yerde durmasının
+   nedeni bu: kupa maçı ayrı bir kopya olsaydı ikisi er geç ayrışırdı.
+   cp: kupa indeksi (CUPS). Lig maçında yok — o zaman her şey eskisi gibi. */
+function playFixture(m,cp){
+  const cup=cp!==undefined;
+  const playedMap={},gMap={},aMap={};
+  playedMap[m.h]=playMatchSide(m.h,cp);
+  playedMap[m.a]=playMatchSide(m.a,cp);
+  [[m.h,m.hg],[m.a,m.ag]].forEach(([tid,goals])=>{
+    const squad=playedMap[tid].out;
+    if(!squad.length)return;
+    for(let g=0;g<goals;g++){
+      const sc=pickWeighted(squad,p=>(p.pos==='FV'?9:p.pos==='OS'?3.2:0.8)*p.r/70);
+      tallyOf(sc,cp).g++;gMap[sc.id]=(gMap[sc.id]||0)+1;
+      /* gol zaten maç puanına giriyor; buradaki artış sadece ek güven payı */
+      sc.form=clamp(sc.form+3,0,100);moraleEvent(sc,2);
+      if(RF()<0.75&&squad.length>1){
+        const as=pickWeighted(squad.filter(p=>p.id!==sc.id),p=>(p.pos==='OS'?6:p.pos==='FV'?3:1.5)*p.r/70);
+        tallyOf(as,cp).a++;aMap[as.id]=(aMap[as.id]||0)+1;
+        as.form=clamp(as.form+2,0,100);
+      }
+    }
+  });
+  /* --- maç puanları, son 5 maç ve Maçın Adamı --- */
+  let motm=null,best=0;
+  const strH=teamStr(m.h),strA=teamStr(m.a);
+  [[m.h,m.hg,m.ag],[m.a,m.ag,m.hg]].forEach(([tid,gf,ga])=>{
+    const res=gf>ga?'W':gf<ga?'L':'D';
+    const oppStr=tid===m.h?strA:strH;
+    playedMap[tid].all.forEach(p=>{
+      const min=playedMap[tid].mins[p.id]||0;
+      const rt=matchRating(p,{res,ga,oppStr,min,g:gMap[p.id]||0,a:aMap[p.id]||0});
+      /* geri besleme: iyi maç formu ve morali taşır, kötü maç aşağı çeker.
+         İleride eklenecek olaylar da moraleEvent() üzerinden aynı kanala girer. */
+      p.form=stat(p.form+(rt-6.7)*1.5,5);
+      if(min>=PERF.shortMin)moraleEvent(p,(rt-6.7)*0.7);
+      p.rtSum=(p.rtSum||0)+rt;p.rtN=(p.rtN||0)+1;
+      /* belirli maç aralıklarıyla piyasa değeri sahadaki işe göre güncellenir */
+      const vd=updateValue(p);
+      if(vd&&p.agent==='you'&&Math.abs(vd)>=0.05)
+        pushNews(vd>0?'valUp':'valDown',{n:p.n,pid:p.id,v:fmtM(valueOf(p))},vd>0?'good':'warn');
+      /* cp yalnız kupa maçında yazılıyor: lig kaydının biçimi bayt bayt aynı kalsın */
+      const e={o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
+        sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0};
+      if(cup)e.cp=cp;
+      (p.l5=p.l5||[]).push(e);
+      if(p.l5.length>5)p.l5.shift();
+      if(rt>best){best=rt;motm=p;}
+    });
+  });
+  if(motm){
+    motm.l5[motm.l5.length-1].mm=true;
+    motm.form=clamp(motm.form+3,0,100);
+  }
+  /* --- haftalık müşteri raporu: gelen kutusuna değil, hafta sonunda açılan
+         kendi ekranına gider. Oynamayanlar da rapora girer — forma bulamamak
+         menajer için gol atmak kadar önemli bir bilgi. --- */
+  S.wkRep=S.wkRep||[];
+  playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
+    if(p.agent!=='you')return;
+    const last=p.l5[p.l5.length-1];
+    const r={pid:p.id,n:p.n,tid:p.team,opp:last.o,res:last.res,sc:last.sc,
+      min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0};
+    if(cup)r.cp=cp;
+    S.wkRep.push(r);
+  });
+  S.clients.forEach(cid=>{
+    const p=byId(cid);
+    if(!p||(p.team!==m.h&&p.team!==m.a))return;
+    if(playedMap[p.team].all.indexOf(p)>=0)return;
+    const r={pid:p.id,n:p.n,tid:p.team,opp:p.team===m.h?m.a:m.h,
+      res:(p.team===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
+      sc:(p.team===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1};
+    if(cup)r.cp=cp;
+    S.wkRep.push(r);
+  });
+  return gMap;
 }
 /* finally: hafta ortasında bir şey atarsa dizin ayakta kalmasın — sonraki bir
    teamStr() çağrısı bayat kadroyu okurdu. */
@@ -124,70 +215,7 @@ function simWeekRun(){
       if(m.hg>m.ag){th.pts+=3;th.w++;ta.l++;}
       else if(m.hg<m.ag){ta.pts+=3;ta.w++;th.l++;}
       else{th.pts++;ta.pts++;th.d++;ta.d++;}
-      const playedMap={},gMap={},aMap={};
-      playedMap[m.h]=playMatchSide(m.h);
-      playedMap[m.a]=playMatchSide(m.a);
-      [[m.h,m.hg],[m.a,m.ag]].forEach(([tid,goals])=>{
-        const squad=playedMap[tid].out;
-        if(!squad.length)return;
-        for(let g=0;g<goals;g++){
-          const sc=pickWeighted(squad,p=>(p.pos==='FV'?9:p.pos==='OS'?3.2:0.8)*p.r/70);
-          sc.g++;gMap[sc.id]=(gMap[sc.id]||0)+1;
-          /* gol zaten maç puanına giriyor; buradaki artış sadece ek güven payı */
-          sc.form=clamp(sc.form+3,0,100);moraleEvent(sc,2);
-          if(RF()<0.75&&squad.length>1){
-            const as=pickWeighted(squad.filter(p=>p.id!==sc.id),p=>(p.pos==='OS'?6:p.pos==='FV'?3:1.5)*p.r/70);
-            as.a++;aMap[as.id]=(aMap[as.id]||0)+1;
-            as.form=clamp(as.form+2,0,100);
-          }
-        }
-      });
-      /* --- maç puanları, son 5 maç ve Maçın Adamı --- */
-      let motm=null,best=0;
-      const strH=teamStr(m.h),strA=teamStr(m.a);
-      [[m.h,m.hg,m.ag],[m.a,m.ag,m.hg]].forEach(([tid,gf,ga])=>{
-        const res=gf>ga?'W':gf<ga?'L':'D';
-        const oppStr=tid===m.h?strA:strH;
-        playedMap[tid].all.forEach(p=>{
-          const min=playedMap[tid].mins[p.id]||0;
-          const rt=matchRating(p,{res,ga,oppStr,min,g:gMap[p.id]||0,a:aMap[p.id]||0});
-          /* geri besleme: iyi maç formu ve morali taşır, kötü maç aşağı çeker.
-             İleride eklenecek olaylar da moraleEvent() üzerinden aynı kanala girer. */
-          p.form=stat(p.form+(rt-6.7)*1.5,5);
-          if(min>=PERF.shortMin)moraleEvent(p,(rt-6.7)*0.7);
-          p.rtSum=(p.rtSum||0)+rt;p.rtN=(p.rtN||0)+1;
-          /* belirli maç aralıklarıyla piyasa değeri sahadaki işe göre güncellenir */
-          const vd=updateValue(p);
-          if(vd&&p.agent==='you'&&Math.abs(vd)>=0.05)
-            pushNews(vd>0?'valUp':'valDown',{n:p.n,pid:p.id,v:fmtM(valueOf(p))},vd>0?'good':'warn');
-          (p.l5=p.l5||[]).push({o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
-            sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0});
-          if(p.l5.length>5)p.l5.shift();
-          if(rt>best){best=rt;motm=p;}
-        });
-      });
-      if(motm){
-        motm.l5[motm.l5.length-1].mm=true;
-        motm.form=clamp(motm.form+3,0,100);
-      }
-      /* --- haftalık müşteri raporu: gelen kutusuna değil, hafta sonunda açılan
-             kendi ekranına gider. Oynamayanlar da rapora girer — forma bulamamak
-             menajer için gol atmak kadar önemli bir bilgi. --- */
-      S.wkRep=S.wkRep||[];
-      playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
-        if(p.agent!=='you')return;
-        const last=p.l5[p.l5.length-1];
-        S.wkRep.push({pid:p.id,n:p.n,tid:p.team,opp:last.o,res:last.res,sc:last.sc,
-          min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0});
-      });
-      S.clients.forEach(cid=>{
-        const p=byId(cid);
-        if(!p||(p.team!==m.h&&p.team!==m.a))return;
-        if(playedMap[p.team].all.indexOf(p)>=0)return;
-        S.wkRep.push({pid:p.id,n:p.n,tid:p.team,opp:p.team===m.h?m.a:m.h,
-          res:(p.team===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
-          sc:(p.team===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1});
-      });
+      playFixture(m);
     });
   });
   /* Form ve moral artık maç performansından besleniyor. Buradaki haftalık hareket
@@ -506,7 +534,13 @@ function endSeason(){
   const gone=[];
   S.players.forEach(p=>{
     p.seasons=p.seasons||[];
-    if(p.app>0||p.g>0||p.agent==='you')p.seasons.push({se:S.season,tm:teamOf(p).n,g:p.g,a:p.a,app:p.app||0,min:p.min||0,rt:p.rtN?Math.round(p.rtSum/p.rtN*10)/10:0});
+    const csApp=p.cs&&p.cs.app>0;
+    if(p.app>0||p.g>0||csApp||p.agent==='you'){
+      const rec={se:S.season,tm:teamOf(p).n,g:p.g,a:p.a,app:p.app||0,min:p.min||0,rt:p.rtN?Math.round(p.rtSum/p.rtN*10)/10:0};
+      /* kupa sayaçları ayrı alan: g/a/app lig olarak kalıyor, eski kayıtlarda alan yok */
+      if(csApp)rec.cs={app:p.cs.app,g:p.cs.g||0,a:p.cs.a||0};
+      p.seasons.push(rec);
+    }
     if(p.seasons.length>6)p.seasons.shift();
     p.age++;p.yrs=Math.max(0,p.yrs-1);
     /* --- development: age + level fit --- */
@@ -537,6 +571,7 @@ function endSeason(){
       if(p.r>lvl+6&&p.age<=29){pushNews('outgrow',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team},'warn');p.morale=clamp(p.morale-12,0,100);}
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
+    delete p.cs;
     p.vmAt=0;if(p.vm)p.vm=+(1+(p.vm-1)*VAL.revert).toFixed(3);
     /* --- kulüpsüz oyuncular: uzun süre imza bulamazsa futbolu bırakır --- */
     if(isFree(p)){

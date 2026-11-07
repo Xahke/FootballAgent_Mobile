@@ -232,6 +232,16 @@ function simCups(){
     round.forEach(m=>{
       const [g1,g2]=playKO(teamStr(m.h),teamStr(m.a));
       m.hg=g1;m.ag=g2;winners.push(g1>g2?m.h:m.a);
+      /* Skor kupanın kendi modelinden (beraberlik yok), sahadaki her şey lig
+         maçıyla aynı motordan: müşterin kupa gecesinde oynar, puan alır, raporda
+         görünür, değeri bu maçı da görür. simCups() simWeekRun()'ın içinden
+         çağrıldığı için haftanın kadro dizini (SQIDX) burada hazır. */
+      const gm=playFixture(m,cci);
+      /* Kupanın kendi gol defteri {pid: gol}. Oyuncunun p.cs'i bütün kupaları
+         topluyor; sezon ortasında başka bir kupanın takımına geçen oyuncu orada
+         karışırdı. Defter kupa nesnesinde durduğu için seedCups() her sezon onu
+         da sıfırlıyor; eski kayıtta alan yok ve ilk golle kuruluyor. */
+      for(const id in gm)(cp.sc=cp.sc||{})[id]=(cp.sc[id]||0)+gm[id];
     });
     if(winners.length>1)cp.rounds.push(consPair(winners));
     else{

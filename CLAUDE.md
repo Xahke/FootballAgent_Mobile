@@ -1153,6 +1153,53 @@ game is ~6,980 players across 436 clubs over a 38-week season. Any change to
 player-facing economy has to be checked against this background economy — it's easy to
 break the free-agent pool or the age pyramid without noticing.
 
+### Every match goes through one engine, whatever the competition
+
+`playFixture(m, cp)` in `sim.js` is the player side of a match: who starts, minutes,
+who scores and assists, the match rating, form and morale feedback, `updateValue()`,
+`p.l5`, Man of the Match and the weekly report rows. **It never produces the score** —
+`m.hg`/`m.ag` arrive filled. A league match scores itself in `simWeekRun()` (draws
+allowed) and updates the table; a cup tie scores itself in `simCups()` through
+`playKO()` (no draws). Both then call the same engine, so a client really plays a cup
+night, gets rated, shows in the week report, and the market value sees that match.
+A new competition gets its own scoring and its own bookkeeping and calls
+`playFixture()` — it must not grow a second copy of the player side.
+
+The extraction was proven neutral: on a seeded run the whole `{S, PID}` hashed
+identically before and after, with cups still on the old path.
+
+`cp` is the cup index into `CUPS`, absent for a league match. It decides one thing:
+**where the counters go** (`tallyOf()`):
+
+| | league | cup |
+|---|---|---|
+| apps, minutes, goals, assists | `p.app/min/g/a` | `p.cs = {app,min,g,a}` |
+| rating | `p.rtSum/rtN` | `p.rtSum/rtN` — the same, on purpose |
+| `p.l5` / `S.wkRep` row | as before | same row plus `cp` |
+
+The split is deliberate. `p.g`/`p.a` stay **league** numbers because the top-scorer
+race, the assist list, the league archive and the goal-bonus deals (`S.deals`, "10+
+goals") all read them as league numbers. The rating is shared because value should
+react to a big European night. `p.cs` is deleted at season end and archived into the
+season record as `cs: {app,g,a}` only when the player appeared in a cup.
+
+Each cup also keeps its own goal ledger, `S.cups[i].sc = {pid: goals}`, because
+`p.cs` sums every cup and a player sold mid-season between two cup teams would blur it.
+`seedCups()` rebuilds the cups every season, which clears the ledger with them.
+
+Every new field is absent on old saves and every reader defaults: no `cp` draws the row
+as a league match, no `p.cs` hides the cup line, no `sc` shows no scorers. A save
+loaded mid-season simply continues its cups through the new path.
+
+Measured over 8 seasons on three seeds against the pre-change code: population
+7,056–7,063 (was 7,056–7,060), mean age 25.06–25.19 (25.14–25.22), ages 16–36, free
+agents 60, unrepresented pool 4,428–4,500 (4,442–4,508). Over nine seeds the value
+multiplier did not move: players at `vm ≥ 1.3` averaged 259 against 260, and the bot's
+season-8 reputation had the same median (35.7 against 36.7). Three seeds alone had
+suggested a drop in high-value players and a rise in reputation; both were noise. The
+mechanical change is that the 48 cup teams' players get up to four extra rated matches
+a season — re-measure before adding competitions that add many more.
+
 ### Balance constants live in named blocks
 
 Tuning happens at these, not scattered magic numbers:
