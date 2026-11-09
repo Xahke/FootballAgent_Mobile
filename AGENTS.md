@@ -86,10 +86,11 @@ other file nothing does.
 
 `js/badges.js` was a worked example: it sits after `data.js` (badges read a team object)
 and before `core.js` (where `tmBadge()` lives), and the same position appears in every
-list. The five language files were the most recent to go through it.
+list. The five language files went through it, and `js/cups.js` (after `core.js`) was
+the most recent.
 
 Load order:
-`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → review → data → worldgeo → atlas → rivals → badges → core → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → review → data → worldgeo → atlas → rivals → badges → core → cups → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -120,7 +121,8 @@ call time. The parts that are load-time real:
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
 | `js/badges.js` | Procedural team badges: 24 emblems, 10 frames, 10 patterns, the semantic name→emblem map and `badgeDescriptor()`. `tmBadge()` draws from here |
-| `js/core.js` | Game state `S`, fixtures, cups, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
+| `js/core.js` | Game state `S`, fixtures, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
+| `js/cups.js` | The three European cups in the real format: the access list, qualifying, the league-phase draw and table, the knockout bracket, and the old 16-team format for saves that began a season on it — see *European cups follow the real format* below |
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |
 | `js/events.js` | Event definitions (32, of which 8 are small), weighted selection, `applyEff` |
@@ -1161,8 +1163,8 @@ break the free-agent pool or the age pyramid without noticing.
 who scores and assists, the match rating, form and morale feedback, `updateValue()`,
 `p.l5`, Man of the Match and the weekly report rows. **It never produces the score** —
 `m.hg`/`m.ag` arrive filled. A league match scores itself in `simWeekRun()` (draws
-allowed) and updates the table; a cup tie scores itself in `simCups()` through
-`playKO()` (no draws). Both then call the same engine, so a client really plays a cup
+allowed) and updates the table; a cup match scores itself in `js/cups.js` through
+`cupScore()` (draws allowed per leg; a tie is settled on aggregate, then penalties). Both then call the same engine, so a client really plays a cup
 night, gets rated, shows in the week report, and the market value sees that match.
 A new competition gets its own scoring and its own bookkeeping and calls
 `playFixture()` — it must not grow a second copy of the player side.
@@ -1199,8 +1201,81 @@ agents 60, unrepresented pool 4,428–4,500 (4,442–4,508). Over nine seeds the
 multiplier did not move: players at `vm ≥ 1.3` averaged 259 against 260, and the bot's
 season-8 reputation had the same median (35.7 against 36.7). Three seeds alone had
 suggested a drop in high-value players and a rise in reputation; both were noise. The
-mechanical change is that the 48 cup teams' players get up to four extra rated matches
-a season — re-measure before adding competitions that add many more.
+mechanical change was that the 48 cup teams' players got up to four extra rated matches
+a season. The real-format cups (below) raised that to ~530 cup matches a season and did
+widen the value spread — see the measurements there.
+
+### European cups follow the real format
+
+`js/cups.js` runs the three cups (`CUPS`: Kıta / Birlik / Bölge Kupası — the Champions,
+Europa and Conference League stand-ins) the way UEFA has since 2024/25, adapted to the
+17 associations the game has (UEFA ranks 1–17; 18–55 are not in the game):
+
+| Stage | Weeks | What happens |
+|---|---|---|
+| Qualifying play-off | 2, 4 | one two-legged round per cup; ŞL losers drop into the AL league phase, AL losers into the KL league phase |
+| League phase | 6–23 | 36 clubs in one table; ŞL/AL 8 matches (4 pots × 9, two opponents per pot, one home one away), KL 6 (6 pots × 6, one per pot, 3 home 3 away) |
+| Knockout play-off | 25, 26 | 9/10–23/24, 11/12–21/22, 13/14–19/20, 15/16–17/18; 25–36 are out |
+| Last 16 → semi-final | 28–35 | two legs each; 1/2 meet the 15–18 winners, 3/4 the 13–20, 5/6 the 11–22, 7/8 the 9–24, in two halves so 1 and 2 meet at the earliest in the final |
+| Final | 37 | one match, neutral ground |
+
+**Who goes where is data, not a formula.** `cupAllocate()` reads `UEFA_ASSOC` (rank and
+the 20%-of-association coefficient floor, data.js) and walks the real 2026/27 access list
+in order — ŞL direct: champions 1–10, runners-up 1–6, thirds 1–5, fourths 1–4, the two
+European Performance Spots (`CUP_EPS`, England and Spain), Portugal's runner-up, and the
+ŞL and AL holders; then ŞL qualifying, AL direct, AL qualifying, KL qualifying. A place
+whose club already qualified passes to the association's next club (`nxt`), which is also
+how the cup-winner places work, because the game has no domestic cups. The number of
+qualifying places is whatever fills each league phase to 36 (`w1/w2/w3`), so holders and
+overlaps rebalance themselves. Lists that run out continue round-robin over associations
+up to a per-rank cap close to the real totals. A new game draws on fresh tables, i.e. in
+team order. The function is pure (no RNG, no writes), so the league tables read the same
+answer: `lgZoneOf()` colours positions by `cupProj()`, "if the season ended now".
+
+**Pots use fixed club coefficients** (`CCOEF`, data.js): each club's real 5-year UEFA
+coefficient (2021/22–2025/26, from kassiesa.net's `trank2026`, an independent compilation
+using UEFA's method — not UEFA itself), keyed by the game club's **name**, and the
+association floor for everyone else. The user decided these stay fixed at today's values
+for now; in-game results do not move them. The ŞL holder is forced into pot 1.
+
+**The league-phase draw is a constructive search, and it is measured, not assumed.**
+`cupEdges8()`/`cupEdges6()` build each pot pairing with backtracking (`cupMatch`) under
+the real rules — no club meets its own association, at most two opponents from any one
+association (`cupCap`, enforced *while* pairing; checking it afterwards failed 300 of 300
+ŞL draws once England and Spain sent five clubs each) — and `cupColor()` splits the
+matches into matchdays so a club plays exactly once per matchday, by Kempe-chain edge
+colouring. KL orientation comes from an Euler circuit, which gives every club 3 home and
+3 away. When a pot cannot satisfy the rules at all (a KL pot of six once held four clubs
+of one association), `cupDrawLp()` swaps a few clubs with the neighbouring pot and tries
+again. Measured: 1,500 draws over five seeds, every one valid on every rule, the slowest
+116 ms. `cupDrawLpLoose()` (round robin, rules relaxed) exists only so an impossible draw
+can never stop a season; it was not reached in those 1,500.
+
+Legs use the league goal model with home advantage; the final is neutral. A level
+aggregate goes to penalties (`pen`), weighted slightly towards the stronger side. Every
+match runs through `playFixture()` and the cup's own goal ledger (`cp.sc`).
+
+**Old saves keep their season.** A cup object without `v:2` is the old 16-team single-leg
+knockout, and `cupLegacyWeek()` finishes that season on the old rules with the old
+`CUPWKS`; the cup screen draws it the old way. `seedCups()` at season end writes the new
+format. Measured with saves from the Play build and the Kademe A build at weeks 10–26:
+the old cups finished and recorded their winners, the next season opened on the new
+format, nothing errored, and the screens drew clean in four themes.
+
+The screen (`cupV2Html()` in ui.js) has three phases — qualifying, league phase (36-row
+table with 1–8 / 9–24 / 25–36 zones and a matchday picker) and knockouts (aggregate in the
+middle, the legs and any penalties underneath). `CUPPH`/`CUPMD` are view state like `IBF`;
+they never reach the save. A tie's parameter is `ti`, never `t`: `t` is the translator,
+and shadowing it broke the first render.
+
+Measured on six seeds over eight seasons against the Kademe A build: population, free
+agents (60), age and the unrepresented share unchanged; bot reputation in the same band;
+simulation time +~6% for ~530 cup matches a season (was 45). **The value spread widened**:
+the mean multiplier stayed at 1.00, but players at `vm ≥ 1.3` went from 308–353 to
+359–409 and at `vm ≤ 0.75` from 347–392 to 357–430 — big-club players are rated up to 17
+more times a season, so `updateValue()` (every `VAL.every` = 12 ratings) fires more often
+for them. If that needs pulling back, `VAL.every` or `VAL.gain` is the dial. Winners now
+include BE, CZ and GR clubs now and then.
 
 ### Balance constants live in named blocks
 
@@ -1588,8 +1663,8 @@ are weaker and `genPlayer()` gives weaker clubs' players a rival agent less ofte
 Simulation time rose ~22%, in step with the world growing ~24%. **A phone has not been
 measured** — check a week's tick on a low-end device before adding the next tier.
 
-**Belgian clubs are not in the continental cups yet.** `CUPQ` still lists the original
-eight leagues; who qualifies from which league belongs to the cup-format rework.
+Every added league is in the European cups from the season after it joins: the access
+list reads UEFA ranks, and BE and the eight Kademe A associations are ranks 8–17.
 
 ### Saves must degrade gracefully
 
