@@ -113,7 +113,7 @@ const NAF=['eg','ma','dz','tn'];
 /* agent nationality → home country (league network) */
 const NAT2CTRY={tr:'TR',en:'EN',es:'ES',de:'DE',it:'IT',fr:'FR',nl:'NL',pt:'PT',br:'BR',ar:'AR',
  us:'US',mx:'MX',sa:'SA',jp:'JP',ng:'WAF',sn:'WAF',gh:'WAF',cm:'WAF',eg:'NAF',ma:'NAF',
- be:'BE',hr:'IT',rs:'IT',pl:'DE',cz:'DE',gr:'IT',no:'EN',se:'EN',dk:'DE',ch:'DE',at:'DE',ua:'DE',ro:'IT',sct:'EN',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP'};
+ be:'BE',hr:'IT',rs:'IT',pl:'PL',cz:'CZ',gr:'GR',no:'NO',se:'EN',dk:'DK',ch:'CH',at:'AT',ua:'DE',ro:'IT',sct:'SCT',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP'};
 const NATNAME={
  tr:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},en:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},es:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
  de:{tr:'Almanya',en:'Germany',es:'Alemania',pt:'Alemanha',de:'Deutschland',fr:'Allemagne',it:'Germania'},it:{tr:'İtalya',en:'Italy',es:'Italia',pt:'Itália',de:'Italien',fr:'Italie',it:'Italia'},fr:{tr:'Fransa',en:'France',es:'Francia',pt:'França',de:'Frankreich',fr:'France',it:'Francia'},
@@ -176,7 +176,15 @@ const CTRYS={
  US:{tr:'ABD',en:'USA',es:'EE. UU.',pt:'EUA',de:'USA',fr:'États-Unis',it:'Stati Uniti'},MX:{tr:'Meksika',en:'Mexico',es:'México',pt:'México',de:'Mexiko',fr:'Mexique',it:'Messico'},
  SA:{tr:'S. Arabistan',en:'Saudi Arabia',es:'Arabia Saudí',pt:'Arábia Saudita',de:'Saudi-Arabien',fr:'Arabie saoudite',it:'Arabia Saudita'},JP:{tr:'Japonya',en:'Japan',es:'Japón',pt:'Japão',de:'Japan',fr:'Japon',it:'Giappone'},
  NAF:{tr:'Kuzey Afrika',en:'North Africa',es:'África del Norte',pt:'Norte da África',de:'Nordafrika',fr:'Afrique du Nord',it:'Nord Africa'},WAF:{tr:'Batı Afrika',en:'West Africa',es:'África Occidental',pt:'África Ocidental',de:'Westafrika',fr:"Afrique de l'Ouest",it:'Africa occidentale'},
- BE:{tr:'Belçika',en:'Belgium',es:'Bélgica',pt:'Bélgica',de:'Belgien',fr:'Belgique',it:'Belgio'}};
+ BE:{tr:'Belçika',en:'Belgium',es:'Bélgica',pt:'Bélgica',de:'Belgien',fr:'Belgique',it:'Belgio'},
+ CZ:{tr:'Çekya',en:'Czechia',es:'Chequia',pt:'Tchéquia',de:'Tschechien',fr:'Tchéquie',it:'Cechia'},
+ NO:{tr:'Norveç',en:'Norway',es:'Noruega',pt:'Noruega',de:'Norwegen',fr:'Norvège',it:'Norvegia'},
+ GR:{tr:'Yunanistan',en:'Greece',es:'Grecia',pt:'Grécia',de:'Griechenland',fr:'Grèce',it:'Grecia'},
+ AT:{tr:'Avusturya',en:'Austria',es:'Austria',pt:'Áustria',de:'Österreich',fr:'Autriche',it:'Austria'},
+ SCT:{tr:'İskoçya',en:'Scotland',es:'Escocia',pt:'Escócia',de:'Schottland',fr:'Écosse',it:'Scozia'},
+ PL:{tr:'Polonya',en:'Poland',es:'Polonia',pt:'Polônia',de:'Polen',fr:'Pologne',it:'Polonia'},
+ DK:{tr:'Danimarka',en:'Denmark',es:'Dinamarca',pt:'Dinamarca',de:'Dänemark',fr:'Danemark',it:'Danimarca'},
+ CH:{tr:'İsviçre',en:'Switzerland',es:'Suiza',pt:'Suíça',de:'Schweiz',fr:'Suisse',it:'Svizzera'}};
 const LEAGUES=[
  {c:'TR1',nat:'tr', con:'eu', ctry:'TR',tier:1},
  {c:'EN1',nat:'en', con:'eu', ctry:'EN',tier:1},
@@ -201,7 +209,15 @@ const LEAGUES=[
  {c:'IT2',nat:'it', con:'eu', ctry:'IT',tier:2},
  {c:'FR2',nat:'fr', con:'eu', ctry:'FR',tier:2},
  /* Buradan sonrası göçle gelen ligler: yalnız sona eklenir, sıra asla değişmez. */
- {c:'BE1',nat:'be', con:'eu', ctry:'BE',tier:1}];
+ {c:'BE1',nat:'be', con:'eu', ctry:'BE',tier:1},
+ {c:'CZ1',nat:'cz', con:'eu', ctry:'CZ',tier:1},
+ {c:'NO1',nat:'no', con:'eu', ctry:'NO',tier:1},
+ {c:'GR1',nat:'gr', con:'eu', ctry:'GR',tier:1},
+ {c:'AT1',nat:'at', con:'eu', ctry:'AT',tier:1},
+ {c:'SC1',nat:'sct',con:'eu', ctry:'SCT',tier:1},
+ {c:'PL1',nat:'pl', con:'eu', ctry:'PL',tier:1},
+ {c:'DK1',nat:'dk', con:'eu', ctry:'DK',tier:1},
+ {c:'CH1',nat:'ch', con:'eu', ctry:'CH',tier:1}];
 const TEAMS=[
 /* TR1 */
 [['İstanbul Sentinels','İSS','#FDB912','#A90432',77],['İstanbul Corsairs','İSC','#FFED00','#163962',77],
@@ -454,7 +470,75 @@ const TEAMS=[
  ['Mechelen Carillons','MEC','#FFD200','#D7141A',60],['Westerlo Heathers','WEH','#FFD200','#0046AD',58],
  ['Brugge Bargemen','BBG','#141414','#008C45',58],['Leuven Scholars','LES','#D7141A','#008C45',57],
  ['Sint-Truiden Blossoms','STB','#FFD200','#0046AD',57],['Waregem Gallopers','WAG','#D7141A','#00843D',55],
- ['Denderleeuw Ferrymen','DEN','#D7141A','#f0f0f0',54],['La Louvière Lifts','LLL','#009639','#f0f0f0',54]]];
+ ['Denderleeuw Ferrymen','DEN','#D7141A','#f0f0f0',54],['La Louvière Lifts','LLL','#009639','#f0f0f0',54]],
+/* Kademe A: ülke sıralamasında BE'nin hemen arkasından gelen sekiz lig. Lig
+   büyüklükleri gerçek liglerinki; güçler sıralamaya göre BE1'in altında ve her
+   birinin keşif maliyeti 250K'lık açılış kasasının üstünde kalacak şekilde
+   (açılışta alınabilen ligler değişmesin). */
+/* CZ1 */
+[['Prague Spires','PRS','#E30613','#f0f0f0',73],['Prague Astrolabes','PRA','#8B0000','#f0f0f0',72],
+ ['Plzeň Coppers','PLC','#0050A0','#D7141A',70],['Ostrava Smelters','OSS','#00A0E3','#f0f0f0',64],
+ ['Liberec Glassblowers','LIG','#0066B3','#f0f0f0',62],['Olomouc Fountains','OLF','#003C8F','#f0f0f0',62],
+ ['Jablonec Beadmakers','JAB','#008C45','#FFD200',61],['Hradec Bastions','HRB','#141414','#f0f0f0',60],
+ ['Mladá Boleslav Pistons','MBP','#0046AD','#f0f0f0',60],['Prague Meadows','PRM','#008C45','#f0f0f0',59],
+ ['Teplice Springs','TES','#FFD200','#0046AD',58],['Uherské Hradiště Vintners','UHV','#0046AD','#f0f0f0',58],
+ ['Karviná Pitheads','KAP','#008C45','#141414',57],['Pardubice Chasers','PAC','#D7141A','#f0f0f0',57],
+ ['Prague Sentries','PRT','#FFD200','#8B0000',56],['Zlín Cobblers','ZLC','#FFD200','#0046AD',56]],
+/* NO1 */
+[['Bodø Auroras','BOA','#FFD200','#141414',70],['Bergen Wharves','BEW','#D7141A','#f0f0f0',67],
+ ['Stavanger Derricks','STD','#003C8F','#f0f0f0',65],['Trondheim Tidewaters','TRT','#141414','#f0f0f0',65],
+ ['Molde Panoramas','MOP','#003C8F','#f0f0f0',64],['Tromsø Arctics','TRA','#D7141A','#f0f0f0',60],
+ ['Oslo Signals','OSG','#0046AD','#D7141A',59],['Fredrikstad Ramparts','FRR','#D7141A','#f0f0f0',58],
+ ['Lillestrøm Sawmills','LIS','#FFD200','#141414',58],['Sarpsborg Rapids','SAR','#0046AD','#f0f0f0',57],
+ ['Sandefjord Sloops','SAS','#0046AD','#f0f0f0',56],['Kristiansund Codfish','KRC','#0046AD','#f0f0f0',55],
+ ['Hamar Skaters','HAS','#008C45','#f0f0f0',55],['Haugesund Herrings','HAH','#003C8F','#f0f0f0',55],
+ ['Drammen Timbermen','DRT','#f0f0f0','#0046AD',55],['Ålesund Gables','ÅLG','#F26522','#0046AD',55]],
+/* GR1 */
+[['Piraeus Triremes','PIT','#D7141A','#f0f0f0',72],['Athens Columns','ATC','#008C45','#f0f0f0',70],
+ ['Athens Porticos','ATP','#FFD200','#141414',70],['Thessaloniki Seawalls','THS','#141414','#f0f0f0',70],
+ ['Thessaloniki Byzantines','THB','#FFD200','#141414',62],['Heraklion Labyrinths','HEL','#141414','#f0f0f0',59],
+ ['Tripoli Arcadians','TRI','#FFD200','#0046AD',57],['Athens Olives','ATO','#0046AD','#f0f0f0',56],
+ ['Volos Harbours','VOH','#D7141A','#0046AD',56],['Agrinio Tobacconists','AGT','#FFD200','#0046AD',55],
+ ['Livadeia Oracles','LIO','#008C45','#f0f0f0',55],['Athens Groves','ATG','#0046AD','#f0f0f0',55],
+ ['Larissa Centaurs','LAC','#8B0000','#f0f0f0',55],['Serres Plains','SEP','#D7141A','#f0f0f0',54]],
+/* AT1 */
+[['Salzburg Sonatas','SAL','#D7141A','#f0f0f0',69],['Graz Clocktowers','GRC','#141414','#f0f0f0',67],
+ ['Vienna Waltzers','VIW','#008C45','#f0f0f0',64],['Vienna Palaces','VIP','#4B2582','#f0f0f0',63],
+ ['Linz Danubians','LID','#141414','#f0f0f0',62],['Wolfsberg Valleys','WOV','#F26522','#141414',58],
+ ['Hartberg Orchards','HAO','#0046AD','#f0f0f0',56],['Altach Rhinelanders','ALR','#FFD200','#141414',56],
+ ['Innsbruck Glaciers','ING','#008C45','#141414',55],['Linz Barges','LIB','#0046AD','#f0f0f0',55],
+ ['Graz Hilltops','GRH','#D7141A','#f0f0f0',55],['Ried Harvesters','RIH','#008C45','#141414',55]],
+/* SC1 */
+[['Glasgow Shipwrights','GLS','#008C45','#f0f0f0',71],['Glasgow Cranes','GLC','#0046AD','#f0f0f0',69],
+ ['Edinburgh Crags','EDC','#8B0000','#f0f0f0',61],['Edinburgh Mists','EDM','#008C45','#f0f0f0',60],
+ ['Aberdeen Granites','ABG','#D7141A','#f0f0f0',60],['Dundee Spinners','DUS','#F26522','#141414',57],
+ ['Motherwell Clydesiders','MOC','#FFD200','#8B0000',56],['Paisley Patterns','PAP','#141414','#f0f0f0',56],
+ ['Kilmarnock Bonnets','KIB','#0046AD','#f0f0f0',56],['Dundee Discoverers','DUD','#0046AD','#f0f0f0',55],
+ ['Falkirk Wheels','FAW','#0046AD','#f0f0f0',54],['Livingston Newtowners','LIN','#FFD200','#141414',54]],
+/* PL1 */
+[['Warsaw Vistulans','WAV','#008C45','#f0f0f0',66],['Poznań Lakes','POL','#0046AD','#f0f0f0',66],
+ ['Częstochowa Bellringers','CZB','#D7141A','#0046AD',65],['Białystok Bisons','BIB','#FFD200','#D7141A',64],
+ ['Szczecin Shipbuilders','SZS','#0046AD','#8B0000',61],['Zabrze Headframes','ZAH','#0046AD','#D7141A',59],
+ ['Łódź Mills','ŁOM','#D7141A','#f0f0f0',59],['Kraków Trumpeters','KRT','#D7141A','#f0f0f0',58],
+ ['Płock Refiners','PŁR','#0046AD','#f0f0f0',57],['Lubin Ridges','LUR','#F26522','#008C45',57],
+ ['Gliwice Towers','GLT','#0046AD','#D7141A',57],['Gdańsk Ambers','GDA','#008C45','#f0f0f0',56],
+ ['Kielce Quarrymen','KIQ','#FFD200','#D7141A',56],['Katowice Saucers','KAS','#FFD200','#008C45',56],
+ ['Radom Fields','RAF','#008C45','#f0f0f0',56],['Lublin Ramparts','LUB','#FFD200','#0046AD',55],
+ ['Nieciecza Thermals','NIT','#F26522','#0046AD',55],['Gdynia Sailmakers','GDS','#FFD200','#0046AD',55]],
+/* DK1 */
+[['Copenhagen Canals','COC','#f0f0f0','#0046AD',68],['Herning Moors','HEM','#141414','#D7141A',67],
+ ['Brøndby Plains','BRP','#FFD200','#0046AD',64],['Aarhus Rooftops','AAR','#f0f0f0','#0046AD',63],
+ ['Farum Saplings','FAS','#FFD200','#D7141A',61],['Randers Canopies','RAC','#0046AD','#f0f0f0',57],
+ ['Silkeborg Lakelands','SIL','#D7141A','#f0f0f0',57],['Odense Storytellers','ODS','#0046AD','#f0f0f0',57],
+ ['Viborg Cathedrals','VIC','#008C45','#f0f0f0',56],['Haderslev Fjords','HAF','#0046AD','#f0f0f0',55],
+ ['Vejle Windmills','VEW','#D7141A','#f0f0f0',55],['Fredericia Gates','FRG','#D7141A','#f0f0f0',54]],
+/* CH1 */
+[['Bern Arcades','BEA','#FFD200','#141414',68],['Basel Ferries','BAF','#D7141A','#0046AD',67],
+ ['Geneva Clockmakers','GEC','#8B0000','#f0f0f0',63],['Lugano Palms','LUP','#141414','#f0f0f0',63],
+ ['Lausanne Terraces','LAT','#0046AD','#f0f0f0',59],['Zürich Guildhalls','ZÜG','#f0f0f0','#0046AD',59],
+ ['Luzern Bridges','LUZ','#0046AD','#f0f0f0',59],['St. Gallen Lacemakers','SGL','#008C45','#f0f0f0',58],
+ ['Sion Apricots','SIA','#D7141A','#f0f0f0',56],['Thun Castles','THC','#D7141A','#f0f0f0',56],
+ ['Zürich Steamers','ZÜS','#0046AD','#f0f0f0',55],['Winterthur Engineers','WIE','#D7141A','#f0f0f0',54]]];
 /* Uyruk → kıta. Kurulum ekranı önce kıta, sonra ülke sorar; 52 ülkeyi tek listede
    göstermek okunmuyordu. Futbol federasyonu esas alındı: Türkiye ve Rusya Avrupa. */
 const NCONTS=[

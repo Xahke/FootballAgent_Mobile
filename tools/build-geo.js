@@ -23,7 +23,7 @@ const SRC_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/
 const CACHE = path.join(__dirname, '.geocache', 'ne_110m_admin_0_map_units.geojson');
 const OUT = path.join(__dirname, '..', 'js', 'worldgeo.js');
 
-/* ===== oyunun 17 keşif bölgesi → Natural Earth birimleri =====
+/* ===== oyunun 25 keşif bölgesi → Natural Earth birimleri =====
    [A3] tüm birimleri alır; [A3, 'Ad'] yalnızca o birimi alır.
    NAF ve WAF birer ülke değil: oyunun data.js'indeki NAF/AFR uyruk listelerinin
    coğrafi karşılığı. Tek bölge, çok poligon. */
@@ -37,6 +37,14 @@ const TERR = {
   NL: [['NLD']],
   PT: [['PRT']],
   BE: [['BEL']],
+  CZ: [['CZE']],
+  NO: [['NOR', 'Norway']],           // Svalbard ayrı birim; ligin coğrafyası değil
+  GR: [['GRC']],
+  AT: [['AUT']],
+  SCT: [['GBR', 'Scotland']],
+  PL: [['POL']],
+  DK: [['DNK']],
+  CH: [['CHE']],
   BR: [['BRA']],
   AR: [['ARG']],
   US: [['USA']],
@@ -60,8 +68,9 @@ const ANCHOR_IN = { WAF: 'NGA' };
    arası 22.8 birime indi (önceki en yakın çift DE–NL 44); en yakın zumda bile
    büyük "evin" halkası komşunun işaretini örtüyor ve ona dokunulamıyordu.
    İşaretler bölgenin içinde kalacak kadar itiliyor (birim ≈ 10 km); raporun
-   İÇERİDE sütunu itilmiş noktayı denetliyor. */
-const MARK_NUDGE = { NL: [3, -9], BE: [-3, 6] };
+   İÇERİDE sütunu itilmiş noktayı denetliyor. Kademe A'da aynı şey AT–CZ'de oldu
+   (29.1 → 39.9). Hedef: hiçbir çift ~37 birimden yakın olmasın. */
+const MARK_NUDGE = { NL: [3, -9], BE: [-3, 6], AT: [9, 3], CZ: [2, -6] };
 
 /* Antarktika 180. meridyeni geçen tek parça; hiçbir ligi de yok. */
 const SKIP = ['ATA'];
