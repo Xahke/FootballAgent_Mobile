@@ -23,7 +23,7 @@ const SRC_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/
 const CACHE = path.join(__dirname, '.geocache', 'ne_110m_admin_0_map_units.geojson');
 const OUT = path.join(__dirname, '..', 'js', 'worldgeo.js');
 
-/* ===== oyunun 16 keşif bölgesi → Natural Earth birimleri =====
+/* ===== oyunun 17 keşif bölgesi → Natural Earth birimleri =====
    [A3] tüm birimleri alır; [A3, 'Ad'] yalnızca o birimi alır.
    NAF ve WAF birer ülke değil: oyunun data.js'indeki NAF/AFR uyruk listelerinin
    coğrafi karşılığı. Tek bölge, çok poligon. */
@@ -36,6 +36,7 @@ const TERR = {
   FR: [['FRA', 'France']],           // metropol Fransa; Fransız Guyanası hariç
   NL: [['NLD']],
   PT: [['PRT']],
+  BE: [['BEL']],
   BR: [['BRA']],
   AR: [['ARG']],
   US: [['USA']],
@@ -54,6 +55,13 @@ const TERR = {
    işaret Kongo havzasına düşüyordu. Bölge bir oyun bölgesi olduğu için işaretin
    nereye konacağı coğrafi değil tasarım kararı. */
 const ANCHOR_IN = { WAF: 'NGA' };
+
+/* Komşu küçük bölgelerin işaretleri üst üste biniyor. Belçika eklenince BE–NL
+   arası 22.8 birime indi (önceki en yakın çift DE–NL 44); en yakın zumda bile
+   büyük "evin" halkası komşunun işaretini örtüyor ve ona dokunulamıyordu.
+   İşaretler bölgenin içinde kalacak kadar itiliyor (birim ≈ 10 km); raporun
+   İÇERİDE sütunu itilmiş noktayı denetliyor. */
+const MARK_NUDGE = { NL: [3, -9], BE: [-3, 6] };
 
 /* Antarktika 180. meridyeni geçen tek parça; hiçbir ligi de yok. */
 const SKIP = ['ATA'];
@@ -231,6 +239,8 @@ async function source() {
       ? terrByUnit[code][host] : rings;
     const big = pool.slice().sort((a, b) => area(b) - area(a))[0];
     const pia = poleOfInaccessibility(big);
+    const nudge = MARK_NUDGE[code];
+    if (nudge) { pia.x += nudge[0]; pia.y += nudge[1]; }
     const inside = rings.some(r => pointInRing(pia.x, pia.y, r));
     out[code] = { d: pathOf(rings), bb: [x0, y0, x1, y1], a: [pia.x, pia.y] };
     report.push({ code, ok: true, rings: rings.length, pia, inside, host: host || null, bb: [x0, y0, x1, y1] });

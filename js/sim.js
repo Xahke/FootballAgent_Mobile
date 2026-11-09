@@ -435,6 +435,9 @@ function endSeason(){
   S.lgHist=S.lgHist||LEAGUES.map(()=>[]);
   const trow=tm=>[tm.id,tm.pts,tm.w,tm.d,tm.l,tm.gf,tm.ga];
   const champs=LEAGUES.map((lg,i)=>{
+    /* Göçle sezonun son haftalarında katılan lig hiç maç oynamamış olabilir:
+       sıfır puanlı tablonun ilk sırası şampiyon değil, arşive de haber de yok. */
+    if(!lgPlayed(i))return null;
     /* Gol kralı yalnız gerçekten gol atmış oyuncudan seçilir. Eski hâlde filtre
        yoktu: hiç gol atılmamış bir ligde sıralama sıfırlar arasında yapılıyor ve
        rastgele bir oyuncu "0 gol ile gol kralı" diye haber oluyordu. Kimse yoksa
@@ -478,7 +481,7 @@ function endSeason(){
     return {lgi:i,tm:champTm,ts};
   });
   delete S.vSe;
-  showSeasonModal(champs);
+  showSeasonModal(champs.filter(Boolean));
   /* --- next season's continental cups seeded from final standings --- */
   seedCups();
   /* --- promotion & relegation: bottom 3 ↔ top 3 in tiered countries --- */

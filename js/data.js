@@ -113,7 +113,7 @@ const NAF=['eg','ma','dz','tn'];
 /* agent nationality → home country (league network) */
 const NAT2CTRY={tr:'TR',en:'EN',es:'ES',de:'DE',it:'IT',fr:'FR',nl:'NL',pt:'PT',br:'BR',ar:'AR',
  us:'US',mx:'MX',sa:'SA',jp:'JP',ng:'WAF',sn:'WAF',gh:'WAF',cm:'WAF',eg:'NAF',ma:'NAF',
- be:'NL',hr:'IT',rs:'IT',pl:'DE',cz:'DE',gr:'IT',no:'EN',se:'EN',dk:'DE',ch:'DE',at:'DE',ua:'DE',ro:'IT',sct:'EN',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP'};
+ be:'BE',hr:'IT',rs:'IT',pl:'DE',cz:'DE',gr:'IT',no:'EN',se:'EN',dk:'DE',ch:'DE',at:'DE',ua:'DE',ro:'IT',sct:'EN',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP'};
 const NATNAME={
  tr:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},en:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},es:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
  de:{tr:'Almanya',en:'Germany',es:'Alemania',pt:'Alemanha',de:'Deutschland',fr:'Allemagne',it:'Germania'},it:{tr:'İtalya',en:'Italy',es:'Italia',pt:'Itália',de:'Italien',fr:'Italie',it:'Italia'},fr:{tr:'Fransa',en:'France',es:'Francia',pt:'França',de:'Frankreich',fr:'France',it:'Francia'},
@@ -175,7 +175,8 @@ const CTRYS={
  BR:{tr:'Brezilya',en:'Brazil',es:'Brasil',pt:'Brasil',de:'Brasilien',fr:'Brésil',it:'Brasile'},AR:{tr:'Arjantin',en:'Argentina',es:'Argentina',pt:'Argentina',de:'Argentinien',fr:'Argentine',it:'Argentina'},
  US:{tr:'ABD',en:'USA',es:'EE. UU.',pt:'EUA',de:'USA',fr:'États-Unis',it:'Stati Uniti'},MX:{tr:'Meksika',en:'Mexico',es:'México',pt:'México',de:'Mexiko',fr:'Mexique',it:'Messico'},
  SA:{tr:'S. Arabistan',en:'Saudi Arabia',es:'Arabia Saudí',pt:'Arábia Saudita',de:'Saudi-Arabien',fr:'Arabie saoudite',it:'Arabia Saudita'},JP:{tr:'Japonya',en:'Japan',es:'Japón',pt:'Japão',de:'Japan',fr:'Japon',it:'Giappone'},
- NAF:{tr:'Kuzey Afrika',en:'North Africa',es:'África del Norte',pt:'Norte da África',de:'Nordafrika',fr:'Afrique du Nord',it:'Nord Africa'},WAF:{tr:'Batı Afrika',en:'West Africa',es:'África Occidental',pt:'África Ocidental',de:'Westafrika',fr:"Afrique de l'Ouest",it:'Africa occidentale'}};
+ NAF:{tr:'Kuzey Afrika',en:'North Africa',es:'África del Norte',pt:'Norte da África',de:'Nordafrika',fr:'Afrique du Nord',it:'Nord Africa'},WAF:{tr:'Batı Afrika',en:'West Africa',es:'África Occidental',pt:'África Ocidental',de:'Westafrika',fr:"Afrique de l'Ouest",it:'Africa occidentale'},
+ BE:{tr:'Belçika',en:'Belgium',es:'Bélgica',pt:'Bélgica',de:'Belgien',fr:'Belgique',it:'Belgio'}};
 const LEAGUES=[
  {c:'TR1',nat:'tr', con:'eu', ctry:'TR',tier:1},
  {c:'EN1',nat:'en', con:'eu', ctry:'EN',tier:1},
@@ -198,7 +199,9 @@ const LEAGUES=[
  {c:'ES2',nat:'es', con:'eu', ctry:'ES',tier:2},
  {c:'DE2',nat:'de', con:'eu', ctry:'DE',tier:2},
  {c:'IT2',nat:'it', con:'eu', ctry:'IT',tier:2},
- {c:'FR2',nat:'fr', con:'eu', ctry:'FR',tier:2}];
+ {c:'FR2',nat:'fr', con:'eu', ctry:'FR',tier:2},
+ /* Buradan sonrası göçle gelen ligler: yalnız sona eklenir, sıra asla değişmez. */
+ {c:'BE1',nat:'be', con:'eu', ctry:'BE',tier:1}];
 const TEAMS=[
 /* TR1 */
 [['İstanbul Sentinels','İSS','#FDB912','#A90432',77],['İstanbul Corsairs','İSC','#FFED00','#163962',77],
@@ -439,7 +442,19 @@ const TEAMS=[
  ['Bastia Clippers','BAC','#8B1B24','#FCD405',56],['Ajaccio Nomads','AJN','#1D9053','#141414',56],
  ['Troyes Frost','TRF','#DC2626','#f0f0f0',55],['Dunkerque Rainfall','DUR','#0057B8','#f0f0f0',54],
  ['Clermont Highlands','CLH','#0A8F42','#f0f0f0',54],['Valenciennes Coves','VAC','#FCD405','#141414',53],
- ['Sochaux Cliffs','SOC','#141414','#f0f0f0',53],['Nancy Quarry','NAQ','#F26522','#141414',52]]];
+ ['Sochaux Cliffs','SOC','#141414','#f0f0f0',53],['Nancy Quarry','NAQ','#F26522','#141414',52]],
+/* BE1 — ilk göçle eklenen lig. LEAGUES ve TEAMS'e yalnız SONA ekleniyor: kayıtlar
+   lig indeksi taşıyor (S.known, S.fx, tm.lg), araya giren bir lig hepsini kaydırırdı.
+   Eski kayıtta olmayan lig açılışta growLeagues() ile kuruluyor (core.js).
+   Güç dağılımı ülke sıralamasına göre PT1/NL1'in hemen altında. */
+[['Brugge Belfries','BRB','#0055A4','#141414',75],['Brussels Mosaics','BRM','#FFD200','#1C3F94',73],
+ ['Brussels Arcades','BRA','#4B2582','#f0f0f0',71],['Genk Lodestones','GEL','#0046AD','#f0f0f0',70],
+ ['Gent Looms','GEN','#00489A','#f0f0f0',66],['Antwerp Cutters','ANC','#E30613','#f0f0f0',66],
+ ['Liège Furnaces','LIF','#D7141A','#f0f0f0',65],['Charleroi Embers','CHE','#141414','#f0f0f0',61],
+ ['Mechelen Carillons','MEC','#FFD200','#D7141A',60],['Westerlo Heathers','WEH','#FFD200','#0046AD',58],
+ ['Brugge Bargemen','BBG','#141414','#008C45',58],['Leuven Scholars','LES','#D7141A','#008C45',57],
+ ['Sint-Truiden Blossoms','STB','#FFD200','#0046AD',57],['Waregem Gallopers','WAG','#D7141A','#00843D',55],
+ ['Denderleeuw Ferrymen','DEN','#D7141A','#f0f0f0',54],['La Louvière Lifts','LLL','#009639','#f0f0f0',54]]];
 /* Uyruk → kıta. Kurulum ekranı önce kıta, sonra ülke sorar; 52 ülkeyi tek listede
    göstermek okunmuyordu. Futbol federasyonu esas alındı: Türkiye ve Rusya Avrupa. */
 const NCONTS=[

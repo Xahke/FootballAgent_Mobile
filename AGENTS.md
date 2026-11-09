@@ -115,7 +115,7 @@ call time. The parts that are load-time real:
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/review.js` | Play's in-app review sheet: when to ask, the device-scoped ask counter, the Settings row that opens the store page — see *The review prompt* below |
-| `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
+| `js/data.js` | Name pools, 23 leagues over 17 territories, 452 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
@@ -229,7 +229,7 @@ knows. Renaming a node id means adding a `SK_LEGACY` row, not just editing `SKIL
 ### The exploration map shows progress — it does not gate it
 
 The scouting network has a full-screen map view (`pushV('atlas')`). The map draws the
-**16 territories** of `LEAGUES[].ctry`, not the 22 leagues: six countries have two tiers,
+**17 territories** of `LEAGUES[].ctry`, not the 23 leagues: six countries have two tiers,
 so a territory carries one marker while purchases still happen per league.
 
 **There is no adjacency requirement.** `buyScout(i)` checks exactly three things — the
@@ -257,8 +257,8 @@ save format — and `atlas.js` only reads it:
 Cost is what shapes the opening, and it comes from league strength:
 `scoutCost(i) = round((30 + max(0, lgAvgStr(i)−40)·12) · (1 − skillBonus('scout')))`. At
 season 1 that runs from 93K (WA1) and 162K (NA1) through the second tiers (196–288K) up
-to 470K (EN1). Against the 250K starting cash only WA1, NA1, TR2, FR2 and IT2 are
-affordable immediately — **that spread is the real balance lever, so re-measure it
+to 470K (EN1); BE1, added later, costs 300K (beside NL1 289K and PT1 301K). Against
+the 250K starting cash only WA1, NA1, TR2, FR2 and IT2 are affordable immediately — **that spread is the real balance lever, so re-measure it
 whenever club strengths or `scoutCost()` change.**
 
 Geometry lives in `js/worldgeo.js`, a **generated** file: `tools/build-geo.js` projects
@@ -1146,10 +1146,10 @@ only Play Core's own `PlayCoreDialogWrapperActivity`.
 
 ### The world runs without the player
 
-`sim.js` and `market.js` simulate all 22 leagues every week regardless of what the
+`sim.js` and `market.js` simulate all 23 leagues every week regardless of what the
 player does: clubs trade with each other, contracts expire and produce free agents,
 players age, decline and retire, youth come through, teams promote and relegate. A new
-game is ~6,980 players across 436 clubs over a 38-week season. Any change to
+game is ~7,240 players across 452 clubs over a 38-week season. Any change to
 player-facing economy has to be checked against this background economy — it's easy to
 break the free-agent pool or the age pyramid without noticing.
 
@@ -1528,6 +1528,53 @@ paid token on the copy left behind — plus that no `cid` is ever live in two sl
 quarantine survives later localStorage writes, and that a restored copy carries no
 purchased capacity across.
 
+### Leagues are only ever appended, and old saves grow into them
+
+A save carries one fixture list per league (`S.fx`) and league *indices* everywhere —
+`S.known`, `S.scout`, `tm.lg`, `S.lgHist`, `S.arch`. So `LEAGUES` and `TEAMS` (data.js)
+grow **only at the end**, in the same order. Inserting a league in the middle would shift
+every index in every existing save. The marker comment in `LEAGUES` says where the
+original 22 end; BE1 is the first league added after release.
+
+`validSave()` used to demand `S.fx.length === LEAGUES.length`, which meant the first
+added league would have marked **every existing career as broken** and dropped it from
+the menu. It is now an upper bound, and `growLeagues()` (core.js) builds what an older
+save is missing when `loadSlot()` opens it:
+
+- Teams and squads come from `addLeagueTeams()`, the same function `newGame()` uses, so
+  a grown league and a new-game league are the same world. Ids continue from
+  `S.teams.length` and `PID`; `claimNotable()` then hands the notable newcomers to the
+  rival agencies.
+- **Mid-season the league joins late.** The weeks already played are empty rounds — the
+  week index is one calendar for every league — and as many rounds as fit run in the
+  weeks that are left. Every team plays in every round, so the table stays fair. The
+  list is capped at the longest existing league, because a longer one would raise
+  `totalWeeks()` and lengthen the season. Next season `buildAllFixtures()` builds it
+  like any other league. `weekFixHtml()` says `lgNoMatchWk` for an empty round instead
+  of drawing a blank card.
+- A league that never got to play before the season ended (a save opened in week 37–38)
+  produces no champion: `endSeason()` skips it through `lgPlayed()` and the season modal
+  receives the filtered list.
+- The grown save is written straight away and a `newLg` inbox message says where the
+  league came from. Byte-exact paths — the write queue, migration, rescue, fork restore,
+  the legacy key — copy records untouched and never grow them; growth happens only when
+  a career is opened.
+- Growing is idempotent: a grown save has every league, so the next open adds nothing.
+
+Measured against the build on Play (versionCode 9, `98fdfc8`): its own code played and
+saved careers at weeks 4, 11, 26 and 37 through the real `saveToSlot()`; the new code
+opened each through the real `loadSlot()` and played on to week 13 of the next season.
+Every one opened with cash, reputation, clients and week unchanged, grew 16 teams and
+256 players with unique ids, ran with no errors, and drew the cup, home, client and
+profile screens in all four themes clean. Saving and reopening a grown career added
+nothing. On new games, six seeds over eight seasons against the pre-Belgium code:
+population 7,311–7,320 (was 7,048–7,063 — the 256 newcomers, flat), free agents 60,
+unrepresented pool 4,586–4,702 (the same 63.6% share as before), mean age 25.1–25.2,
+and the oldest player 37 in two seeds where it had been 36. Simulation time rose ~5%.
+
+**Belgian clubs are not in the continental cups yet.** `CUPQ` still lists the original
+eight leagues; who qualifies from which league belongs to the cup-format rework.
+
 ### Saves must degrade gracefully
 
 There are three slots plus device preferences, all in `localStorage`:
@@ -1568,7 +1615,9 @@ are there for the same reason.
 `META.fk` is the quarantine index and is absent on every old save; `forkList()` returns
 an empty list when it is missing, so nothing downstream has to know it can be absent.
 
-`validSave()` accepts any save whose `S.fx` length matches `LEAGUES.length`; a slot whose
+`validSave()` accepts any save with between one and `LEAGUES.length` fixture lists — fewer
+means an older build wrote it and `growLeagues()` adds the rest (see *Leagues are only ever
+appended* below); more means a newer build did, and it is still refused. A slot whose
 summary exists but whose payload is broken is dropped from the meta so the menu doesn't
 lie. There is no migration step beyond that, so **every new state field must work when
 absent from an old save.** Read through a helper with a default (`agMod`, `pref`,
@@ -1835,8 +1884,11 @@ close-out for a gameplay change:
    (atlas.js filters both silently, so a mismatch is invisible at runtime); that each
    marker `a` falls inside its own `bb`; that `GEO.ctx` is present. Marker crowding is a
    visual check at zoom, not a fixed threshold — markers rescale with `mapMarkScale()`,
-   and the closest pair today is DE–NL at 44 units in a 3753-wide viewBox.
-   Then re-check `scoutCost()` across all 22 leagues against the 250K opening cash.
+   and the closest pair today is BE–NL at 39 units in a 3753-wide viewBox — only because
+   `MARK_NUDGE` in `tools/build-geo.js` pushes both apart; unpushed they sat at 23 and
+   Belgium's home ring covered the Dutch marker at the deepest zoom. A new small
+   neighbour needs the same check, and a nudge must keep the build's İÇERİDE column.
+   Then re-check `scoutCost()` across all leagues against the 250K opening cash.
 5. **Themes** — 4 themes × every screen. Also assert that every class the new markup emits
    and every `--*` variable it references resolves inside all four scoped blocks of the
    compiled `css/style.css`; that catches a theme silently missing a rule.

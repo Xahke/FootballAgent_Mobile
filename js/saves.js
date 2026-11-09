@@ -157,7 +157,11 @@ function metaOf(st){
 }
 
 /* ================= YUVA İŞLEMLERİ ================= */
-function validSave(d){return !!(d&&d.S&&d.S.players&&d.S.fx&&d.S.fx.length===LEAGUES.length);}
+/* Lig sayısı tam eşitlik değil, ÜST sınır: daha az ligli bir kayıt eski bir
+   sürümün kaydıdır ve açılırken growLeagues() eksikleri kuruyor (core.js). Eskiden
+   burada === vardı — LEAGUES'e eklenen ilk lig bütün kayıtları "bozuk" saydırırdı.
+   Fazla ligli kayıt bu sürümden yeni bir sürümün yazdığı kayıttır; o hâlâ reddediliyor. */
+function validSave(d){return !!(d&&d.S&&d.S.players&&Array.isArray(d.S.fx)&&d.S.fx.length>0&&d.S.fx.length<=LEAGUES.length);}
 
 /* Senkron döner: "kuyruğa alındı" demek, "diske yazıldı" demek değil. Gerçek
    sonuç SAVEH üzerinden görünür oluyor (ui.js kalıcı bir şerit çiziyor) —
@@ -200,6 +204,15 @@ function loadSlot(n){
     const d=migrateSave(rec);
     if(!validSave(d))return dropSlotMeta(n,'broken');
     S=d.S;PID=d.PID;curSlot=n;
+    /* Eski sürümün kaydı: bu sürümde eklenen ligler kuruluyor ve kayıt hemen
+       yazılıyor. Yazma tutmazsa bir sonraki açılışta aynı ligler yeniden kurulur
+       — o zaman başka oyuncularla, ama henüz hiçbir şey onlara bağlanmamış olur.
+       Haber, oyuncu yeni ligi kendi görmeden önce nereden geldiğini bilsin diye. */
+    const grown=growLeagues();
+    if(grown.length){
+      grown.forEach(li=>pushNews('newLg',{li},'info'));
+      saveToSlot(n);
+    }
     /* Kariyer kimliği eski kayıtlarda yok; ilk açılışta veriliyor ve hemen
        yazılıyor. saveToSlot() senkron dönüyor ama bu yalnız "kuyruğa alındı"
        demek — yazmanın gerçekten tuttuğunu SAVEH söylüyor ve başarısızlık

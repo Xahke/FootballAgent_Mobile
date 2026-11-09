@@ -161,13 +161,7 @@ function newGame(){
   /* cid: kariyerin yuvadan bağımsız kimliği (js/saves.js — newCid).
      Aynı yuvada silinip yeniden kurulan kariyer yeni bir kimlik alır. */
   S={cid:newCid(),lang:L,week:1,season:1,cash:250,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
-  TEAMS.forEach((lgTeams,lg)=>{
-    lgTeams.forEach(([n,ab,c1,c2,str])=>{
-      const tm={id:S.teams.length,n,ab,c1,c2,lg,str,bud:clamp((str-55)/30,0.4,1.05),pts:0,w:0,d:0,l:0,gf:0,ga:0};
-      S.teams.push(tm);
-      [['KL',2],['DF',5],['OS',5],['FV',4]].forEach(([p,cnt])=>{for(let k=0;k<cnt;k++)S.players.push(genPlayer(tm,p));});
-    });
-  });
+  TEAMS.forEach((_,lg)=>addLeagueTeams(lg));
   buildAllFixtures();
   seedCups();
   /* Dünya kurulduktan sonra: rakip ajanslar ve dikkat çekici oyuncuların paylaşımı.
@@ -176,6 +170,58 @@ function newGame(){
   pushNews('tut',{},'info');
 }
 const SEASONW=38;   // sezon uzunluğu hedefi (en kalabalık ligin çift devresi)
+/* Bir ligin kulüplerini ve kadrolarını dünyaya ekler. Yeni oyun da, eski kayda
+   lig ekleyen göç de buradan geçiyor — iki ayrı kopya olsaydı göçle gelen lig
+   yeni oyundakinden farklı bir dünya kurardı. Dönen dizi eklenen takım kimlikleri. */
+function addLeagueTeams(lg){
+  const ids=[];
+  (TEAMS[lg]||[]).forEach(([n,ab,c1,c2,str])=>{
+    const tm={id:S.teams.length,n,ab,c1,c2,lg,str,bud:clamp((str-55)/30,0.4,1.05),pts:0,w:0,d:0,l:0,gf:0,ga:0};
+    S.teams.push(tm);ids.push(tm.id);
+    [['KL',2],['DF',5],['OS',5],['FV',4]].forEach(([p,cnt])=>{for(let k=0;k<cnt;k++)S.players.push(genPlayer(tm,p));});
+  });
+  return ids;
+}
+/* ===== LİG GÖÇÜ =====
+   Bir kayıt, yazıldığı sürümün lig listesini taşıyor (S.fx her lig için bir
+   fikstür). LEAGUES sonradan uzadığında eski kayıtta eksik kalan ligler burada,
+   kayıt açılırken kuruluyor: takımlar, oyuncular, fikstür, arşiv yuvaları.
+
+   Kurallar:
+   - Ligler yalnız SONA eklenir (data.js). Kayıtta olan her lig indeksi yerinde
+     kalır; S.known, tm.lg, S.scout, arşivler hiç dokunulmadan doğru kalır.
+   - Sezon ortasında açılan kayıtta yeni lig o sezona GEÇ katılıyor: geçmiş
+     haftalar boş tur olarak duruyor (hafta indeksi bütün liglerde aynı takvim),
+     kalan haftalara sığdığı kadar tur oynanıyor. Her turda bütün takımlar
+     oynadığı için tablo adil kalıyor. Sezon uzamıyor: fikstür, var olan en
+     uzun ligin boyunu geçmiyor — aşsaydı totalWeeks() büyür ve sezon uzardı.
+     Sonraki sezon buildAllFixtures() ligi diğerleri gibi baştan kuruyor.
+   - Hiç maç oynayamadan biten sezon (çok geç açılan kayıt) şampiyon üretmiyor;
+     endSeason() bunu lgPlayed() ile ayırıyor.
+   Dönüş: eklenen lig indeksleri (boşsa göç yok). */
+function growLeagues(){
+  if(!S||!Array.isArray(S.fx)||!Array.isArray(S.teams))return [];
+  const have=S.fx.length;
+  if(have>=LEAGUES.length)return [];
+  const seasonLen=S.fx.reduce((m,f)=>Math.max(m,(f||[]).length),0)||SEASONW;
+  const past=Math.max(0,Math.min(seasonLen,(S.week||1)-1));
+  const added=[];
+  for(let lg=have;lg<LEAGUES.length;lg++){
+    const ids=addLeagueTeams(lg);
+    const rounds=makeFixtures(ids,SEASONW);
+    S.fx[lg]=Array.from({length:past},()=>[]).concat(rounds).slice(0,seasonLen);
+    if(S.lgHist)S.lgHist[lg]=S.lgHist[lg]||[];
+    if(S.arch)S.arch[lg]=S.arch[lg]||[];
+    added.push(lg);
+  }
+  /* Yeni oyuncuların bir kısmı genPlayer'dan 'rival' olarak çıkıyor; dikkat
+     çekenler adlı bir ajansa bağlanmalı, yoksa o ligde herkes isimsiz kalırdı. */
+  if(S.rivals&&S.rivals.length&&typeof claimNotable==='function')claimNotable();
+  return added;
+}
+/* Ligin bu sezon en az bir maç oynayıp oynamadığı. Göçle sezonun sonunda
+   katılan bir lig sıfır puanlı bir tablo taşır; ondan şampiyon çıkmaz. */
+function lgPlayed(lg){return ((S.fx||[])[lg]||[]).some(r=>(r||[]).some(m=>m.hg!==null));}
 function makeFixtures(idList,targetW){
   let ids=[...idList];
   if(ids.length%2)ids.push(-1); // bye for odd-sized groups

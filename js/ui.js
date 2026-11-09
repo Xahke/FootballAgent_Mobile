@@ -684,7 +684,7 @@ const IB_CAT=[
    keys:['champ','finalN','cupWin','wcWin']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
-   keys:['promoted','relegated']},
+   keys:['promoted','relegated','newLg']},
   {id:'scout',grp:'world',ic:'assets/ui/inbox-scout.webp',
    n:{tr:'Keşif Ağı',en:'Scouting',es:'Ojeo',pt:'Observação',de:'Scouting',fr:'Recrutement',it:'Osservatori'},
    keys:['scoutDone']},
@@ -946,6 +946,9 @@ function weekFixHtml(lg,wk){
       <span class="tn" onclick="pushV('team',${a.id})">${a.n}</span></div>`;
   }
   if(wk<0||wk>=S.fx[lg].length)return `<div class="sub">${t('seasonEnd')}</div>`;
+  /* Boş tur yalnız göçle sezon ortasında katılan ligde olur (core.js growLeagues):
+     o haftalar lig yokken geçti. Boş bir kart "bir şey yüklenmedi" gibi okunurdu. */
+  if(!S.fx[lg][wk].length)return `<div class="sub">${t('lgNoMatchWk')}</div>`;
   return S.fx[lg][wk].map(m=>{
     const h=S.teams[m.h],a=S.teams[m.a];
     return `<div class="matchrow">
