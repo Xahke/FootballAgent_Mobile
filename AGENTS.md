@@ -116,7 +116,7 @@ call time. The parts that are load-time real:
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/review.js` | Play's in-app review sheet: when to ask, the device-scoped ask counter, the Settings row that opens the store page — see *The review prompt* below |
-| `js/data.js` | Name pools, 31 leagues over 25 territories, 564 clubs, 3 cups, 52 nationalities — all original names |
+| `js/data.js` | Name pools, 42 leagues over 36 territories, 714 clubs, 3 cups, 58 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
@@ -231,7 +231,7 @@ knows. Renaming a node id means adding a `SK_LEGACY` row, not just editing `SKIL
 ### The exploration map shows progress — it does not gate it
 
 The scouting network has a full-screen map view (`pushV('atlas')`). The map draws the
-**25 territories** of `LEAGUES[].ctry`, not the 31 leagues: six countries have two tiers,
+**36 territories** of `LEAGUES[].ctry`, not the 42 leagues: six countries have two tiers,
 so a territory carries one marker while purchases still happen per league.
 
 **There is no adjacency requirement.** `buyScout(i)` checks exactly three things — the
@@ -259,10 +259,13 @@ save format — and `atlas.js` only reads it:
 Cost is what shapes the opening, and it comes from league strength:
 `scoutCost(i) = round((30 + max(0, lgAvgStr(i)−40)·12) · (1 − skillBonus('scout')))`. At
 season 1 that runs from 93K (WA1) and 162K (NA1) through the second tiers (196–288K) up
-to 470K (EN1). The leagues added after release sit just above the opening cash on
-purpose: PL1 255K, SC1 259K, DK1 264K, AT1 265K, NO1 266K, CH1 267K, GR1 275K, CZ1 289K and
-BE1 300K (beside NL1 289K and PT1 301K). Against the 250K starting cash only WA1, NA1,
-TR2, FR2 and IT2 are affordable immediately — **that spread is the real balance lever, so re-measure it
+to 470K (EN1). Kademe A (ranks 8–17) sits just above the opening cash: PL1 255K, SC1
+259K, DK1 264K, AT1 265K, NO1 266K, CH1 267K, GR1 275K, CZ1 289K, BE1 300K. Kademe B
+(ranks 19–30) is weaker and mostly below it: AZ1 220K, BG1 224K, SK1 227K, SI1 228K, RS1
+234K, HU1 234K, UA1 237K, RO1 239K, CY1 240K, then SE1 254K and HR1 258K. So the 250K
+starting cash now opens fourteen leagues (WA1, NA1, TR2, FR2, IT2 and those nine), where
+it used to open five — kept on purpose by the user's decision, because those leagues really are as
+weak as the second tiers next to them; don't "fix" it by inflating their clubs — **that spread is the real balance lever, so re-measure it
 whenever club strengths or `scoutCost()` change.**
 
 Geometry lives in `js/worldgeo.js`, a **generated** file: `tools/build-geo.js` projects
@@ -1150,10 +1153,10 @@ only Play Core's own `PlayCoreDialogWrapperActivity`.
 
 ### The world runs without the player
 
-`sim.js` and `market.js` simulate all 31 leagues every week regardless of what the
+`sim.js` and `market.js` simulate all 42 leagues every week regardless of what the
 player does: clubs trade with each other, contracts expire and produce free agents,
 players age, decline and retire, youth come through, teams promote and relegate. A new
-game is ~9,020 players across 564 clubs over a 38-week season. Any change to
+game is ~11,420 players across 714 clubs over a 38-week season. Any change to
 player-facing economy has to be checked against this background economy — it's easy to
 break the free-agent pool or the age pyramid without noticing.
 
@@ -1209,7 +1212,8 @@ widen the value spread — see the measurements there.
 
 `js/cups.js` runs the three cups (`CUPS`: Kıta / Birlik / Bölge Kupası — the Champions,
 Europa and Conference League stand-ins) the way UEFA has since 2024/25, adapted to the
-17 associations the game has (UEFA ranks 1–17; 18–55 are not in the game):
+28 associations the game has (UEFA ranks 1–30 apart from 18, Israel, left out by the
+user's decision, and 26, Russia, suspended by UEFA; 31–55 are not in the game):
 
 | Stage | Weeks | What happens |
 |---|---|---|
@@ -1223,7 +1227,10 @@ Europa and Conference League stand-ins) the way UEFA has since 2024/25, adapted 
 the 20%-of-association coefficient floor, data.js) and walks the real 2026/27 access list
 in order — ŞL direct: champions 1–10, runners-up 1–6, thirds 1–5, fourths 1–4, the two
 European Performance Spots (`CUP_EPS`, England and Spain), Portugal's runner-up, and the
-ŞL and AL holders; then ŞL qualifying, AL direct, AL qualifying, KL qualifying. A place
+ŞL and AL holders; then ŞL qualifying (champions of ranks 11–15, the league path's head,
+then the lower champions — the real last round is 10 champions-path and 4 league-path
+clubs), AL direct, AL qualifying (which takes the lower champions that do not fit the ŞL,
+as the real early-round losers drop down), KL qualifying. A place
 whose club already qualified passes to the association's next club (`nxt`), which is also
 how the cup-winner places work, because the game has no domestic cups. The number of
 qualifying places is whatever fills each league phase to 36 (`w1/w2/w3`), so holders and
@@ -1248,7 +1255,8 @@ colouring. KL orientation comes from an Euler circuit, which gives every club 3 
 3 away. When a pot cannot satisfy the rules at all (a KL pot of six once held four clubs
 of one association), `cupDrawLp()` swaps a few clubs with the neighbouring pot and tries
 again. Measured: 1,500 draws over five seeds, every one valid on every rule, the slowest
-116 ms. `cupDrawLpLoose()` (round robin, rules relaxed) exists only so an impossible draw
+116 ms; with the 28 associations of Kademe B, 810 more, all valid, the slowest 42 ms —
+more associations make the country rules easier to satisfy. `cupDrawLpLoose()` (round robin, rules relaxed) exists only so an impossible draw
 can never stop a season; it was not reached in those 1,500.
 
 Legs use the league goal model with home advantage; the final is neutral. A level
@@ -1612,8 +1620,12 @@ A save carries one fixture list per league (`S.fx`) and league *indices* everywh
 grow **only at the end**, in the same order. Inserting a league in the middle would shift
 every index in every existing save. The marker comment in `LEAGUES` says where the
 original 22 end. BE1 came first as the pilot; CZ1, NO1, GR1, AT1, SC1, PL1, DK1 and CH1
-followed — the associations ranked 9–17 by UEFA apart from Türkiye, which was already
-in. Each uses the real league's size (12–18 clubs), and agents of those nationalities now
+followed (Kademe A, UEFA ranks 9–17 apart from Türkiye, which was already in), then CY1,
+SE1, HR1, RS1, UA1, HU1, RO1, SK1, SI1, BG1 and AZ1 (Kademe B, ranks 19–30). Rank 18,
+Israel, is **left out by the user's decision**, and rank 26, Russia, is suspended by UEFA —
+don't "complete" the list. Kademe B brought six name pools the game lacked (`cy`, `hu`,
+`sk`, `si`, `bg`, `az`, each with a low `pickNat()` weight so they do not flood other
+leagues as foreigners). Each uses the real league's size (12–18 clubs), and agents of those nationalities now
 start in their own league (`NAT2CTRY`).
 
 `validSave()` used to demand `S.fx.length === LEAGUES.length`, which meant the first
@@ -1640,6 +1652,9 @@ save is missing when `loadSlot()` opens it:
   the legacy key — copy records untouched and never grow them; growth happens only when
   a career is opened.
 - Growing is idempotent: a grown save has every league, so the next open adds nothing.
+- One league grown is one `newLg` message; several at once are one `newLgs` message that
+  lists the countries. A save from the Play build grows twenty leagues, and twenty
+  separate messages buried the inbox.
 
 Measured against the build on Play (versionCode 9, `98fdfc8`): its own code played and
 saved careers at weeks 4, 11, 26 and 37 through the real `saveToSlot()`; the new code
@@ -1663,8 +1678,18 @@ are weaker and `genPlayer()` gives weaker clubs' players a rival agent less ofte
 Simulation time rose ~22%, in step with the world growing ~24%. **A phone has not been
 measured** — check a week's tick on a low-end device before adding the next tier.
 
+Kademe B was measured the same way. Saves from the Play build (22 leagues) and from
+`main` at 31 leagues, at weeks 10–26, grew exactly the twenty or eleven leagues they lacked,
+played into the next season with no errors (the 31-league saves mid-way through a
+real-format cup season too), drew clean in four themes and did not grow again on
+reopening. New games, six seeds over eight seasons against the 31-league build:
+population 11,507–11,516 (+2,400, flat), free agents 60, mean age 25.3, oldest 36,
+every new league crowned a champion every season; the unrepresented share rose again,
+64–66% → 66–67%. **Simulation time rose ~42%** for a world ~26% larger — more than
+proportional, and still not measured on a phone.
+
 Every added league is in the European cups from the season after it joins: the access
-list reads UEFA ranks, and BE and the eight Kademe A associations are ranks 8–17.
+list reads UEFA ranks, so the 28 associations in the game take part.
 
 ### Saves must degrade gracefully
 
@@ -1975,10 +2000,13 @@ close-out for a gameplay change:
    (atlas.js filters both silently, so a mismatch is invisible at runtime); that each
    marker `a` falls inside its own `bb`; that `GEO.ctx` is present. Marker crowding is a
    visual check at zoom, not a fixed threshold — markers rescale with `mapMarkScale()`,
-   and the closest pairs today are CH–IT 37, BE–NL 39 and AT–CZ 40 units in a 3753-wide
-   viewBox — the last two only because `MARK_NUDGE` in `tools/build-geo.js` pushes them
-   apart; unpushed they sat at 23 and 29, and a home ring covered the neighbour's marker
-   at the deepest zoom. A new small
+   and the closest pairs today are AT–SI 31, AT–CZ 34, HU–SK 35 and IT–SI 36 units in a
+   3753-wide viewBox — only because `MARK_NUDGE` in `tools/build-geo.js` places the Central
+   European cluster (SI, HR, AT, HU, SK, CZ, RS) jointly; unplaced, HR–SI sat at 15 and a
+   home ring covered the neighbour's marker at the deepest zoom. Slovenia is too small and
+   Croatia too crescent-shaped for the old ~37 target, so the cluster was placed by
+   searching each shape for its farthest-from-neighbours inside point and then checked by
+   eye at the deepest zoom. A new small
    neighbour needs the same check, and a nudge must keep the build's İÇERİDE column.
    Then re-check `scoutCost()` across all leagues against the 250K opening cash.
 5. **Themes** — 4 themes × every screen. Also assert that every class the new markup emits
