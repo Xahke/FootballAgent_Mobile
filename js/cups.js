@@ -63,8 +63,9 @@ function cupHolder(ci){
    önemli: önce ŞL doğrudan girişleri, sonra ŞL ön elemesi, sonra AL, sonra KL.
    Bir kulüp yalnız bir yere girer (used). "nxt" = o ülkenin henüz yer almamış
    en iyi kulübü — gerçekte kupa galibinin ya da zaten yer almış kulübün boşalttığı
-   yerin "bir sonraki sıraya" geçmesi böyle işliyor (oyunda yerel kupa yok, kupa
-   galibi yeri de bu yolla ligin bir sonraki sırasına gidiyor).
+   yerin "bir sonraki sıraya" geçmesi böyle işliyor (kupa galibi yerleri cw: ulusal
+   kupanın galibi;
+   galibi zaten yer almışsa yeri de bu yolla ligin bir sonraki sırasına gidiyor).
    Saf: S'ye yazmıyor, zar atmıyor — lig tablosundaki Avrupa bölgeleri de bunu
    "sezon şimdi bitse" diye okuyor (cupProj). */
 function cupAllocate(){
@@ -77,6 +78,9 @@ function cupAllocate(){
   const pos=(r,n)=>{const a=byR[r];const t=a?a.tbl[n-1]:undefined;return ok(t)?t:null;};
   const nxt=r=>{const a=byR[r];if(!a)return null;const t=a.tbl.find(x=>!used.has(x));return t===undefined?null:t;};
   const add=(arr,t)=>{if(ok(t)){mark(t);arr.push(t);}};
+  /* Kupa galibi yeri: ülkenin ulusal kupasını bu sezon kazanan; zaten yer almışsa
+     (ya da kupa henüz bitmediyse — lig tablosundaki tahmin) ligin sıradaki kulübü. */
+  const cw=r=>{const a=byR[r];const w=a?dcWinner(a.ctry):null;return ok(w)?w:nxt(r);};
   /* Öncelik listesi bitince: ülkeler sırayla, her ülke gerçek toplam Avrupa
      kontenjanına yakın bir tavana kadar. Tavanlar dolarsa tavansız devam — oyundaki 28
      ülkede ~430 üst lig kulübü var, gereken ~135. */
@@ -119,20 +123,22 @@ function cupAllocate(){
      yeri), 6–7 için bir (kupa galibi yeri). ŞL ön eleme kaybedenleri sonra eklenir. */
   const d2=[];
   add(d2,cupHolder(2));
-  cupRange(1,5).forEach(r=>{add(d2,nxt(r));add(d2,nxt(r));});
-  cupRange(6,7).forEach(r=>add(d2,nxt(r)));
+  cupRange(1,5).forEach(r=>{add(d2,cw(r));add(d2,nxt(r));});
+  cupRange(6,7).forEach(r=>add(d2,cw(r)));
   const w2=Math.max(0,CUP_LPN-d2.length-w1);
   const p2=[];
   /* AL ön elemesi: 8–12 kupa yerleri; ŞL'ye sığmayan alt sıra şampiyonları
      (gerçekte ŞL ön elemesinin ilk turlarında kaybedip AL'ye düşenler); sonra
      8–17'nin bir sonraki kulüpleri ve 18–30'un kupa yerleri. */
-  fill(p2,2*w2,[...cupRange(8,12).map(r=>()=>nxt(r)),...cupRange(16,30).map(r=>()=>pos(r,1)),
-    ...cupRange(7,12).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(13,17).map(r=>()=>nxt(r)),
-    ...cupRange(18,30).map(r=>()=>nxt(r))]);
-  /* KL — doğrudan giriş yok: AL ön eleme kaybedenleri ve KL ön eleme kazananları. */
+  fill(p2,2*w2,[...cupRange(8,12).map(r=>()=>cw(r)),...cupRange(16,30).map(r=>()=>pos(r,1)),
+    ...cupRange(7,12).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(13,17).map(r=>()=>cw(r)),
+    ...cupRange(18,30).map(r=>()=>cw(r))]);
+  /* KL — doğrudan giriş yok: AL ön eleme kaybedenleri ve KL ön eleme kazananları.
+     AL'ye sığmayan 13–30 kupa galipleri önce: gerçekte KL ön elemesine giriyorlar,
+     liste sırası yüzünden dışarıda kalmasınlar. */
   const w3=Math.max(0,CUP_LPN-w2);
   const p3=[];
-  fill(p3,2*w3,[...cupRange(1,5).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(7,15).map(r=>()=>nxt(r)),
+  fill(p3,2*w3,[...cupRange(13,30).map(r=>()=>cw(r)),...cupRange(1,5).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(7,15).map(r=>()=>nxt(r)),
     ...cupRange(13,17).map(r=>()=>nxt(r)),...cupRange(16,30).map(r=>()=>nxt(r))]);
   return {d:[d1,d2,[]],p:[p1,p2,p3]};
 }
@@ -521,11 +527,13 @@ function simCups(){
   const C=S.cups||[];
   C.forEach((cp,ci)=>{if(cp.v===2)cupWeek(cp,ci);else cupLegacyWeek(cp,ci);});
   if(S.week===CUP_WK.po[1]&&C.length===3&&C.every(cp=>cp.v===2&&cp.st==='po'))cupAfterPo();
+  simDomCups();
 }
 
 /* ===== OKUYUCULAR (arayüz) ===== */
 /* Bu kupada yer alan bütün kulüpler — ön eleme, doğrudan giriş, lig aşaması. */
 function cupTeams(cp){
+  if(cp.ctry)return (cp.t||[]).slice();
   if(cp.v!==2)return (cp.rounds&&cp.rounds[0]||[]).flatMap(m=>[m.h,m.a]);
   const s=new Set(cp.d||[]);
   (cp.po||[]).forEach(t=>{s.add(t.s);s.add(t.u);});
@@ -544,4 +552,97 @@ function cupProj(){
   al.p.forEach((arr,ci)=>arr.forEach(t=>{if(m[t]===undefined)m[t]=ci;}));
   CUPPROJ=m;CUPPROJK=key;
   return m;
+}
+
+/* ===== ULUSAL KUPALAR =====
+   Her ülkenin kendi kupası, gerçekteki gibi: o ülkenin bütün kulüpleri (üst ve
+   alt lig), TEK MAÇLIK eleme, eşitlikte penaltılar, final tarafsız sahada. Tur
+   sayısı kulüp sayısının bir üst ikinin kuvvetine göre; fazlalık kadar en üst
+   tohum ilk turu bay geçer (gerçekte üst lig kulüpleri sonraki turlarda katılıyor).
+   Her tur ayrı kurayla — gerçek kupalar da turdan tura yeniden çekiliyor. Farklı
+   kademeden iki kulüp eşleşirse alt kademedeki ev sahibi; yarı final İspanya,
+   İtalya, Portekiz ve Brezilya'da rövanşlı (gerçekte de öyle).
+   Kuzey ve Batı Afrika ligleri tek bir federasyon değil, bölge karması: kupası yok.
+
+   Kupa galibi gerçek kontenjandaki kupa galibi yerini alıyor (cupAllocate →
+   dcSlot): galip zaten ligden yer almışsa yer ligin bir sonraki sırasına geçer.
+
+   Haftalar Avrupa haftalarının (CUP_WK) dışında: 9, 12, 16, 20, 27, 33, final
+   36. Turlar sondan alınıyor; 64'lük kupa 12. haftada başlar, 16'lık 20'de.
+   Kayıt: S.dc (bu sezonun kupaları) ve S.dcHist {ülke: [{se,tid}]}. İkisi de eski
+   kayıtlarda yok; o kayıtlar ilk kupalarını bir sonraki sezon başında alır. */
+const DC_RW=[9,12,16,20,27,33,36];
+const DC_SF2=['ES','IT','PT','BR'],DC_SF2W=30;
+const DC_SKIP=['NAF','WAF'];
+function dcCtrys(){
+  const out=[];
+  LEAGUES.forEach(l=>{if(!DC_SKIP.includes(l.ctry)&&!out.includes(l.ctry))out.push(l.ctry);});
+  return out;
+}
+function dcName(c){return CTRYS[c]?fmtStr(t('dcFmt'),{c:tx(CTRYS[c])}):'';}
+function dcTier(tid){const tm=S.teams[tid];return tm&&LEAGUES[tm.lg]?LEAGUES[tm.lg].tier:9;}
+/* Turun haftaları: tek maç ya da rövanşlı yarı final için iki hafta. */
+function dcWks(dc,ri){
+  const w=DC_RW[Math.max(0,DC_RW.length-dc.n+ri)];
+  return ri===dc.n-2&&DC_SF2.includes(dc.ctry)?[DC_SF2W,w]:[w];
+}
+/* Açık kura. Tek maçta s ev sahibi: alt kademe ev sahibi, aynı kademede zar.
+   Rövanşlı turda ve finalde s tohumu daha iyi olan (ikinci maçı evinde oynar). */
+function dcDraw(dc,ids,ri){
+  const L=cupShuffle(ids.slice()),out=[];
+  const single=dcWks(dc,ri).length===1,fin=ri===dc.n-1;
+  for(let i=0;i+1<L.length;i+=2){
+    let a=L[i],b=L[i+1];
+    if(fin||!single){if((dc.rk[b]||99)<(dc.rk[a]||99))[a,b]=[b,a];}
+    else if(dcTier(b)>dcTier(a))[a,b]=[b,a];
+    out.push(cupTie(a,b,single));
+  }
+  return out;
+}
+function seedDomCups(){
+  S.dc=dcCtrys().map(c=>{
+    /* Tohum sırası: kademe, sonra biten sezonun sırası (yeni oyunda takım sırası). */
+    const seed=[];
+    LEAGUES.map((l,i)=>[l,i]).filter(([l])=>l.ctry===c).sort((x,y)=>x[0].tier-y[0].tier)
+      .forEach(([,i])=>leagueTable(i).forEach(tm=>seed.push(tm.id)));
+    let B=1;while(B<seed.length)B*=2;
+    const nb=B-seed.length;
+    const dc={ctry:c,t:seed,rk:{},by:seed.slice(0,nb),n:Math.round(Math.log2(B)),r:[],w:null,sc:{}};
+    seed.forEach((id,i)=>dc.rk[id]=i+1);
+    if(dc.n>0)dc.r.push(dcDraw(dc,seed.slice(nb),0));
+    return dc;
+  }).filter(dc=>dc.r.length);
+}
+function dcChampion(dc,tid){
+  dc.w=tid;
+  S.dcHist=S.dcHist||{};
+  const h=S.dcHist[dc.ctry]=S.dcHist[dc.ctry]||[];
+  h.push({se:S.season,tid});
+  if(h.length>20)h.shift();
+  const mine=S.clients.some(id=>(byId(id)||{}).team===tid);
+  if(mine)repEvent(0.8);
+  /* Otuz dört kupanın hepsi haber olsa gelen kutusu boğulur: yalnız müşterinin
+     kulübü kazandıysa ya da kendi ülkenin kupasıysa. */
+  if(mine||dc.ctry===homeCtry())pushNews('dcWin',{c:S.teams[tid].n,tid,ctry:dc.ctry},'good');
+}
+/* simCups()'tan, yani simWeekRun()'ın içinden: kadro dizini hazır. */
+function simDomCups(){
+  (S.dc||[]).forEach(dc=>{
+    if(dc.w!==null)return;
+    const ri=dc.r.length-1,ties=dc.r[ri];
+    if(!ties||!ties.length)return;
+    const k=dcWks(dc,ri).indexOf(S.week);if(k<0)return;
+    const fin=ri===dc.n-1,id='d:'+dc.ctry;
+    ties.forEach(ti=>{const m=ti.m[k];if(m&&m.hg===null)cupPlay(m,id,dc,fin);});
+    if(k<ties[0].m.length-1)return;
+    ties.forEach(ti=>{if(ti.w===null)cupTieEnd(ti);});
+    if(fin){dcChampion(dc,ties[0].w);return;}
+    dc.r.push(dcDraw(dc,ties.map(ti=>ti.w).concat(ri===0?dc.by:[]),ri+1));
+  });
+}
+/* Bu sezonun kupa galibi — yalnız kupa bu sezon bittiyse. seedCups() sezon sonunda
+   S.season artmadan çalıştığı için "bu sezonun" galibi gelecek sezonun yeri. */
+function dcWinner(c){
+  const h=(S.dcHist||{})[c];const x=h&&h[h.length-1];
+  return x&&x.se===S.season&&S.teams[x.tid]&&LEAGUES[S.teams[x.tid].lg].ctry===c?x.tid:null;
 }

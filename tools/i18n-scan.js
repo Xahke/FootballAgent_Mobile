@@ -251,7 +251,9 @@ async function scan(cfg) {
           reset(); shot('lg' + i + '-' + tab, "goLg(" + i + ");S.ltab='" + tab + "';render();");
         }
       }
-      for (let ci = 0; ci < 4; ci++) { reset(); shot('cup' + ci, "goCup(" + ci + ");"); }
+      for (let ci = 0; ci < 5; ci++) { reset(); shot('cup' + ci, "goCup(" + ci + ");"); }
+      /* ulusal kupalar: rövanşlı yarı finalli, iki kademeli, tek kademeli ve Avrupa dışı birer ülke */
+      for (const c of ['ES','EN','NL','US']) { reset(); shot('dc-' + c, "goDc('" + c + "');"); }
       reset(); shot('lg-pick', "goLg(0);lgPickOpen();");
 
       /* ---- kişiler ve takımlar ---- */

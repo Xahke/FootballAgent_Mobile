@@ -166,6 +166,7 @@ function newGame(){
   TEAMS.forEach((_,lg)=>addLeagueTeams(lg));
   buildAllFixtures();
   seedCups();
+  seedDomCups();
   /* Dünya kurulduktan sonra: rakip ajanslar ve dikkat çekici oyuncuların paylaşımı.
      Oyuncular üretilmeden çağrılamaz, sahiplenecek kimse olmazdı. */
   ensureRivals();
