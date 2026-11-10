@@ -484,6 +484,8 @@ function endSeason(){
   showSeasonModal(champs.filter(Boolean));
   /* --- next season's continental cups seeded from final standings --- */
   seedCups();
+  /* --- ulusal kupalar da düşme/çıkmadan önce, biten sezonun tablosundan --- */
+  seedDomCups();
   /* --- promotion & relegation: bottom 3 ↔ top 3 in tiered countries --- */
   const myTids=new Set(S.clients.map(id=>byId(id).team));
   TIERS.forEach(([tc,sc])=>{

@@ -60,7 +60,7 @@ cupMd:'{n}. maç günü',
 cupLegs:'1. maç {a} · 2. maç {b}',
 cupPen:'pen.',
 cupZones:'1–8 son 16 · 9–24 play-off · 25–36 elenir',
-cupWks:'{a}. ve {b}. hafta',
+cupWks:'{a}. ve {b}. hafta',dcLbl:'Ulusal kupalar',dcFmt:'{c} Ulusal Kupası',dcRound:'{n}. tur',dcByes:'{n} kulüp ilk turu bay geçiyor',dcNext:'Ulusal kupalar gelecek sezon başlıyor.',dcInfo:'Tek maçlık eleme, eşitlikte penaltılar; alt ligdeki kulüp ev sahibi; final tarafsız sahada.',dcSf2:'Yarı final rövanşlı.',
 notifs:'Bildirimler',allNotifs:'Tümünü Gör',newNotifsT:'yeni bildirim',viewProfile:'Profil',
 ibUnread:'okunmamış',ibAllRead:'Hepsi okundu',ibReadAll:'Tümünü oku',
 ibFAct:'Aksiyon',ibFPly:'Oyuncular',ibFFin:'Finans',ibFWorld:'Dünya',
@@ -404,7 +404,7 @@ cupMd:'Matchday {n}',
 cupLegs:'1st leg {a} · 2nd leg {b}',
 cupPen:'pens',
 cupZones:'1–8 last 16 · 9–24 play-offs · 25–36 out',
-cupWks:'weeks {a} and {b}',
+cupWks:'weeks {a} and {b}',dcLbl:'National cups',dcFmt:'{c} National Cup',dcRound:'Round {n}',dcByes:'{n} clubs have a bye in the first round',dcNext:'National cups start next season.',dcInfo:'Single-match knockout, penalties if level; the lower-division club hosts; final on neutral ground.',dcSf2:'Two-legged semi-finals.',
 notifs:'Notifications',allNotifs:'View All',newNotifsT:'new notification(s)',viewProfile:'Profile',
 ibUnread:'unread',ibAllRead:'All caught up',ibReadAll:'Mark all read',
 ibFAct:'Action',ibFPly:'Players',ibFFin:'Finance',ibFWorld:'World',
@@ -758,10 +758,12 @@ const PRIVACY_URL={tr:'https://xahke.github.io/privacy/pro-football-agent/tr.htm
 /* inline links inside news: player → profile, team → team page, league → standings, cup → bracket */
 function goLg(i){S.curLg=i;S.curCtry=LEAGUES[i].ctry;S.curCon=LEAGUES[i].con;S.ltab='table';S.vSe=undefined;navTo('league');}
 function goCup(i){S.curCon='cup';S.curCup=i;navTo('league');}
+function goDc(c){S.curCon='cup';S.curCup=4;S.curDc=c;navTo('league');}
 const lkP=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('player',${id})">${n}</span>`:n;
 const lkT=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('team',${id})">${n}</span>`:n;
 const lkL=(i,n)=>i!==undefined?`<span class="lnk" onclick="goLg(${i})">${n}</span>`:n;
 const lkC=(ci,n)=>ci!==undefined?`<span class="lnk" onclick="goCup(${ci})">${n}</span>`:n;
+const lkD=(c,n)=>c?`<span class="lnk" onclick="goDc('${c}')">${n}</span>`:n;
 /* Rakip ajans adı → ajans sayfası. Çok eski kayıtlarda ajans olmayabilir; o zaman
    haber yine okunabilir olsun diye düz metne düşüyor. */
 const lkR=(ri,n)=>ri!==undefined&&n?`<span class="lnk" onclick="pushV('rival',${ri})">${n}</span>`:(n||'');
@@ -784,6 +786,7 @@ firedYou:p=>`${lkP(p.pid,p.n)} seni kovdu — taleplerini uzun süre görmezden 
 champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} şampiyon oldu.`+(p.s?` Gol kralı: ${lkP(p.sid,p.s)} (${p.g} gol)`:''),
 finalN:p=>`${lkL(p.li,lgName(p.li))} Finali: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Şampiyon: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: Kupayı ${lkT(p.tid,p.c)} kazandı!`,
+dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: Kupayı ${lkT(p.tid,p.c)} kazandı!`,
 wcWin:p=>`${lkC(3,t("wcLbl"))}'nı ${p.n} kazandı!`,
 promoted:p=>`${lkT(p.tid,p.c)} bir üst lige yükseldi — yeni adres: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Dünyaya yeni bir lig eklendi: ${lkL(p.li,lgName(p.li))}. Kulüpleri ve oyuncuları artık dünyada.`,
@@ -824,6 +827,7 @@ firedYou:p=>`${lkP(p.pid,p.n)} fired you — you ignored his demands for too lon
 champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} are champions.`+(p.s?` Top scorer: ${lkP(p.sid,p.s)} (${p.g} goals)`:''),
 finalN:p=>`${lkL(p.li,lgName(p.li))} Final: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Champions: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} lift the trophy!`,
+dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ${lkT(p.tid,p.c)} lift the trophy!`,
 wcWin:p=>`${p.n} win the ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} have been promoted — new home: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`A new league has joined the world: ${lkL(p.li,lgName(p.li))}. Its clubs and players are now part of it.`,

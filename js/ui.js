@@ -681,7 +681,7 @@ const IB_CAT=[
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
   {id:'trophy',grp:'world',ic:'assets/ui/inbox-trophy.webp',
    n:{tr:'Şampiyonluk',en:'Silverware',es:'Títulos',pt:'Títulos',de:'Titel',fr:'Trophées',it:'Trofei'},
-   keys:['champ','finalN','cupWin','wcWin']},
+   keys:['champ','finalN','cupWin','dcWin','wcWin']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
    keys:['promoted','relegated','newLg','newLgs']},
@@ -984,7 +984,11 @@ function setF(k,v){S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};S.
 /* ================= VIEWS ================= */
 /* Bir maç kaydının kupa etiketi. cp yalnız kupa maçının kaydında var (sim.js
    playFixture); lig maçında ve eski kayıtlarda boş döner, satır eskisi gibi çizilir. */
-function cupTag(cp){const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';}
+/* Ulusal kupa maçında cp 'd:XX' (ülke kodu) — Avrupa kupalarının indeksiyle karışmasın. */
+function cupTag(cp){
+  if(typeof cp==='string')return cp.slice(0,2)==='d:'?dcName(cp.slice(2)):'';
+  const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';
+}
 function cupTagPre(cp){const s=cupTag(cp);return s?esc(s)+' · ':'';}
 /* Sezon arşivindeki kupa ekinin tek biçimi — iki profil de buradan okuyor. */
 function cupSeTxt(s){return s&&s.cs?fmtStr(t('cupSe'),{n:s.cs.app,g:s.cs.g||0}):'';}
@@ -1084,16 +1088,50 @@ function cupV2Html(cp,ci){
   else body=cupKoHtml(cp);
   return chips+body;
 }
+/* ===== Ulusal kupalar =====
+   Seçili ülke S.curDc'de (S.curCtry gibi); yoksa menajerin kendi ülkesi. Kıta
+   satırı lig ekranındaki gibi: otuz dört ülke tek satırda çip yığını olurdu. */
+function setDc(c){S.curDc=c;render();}
+function dcRoundLbl(dc,ri){
+  const k=dc.n-1-ri;
+  return k===0?t('finalLbl'):k===1?t('sf'):k===2?t('qf'):k===3?t('r16'):fmtStr(t('dcRound'),{n:ri+1});
+}
+function dcHtml(){
+  const L=S.dc||[];
+  if(!L.length)return `<div class="card">${emptyState('league',t('noCupYet'),t('dcNext'))}</div>`;
+  const dc=L.find(d=>d.ctry===S.curDc)||L.find(d=>d.ctry===homeCtry())||L[0];
+  const conOf=c=>(LEAGUES.find(l=>l.ctry===c)||{}).con;
+  const con=conOf(dc.ctry);
+  const cons=CONTS.filter(([cc])=>L.some(d=>conOf(d.ctry)===cc));
+  const conChips=`<div class="chips">${cons.map(([cc,nm])=>{const f=L.find(d=>conOf(d.ctry)===cc);
+    return `<button class="${con===cc?'on':''}" onclick="setDc('${f.ctry}')">${tx(nm)}</button>`;}).join('')}</div>`;
+  const ctryChips=`<div class="chips">${L.filter(d=>conOf(d.ctry)===con).map(d=>
+    `<button class="${d===dc?'on':''}" onclick="setDc('${d.ctry}')">${tx(CTRYS[d.ctry])}</button>`).join('')}</div>`;
+  const wl=w=>w.length===2?fmtStr(t('cupWks'),{a:w[0],b:w[1]}):t('week')+' '+w[0];
+  const head=`<div class="card"><div class="sect">${esc(dcName(dc.ctry))} · ${t('season')} ${S.season}</div>
+    ${dc.w!==null?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${S.teams[dc.w].n}</span></div>`:''}
+    <div class="sub">${t('dcInfo')}${DC_SF2.includes(dc.ctry)?' '+t('dcSf2'):''}</div></div>`;
+  const rounds=dc.r.map((ties,ri)=>`<div class="card"><div class="sect">${dcRoundLbl(dc,ri)} · ${wl(dcWks(dc,ri))}</div>
+    ${ri===0&&dc.by.length?`<div class="sub" style="margin-bottom:6px">${fmtStr(t('dcByes'),{n:dc.by.length})}</div>`:''}
+    ${ties.map(cupTieHtml).join('')}</div>`).join('');
+  const hist=((S.dcHist||{})[dc.ctry]||[]).filter(x=>S.teams[x.tid]);
+  const histH=hist.length?`<div class="card"><div class="sect">${t('history')}</div>
+    ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span>
+    <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`:'';
+  return conChips+ctryChips+head+rounds+cupExtraHtml(dc)+histH;
+}
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
     `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
   const ci=S.curCup||0;
   const cupChips=`<div class="chips">${CUPS.map((cp,i)=>
     `<button class="${ci===i?'on':''}" onclick="setCup(${i})">${tx(cp.n)}</button>`).join('')}
+    <button class="${ci===4?'on':''}" onclick="setCup(4)">${t('dcLbl')}</button>
     <button class="${ci===3?'on':''}" onclick="setCup(3)">${t('wcLbl')}</button></div>`;
   const RL=[t('r16'),t('qf'),t('sf'),t('finalLbl')];
   let body='';
-  if(ci<3){
+  if(ci===4)body=dcHtml();
+  else if(ci<3){
     const cp=(S.cups||[])[ci];
     if(!cp){body=`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;}
     else if(cp.v===2){

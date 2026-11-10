@@ -122,7 +122,7 @@ call time. The parts that are load-time real:
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
 | `js/badges.js` | Procedural team badges: 24 emblems, 10 frames, 10 patterns, the semantic name→emblem map and `badgeDescriptor()`. `tmBadge()` draws from here |
 | `js/core.js` | Game state `S`, fixtures, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
-| `js/cups.js` | The three European cups in the real format: the access list, qualifying, the league-phase draw and table, the knockout bracket, and the old 16-team format for saves that began a season on it — see *European cups follow the real format* below |
+| `js/cups.js` | The three European cups in the real format: the access list, qualifying, the league-phase draw and table, the knockout bracket, and the old 16-team format for saves that began a season on it — see *European cups follow the real format* below. Also the 34 national cups — see *Every country has its own cup* |
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |
 | `js/events.js` | Event definitions (32, of which 8 are small), weighted selection, `applyEff` |
@@ -1175,7 +1175,8 @@ A new competition gets its own scoring and its own bookkeeping and calls
 The extraction was proven neutral: on a seeded run the whole `{S, PID}` hashed
 identically before and after, with cups still on the old path.
 
-`cp` is the cup index into `CUPS`, absent for a league match. It decides one thing:
+`cp` is the cup index into `CUPS` — or `'d:XX'`, a country code, for a national cup —
+absent for a league match. It decides one thing:
 **where the counters go** (`tallyOf()`):
 
 | | league | cup |
@@ -1231,8 +1232,10 @@ European Performance Spots (`CUP_EPS`, England and Spain), Portugal's runner-up,
 then the lower champions — the real last round is 10 champions-path and 4 league-path
 clubs), AL direct, AL qualifying (which takes the lower champions that do not fit the ŞL,
 as the real early-round losers drop down), KL qualifying. A place
-whose club already qualified passes to the association's next club (`nxt`), which is also
-how the cup-winner places work, because the game has no domestic cups. The number of
+whose club already qualified passes to the association's next club (`nxt`). The
+cup-winner places (`cw`) go to the national cup winner (`dcWinner()`, see the next
+section) and pass to `nxt` the same way when that club is already in, or while the cup is
+still being played — which is what the league table's projection sees. The number of
 qualifying places is whatever fills each league phase to 36 (`w1/w2/w3`), so holders and
 overlaps rebalance themselves. Lists that run out continue round-robin over associations
 up to a per-rank cap close to the real totals. A new game draws on fresh tables, i.e. in
@@ -1284,6 +1287,57 @@ the mean multiplier stayed at 1.00, but players at `vm ≥ 1.3` went from 308–
 more times a season, so `updateValue()` (every `VAL.every` = 12 ratings) fires more often
 for them. If that needs pulling back, `VAL.every` or `VAL.gain` is the dial. Winners now
 include BE, CZ and GR clubs now and then.
+
+### Every country has its own cup
+
+`S.dc` holds one national cup per country — 34, every territory but `NAF`/`WAF`, which are
+regional composites rather than one federation (`DC_SKIP`). They run the way most real
+cups do: **every club of the country**, both tiers; single-match knockout; a level score
+goes to penalties (`cupTieEnd()`, the same rule as the European legs); the final on neutral
+ground. The bracket is the next power of two, and the top seeds — tier first, then the
+finishing position of the season that just ended — take the byes, as real top-flight
+clubs enter in later rounds. Every round is drawn afresh (`dcDraw()`), open draw, and when
+two tiers meet the lower one hosts. Spain, Italy, Portugal and Brazil play two-legged
+semi-finals (`DC_SF2`), as they really do.
+
+The calendar stays out of the European weeks: rounds are taken from the end of `DC_RW`
+(9, 12, 16, 20, 27, 33, final 36), so a 64-club cup starts in week 12 and a 16-club cup
+in week 20; a two-legged semi-final adds week 30. Every match runs through
+`cupPlay()` → `playFixture()` with `cp = 'd:'+ctry`, so a national cup appearance lands in
+`p.cs` with the European ones and `cupTag()` names the competition on the match rows. Each
+cup keeps its own goal ledger (`sc`).
+
+Seeded where the European cups are — `newGame()` and `endSeason()`, before promotion, from
+the final tables — and the winner goes into `S.dcHist[ctry]` (`{se, tid}`, last 20).
+`dcWinner()` reads only *this* season's entry, and that is what `cupAllocate()`'s `cw`
+places take: in the AL directly for ranks 1–7, in AL qualifying for 8–17, and the 13–30
+winners first in KL qualifying, so every winner of a European association reaches Europe —
+measured over three seeds, none left out (before the KL change, 1–2 of the lowest ranks
+were). News is pushed only for a client's club or the agent's home country (`dcWin`); 34
+messages a season would bury the inbox. A client's club winning is +0.8 reputation.
+
+**Old saves** carry neither `S.dc` nor `S.dcHist`; they play the season they were opened in
+without national cups and get them at the next `endSeason()`, the cup-winner places
+falling back to `nxt` until the first winner exists. Measured with saves from the Play
+build (v9) and from `main` at 42 leagues, at weeks 10, 20, 26 and 37: every one opened
+unchanged, played into the next season with 34 cups running, no errors, the five cup
+screens clean in four themes, and reopening grew nothing.
+
+Measured on six seeds over eight seasons against `main` at 42 leagues: population
+11,503–11,515 (was 11,507–11,516), free agents 60, mean age 25.3, oldest 36–37, the
+unrepresented share 66–67%, bot reputation in the same band; 272 winners in 272 cup
+seasons, a second-tier club winning 0–1 times per run. About 610 more matches a season
+cost **~12% simulation time** (3 seasons, sequential: 35.5/38.3 s → 39.4/43.8 s). **The
+value spread widened again**, now across every league rather than only the European
+clubs: players at `vm ≥ 1.3` 462–514 → 561–613, at `vm ≤ 0.75` 347–421 → 407–438, mean
+multiplier still 1.01–1.02. `VAL.every` / `VAL.gain` remain the dial if it needs pulling
+back.
+
+The screen is the fifth chip on the cup view (`setCup(4)`, `dcHtml()`): continent and
+country chips like the league view — 34 countries in one row would be a wall — with the
+selection in `S.curDc` (default: the agent's home country), one card per round, the byes
+noted on the first, the European cup cards' scorers/clients (`cupExtraHtml()` reads
+`cupTeams()`, which knows a national cup by its `ctry`) and the history.
 
 ### Balance constants live in named blocks
 
