@@ -600,6 +600,24 @@ function adsAgeForget(){
   adsAgeClear();
   toast(t('adAgeCleared'));
 }
+/* Açılışta bir kez sor. Beyan yalnız + düğmesinden istendiğinde oyuncuların
+   çoğu o düğmeye hiç dokunmuyordu; beyan olmayınca da izin akışı, SDK ve ara
+   reklamlar kurulumun ömrü boyunca hiç başlamıyordu.
+   Aynı nötr ekran: tutar yok, eşik yok, "paylaşmadan devam" aynı ağırlıkta.
+   Atlanırsa bu oturumda bir daha sorulmuyor; bir sonraki açılışta yeniden çıkıyor
+   (bilinçli karar — beyan girilene kadar her açılışta bir kez). Bayrak bellekte
+   ve hiçbir yere yazılmıyor. Menü ÖNCE çiziliyor, ekran onun üstüne geliyor;
+   sıraya pushModal ile giriyor ki açılışta çıkan başka bir pencereyle çakışmasın.
+   Eklenti yoksa (web, PWA, tek dosya) reklam yolu da yok — hiçbir şey sorulmuyor. */
+let adsAgeAsked=false;
+function adsAgeBoot(){
+  if(adsAgeAsked)return;
+  if(typeof adsPlugin!=='function'||!adsPlugin())return;
+  if(adsAgeState()!=='ask')return;
+  adsAgeAsked=true;
+  /* Sırası gelene kadar beyan başka bir yoldan (Ayarlar, +) girilmiş olabilir. */
+  pushModal(()=>{if(adsAgeState()==='ask')adsAgeOpen();else runNextModal();});
+}
 /* Ayarlar'daki beyan satırı. Düzeltme ile silme aynı yerde ve aynı ağırlıkta:
    aşağı düzeltmek yukarı düzeltmek kadar kolay olmalı. Eklenti yoksa (web, PWA,
    tek dosya) hiç çizilmiyor — orada reklam yolu zaten yok. */
@@ -666,7 +684,7 @@ const IB_CAT=[
    keys:['champ','finalN','cupWin','wcWin']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
-   keys:['promoted','relegated']},
+   keys:['promoted','relegated','newLg']},
   {id:'scout',grp:'world',ic:'assets/ui/inbox-scout.webp',
    n:{tr:'Keşif Ağı',en:'Scouting',es:'Ojeo',pt:'Observação',de:'Scouting',fr:'Recrutement',it:'Osservatori'},
    keys:['scoutDone']},
@@ -928,6 +946,9 @@ function weekFixHtml(lg,wk){
       <span class="tn" onclick="pushV('team',${a.id})">${a.n}</span></div>`;
   }
   if(wk<0||wk>=S.fx[lg].length)return `<div class="sub">${t('seasonEnd')}</div>`;
+  /* Boş tur yalnız göçle sezon ortasında katılan ligde olur (core.js growLeagues):
+     o haftalar lig yokken geçti. Boş bir kart "bir şey yüklenmedi" gibi okunurdu. */
+  if(!S.fx[lg][wk].length)return `<div class="sub">${t('lgNoMatchWk')}</div>`;
   return S.fx[lg][wk].map(m=>{
     const h=S.teams[m.h],a=S.teams[m.a];
     return `<div class="matchrow">
@@ -961,6 +982,30 @@ function setCtry(c){
 function setMLg(i){S.mLg=i;render();}
 function setF(k,v){S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};S.f[k]=v;save();render();}
 /* ================= VIEWS ================= */
+/* Bir maç kaydının kupa etiketi. cp yalnız kupa maçının kaydında var (sim.js
+   playFixture); lig maçında ve eski kayıtlarda boş döner, satır eskisi gibi çizilir. */
+function cupTag(cp){const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';}
+function cupTagPre(cp){const s=cupTag(cp);return s?esc(s)+' · ':'';}
+/* Sezon arşivindeki kupa ekinin tek biçimi — iki profil de buradan okuyor. */
+function cupSeTxt(s){return s&&s.cs?fmtStr(t('cupSe'),{n:s.cs.app,g:s.cs.g||0}):'';}
+/* Kupa ekranının iki kartı: kupanın kendi gol defterinden (cp.sc) gol krallığı ve
+   bu kupada takımı olan müşteriler. İkisi de yalnız okuyor. */
+function cupExtraHtml(cp){
+  let h='';
+  const ids=new Set();
+  (cp.rounds[0]||[]).forEach(m=>{ids.add(m.h);ids.add(m.a);});
+  const mine=S.clients.map(byId).filter(p=>p&&ids.has(p.team));
+  if(mine.length)h+=`<div class="card"><div class="sect">${t('cupMine')}</div>
+    ${mine.map(p=>{const c=p.cs||{app:0,g:0,a:0};
+      return `<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)} · ${S.teams[p.team].n}</span>
+      <span class="v num">${c.app} ${t('mShort')} · ${c.g||0} ${t('gShort')} · ${c.a||0} ${t('aShort')}</span></div>`;}).join('')}</div>`;
+  const sc=Object.keys(cp.sc||{}).map(id=>[byId(+id),cp.sc[id]])
+    .filter(x=>x[0]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(sc.length)h+=`<div class="card"><div class="sect">${t('cupScorers')}</div>
+    ${sc.map(([p,g])=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)}${p.agent==='you'?' <span style="color:var(--acc)">★</span>':''} · ${isFree(p)?'—':teamOf(p).n}</span>
+      <span class="v num">${g} ${t('gShort')}</span></div>`).join('')}</div>`;
+  return h;
+}
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
     `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
@@ -985,6 +1030,7 @@ function cupView(){
             ${tmBadge(a,20)}
             <span class="tn" onclick="pushV('team',${a.id})">${a.n}</span></div>`;
         }).join('')}</div>`).join('');
+      body+=cupExtraHtml(cp);
       const hist=(S.cupHist||{})[cp.c]||[];
       if(hist.length)body+=`<div class="card"><div class="sect">${t('history')}</div>
         ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span>
@@ -1941,7 +1987,7 @@ function pfMtHtml(p,tm,cx){
   const l5=(p.l5||[]).slice().reverse();
   const rows=l5.length?l5.map(m5=>{
     const o=S.teams[m5.o];
-    const facts=[m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
+    const facts=[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
       m5.mm?`<b class="pfMotm">${t('motm')}</b>`:''].filter(Boolean).join(' · ');
     return `<button class="pfMatch" onclick="pushV('team',${o.id})">
       ${tmBadge(o,28)}
@@ -1964,6 +2010,15 @@ function pfMtHtml(p,tm,cx){
       ${pfCell(p.a,t('assists'))}
       <span class="pfCell"><b class="num ${rtAvg?pfRtCls(rtAvg):''}">${rtAvg?rtAvg.toFixed(1):'—'}</b><em>${t('avgRt')}</em></span>
     </div>
+    ${/* Üstteki dört sayaç lig; kupa ayrı defterde (p.cs). Ortalama puan iki
+         yarışmayı birlikte görüyor, piyasa değeri de öyle. */''}
+    ${p.cs&&p.cs.app?`<div class="pfSub" style="margin-top:12px">${t('cupLine')}</div>
+    <div class="pfGrid pfG4">
+      ${pfCell(p.cs.app,t('apps'))}
+      ${pfCell((p.cs.min||0)+"'",t('mins'))}
+      ${pfCell(p.cs.g||0,t('goals'))}
+      ${pfCell(p.cs.a||0,t('assists'))}
+    </div>`:''}
   </div>
   <div class="pfFilt">
     <div class="pfChips">
@@ -1978,7 +2033,7 @@ function pfMtHtml(p,tm,cx){
     ${seasons.map(s=>`<div class="pfSeason">
       <span class="pfSeasonS num">S${s.se}</span>
       <span class="pfSeasonT">${esc(s.tm)}</span>
-      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}</span>
+      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}${s.cs?' · '+cupSeTxt(s):''}</span>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -2859,6 +2914,7 @@ player(id){
       <div class="stat"><div class="v">${p.g}</div><div class="l">${t('goals')}</div></div>
       <div class="stat"><div class="v">${p.a}</div><div class="l">${t('assists')}</div></div>
     </div>
+    ${p.cs&&p.cs.app?`<div class="sub" style="margin-top:8px">${t('cupLine')}: ${p.cs.app} ${t('mShort')} · ${p.cs.g||0} ${t('gShort')} · ${p.cs.a||0} ${t('aShort')}</div>`:''}
     <div class="divider"></div>
     <div class="grid3">
       <div class="stat"><div class="v" style="color:${rtAvg?(rtAvg>=7.2?'var(--acc)':rtAvg>=6.6?'var(--warn)':'var(--bad)'):'var(--txt3)'}">${rtAvg?rtAvg.toFixed(1):'—'}</div><div class="l">${t('avgRt')}</div></div>
@@ -2884,7 +2940,7 @@ player(id){
         <div style="flex:1;min-width:0">
           <div style="font-size:12.5px;font-weight:600">${o.n} <span class="faint" style="font-variant-numeric:tabular-nums">${m5.sc}</span>
             <b style="color:${resCol};font-size:11px">${resCh}</b></div>
-          <div class="psub">${[m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
+          <div class="psub">${[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
             m5.mm?`<span style="color:var(--gold);font-weight:700">${t('motm')}</span>`:'']
             .filter(Boolean).join(' · ')||'—'}</div>
         </div>
@@ -2919,7 +2975,7 @@ player(id){
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
     ${hist.map(h=>`<div class="kv"><span class="k">S${h.se} · ${t('transferH')}</span><span class="v">${h.a} → ${h.b} (${fmtM(h.f)})</span></div>`).join('')}
-    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}</span></div>`).join('')}
+    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}${s.cs?' · '+cupSeTxt(s):''}</span></div>`).join('')}
   </div>`:''}
   ${mine?`
     <div class="grid2">
@@ -3645,7 +3701,7 @@ function wkSahaCard(r){
     +'<span class="wrCrest">'+tmBadge(tm,38)+'</span>'
     +'<span class="wrMain">'
     +'<span class="wrName"><span class="wrNameT">'+esc(r.n)+'</span>'+(r.mm?'<i class="wrMotm">'+t('motm')+'</i>':'')+'</span>'
-    +'<span class="wrVs">'+(opp?esc(opp.n):'—')+' <b class="wrRes '+resCls+'">'+r.sc+' '+resCh+'</b></span>'
+    +'<span class="wrVs">'+cupTagPre(r.cp)+(opp?esc(opp.n):'—')+' <b class="wrRes '+resCls+'">'+r.sc+' '+resCh+'</b></span>'
     +body+'</span>'+rt+'</button>';
 }
 function wkSahaReport(wk){
@@ -3891,7 +3947,7 @@ function showWeekReport(wk){
       ${tmBadge(tm,30)}
       <div class="pinfo">
         <div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${r.n}</span>${r.mm?'<span class="star">★</span>':''}</div>
-        <div class="psub">${opp?opp.n:'—'} <b style="color:${resCol(r.res)}">${r.sc} ${resCh(r.res)}</b>${r.dnp?` · <span style="color:var(--txt3)">${t('dnp')}</span>`:''}</div>
+        <div class="psub">${cupTagPre(r.cp)}${opp?opp.n:'—'} <b style="color:${resCol(r.res)}">${r.sc} ${resCh(r.res)}</b>${r.dnp?` · <span style="color:var(--txt3)">${t('dnp')}</span>`:''}</div>
       </div>
       ${r.dnp
         ? cell('–',W.min,dim)+cell('–',W.g,dim)+cell('–',W.a,dim)+cell('–',W.rt,dim)

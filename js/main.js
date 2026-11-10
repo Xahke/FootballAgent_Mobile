@@ -33,6 +33,10 @@ storeInit().then(()=>{
    Hazır olunca ads.js kendisi yeniden çizdiriyor. Native eklenti yoksa
    (web/PWA/tek dosya) sessizce 'off' dönüyor ve hiçbir şey çizilmiyor. */
 adsInit();
+/* Doğum yılı beyanı yoksa nötr yaş ekranı menünün üstüne geliyor (js/ui.js,
+   adsAgeBoot). Beyan girilince adsAgeApply() akışı kendisi başlatıyor; atlanırsa
+   oyun aynen açık kalıyor ve soru bir sonraki açılışta yeniden çıkıyor. */
+adsAgeBoot();
 
 /* Play Billing (js/iap.js). Aynı gerekçeyle BEKLENMİYOR: ürün ve hak sorgusu
    ağ üzerinden gidiyor, menü onu bekleyemez. Açılışta yaptığı iş üç şey —

@@ -115,7 +115,7 @@ call time. The parts that are load-time real:
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/review.js` | Play's in-app review sheet: when to ask, the device-scoped ask counter, the Settings row that opens the store page — see *The review prompt* below |
-| `js/data.js` | Name pools, 22 leagues over 16 territories, 436 clubs, 3 cups, 52 nationalities — all original names |
+| `js/data.js` | Name pools, 31 leagues over 25 territories, 564 clubs, 3 cups, 52 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
@@ -229,7 +229,7 @@ knows. Renaming a node id means adding a `SK_LEGACY` row, not just editing `SKIL
 ### The exploration map shows progress — it does not gate it
 
 The scouting network has a full-screen map view (`pushV('atlas')`). The map draws the
-**16 territories** of `LEAGUES[].ctry`, not the 22 leagues: six countries have two tiers,
+**25 territories** of `LEAGUES[].ctry`, not the 31 leagues: six countries have two tiers,
 so a territory carries one marker while purchases still happen per league.
 
 **There is no adjacency requirement.** `buyScout(i)` checks exactly three things — the
@@ -257,8 +257,10 @@ save format — and `atlas.js` only reads it:
 Cost is what shapes the opening, and it comes from league strength:
 `scoutCost(i) = round((30 + max(0, lgAvgStr(i)−40)·12) · (1 − skillBonus('scout')))`. At
 season 1 that runs from 93K (WA1) and 162K (NA1) through the second tiers (196–288K) up
-to 470K (EN1). Against the 250K starting cash only WA1, NA1, TR2, FR2 and IT2 are
-affordable immediately — **that spread is the real balance lever, so re-measure it
+to 470K (EN1). The leagues added after release sit just above the opening cash on
+purpose: PL1 255K, SC1 259K, DK1 264K, AT1 265K, NO1 266K, CH1 267K, GR1 275K, CZ1 289K and
+BE1 300K (beside NL1 289K and PT1 301K). Against the 250K starting cash only WA1, NA1,
+TR2, FR2 and IT2 are affordable immediately — **that spread is the real balance lever, so re-measure it
 whenever club strengths or `scoutCost()` change.**
 
 Geometry lives in `js/worldgeo.js`, a **generated** file: `tools/build-geo.js` projects
@@ -405,9 +407,19 @@ Because the birthday is unknown the person is counted as the *younger* possible 
 sane range — text, fraction, future year — resolves to `null` and **closes** the gate.
 It is a self-declaration: not verification, and no compliance claim rests on it.
 
-**The screen never blocks launch.** The declaration is asked at first use of the optional
-ad feature, not at startup, so a game that asks for nothing else does not open with a
-question. That forces one design consequence: `adsRowState()` reads the age gate **before**
+**The question comes at launch, and it never blocks it.** It used to be asked only at first
+use of the optional ad feature (the `+`), and most players never tapped it — so no consent
+read, no SDK and no interstitial ever ran for them. `adsAgeBoot()` (ui.js, called from
+`main.js` after the first paint) now opens the same neutral birth-year screen over the menu
+when the bridge exists and `adsAgeState()` is `'ask'` (no declaration, or a damaged one).
+It goes through `pushModal`, so it queues behind anything else at boot, and it is
+skippable: **Continue without sharing** keeps the whole game open, the skip is remembered
+**in memory only** (`adsAgeAsked`) and nothing is written, so the question returns on the
+next launch until a year is declared — a decision the user made over "ask once". A
+declaration below the threshold is a declaration: it is not asked again. Web, PWA and the
+single file have no bridge and ask nothing. The screen's text (`adAgeBody`) talks about
+ads in general, not the reward. `tools/savetest.js` block **33** holds this.
+The `+` and Settings paths are unchanged, and one design consequence still holds: `adsRowState()` reads the age gate **before**
 the SDK state, because the SDK is never started while the gate is closed and the entry
 point would otherwise be undrawable — the user could never reach the question. The `'age'`
 and `'noage'` states deliberately **omit the reward amount**: showing the money and then
@@ -638,12 +650,12 @@ eligibility is newly won, a break being handled (after a show, or instead of one
 nothing was loaded) and `adsInterKeep()` finding the loaded ad stale. A failed load is
 retried at the next break — once per ten played weeks — and never in a loop.
 
-**The age gate is why most players will never see one.** The birth year is asked only when
-the player taps the `+` for the rewarded ad, and with no declaration `adsInit()` returns
-`'noage'` before any native call: no consent read, no SDK, no interstitial, for the whole
-life of the install. That is the designed behaviour, not a fault in the break logic — but
-it means "no ad appeared" from a tester is first a question about whether they ever
-declared a year.
+**The age gate still decides who sees one.** With no declaration `adsInit()` returns
+`'noage'` before any native call: no consent read, no SDK, no interstitial. The birth year
+used to be asked only behind the `+`, so most installs stayed there for good; it is now
+asked at every launch until declared (`adsAgeBoot()`, see the age gate above). A player
+who keeps skipping, or declares a year below the threshold, still sees no ads — so "no ad
+appeared" from a tester is first a question about whether they declared a year.
 
 **The interval is in played weeks, not in minutes.** Ten weeks can be tapped through in
 a minute or two. Nothing in the code spaces breaks in real time; if that turns out to
@@ -1136,12 +1148,59 @@ only Play Core's own `PlayCoreDialogWrapperActivity`.
 
 ### The world runs without the player
 
-`sim.js` and `market.js` simulate all 22 leagues every week regardless of what the
+`sim.js` and `market.js` simulate all 31 leagues every week regardless of what the
 player does: clubs trade with each other, contracts expire and produce free agents,
 players age, decline and retire, youth come through, teams promote and relegate. A new
-game is ~6,980 players across 436 clubs over a 38-week season. Any change to
+game is ~9,020 players across 564 clubs over a 38-week season. Any change to
 player-facing economy has to be checked against this background economy — it's easy to
 break the free-agent pool or the age pyramid without noticing.
+
+### Every match goes through one engine, whatever the competition
+
+`playFixture(m, cp)` in `sim.js` is the player side of a match: who starts, minutes,
+who scores and assists, the match rating, form and morale feedback, `updateValue()`,
+`p.l5`, Man of the Match and the weekly report rows. **It never produces the score** —
+`m.hg`/`m.ag` arrive filled. A league match scores itself in `simWeekRun()` (draws
+allowed) and updates the table; a cup tie scores itself in `simCups()` through
+`playKO()` (no draws). Both then call the same engine, so a client really plays a cup
+night, gets rated, shows in the week report, and the market value sees that match.
+A new competition gets its own scoring and its own bookkeeping and calls
+`playFixture()` — it must not grow a second copy of the player side.
+
+The extraction was proven neutral: on a seeded run the whole `{S, PID}` hashed
+identically before and after, with cups still on the old path.
+
+`cp` is the cup index into `CUPS`, absent for a league match. It decides one thing:
+**where the counters go** (`tallyOf()`):
+
+| | league | cup |
+|---|---|---|
+| apps, minutes, goals, assists | `p.app/min/g/a` | `p.cs = {app,min,g,a}` |
+| rating | `p.rtSum/rtN` | `p.rtSum/rtN` — the same, on purpose |
+| `p.l5` / `S.wkRep` row | as before | same row plus `cp` |
+
+The split is deliberate. `p.g`/`p.a` stay **league** numbers because the top-scorer
+race, the assist list, the league archive and the goal-bonus deals (`S.deals`, "10+
+goals") all read them as league numbers. The rating is shared because value should
+react to a big European night. `p.cs` is deleted at season end and archived into the
+season record as `cs: {app,g,a}` only when the player appeared in a cup.
+
+Each cup also keeps its own goal ledger, `S.cups[i].sc = {pid: goals}`, because
+`p.cs` sums every cup and a player sold mid-season between two cup teams would blur it.
+`seedCups()` rebuilds the cups every season, which clears the ledger with them.
+
+Every new field is absent on old saves and every reader defaults: no `cp` draws the row
+as a league match, no `p.cs` hides the cup line, no `sc` shows no scorers. A save
+loaded mid-season simply continues its cups through the new path.
+
+Measured over 8 seasons on three seeds against the pre-change code: population
+7,056–7,063 (was 7,056–7,060), mean age 25.06–25.19 (25.14–25.22), ages 16–36, free
+agents 60, unrepresented pool 4,428–4,500 (4,442–4,508). Over nine seeds the value
+multiplier did not move: players at `vm ≥ 1.3` averaged 259 against 260, and the bot's
+season-8 reputation had the same median (35.7 against 36.7). Three seeds alone had
+suggested a drop in high-value players and a rise in reputation; both were noise. The
+mechanical change is that the 48 cup teams' players get up to four extra rated matches
+a season — re-measure before adding competitions that add many more.
 
 ### Balance constants live in named blocks
 
@@ -1471,6 +1530,67 @@ paid token on the copy left behind — plus that no `cid` is ever live in two sl
 quarantine survives later localStorage writes, and that a restored copy carries no
 purchased capacity across.
 
+### Leagues are only ever appended, and old saves grow into them
+
+A save carries one fixture list per league (`S.fx`) and league *indices* everywhere —
+`S.known`, `S.scout`, `tm.lg`, `S.lgHist`, `S.arch`. So `LEAGUES` and `TEAMS` (data.js)
+grow **only at the end**, in the same order. Inserting a league in the middle would shift
+every index in every existing save. The marker comment in `LEAGUES` says where the
+original 22 end. BE1 came first as the pilot; CZ1, NO1, GR1, AT1, SC1, PL1, DK1 and CH1
+followed — the associations ranked 9–17 by UEFA apart from Türkiye, which was already
+in. Each uses the real league's size (12–18 clubs), and agents of those nationalities now
+start in their own league (`NAT2CTRY`).
+
+`validSave()` used to demand `S.fx.length === LEAGUES.length`, which meant the first
+added league would have marked **every existing career as broken** and dropped it from
+the menu. It is now an upper bound, and `growLeagues()` (core.js) builds what an older
+save is missing when `loadSlot()` opens it:
+
+- Teams and squads come from `addLeagueTeams()`, the same function `newGame()` uses, so
+  a grown league and a new-game league are the same world. Ids continue from
+  `S.teams.length` and `PID`; `claimNotable()` then hands the notable newcomers to the
+  rival agencies.
+- **Mid-season the league joins late.** The weeks already played are empty rounds — the
+  week index is one calendar for every league — and as many rounds as fit run in the
+  weeks that are left. Every team plays in every round, so the table stays fair. The
+  list is capped at the longest existing league, because a longer one would raise
+  `totalWeeks()` and lengthen the season. Next season `buildAllFixtures()` builds it
+  like any other league. `weekFixHtml()` says `lgNoMatchWk` for an empty round instead
+  of drawing a blank card.
+- A league that never got to play before the season ended (a save opened in week 37–38)
+  produces no champion: `endSeason()` skips it through `lgPlayed()` and the season modal
+  receives the filtered list.
+- The grown save is written straight away and a `newLg` inbox message says where the
+  league came from. Byte-exact paths — the write queue, migration, rescue, fork restore,
+  the legacy key — copy records untouched and never grow them; growth happens only when
+  a career is opened.
+- Growing is idempotent: a grown save has every league, so the next open adds nothing.
+
+Measured against the build on Play (versionCode 9, `98fdfc8`): its own code played and
+saved careers at weeks 4, 11, 26 and 37 through the real `saveToSlot()`; the new code
+opened each through the real `loadSlot()` and played on to week 13 of the next season.
+Every one opened with cash, reputation, clients and week unchanged, grew 16 teams and
+256 players with unique ids, ran with no errors, and drew the cup, home, client and
+profile screens in all four themes clean. Saving and reopening a grown career added
+nothing. On new games, six seeds over eight seasons against the pre-Belgium code:
+population 7,311–7,320 (was 7,048–7,063 — the 256 newcomers, flat), free agents 60,
+unrepresented pool 4,586–4,702 (the same 63.6% share as before), mean age 25.1–25.2,
+and the oldest player 37 in two seeds where it had been 36. Simulation time rose ~5%.
+
+The eight Kademe A leagues were measured the same way. Saves written by the Play build
+(22 leagues) and by the Belgium build (23 leagues) at weeks 4–37 grew exactly the
+leagues they lacked — nine and eight — played into the next season with no errors, drew
+clean in four themes, and reopened without growing again. New games, six seeds over
+eight seasons against the Belgium build: population 9,103–9,112 (was 7,311–7,320, +1,792,
+flat), free agents 60, mean age 25.2, oldest 36–37, every new league crowned a champion
+in all eight seasons. The unrepresented share rose from 63–64% to 64–66%: the new leagues
+are weaker and `genPlayer()` gives weaker clubs' players a rival agent less often.
+Simulation time rose ~22%, in step with the world growing ~24%. **A phone has not been
+measured** — check a week's tick on a low-end device before adding the next tier.
+
+**Belgian clubs are not in the continental cups yet.** `CUPQ` still lists the original
+eight leagues; who qualifies from which league belongs to the cup-format rework.
+
 ### Saves must degrade gracefully
 
 There are three slots plus device preferences, all in `localStorage`:
@@ -1511,7 +1631,9 @@ are there for the same reason.
 `META.fk` is the quarantine index and is absent on every old save; `forkList()` returns
 an empty list when it is missing, so nothing downstream has to know it can be absent.
 
-`validSave()` accepts any save whose `S.fx` length matches `LEAGUES.length`; a slot whose
+`validSave()` accepts any save with between one and `LEAGUES.length` fixture lists — fewer
+means an older build wrote it and `growLeagues()` adds the rest (see *Leagues are only ever
+appended* below); more means a newer build did, and it is still refused. A slot whose
 summary exists but whose payload is broken is dropped from the meta so the menu doesn't
 lie. There is no migration step beyond that, so **every new state field must work when
 absent from an old save.** Read through a helper with a default (`agMod`, `pref`,
@@ -1778,8 +1900,12 @@ close-out for a gameplay change:
    (atlas.js filters both silently, so a mismatch is invisible at runtime); that each
    marker `a` falls inside its own `bb`; that `GEO.ctx` is present. Marker crowding is a
    visual check at zoom, not a fixed threshold — markers rescale with `mapMarkScale()`,
-   and the closest pair today is DE–NL at 44 units in a 3753-wide viewBox.
-   Then re-check `scoutCost()` across all 22 leagues against the 250K opening cash.
+   and the closest pairs today are CH–IT 37, BE–NL 39 and AT–CZ 40 units in a 3753-wide
+   viewBox — the last two only because `MARK_NUDGE` in `tools/build-geo.js` pushes them
+   apart; unpushed they sat at 23 and 29, and a home ring covered the neighbour's marker
+   at the deepest zoom. A new small
+   neighbour needs the same check, and a nudge must keep the build's İÇERİDE column.
+   Then re-check `scoutCost()` across all leagues against the 250K opening cash.
 5. **Themes** — 4 themes × every screen. Also assert that every class the new markup emits
    and every `--*` variable it references resolves inside all four scoped blocks of the
    compiled `css/style.css`; that catches a theme silently missing a rule.
@@ -1829,6 +1955,10 @@ close-out for a gameplay change:
    row, the real season-summary button asks only after it closes, the ask is counted on
    disk before the call, the 30-day and three-ask limits, damaged `PREFS.rv`, every gate,
    the Settings row, and that no path writes to `S`.
+   Block **33** covers the launch-time age question (`adsAgeBoot()`): none without a
+   bridge, the neutral screen with no reward amount and no consent read before a
+   declaration, a skip that writes nothing and is asked again next launch, and no
+   question once any valid year is declared.
 8. **Storage fallback and migration**, if `js/store.js` or the migration paths in
    `js/saves.js` changed — blocks **25** and **26** cover the localStorage fallback, the
    conflict rescue, the destination read error, an interrupted rescue, the no-room path,
@@ -1882,7 +2012,8 @@ Gradle output reaches logs, CI records and screenshots. Debug builds and CI keep
 with no keystore at all, so don't "fix" that path by making the config mandatory.
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
-twice. It is 10 today; 5 is what the closed-test track carried on 2 October 2026.
+twice. It is 11 today (bumped 9 November 2026 for the cup-engine release; 10 came in
+with commit `010cd4a`); 5 is what the closed-test track carried on 2 October 2026.
 Bundles numbered 6 (9 October), 7 (11 October) and 8 (12 October) were built and may
 have been uploaded, so each next build took a new number rather than risk a duplicate.
 **9 is on Play** (reported 23 October 2026); the bump to 9 is commit `98fdfc8`
