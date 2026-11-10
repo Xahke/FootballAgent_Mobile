@@ -992,8 +992,7 @@ function cupSeTxt(s){return s&&s.cs?fmtStr(t('cupSe'),{n:s.cs.app,g:s.cs.g||0}):
    bu kupada takımı olan müşteriler. İkisi de yalnız okuyor. */
 function cupExtraHtml(cp){
   let h='';
-  const ids=new Set();
-  (cp.rounds[0]||[]).forEach(m=>{ids.add(m.h);ids.add(m.a);});
+  const ids=new Set(cupTeams(cp));
   const mine=S.clients.map(byId).filter(p=>p&&ids.has(p.team));
   if(mine.length)h+=`<div class="card"><div class="sect">${t('cupMine')}</div>
     ${mine.map(p=>{const c=p.cs||{app:0,g:0,a:0};
@@ -1005,6 +1004,85 @@ function cupExtraHtml(cp){
     ${sc.map(([p,g])=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)}${p.agent==='you'?' <span style="color:var(--acc)">★</span>':''} · ${isFree(p)?'—':teamOf(p).n}</span>
       <span class="v num">${g} ${t('gShort')}</span></div>`).join('')}</div>`;
   return h;
+}
+function cupHistHtml(cp){
+  const hist=(S.cupHist||{})[cp.c]||[];
+  if(!hist.length)return '';
+  return `<div class="card"><div class="sect">${t('history')}</div>
+    ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span>
+    <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`;
+}
+/* ===== Kupa ekranı (v2: gerçek format) =====
+   Aşama ve maç günü seçimi ekran durumu (IBF/MKQ gibi): kayda girmiyor, kupa ya
+   da tema değişince bir şey bozulmuyor. Seçilmemişse kupanın o anki aşaması. */
+let CUPPH=null,CUPMD=null;
+function setCupPh(p){CUPPH=p;CUPMD=null;render();}
+function setCupMd(d){CUPMD=d;render();}
+function cupPhOf(cp){return cp.st==='po'?'po':cp.st==='lp'?'lp':'ko';}
+/* Bir eşleşme: seri başı solda, toplam skor ortada, ayakların ayrıntısı altında. */
+function cupTieHtml(ti){
+  /* parametre "t" değil: t() çeviri fonksiyonunun adı, gölgelenirse metin çağrısı patlar */
+  const s=S.teams[ti.s],u=S.teams[ti.u];
+  if(!s||!u)return '';
+  const gf=x=>ti.m.reduce((n,m)=>n+(m.hg===null?0:(m.h===x?m.hg:m.ag)),0);
+  const played=ti.m.some(m=>m.hg!==null);
+  const mine=new Set(S.clients.map(id=>(byId(id)||{}).team));
+  const nm=(tm)=>{const w=ti.w===tm.id;const b=w?'b':'span';return `<${b}>${tm.n}</${b}>${mine.has(tm.id)?' <span style="color:var(--acc)">★</span>':''}`;};
+  const legs=ti.m.length===2&&played
+    ?fmtStr(t('cupLegs'),{a:ti.m[0].hg===null?'–':(ti.m[0].ag+'-'+ti.m[0].hg),b:ti.m[1].hg===null?'–':(ti.m[1].hg+'-'+ti.m[1].ag)})
+    :'';
+  return `<div class="matchrow">
+    <span class="tn r" onclick="pushV('team',${s.id})">${nm(s)}</span>
+    ${tmBadge(s,20)}
+    <span class="sc ${played?'':'f'}">${played?gf(ti.s)+' : '+gf(ti.u):'–'}</span>
+    ${tmBadge(u,20)}
+    <span class="tn" onclick="pushV('team',${u.id})">${nm(u)}</span></div>
+    ${legs||ti.pen?`<div class="sub" style="text-align:center;margin:-2px 0 6px">${legs}${ti.pen?(legs?' · ':'')+t('cupPen'):''}</div>`:''}`;
+}
+function cupWkLbl(st){const w=CUP_WK[st];return Array.isArray(w)?fmtStr(t('cupWks'),{a:w[0],b:w[1]}):t('week')+' '+w;}
+function cupLpHtml(cp,ci){
+  const tb=cupLpTable(cp);
+  const mine=new Set(S.clients.map(id=>(byId(id)||{}).team));
+  const z=i=>i<8?'zone1':i<24?'zone2':'zoneR';
+  const table=`<div class="card tight"><table>
+    <tr><th></th><th>${t('team')}</th><th class="c">${t('P')}</th><th class="c">${t('GD')}</th><th class="c">${t('PTS')}</th></tr>
+    ${tb.map((r,i)=>{const tm=S.teams[r.id];return `<tr class="click ${mine.has(r.id)?'hl':''}" onclick="pushV('team',${r.id})">
+      <td><span class="posn ${z(i)}">${i+1}</span></td>
+      <td class="tmc"><div class="row" style="gap:8px;min-width:0">${tmBadge(tm,22)}
+        <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tm.n}</b></div></td>
+      <td class="c">${r.pl}</td><td class="c">${r.gf-r.ga}</td><td class="c"><b>${r.pts}</b></td></tr>`;}).join('')}
+    </table><div class="sub" style="margin-top:8px">${t('cupZones')}</div></div>`;
+  const n=cp.lp.md.length;
+  const cur=CUP_WK.lp.findIndex((w,k)=>k<n&&w>=S.week);
+  const d=CUPMD!==null&&CUPMD<n?CUPMD:(cur<0?n-1:Math.max(0,cur));
+  const chips=`<div class="chips">${cp.lp.md.map((_,k)=>
+    `<button class="${k===d?'on':''}" onclick="setCupMd(${k})">${k+1}</button>`).join('')}</div>`;
+  const day=`<div class="card"><div class="sect">${fmtStr(t('cupMd'),{n:d+1})} · ${t('week')} ${CUP_WK.lp[d]}</div>
+    ${cp.lp.md[d].map(m=>{const h=S.teams[m.h],a=S.teams[m.a];
+      return `<div class="matchrow">
+      <span class="tn r" onclick="pushV('team',${h.id})">${h.n}</span>${tmBadge(h,20)}
+      <span class="sc ${m.hg===null?'f':''}">${m.hg===null?'–':m.hg+' : '+m.ag}</span>
+      ${tmBadge(a,20)}<span class="tn" onclick="pushV('team',${a.id})">${a.n}</span></div>`;}).join('')}</div>`;
+  return table+chips+day;
+}
+function cupKoHtml(cp){
+  const K=cp.ko||{};
+  const sec=(lbl,ties,st)=>ties&&ties.length?`<div class="card"><div class="sect">${lbl} · ${cupWkLbl(st)}</div>${ties.map(cupTieHtml).join('')}</div>`:'';
+  let h=sec(t('cupKpo'),K.kpo,'kpo')+sec(t('r16'),K.r16,'r16')+sec(t('qf'),K.qf,'qf')+sec(t('sf'),K.sf,'sf');
+  if(K.f)h+=`<div class="card"><div class="sect">${t('finalLbl')} · ${cupWkLbl('f')}</div>${cupTieHtml(K.f)}</div>`;
+  return h||`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;
+}
+function cupV2Html(cp,ci){
+  const has={po:true,lp:!!cp.lp,ko:!!cp.ko};
+  const ph=CUPPH&&has[CUPPH]?CUPPH:cupPhOf(cp);
+  const chips=`<div class="chips">${[['po','cupPhPo'],['lp','cupPhLp'],['ko','cupPhKo']].map(([k,s])=>
+    `<button class="${ph===k?'on':''}"${has[k]?` onclick="setCupPh('${k}')"`:' disabled'}>${t(s)}</button>`).join('')}</div>`;
+  let body='';
+  if(ph==='po')body=(cp.po||[]).length?`<div class="card"><div class="sect">${t('cupPhPo')} · ${cupWkLbl('po')}</div>${cp.po.map(cupTieHtml).join('')}</div>`
+    :`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;
+  else if(ph==='lp')body=cupLpHtml(cp,ci);
+  else body=cupKoHtml(cp);
+  return chips+body;
 }
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
@@ -1018,6 +1096,9 @@ function cupView(){
   if(ci<3){
     const cp=(S.cups||[])[ci];
     if(!cp){body=`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;}
+    else if(cp.v===2){
+      body=cupV2Html(cp,ci)+cupExtraHtml(cp)+cupHistHtml(cp);
+    }
     else{
       body=cp.rounds.map((rd,ri)=>`<div class="card">
         <div class="sect">${RL[ri]} · ${t('week')} ${CUPWKS[ri]}</div>
@@ -1426,20 +1507,31 @@ function lgClientsLbl(n){return n===1?t('lgClient1'):t('lgClientsN').replace('{n
 
 /* Bölgeler TÜRETİLİYOR, boyanmıyor. Oyunda gerçekten olan iki kural var:
      · TIERS (data.js): üst ligin son 3'ü düşer, alt ligin ilk 3'ü çıkar
-     · CUPQ (core.js): yalnız sekiz ligin 1-2 / 3-4 / 5-6. sıraları kupalara gider
+     · cupAllocate (cups.js): UEFA kontenjanı — 17 Avrupa ülkesinin üst liginde kim
+       hangi kupaya (ya da ön elemesine) gidiyor
    Bu iki kuralın dışındaki liglerde düşme ya da Avrupa bölgesi YOK; oralarda
    tabloyu renklendirmek uydurma olurdu. Gruplu ligde (AR1/US1) grup lideri
    finale gider — o da gerçek bir mekanik (bkz. weekFixHtml). */
 function lgTierDown(lg){const c=LEAGUES[lg].c;return TIERS.some(x=>x[0]===c);}
 function lgTierUp(lg){const c=LEAGUES[lg].c;return TIERS.some(x=>x[1]===c);}
-function lgHasCups(lg){return typeof CUPQ!=='undefined'&&CUPQ.indexOf(LEAGUES[lg].c)>=0;}
+/* Avrupa bölgeleri artık sabit "ilk altı" değil: gerçek kontenjan tablosundan
+   (js/cups.js cupAllocate) "sezon şimdi bitse kim nereye gider" okunuyor ve
+   sıraya çevriliyor. Ön elemeye giden de o kupanın rengini alıyor — bölge,
+   kupaya girişin garantisi değil, oraya giden yolun başladığı yer. */
+function lgHasCups(lg){const l=LEAGUES[lg];return typeof UEFA_ASSOC!=='undefined'&&l.tier===1&&!!UEFA_ASSOC[l.ctry];}
+function lgCupZone(lg,pos){
+  if(!S||typeof cupProj!=='function')return '';
+  const t=leagueTable(lg)[pos-1];if(!t)return '';
+  const ci=cupProj()[t.id];
+  return ci===undefined?'':'ec'+(ci+1);
+}
 function lgZoneOf(lg,pos,total){
   const l=LEAGUES[lg];
   if(l.grp)return pos===1?'ch':'';
   if(lgTierUp(lg))return pos<=3?'up':'';
   if(lgTierDown(lg)&&pos>total-3)return 'down';
   if(pos===1)return 'ch';
-  if(lgHasCups(lg))return pos<=2?'ec1':pos<=4?'ec2':pos<=6?'ec3':'';
+  if(lgHasCups(lg))return lgCupZone(lg,pos);
   return '';
 }
 /* Gösterge yalnız o ligde gerçekten var olan bölgeleri yazıyor. */

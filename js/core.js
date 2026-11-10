@@ -247,59 +247,12 @@ function makeFixtures(idList,targetW){
 /* ===== continental cups ===== */
 function seedPair(ids){const r=[];for(let i=0;i<ids.length/2;i++)r.push({h:ids[i],a:ids[ids.length-1-i],hg:null,ag:null});return r;}
 function consPair(ids){const r=[];for(let i=0;i<ids.length;i+=2)r.push({h:ids[i],a:ids[i+1],hg:null,ag:null});return r;}
-/* Kıta kupalarına oyuncu gönderen sekiz lig. Modül düzeyinde duruyor çünkü iki
-   yerden okunuyor: seedCups() katılımcıları buradan çekiyor, arayüz de puan
-   durumunda hangi sıraların gerçekten Avrupa'ya gittiğini buradan öğreniyor.
-   Liste seedCups()'ın içinde kalsaydı arayüz onu kopyalamak zorunda kalırdı ve
-   iki kopya er ya da geç ayrışırdı. */
-const CUPQ=['EN1','ES1','DE1','IT1','FR1','TR1','NL1','PT1'];
-function seedCups(){
-  /* katılım: 8 Avrupa liginin bitiş sıralamasından — 1-2. sıra EC1, 3-4. EC2, 5-6. EC3 */
-  const perLg=CUPQ.map(c=>{
-    const i=LEAGUES.findIndex(l=>l.c===c);
-    return leagueTable(i).map(tm=>tm.id);
-  });
-  const pool=[];
-  for(let pos=0;pos<6;pos++)perLg.forEach(lst=>{if(lst[pos]!==undefined)pool.push(lst[pos]);});
-  S.cups=CUPS.map((cp,ci)=>({c:cp.c,rounds:[seedPair(pool.slice(ci*16,ci*16+16))]}));
-}
+/* Kıta kupalarının kurulumu ve haftalık akışı js/cups.js'te (seedCups/simCups).
+   Buradaki üç yardımcı başka yerlerden de okunuyor: playKO milli turnuvada. */
 function playKO(sh,sa){
   let g1=poisson(clamp(1.3*Math.pow(sh/sa,2.4),0.3,4)),g2=poisson(clamp(1.1*Math.pow(sa/sh,2.4),0.3,4));
   if(g1===g2){if(RF()<0.5)g1++;else g2++;}
   return [g1,g2];
-}
-function simCups(){
-  (S.cups||[]).forEach((cp,cci)=>{
-    const ri=cp.rounds.length-1;
-    const round=cp.rounds[ri];
-    if(!round||!round.length||round[0].hg!==null)return;
-    if(S.week!==CUPWKS[ri])return;
-    const winners=[];
-    round.forEach(m=>{
-      const [g1,g2]=playKO(teamStr(m.h),teamStr(m.a));
-      m.hg=g1;m.ag=g2;winners.push(g1>g2?m.h:m.a);
-      /* Skor kupanın kendi modelinden (beraberlik yok), sahadaki her şey lig
-         maçıyla aynı motordan: müşterin kupa gecesinde oynar, puan alır, raporda
-         görünür, değeri bu maçı da görür. simCups() simWeekRun()'ın içinden
-         çağrıldığı için haftanın kadro dizini (SQIDX) burada hazır. */
-      const gm=playFixture(m,cci);
-      /* Kupanın kendi gol defteri {pid: gol}. Oyuncunun p.cs'i bütün kupaları
-         topluyor; sezon ortasında başka bir kupanın takımına geçen oyuncu orada
-         karışırdı. Defter kupa nesnesinde durduğu için seedCups() her sezon onu
-         da sıfırlıyor; eski kayıtta alan yok ve ilk golle kuruluyor. */
-      for(const id in gm)(cp.sc=cp.sc||{})[id]=(cp.sc[id]||0)+gm[id];
-    });
-    if(winners.length>1)cp.rounds.push(consPair(winners));
-    else{
-      const champ=S.teams[winners[0]];
-      const cupN=tx(CUPS.find(x=>x.c===cp.c).n);
-      pushNews('cupWin',{c:champ.n,tid:champ.id,cup:cupN,ci:cci},'good');
-      S.cupHist=S.cupHist||{};
-      (S.cupHist[cp.c]=S.cupHist[cp.c]||[]).push({se:S.season,tid:champ.id});
-      if(S.cupHist[cp.c].length>20)S.cupHist[cp.c].shift();
-      if(S.clients.some(id=>byId(id).team===champ.id))repEvent(1.5);
-    }
-  });
 }
 function buildAllFixtures(){
   LEAGUES.forEach((lg,i)=>{

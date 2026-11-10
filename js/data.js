@@ -166,7 +166,51 @@ const CUPS=[
  {c:'EC1', n:{tr:'Kıta Kupası',en:'Continental Cup',es:'Copa Continental',pt:'Copa Continental',de:'Kontinentalpokal',fr:'Coupe continentale',it:'Coppa Continentale'}},
  {c:'EC2', n:{tr:'Birlik Kupası',en:'Union Cup',es:'Copa de la Unión',pt:'Copa da União',de:'Unionspokal',fr:"Coupe de l'Union",it:"Coppa dell'Unione"}},
  {c:'EC3', n:{tr:'Bölge Kupası',en:'Regional Cup',es:'Copa Regional',pt:'Copa Regional',de:'Regionalpokal',fr:'Coupe régionale',it:'Coppa Regionale'}}];
+/* Eski (v1) kupa takvimi: 16 takımlı tek maçlık eleme. Yalnız sezonu eski
+   formatla başlamış bir kaydın o sezonu bitirmesi için duruyor (js/cups.js). */
 const CUPWKS=[8,14,24,32]; // R16, QF, SF, Final
+/* UEFA ülke sıralaması (2025 katsayıları; 2026/27 kontenjanını belirleyen liste).
+   r: sıra — kontenjan tablosu buna göre okunuyor (js/cups.js CUP_ACCESS).
+   f: kulüp katsayısının tabanı = ülkenin 5 yıllık katsayısının %20'si. Gerçek
+   kural: bir kulübün katsayısı kendi puanıyla bu tabandan büyüğü. Oyundaki 17
+   Avrupa ülkesi, sıralamanın ilk 17'si; 18 ve sonrası oyunda yok.
+   Kaynak: Wikipedia 2026–27 UEFA Champions League (sıra), kassiesa.net trank2026
+   (taban). SABİT — kullanıcı kararı: güncel duruma göre, şimdilik güncellenmiyor. */
+const UEFA_ASSOC={EN:{r:1,f:23.903},IT:{r:2,f:19.989},ES:{r:3,f:19.409},DE:{r:4,f:18.58},
+ FR:{r:5,f:16.699},NL:{r:6,f:13.585},PT:{r:7,f:14.633},BE:{r:8,f:12.45},CZ:{r:9,f:9.705},
+ TR:{r:10,f:10.375},NO:{r:11,f:8.247},GR:{r:12,f:9.682},AT:{r:13,f:6.77},SCT:{r:14,f:6.41},
+ PL:{r:15,f:9.35},DK:{r:16,f:8.421},CH:{r:17,f:6.94}};
+/* Kulüp katsayıları — kura torbalarını belirliyor. Gerçek kulübün 5 yıllık UEFA
+   katsayısı (2021/22–2025/26, kassiesa.net "trank2026", UEFA'nın yöntemiyle
+   hesaplanan bağımsız bir derleme), oyundaki karşılığına ad üzerinden bağlı.
+   Anahtar oyundaki kulüp ADI: kulüpler adla eşleniyor çünkü takım kimliği
+   kayda göre değişebilir, ad değişmez. Listede olmayan kulüp ülke tabanını alır
+   (UEFA_ASSOC.f). SABİT: oyun içi sonuçlarla güncellenmiyor (kullanıcı kararı). */
+const CCOEF={
+ /* EN */ 'Merseyside Summit':130,'Manchester Forges':125.5,'London Compass':119,'London Meridian':99.25,
+ 'Birmingham Refiners':83,'London Comets':82,'Manchester Ironworks':76.5,'London Meteors':69,'Newcastle Colliers':29.75,
+ /* IT */ 'Milano Northwind':127,'Roma Anchors':97.75,'Bergamo Frigates':84,'Firenze Granaries':76.25,'Torino Comets':72.25,
+ 'Milano Vaults':66,'Napoli Beacons':63,'Roma Meteors':59,'Bologna Wharf':30.75,
+ /* ES */ 'Madrid Pioneers':144.5,'Barcelona Vaults':113.25,'Madrid Citadels':104.75,'Sevilla Ironworks':74.5,
+ 'Villarreal Sentinels':59,'San Sebastián Summit':57,'Sevilla Compass':39,'Bilbao Citadels':38.75,'Madrid Frost':22,
+ /* DE */ 'Munich Anchors':147.5,'Leverkusen Frigates':105,'Dortmund Pioneers':100.75,'Frankfurt Forges':83,
+ 'Leipzig Vaults':61,'Freiburg Highlands':56.5,'Stuttgart Rainfall':27.5,'Berlin Saltworks':23,
+ /* FR */ 'Paris Ramparts':132,'Lille Comets':68.75,'Lyon Spires':65.75,'Monaco Lighthouse':56,'Marseille Northwind':54,
+ 'Rennes Willows':35,'Strasbourg Clippers':21.5,'Nice Herons':20,'Brest Highlands':16.75,
+ /* PT */ 'Lisboa Sentinels':90,'Lisboa Heralds':84,'Porto Citadels':80.75,'Braga Vanguard':63.75,'Guimarães Ironworks':18.75,
+ /* NL */ 'Eindhoven Meridian':71.25,'Rotterdam Corsairs':71,'Alkmaar Heralds':62.875,'Amsterdam Ironworks':58.25,
+ /* BE */ 'Brugge Belfries':75.25,'Brussels Mosaics':48,'Gent Looms':39,'Brussels Arcades':30.75,'Genk Lodestones':29,
+ 'Brugge Bargemen':12.75,'Antwerp Cutters':12.5,
+ /* CZ */ 'Plzeň Coppers':50.5,'Prague Spires':44,'Prague Astrolabes':38.25,
+ /* TR */ 'İstanbul Corsairs':57.75,'İstanbul Sentinels':53.5,'İstanbul Compass':19.5,'İstanbul Spires':15.5,
+ 'Sivas Willows':12.5,'Samsun Otters':11.125,'Trabzon Vanguard':11,
+ /* NO */ 'Bodø Auroras':64,'Molde Panoramas':21.75,'Bergen Wharves':12.25,
+ /* GR */ 'Piraeus Triremes':62.25,'Thessaloniki Seawalls':48.25,'Athens Columns':29.25,'Athens Porticos':24,
+ /* AT */ 'Salzburg Sonatas':45,'Vienna Waltzers':29.75,'Graz Clocktowers':28,'Linz Danubians':21,'Vienna Palaces':9.5,
+ /* SCT */ 'Glasgow Cranes':59.25,'Glasgow Shipwrights':44,'Edinburgh Crags':11.5,'Aberdeen Granites':10,'Edinburgh Mists':7,
+ /* PL */ 'Warsaw Vistulans':32.5,'Poznań Lakes':27.25,'Częstochowa Bellringers':22.25,'Białystok Bisons':22,
+ /* DK */ 'Copenhagen Canals':54.375,'Herning Moors':48.25,'Brøndby Plains':9.5,
+ /* CH */ 'Basel Ferries':34.5,'Bern Arcades':29.5,'Lugano Palms':21.25,'Geneva Clockmakers':12.5,'Lausanne Terraces':10};
 const TIERS=[['TR1','TR2'],['EN1','EN2'],['ES1','ES2'],['DE1','DE2'],['IT1','IT2'],['FR1','FR2']];
 const CTRYS={
  TR:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},EN:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},ES:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
