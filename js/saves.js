@@ -210,7 +210,10 @@ function loadSlot(n){
        Haber, oyuncu yeni ligi kendi görmeden önce nereden geldiğini bilsin diye. */
     const grown=growLeagues();
     if(grown.length){
-      grown.forEach(li=>pushNews('newLg',{li},'info'));
+      /* Birden çok lig birlikte geldiyse tek mesaj: Play'deki sürümden gelen
+         bir oyuncunun kutusuna yirmi ayrı "yeni lig" mesajı düşüyordu. */
+      if(grown.length===1)pushNews('newLg',{li:grown[0]},'info');
+      else pushNews('newLgs',{lis:grown},'info');
       saveToSlot(n);
     }
     /* Kariyer kimliği eski kayıtlarda yok; ilk açılışta veriliyor ve hemen

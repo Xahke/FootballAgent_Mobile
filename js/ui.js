@@ -684,7 +684,7 @@ const IB_CAT=[
    keys:['champ','finalN','cupWin','wcWin']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
-   keys:['promoted','relegated','newLg']},
+   keys:['promoted','relegated','newLg','newLgs']},
   {id:'scout',grp:'world',ic:'assets/ui/inbox-scout.webp',
    n:{tr:'Keşif Ağı',en:'Scouting',es:'Ojeo',pt:'Observação',de:'Scouting',fr:'Recrutement',it:'Osservatori'},
    keys:['scoutDone']},

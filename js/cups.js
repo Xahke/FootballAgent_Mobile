@@ -78,9 +78,9 @@ function cupAllocate(){
   const nxt=r=>{const a=byR[r];if(!a)return null;const t=a.tbl.find(x=>!used.has(x));return t===undefined?null:t;};
   const add=(arr,t)=>{if(ok(t)){mark(t);arr.push(t);}};
   /* Öncelik listesi bitince: ülkeler sırayla, her ülke gerçek toplam Avrupa
-     kontenjanına yakın bir tavana kadar. Tavanlar dolarsa tavansız devam — 17
-     ülkede ~280 üst lig kulübü var, gereken ~135. */
-  const capOf=r=>r<=5?8:r<=7?7:r<=10?6:5;
+     kontenjanına yakın bir tavana kadar. Tavanlar dolarsa tavansız devam — oyundaki 28
+     ülkede ~430 üst lig kulübü var, gereken ~135. */
+  const capOf=r=>r<=5?8:r<=7?7:r<=10?6:r<=15?5:4;
   const fill=(arr,need,list)=>{
     for(const f of list){if(arr.length>=need)return;add(arr,f());}
     for(let relax=0;relax<2&&arr.length<need;relax++){
@@ -107,11 +107,14 @@ function cupAllocate(){
   add(d1,pos(7,2));
   add(d1,cupHolder(0));add(d1,cupHolder(1));
   const w1=Math.max(0,CUP_LPN-d1.length);
-  /* ŞL ön elemesi: şampiyonlar yolu (11–17 şampiyonları) önce, sonra lig yolu
-     (6. ülkenin üçüncüsü, 5.'nin dördüncüsü, 8–17 ikincileri). */
+  /* ŞL ön elemesi: şampiyonlar yolu ile lig yolu iç içe — gerçekte son turda
+     şampiyonlar yolu 10, lig yolu 4 takım. Önce 11–15 şampiyonları, sonra lig
+     yolunun başı (6.'nın üçüncüsü, 5.'nin dördüncüsü, 8–9 ikincileri), sonra daha
+     alt sıraların şampiyonları, en son 10–17 ikincileri. Sırası boş kalan ülke
+     (18 İsrail kullanıcı kararıyla, 26 Rusya UEFA meni nedeniyle oyunda yok) pos()'tan null döner ve atlanır. */
   const p1=[];
-  fill(p1,2*w1,[...cupRange(11,17).map(r=>()=>pos(r,1)),()=>pos(6,3),()=>pos(5,4),
-    ...cupRange(8,17).map(r=>()=>pos(r,2))]);
+  fill(p1,2*w1,[...cupRange(11,15).map(r=>()=>pos(r,1)),()=>pos(6,3),()=>pos(5,4),()=>pos(8,2),()=>pos(9,2),
+    ...cupRange(16,30).map(r=>()=>pos(r,1)),...cupRange(10,17).map(r=>()=>pos(r,2))]);
   /* AL — doğrudan: KL sahibi; 1–5 için iki yer (beşinci sıra + kupa galibi
      yeri), 6–7 için bir (kupa galibi yeri). ŞL ön eleme kaybedenleri sonra eklenir. */
   const d2=[];
@@ -120,13 +123,17 @@ function cupAllocate(){
   cupRange(6,7).forEach(r=>add(d2,nxt(r)));
   const w2=Math.max(0,CUP_LPN-d2.length-w1);
   const p2=[];
-  fill(p2,2*w2,[...cupRange(8,12).map(r=>()=>nxt(r)),...cupRange(7,12).map(r=>()=>nxt(r)),
-    ()=>nxt(6),...cupRange(13,17).map(r=>()=>nxt(r))]);
+  /* AL ön elemesi: 8–12 kupa yerleri; ŞL'ye sığmayan alt sıra şampiyonları
+     (gerçekte ŞL ön elemesinin ilk turlarında kaybedip AL'ye düşenler); sonra
+     8–17'nin bir sonraki kulüpleri ve 18–30'un kupa yerleri. */
+  fill(p2,2*w2,[...cupRange(8,12).map(r=>()=>nxt(r)),...cupRange(16,30).map(r=>()=>pos(r,1)),
+    ...cupRange(7,12).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(13,17).map(r=>()=>nxt(r)),
+    ...cupRange(18,30).map(r=>()=>nxt(r))]);
   /* KL — doğrudan giriş yok: AL ön eleme kaybedenleri ve KL ön eleme kazananları. */
   const w3=Math.max(0,CUP_LPN-w2);
   const p3=[];
   fill(p3,2*w3,[...cupRange(1,5).map(r=>()=>nxt(r)),()=>nxt(6),...cupRange(7,15).map(r=>()=>nxt(r)),
-    ...cupRange(13,17).map(r=>()=>nxt(r))]);
+    ...cupRange(13,17).map(r=>()=>nxt(r)),...cupRange(16,30).map(r=>()=>nxt(r))]);
   return {d:[d1,d2,[]],p:[p1,p2,p3]};
 }
 

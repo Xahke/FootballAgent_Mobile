@@ -23,7 +23,7 @@ const SRC_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/
 const CACHE = path.join(__dirname, '.geocache', 'ne_110m_admin_0_map_units.geojson');
 const OUT = path.join(__dirname, '..', 'js', 'worldgeo.js');
 
-/* ===== oyunun 25 keşif bölgesi → Natural Earth birimleri =====
+/* ===== oyunun 36 keşif bölgesi → Natural Earth birimleri =====
    [A3] tüm birimleri alır; [A3, 'Ad'] yalnızca o birimi alır.
    NAF ve WAF birer ülke değil: oyunun data.js'indeki NAF/AFR uyruk listelerinin
    coğrafi karşılığı. Tek bölge, çok poligon. */
@@ -45,6 +45,18 @@ const TERR = {
   PL: [['POL']],
   DK: [['DNK']],
   CH: [['CHE']],
+  /* Kademe B. Kıbrıs yalnız güney birimi: ligin kulüpleri orada. */
+  CY: [['CYP']],
+  SE: [['SWE']],
+  HR: [['HRV']],
+  RS: [['SRB']],
+  UA: [['UKR']],
+  HU: [['HUN']],
+  RO: [['ROU']],
+  SK: [['SVK']],
+  SI: [['SVN']],
+  BG: [['BGR']],
+  AZ: [['AZE']],
   BR: [['BRA']],
   AR: [['ARG']],
   US: [['USA']],
@@ -69,8 +81,13 @@ const ANCHOR_IN = { WAF: 'NGA' };
    büyük "evin" halkası komşunun işaretini örtüyor ve ona dokunulamıyordu.
    İşaretler bölgenin içinde kalacak kadar itiliyor (birim ≈ 10 km); raporun
    İÇERİDE sütunu itilmiş noktayı denetliyor. Kademe A'da aynı şey AT–CZ'de oldu
-   (29.1 → 39.9). Hedef: hiçbir çift ~37 birimden yakın olmasın. */
-const MARK_NUDGE = { NL: [3, -9], BE: [-3, 6], AT: [9, 3], CZ: [2, -6] };
+   (29.1 → 39.9). Hedef: hiçbir çift ~37 birimden yakın olmasın.
+   Kademe B'de Orta Avrupa kümesi (SI, HR, AT, HU, SK, CZ) bu hedefi tutturamıyor:
+   Slovenya çok küçük, Hırvatistan hilal biçimli. Altı işaret birlikte, bölge
+   içinde en uzak noktalar aranarak yerleştirildi; en yakın çift AT–SI 30.6.
+   Bu kümeye bir bölge daha eklenirse en yakın zumda göz kontrolü şart. */
+const MARK_NUDGE = { NL: [3, -9], BE: [-3, 6], AT: [-12, -7], CZ: [1, -13],
+  SI: [-7, 4], HR: [16, 4], HU: [8, 0], SK: [-6, -3], RS: [0, 8] };
 
 /* Antarktika 180. meridyeni geçen tek parça; hiçbir ligi de yok. */
 const SKIP = ['ATA'];
