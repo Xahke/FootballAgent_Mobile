@@ -675,7 +675,7 @@ const IB_CAT=[
    keys:['firedRival','chaseOn','chaseLost','poachWarn','poached','poachHeld']},
   {id:'growth',grp:'players',ic:'assets/ui/inbox-growth.webp',
    n:{tr:'Gelişim',en:'Development',es:'Progresión',pt:'Evolução',de:'Entwicklung',fr:'Progression',it:'Crescita'},
-   keys:['valUp','valDown','devUp']},
+   keys:['valUp','valDown','devUp','ntCall','ntCall1']},
   {id:'status',grp:'players',ic:'assets/ui/inbox-status.webp',
    n:{tr:'Oyuncu Durumu',en:'Squad Status',es:'Situación en la plantilla',pt:'Situação no elenco',de:'Kaderstatus',fr:"Statut dans l'effectif",it:'Situazione in rosa'},
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
@@ -986,12 +986,20 @@ function setF(k,v){S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};S.
    playFixture); lig maçında ve eski kayıtlarda boş döner, satır eskisi gibi çizilir. */
 /* Ulusal kupa maçında cp 'd:XX' (ülke kodu) — Avrupa kupalarının indeksiyle karışmasın. */
 function cupTag(cp){
-  if(typeof cp==='string')return cp.slice(0,2)==='d:'?dcName(cp.slice(2)):'';
+  if(typeof cp==='string'){
+    if(cp.slice(0,2)==='d:')return dcName(cp.slice(2));
+    /* milli maç: hazırlık maçı ya da Milletler Kupası (nations.js) */
+    return cp==='n:wc'?t('wcLbl'):cp[0]==='n'?t('ntFriendly'):'';
+  }
   const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';
 }
 function cupTagPre(cp){const s=cupTag(cp);return s?esc(s)+' · ':'';}
 /* Sezon arşivindeki kupa ekinin tek biçimi — iki profil de buradan okuyor. */
 function cupSeTxt(s){return s&&s.cs?fmtStr(t('cupSe'),{n:s.cs.app,g:s.cs.g||0}):'';}
+/* Aynı arşivin milli maç eki (rec.ns, sim.js endSeason). */
+function ntSeTxt(s){return s&&s.ns?fmtStr(t('ntSe'),{n:s.ns.app,g:s.ns.g||0}):'';}
+/* Bir maç kaydının rakibine dokununca: kulüp sayfası, milli maçta Milletler Kupası ekranı. */
+function oppGo(o,nt){return nt?'goCup(3)':`pushV('team',${o.id})`;}
 /* Kupa ekranının iki kartı: kupanın kendi gol defterinden (cp.sc) gol krallığı ve
    bu kupada takımı olan müşteriler. İkisi de yalnız okuyor. */
 function cupExtraHtml(cp){
@@ -1120,6 +1128,72 @@ function dcHtml(){
     <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`:'';
   return conChips+ctryChips+head+rounds+cupExtraHtml(dc)+histH;
 }
+/* ===== Milletler Kupası ve milli maçlar =====
+   S.wc iki biçimde olabilir: v:2 (yaz haftalarında oynanan, eşleşmeli) ve eski
+   kayıtlardaki {rounds, champ} (sezon sonunda tek seferde oynanmış). İkincisi
+   geçmiş bir sonuç olarak eskisi gibi çiziliyor. */
+function ntTieHtml(ti){
+  const s=ntPseudo(ti.s),u=ntPseudo(ti.u),m=ti.m[0];
+  const played=m.hg!==null;
+  const gs=played?(m.h===ti.s?m.hg:m.ag):0,gu=played?(m.h===ti.s?m.ag:m.hg):0;
+  const mine=new Set(S.clients.map(id=>(byId(id)||{}).nat));
+  const nm=(o,k)=>{const b=ti.w===k?'b':'span';return `<${b}>${esc(o.n)}</${b}>${mine.has(k)?' <span style="color:var(--acc)">★</span>':''}`;};
+  return `<div class="matchrow">
+    <span class="tn r">${nm(s,ti.s)}</span>${tmBadge(s,20)}
+    <span class="sc ${played?'':'f'}">${played?gs+' : '+gu:'–'}</span>
+    ${tmBadge(u,20)}<span class="tn">${nm(u,ti.u)}</span></div>
+    ${ti.pen?`<div class="sub" style="text-align:center;margin:-2px 0 6px">${t('cupPen')}</div>`:''}`;
+}
+function ncHtml(RL){
+  let h='';
+  const W=S.wc;
+  const nextSe=ncSeason()&&!(W&&W.v===2&&W.se===S.season&&W.w)?S.season:(Math.floor(S.season/NC_EVERY)+1)*NC_EVERY;
+  if(W&&W.v===2){
+    const n=W.r[0].length*2,R=Math.round(Math.log2(n));
+    const lbl=ri=>{const k=R-1-ri;return k===0?t('finalLbl'):k===1?t('sf'):k===2?t('qf'):k===3?t('r16'):fmtStr(t('dcRound'),{n:ri+1});};
+    const live=W.se===S.season;
+    h+=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+      ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
+      <div class="sub">${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`;
+    h+=W.r.map((ties,ri)=>`<div class="card"><div class="sect">${lbl(ri)}${live?' · '+t('week')+' '+(totalWeeks()+ri+1):''}</div>
+      ${ties.map(ntTieHtml).join('')}</div>`).join('');
+    const sc=Object.keys(W.sc||{}).map(id=>[byId(+id),W.sc[id]]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(sc.length)h+=`<div class="card"><div class="sect">${t('cupScorers')}</div>
+      ${sc.map(([p,g])=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)}${p.agent==='you'?' <span style="color:var(--acc)">★</span>':''} · ${NATS[p.nat].c}</span>
+      <span class="v num">${g} ${t('gShort')}</span></div>`).join('')}</div>`;
+  } else if(W&&W.rounds){
+    const wcRL=W.rounds.length===4?RL:RL.slice(4-W.rounds.length);
+    h+=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+      <div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${NATS[W.champ].c}</span></div>
+      <div class="sub">${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`
+    +W.rounds.map((rd,ri)=>`<div class="card">
+      <div class="sect">${wcRL[ri]}</div>
+      ${rd.map(m=>`<div class="matchrow">
+        <span class="tn r"><b>${NATS[m.h].c}</b></span>
+        <span class="sc">${m.hg} : ${m.ag}</span>
+        <span class="tn"><b>${NATS[m.a].c}</b></span></div>`).join('')}</div>`).join('');
+  } else {
+    h+=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+nextSe)}</div>`;
+  }
+  /* Kadrodaki müşterilerin ve son milli maç günü — müşterilerinin ülkeleri ve kendi
+     ülken önce, en fazla on maç. */
+  const mine=S.clients.map(byId).filter(p=>p&&(p.caps||ntInSquad(p.id)));
+  if(mine.length)h+=`<div class="card"><div class="sect">${t('ntMine')}</div>
+    ${mine.map(p=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)} · ${NATS[p.nat].c}${ntInSquad(p.id)?' <span style="color:var(--acc)">✓</span>':''}</span>
+    <span class="v num">${p.caps||0} ${t('mShort')} · ${p.ig||0} ${t('gShort')}</span></div>`).join('')}</div>`;
+  const M=(S.nt&&S.nt.m)||[];
+  if(M.length){
+    const lw=Math.max(...M.map(m=>m.w));
+    const pri=new Set(S.clients.map(id=>(byId(id)||{}).nat).concat(S.agent?[S.agent.nat]:[]));
+    const day=M.filter(m=>m.w===lw).sort((a,b)=>(pri.has(b.h)||pri.has(b.a))-(pri.has(a.h)||pri.has(a.a))).slice(0,10);
+    h+=`<div class="card"><div class="sect">${t('ntRecent')} · ${t('week')} ${lw}</div>
+      ${day.map(m=>{const a=ntPseudo(m.h),b=ntPseudo(m.a);return `<div class="matchrow">
+        <span class="tn r">${esc(a.n)}</span>${tmBadge(a,20)}<span class="sc">${m.hg} : ${m.ag}</span>${tmBadge(b,20)}<span class="tn">${esc(b.n)}</span></div>`;}).join('')}</div>`;
+  }
+  if((S.wcHist||[]).length)h+=`<div class="card"><div class="sect">${t('history')}</div>
+    ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
+  return h;
+}
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
     `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
@@ -1156,25 +1230,8 @@ function cupView(){
         <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`;
     }
   } else {
-    /* milli takımlar turnuvası */
-    if(!S.wc){
-      const next=Math.ceil(S.season/4)*4;
-      body=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+next)}</div>`;
-    } else {
-      const wcRL=S.wc.rounds.length===4?RL:RL.slice(4-S.wc.rounds.length);
-      body=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${S.wc.se}</div>
-        <div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${NATS[S.wc.champ].c}</span></div></div>`
-      +S.wc.rounds.map((rd,ri)=>`<div class="card">
-        <div class="sect">${wcRL[ri]}</div>
-        ${rd.map(m=>`<div class="matchrow">
-          <span class="tn r"><b>${NATS[m.h].c}</b></span>
-          <span class="sc">${m.hg} : ${m.ag}</span>
-          <span class="tn"><b>${NATS[m.a].c}</b></span></div>`).join('')}</div>`).join('');
-      const next=S.wc.se+4;
-      body+=`<div class="card"><div class="sub">${t('nextWc')}: ${t('season')} ${next}</div></div>`;
-      if((S.wcHist||[]).length>1)body+=`<div class="card"><div class="sect">${t('history')}</div>
-        ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${NATS[x.nat].c}</span></div>`).join('')}</div>`;
-    }
+    /* milli takımlar: Milletler Kupası (nations.js) ve milli maçlar */
+    body=ncHtml(RL);
   }
   return `${conChips}${cupChips}${body}`;
 }
@@ -1962,6 +2019,19 @@ function pfSectHtml(k,title,sub){
     <span class="pfSectT"><b>${title}</b>${sub?`<em>${sub}</em>`:''}</span>
   </div>`;
 }
+/* Milli takım kartı: yalnız milli maçı olan ya da şu an kadroda olan oyuncuda. */
+function pfNtHtml(p){
+  if(!(p.caps||ntInSquad(p.id)))return '';
+  return `<div class="card pfCard">
+    <div class="pfSub">${t('ntTitle')} · ${esc(tx(NATNAME[p.nat]))}</div>
+    <div class="pfGrid pfG4">
+      ${pfCell(p.caps||0,t('ntCaps'))}
+      ${pfCell(p.ig||0,t('ntGoals'))}
+      ${pfCell(p.ns?p.ns.app:0,t('ntSeason'))}
+      ${pfCell(ntInSquad(p.id)?'✓':'—',t('ntSquadL'))}
+    </div>
+  </div>`;
+}
 function pfCell(v,lbl){
   return `<span class="pfCell"><b class="num">${v}</b><em>${lbl}</em></span>`;
 }
@@ -2103,7 +2173,7 @@ function pfOvHtml(p,tm,cx){
       ${pfCell(p.h?p.h+' cm':'—',t('height'))}
       ${pfCell(p.ft==='L'?t('left'):t('right'),t('foot'))}
     </div>
-  </div>`;
+  </div>${pfNtHtml(p)}`;
 }
 
 /* ---------- sekme 2: maçlar ----------
@@ -2116,10 +2186,10 @@ function pfMtHtml(p,tm,cx){
   const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
   const l5=(p.l5||[]).slice().reverse();
   const rows=l5.length?l5.map(m5=>{
-    const o=S.teams[m5.o];
+    const o=oppOf(m5.o,m5.nt);
     const facts=[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
       m5.mm?`<b class="pfMotm">${t('motm')}</b>`:''].filter(Boolean).join(' · ');
-    return `<button class="pfMatch" onclick="pushV('team',${o.id})">
+    return `<button class="pfMatch" onclick="${oppGo(o,m5.nt)}">
       ${tmBadge(o,28)}
       <span class="pfMatchM">
         <span class="pfMatchT">${esc(o.n)}</span>
@@ -2163,7 +2233,7 @@ function pfMtHtml(p,tm,cx){
     ${seasons.map(s=>`<div class="pfSeason">
       <span class="pfSeasonS num">S${s.se}</span>
       <span class="pfSeasonT">${esc(s.tm)}</span>
-      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}${s.cs?' · '+cupSeTxt(s):''}</span>
+      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}${s.cs?' · '+cupSeTxt(s):''}${s.ns?' · '+ntSeTxt(s):''}</span>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -2877,7 +2947,7 @@ settings(){
   <div class="sect">${t('dataLbl')}</div>
   <div class="card">
     <div class="kv"><span class="k">${t('slotN').replace('{n}',curSlot)}</span><span class="v">${esc(S.agent.agency)}</span></div>
-    <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</span></div>
+    <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${shownWeek()}</span></div>
     <div class="kv"><span class="k">${t('clients')}</span><span class="v">${S.clients.length}/${maxClients()}</span></div>
     <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
   </div>
@@ -3061,11 +3131,11 @@ player(id){
   ${(p.l5&&p.l5.length)?`<div class="card">
     <div class="sect">${t('last5')}</div>
     ${p.l5.slice().reverse().map(m5=>{
-      const o=S.teams[m5.o];
+      const o=oppOf(m5.o,m5.nt);
       const rc=m5.rt>=7.5?'var(--acc)':m5.rt>=6.5?'var(--warn)':'var(--bad)';
       const resCh=pfResCh(m5.res);
       const resCol=m5.res==='W'?'var(--acc)':m5.res==='L'?'var(--bad)':'var(--warn)';
-      return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="pushV('team',${o.id})">
+      return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="${oppGo(o,m5.nt)}">
         ${tmBadge(o,26)}
         <div style="flex:1;min-width:0">
           <div style="font-size:12.5px;font-weight:600">${o.n} <span class="faint" style="font-variant-numeric:tabular-nums">${m5.sc}</span>
@@ -3081,6 +3151,7 @@ player(id){
   <div class="card">
     <div class="sect">${t('personal')}</div>
     <div class="kv"><span class="k">${t('nation')}</span><span class="v">${NATS[p.nat].c}</span></div>
+    ${p.caps?`<div class="kv"><span class="k">${t('ntTitle')}</span><span class="v">${p.caps} ${t('ntCaps')} · ${p.ig||0} ${t('gShort')}${ntInSquad(p.id)?' · '+t('ntSquadL'):''}</span></div>`:''}
     <div class="kv"><span class="k">${t('age')}</span><span class="v">${p.age}</span></div>
     ${/* Boy yoksa birim de yazılmaz: "— cm" diye bir ölçü yok. Saha profili
          (pfOvHtml) zaten böyle davranıyor. */''}
@@ -3105,7 +3176,7 @@ player(id){
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
     ${hist.map(h=>`<div class="kv"><span class="k">S${h.se} · ${t('transferH')}</span><span class="v">${h.a} → ${h.b} (${fmtM(h.f)})</span></div>`).join('')}
-    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}${s.cs?' · '+cupSeTxt(s):''}</span></div>`).join('')}
+    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}${s.cs?' · '+cupSeTxt(s):''}${s.ns?' · '+ntSeTxt(s):''}</span></div>`).join('')}
   </div>`:''}
   ${mine?`
     <div class="grid2">
@@ -3684,7 +3755,7 @@ function render(){
   }
   showChrome(true);
   document.getElementById('hBack').classList.toggle('show',stack.length>1);
-  let t1='Menajer',t2=fmtStr(t('seWk'),{s:S.season,w:Math.min(S.week,totalWeeks())});
+  let t1='Menajer',t2=fmtStr(t('seWk'),{s:S.season,w:shownWeek()});
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
@@ -3816,7 +3887,7 @@ function wkSahaCell(v,lbl){
   return '<span class="wrCell"><b class="num">'+v+'</b><em>'+lbl+'</em></span>';
 }
 function wkSahaCard(r){
-  const tm=S.teams[r.tid],opp=S.teams[r.opp];
+  const tm=oppOf(r.tid,r.nt),opp=oppOf(r.opp,r.nt);
   const resCh=pfResCh(r.res);
   const resCls=r.res==='W'?'w':r.res==='L'?'l':'d';
   const stat=(v,lbl,cls)=>'<i class="wrStat'+(cls?' '+cls:'')+'"><b class="num">'+v+'</b><em>'+lbl+'</em></i>';
@@ -4070,7 +4141,7 @@ function showWeekReport(wk){
     <div style="width:30px;flex-shrink:0"></div><div style="flex:1;min-width:0"></div>
     ${cell(t('minShort'),W.min)}${cell('G',W.g)}${cell('A',W.a)}${cell(t('ratingShort'),W.rt)}</div>`;
   const body=rows.map(r=>{
-    const tm=S.teams[r.tid],opp=S.teams[r.opp];
+    const tm=oppOf(r.tid,r.nt),opp=oppOf(r.opp,r.nt);
     const rc=r.rt>=7.5?'var(--acc)':r.rt>=6.5?'var(--warn)':'var(--bad)';
     const dim='color:var(--txt3)';
     return `<div class="pitem" style="gap:11px" onclick="closeModal();pushV('player',${r.pid})">

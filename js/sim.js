@@ -77,13 +77,17 @@ function pickWeighted(ps,wf){
    (p.app/min/g/a) yazar — gol krallığı, asist listesi, gol bonusu anlaşmaları ve
    sezon arşivi bunları "lig" diye okuyor. Kupa maçı ayrı bir sezonluk deftere
    (p.cs) yazar: kupa golü lig gol krallığına karışmasın. Maç puanı ise iki yerde
-   de aynı rtSum/rtN'ye giriyor — piyasa değeri büyük gecelerdeki oyunu da görsün. */
+   de aynı rtSum/rtN'ye giriyor — piyasa değeri büyük gecelerdeki oyunu da görsün.
+   Milli maç ('n:…') kendi defterine (p.ns): kupa satırına da karışmasın. */
 function tallyOf(p,cp){
   if(cp===undefined)return p;
+  if(typeof cp==='string'&&cp[0]==='n')return p.ns||(p.ns={app:0,min:0,g:0,a:0});
   return p.cs||(p.cs={app:0,min:0,g:0,a:0});
 }
-function playMatchSide(tid,cp){
-  const sq=squadOf(tid);
+function playMatchSide(tid,cp){return playSquad(squadOf(tid),cp);}
+/* Bir kadrodan sahaya çıkanlar. Kulüp maçında kadro takımınki, milli maçta çağrılan
+   26 kişi (nations.js) — dizilişin kuralı ikisinde de aynı. */
+function playSquad(sq,cp){
   const sorted=sq.map(p=>({p,s:p.r+(p.form-50)*0.1+R(-6,6)})).sort((a,b)=>b.s-a.s).map(x=>x.p);
   const gk=sorted.find(p=>p.pos==='KL');
   /* Dizilişi mevkiye göre kur: sadece en iyi 10'u alırsak 10 forvetli takım çıkabiliyor.
@@ -119,18 +123,22 @@ function playMatchSide(tid,cp){
    kimin attığı, maç puanı, form/moral geri beslemesi, piyasa değeri, son 5 maç,
    Maçın Adamı ve haftalık rapor her yarışmada aynı kural. Tek yerde durmasının
    nedeni bu: kupa maçı ayrı bir kopya olsaydı ikisi er geç ayrışırdı.
-   cp: kupa indeksi (CUPS). Lig maçında yok — o zaman her şey eskisi gibi. */
-function playFixture(m,cp){
+   cp: kupa indeksi (CUPS), ulusal kupada 'd:XX', milli maçta 'n:…'. Lig maçında
+   yok — o zaman her şey eskisi gibi.
+   ns: yalnız milli maçta — {ülke: {sq, str}}. m.h/m.a o zaman ülke kodu; kadro ve
+   güç takımdan değil buradan okunuyor, kayıtlar (l5, haftalık rapor) nt taşıyor. */
+function playFixture(m,cp,ns){
   const cup=cp!==undefined;
   const playedMap={},gMap={},aMap={};
-  playedMap[m.h]=playMatchSide(m.h,cp);
-  playedMap[m.a]=playMatchSide(m.a,cp);
+  playedMap[m.h]=ns?playSquad(ns[m.h].sq,cp):playMatchSide(m.h,cp);
+  playedMap[m.a]=ns?playSquad(ns[m.a].sq,cp):playMatchSide(m.a,cp);
   [[m.h,m.hg],[m.a,m.ag]].forEach(([tid,goals])=>{
     const squad=playedMap[tid].out;
     if(!squad.length)return;
     for(let g=0;g<goals;g++){
       const sc=pickWeighted(squad,p=>(p.pos==='FV'?9:p.pos==='OS'?3.2:0.8)*p.r/70);
       tallyOf(sc,cp).g++;gMap[sc.id]=(gMap[sc.id]||0)+1;
+      if(ns)sc.ig=(sc.ig||0)+1;
       /* gol zaten maç puanına giriyor; buradaki artış sadece ek güven payı */
       sc.form=clamp(sc.form+3,0,100);moraleEvent(sc,2);
       if(RF()<0.75&&squad.length>1){
@@ -142,7 +150,13 @@ function playFixture(m,cp){
   });
   /* --- maç puanları, son 5 maç ve Maçın Adamı --- */
   let motm=null,best=0;
-  const strH=teamStr(m.h),strA=teamStr(m.a);
+  const strH=ns?ns[m.h].str:teamStr(m.h),strA=ns?ns[m.a].str:teamStr(m.a);
+  /* Milli maç sayısı kariyer boyu (p.caps). İlk maçı oynayan müşteri menajerine de
+     itibar getiriyor: "milli oyuncu temsil ediyor" sektörde bir basamak. */
+  if(ns)[m.h,m.a].forEach(k=>playedMap[k].all.forEach(p=>{
+    p.caps=(p.caps||0)+1;
+    if(p.caps===1&&p.agent==='you')repEvent(0.3);
+  }));
   [[m.h,m.hg,m.ag],[m.a,m.ag,m.hg]].forEach(([tid,gf,ga])=>{
     const res=gf>ga?'W':gf<ga?'L':'D';
     const oppStr=tid===m.h?strA:strH;
@@ -162,6 +176,7 @@ function playFixture(m,cp){
       const e={o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
         sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0};
       if(cup)e.cp=cp;
+      if(ns)e.nt=1;
       (p.l5=p.l5||[]).push(e);
       if(p.l5.length>5)p.l5.shift();
       if(rt>best){best=rt;motm=p;}
@@ -178,19 +193,25 @@ function playFixture(m,cp){
   playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
     if(p.agent!=='you')return;
     const last=p.l5[p.l5.length-1];
-    const r={pid:p.id,n:p.n,tid:p.team,opp:last.o,res:last.res,sc:last.sc,
+    /* Milli maçta tid oyuncunun ülkesi: satırın rozeti kulübü değil milli takımı göstersin. */
+    const r={pid:p.id,n:p.n,tid:ns?p.nat:p.team,opp:last.o,res:last.res,sc:last.sc,
       min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0};
     if(cup)r.cp=cp;
+    if(ns)r.nt=1;
     S.wkRep.push(r);
   });
   S.clients.forEach(cid=>{
     const p=byId(cid);
-    if(!p||(p.team!==m.h&&p.team!==m.a))return;
-    if(playedMap[p.team].all.indexOf(p)>=0)return;
-    const r={pid:p.id,n:p.n,tid:p.team,opp:p.team===m.h?m.a:m.h,
-      res:(p.team===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
-      sc:(p.team===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1};
+    /* Kadroda olup oynamayan: kulüp maçında kulübünün, milli maçta çağrıldığı ülkenin */
+    const k=ns?(ns[m.h]&&ns[m.h].sq.indexOf(p)>=0?m.h:ns[m.a]&&ns[m.a].sq.indexOf(p)>=0?m.a:null)
+      :(p&&(p.team===m.h||p.team===m.a)?p.team:null);
+    if(!p||k===null)return;
+    if(playedMap[k].all.indexOf(p)>=0)return;
+    const r={pid:p.id,n:p.n,tid:k,opp:k===m.h?m.a:m.h,
+      res:(k===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
+      sc:(k===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1};
     if(cup)r.cp=cp;
+    if(ns)r.nt=1;
     S.wkRep.push(r);
   });
   return gMap;
@@ -199,7 +220,7 @@ function playFixture(m,cp){
    teamStr() çağrısı bayat kadroyu okurdu. */
 function simWeek(){
   SQIDX=weekSquads();
-  try{simWeekRun();}finally{SQIDX=null;}
+  try{simWeekRun();simNat();}finally{SQIDX=null;}
 }
 function simWeekRun(){
   const wk=S.week-1;
@@ -400,7 +421,8 @@ function nextWeek(){
     }
   }
   S.week++;
-  const seasonOver=S.week>totalWeeks();
+  /* Turnuva sezonunda lig bittikten sonra yaz haftaları var (nations.js). */
+  const seasonOver=S.week>seasonLen();
   /* Reklam arası hakkı save()'den ÖNCE isteniyor: işaret diske bu haftayla
      birlikte düşmeli. */
   const brk=adBreakClaim();
@@ -494,37 +516,7 @@ function endSeason(){
     down.forEach(tm=>{tm.lg=si;if(myTids.has(tm.id))pushNews('relegated',{c:tm.n,tid:tm.id,li:si},'bad');});
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
-  /* --- milli takımlar turnuvası: her 4 sezonda bir --- */
-  if(S.season%4===0){
-    const natStr=nat=>{
-      const ps=S.players.filter(p=>p.nat===nat).sort((a,b)=>b.r-a.r).slice(0,11);
-      return ps.length?ps.reduce((s,p)=>s+p.r,0)/ps.length:0;
-    };
-    const strMap={};NATKEYS.forEach(n=>strMap[n]=natStr(n));
-    const seeds=NATKEYS.slice().sort((a,b)=>strMap[b]-strMap[a]).slice(0,16);
-    const rounds=[];
-    let cur=null;
-    /* first round: seed 1 vs 16, 2 vs 15 ... */
-    let rd=[];const nxt=[];
-    for(let i=0;i<8;i++){
-      const A=seeds[i],B=seeds[15-i];
-      const [g1,g2]=playKO(strMap[A],strMap[B]);
-      rd.push({h:A,a:B,hg:g1,ag:g2});nxt.push(g1>g2?A:B);
-    }
-    rounds.push(rd);cur=nxt;
-    while(cur.length>1){
-      rd=[];const n2=[];
-      for(let i=0;i<cur.length;i+=2){
-        const A=cur[i],B=cur[i+1];
-        const [g1,g2]=playKO(strMap[A],strMap[B]);
-        rd.push({h:A,a:B,hg:g1,ag:g2});n2.push(g1>g2?A:B);
-      }
-      rounds.push(rd);cur=n2;
-    }
-    S.wc={se:S.season,rounds,champ:cur[0]};
-    (S.wcHist=S.wcHist||[]).push({se:S.season,nat:cur[0]});
-    pushNews('wcWin',{n:NATS[cur[0]].c},'good');
-  }
+  /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
   const tstr={};S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});
   /* --- gol bonusu anlaşmaları: 10+ gol atan transferden pay --- */
   (S.deals=S.deals||[]).forEach(d=>{
@@ -539,11 +531,12 @@ function endSeason(){
   const gone=[];
   S.players.forEach(p=>{
     p.seasons=p.seasons||[];
-    const csApp=p.cs&&p.cs.app>0;
-    if(p.app>0||p.g>0||csApp||p.agent==='you'){
+    const csApp=p.cs&&p.cs.app>0,nsApp=p.ns&&p.ns.app>0;
+    if(p.app>0||p.g>0||csApp||nsApp||p.agent==='you'){
       const rec={se:S.season,tm:teamOf(p).n,g:p.g,a:p.a,app:p.app||0,min:p.min||0,rt:p.rtN?Math.round(p.rtSum/p.rtN*10)/10:0};
       /* kupa sayaçları ayrı alan: g/a/app lig olarak kalıyor, eski kayıtlarda alan yok */
       if(csApp)rec.cs={app:p.cs.app,g:p.cs.g||0,a:p.cs.a||0};
+      if(nsApp)rec.ns={app:p.ns.app,g:p.ns.g||0};
       p.seasons.push(rec);
     }
     if(p.seasons.length>6)p.seasons.shift();
@@ -576,7 +569,7 @@ function endSeason(){
       if(p.r>lvl+6&&p.age<=29){pushNews('outgrow',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team},'warn');p.morale=clamp(p.morale-12,0,100);}
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
-    delete p.cs;
+    delete p.cs;delete p.ns;
     p.vmAt=0;if(p.vm)p.vm=+(1+(p.vm-1)*VAL.revert).toFixed(3);
     /* --- kulüpsüz oyuncular: uzun süre imza bulamazsa futbolu bırakır --- */
     if(isFree(p)){

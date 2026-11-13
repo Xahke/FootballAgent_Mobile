@@ -82,7 +82,11 @@ function genName(nat){
   const pool=NATS[nat];
   return pool.f[R(0,pool.f.length-1)]+' '+pool.l[R(0,pool.l.length-1)];
 }
-function pickNat(domestic){
+/* str: kulübün gücü (genPlayer). Verilirse yabancı uyruk ağırlığı ülkenin kalitesiyle
+   (NAT_Q) kulübün gücüne göre eğiliyor: 85'lik kulüpte en üst basamak ~4 kat, en
+   alt ~4'te bir; 55'lik kulüpte tersi, daha yumuşak. Yerli oran (0.62) değişmiyor. */
+const NAT_BIAS=1.4;
+function pickNat(domestic,str){
   if(domestic==='af')domestic=AFR[R(0,AFR.length-1)];
   else if(domestic==='afN')domestic=NAF[R(0,NAF.length-1)];
   if(RF()<0.62)return domestic;
@@ -92,16 +96,18 @@ function pickNat(domestic){
     cy:0.1,hu:0.3,sk:0.3,si:0.3,bg:0.2,az:0.1,
     /* Milli takım genişlemesi: ligi olmayan ülkeler; ağırlık bir kadroluk oyuncu çıkacak kadar */
     bo:0.3,ca:0.5,pa:0.3,cr:0.3,jm:0.4,ht:0.25,cw:0.3,hn:0.25,sr:0.25,cv:0.3,za:0.3,ga:0.25,bf:0.3,gn:0.3,qa:0.25,uz:0.3,jo:0.25,iq:0.25,ae:0.25,om:0.25,id:0.25,nz:0.3};
-  let tot=0;others.forEach(n=>tot+=w[n]||1);
+  const b=str===undefined?0:clamp((str-65)/20,-1,1);
+  const wt=n=>(w[n]||1)*(b?Math.exp(NAT_BIAS*b*((NAT_Q[n]===undefined?0.5:NAT_Q[n])-0.5)*2):1);
+  let tot=0;others.forEach(n=>tot+=wt(n));
   let x=RF()*tot;
-  for(const n of others){x-=(w[n]||1);if(x<=0)return n;}
+  for(const n of others){x-=wt(n);if(x<=0)return n;}
   return others[0];
 }
 /* yaş → güç eğrisi: genç oyuncu kulübünün seviyesinin belirgin altında başlar,
    zirveye 24-30 arasında ulaşır, sonra geriler. forceAge verilirse r/pot O yaşa göre hesaplanır. */
 function genPlayer(team,pos,forceAge){
   const str=team.str;
-  const nat=pickNat(LEAGUES[team.lg].nat);
+  const nat=pickNat(LEAGUES[team.lg].nat,team.str);
   const low=str<=60;
   const age=forceAge||(low?(RF()<0.5?R(16,21):R(22,32)):R(17,34));
   let r;

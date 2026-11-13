@@ -383,8 +383,10 @@ function cupLpTable(cp){
 /* ===== MAÇ =====
    Ayaklar lig skor modeliyle (beraberlik var, ev avantajı var); final tarafsız
    sahada. Oyuncu tarafı her yarışmada aynı motor: playFixture (sim.js). */
-function cupScore(h,a,neutral){
-  const sh=teamStr(h),sa=teamStr(a),hf=neutral?1.3:1.45,af=neutral?1.3:1.15;
+function cupScore(h,a,neutral){return goalPair(teamStr(h),teamStr(a),neutral);}
+/* Güçten skor: kupa ayakları ve milli maçlar (nations.js) aynı modeli kullanıyor. */
+function goalPair(sh,sa,neutral){
+  const hf=neutral?1.3:1.45,af=neutral?1.3:1.15;
   return [poisson(clamp(hf*Math.pow(sh/sa,2.4),0.3,4.2)),poisson(clamp(af*Math.pow(sa/sh,2.4),0.3,4.2))];
 }
 function cupPlay(m,ci,cp,neutral){

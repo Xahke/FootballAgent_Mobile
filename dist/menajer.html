@@ -5237,7 +5237,7 @@ cupMd:'{n}. maç günü',
 cupLegs:'1. maç {a} · 2. maç {b}',
 cupPen:'pen.',
 cupZones:'1–8 son 16 · 9–24 play-off · 25–36 elenir',
-cupWks:'{a}. ve {b}. hafta',dcLbl:'Ulusal kupalar',dcFmt:'{c} Ulusal Kupası',dcRound:'{n}. tur',dcByes:'{n} kulüp ilk turu bay geçiyor',dcNext:'Ulusal kupalar gelecek sezon başlıyor.',dcInfo:'Tek maçlık eleme, eşitlikte penaltılar; alt ligdeki kulüp ev sahibi; final tarafsız sahada.',dcSf2:'Yarı final rövanşlı.',
+cupWks:'{a}. ve {b}. hafta',ntFriendly:'Hazırlık maçı',ntCaps:'Milli maç',ntGoals:'Milli gol',ntSeason:'Bu sezon',ntSquadL:'Kadroda',ntTitle:'Milli takım',ntSe:'Milli: {n} maç, {g} gol',ntMine:'Milli takımdaki müşterilerin',ntRecent:'Son milli maçlar',dcLbl:'Ulusal kupalar',dcFmt:'{c} Ulusal Kupası',dcRound:'{n}. tur',dcByes:'{n} kulüp ilk turu bay geçiyor',dcNext:'Ulusal kupalar gelecek sezon başlıyor.',dcInfo:'Tek maçlık eleme, eşitlikte penaltılar; alt ligdeki kulüp ev sahibi; final tarafsız sahada.',dcSf2:'Yarı final rövanşlı.',
 notifs:'Bildirimler',allNotifs:'Tümünü Gör',newNotifsT:'yeni bildirim',viewProfile:'Profil',
 ibUnread:'okunmamış',ibAllRead:'Hepsi okundu',ibReadAll:'Tümünü oku',
 ibFAct:'Aksiyon',ibFPly:'Oyuncular',ibFFin:'Finans',ibFWorld:'Dünya',
@@ -5581,7 +5581,7 @@ cupMd:'Matchday {n}',
 cupLegs:'1st leg {a} · 2nd leg {b}',
 cupPen:'pens',
 cupZones:'1–8 last 16 · 9–24 play-offs · 25–36 out',
-cupWks:'weeks {a} and {b}',dcLbl:'National cups',dcFmt:'{c} National Cup',dcRound:'Round {n}',dcByes:'{n} clubs have a bye in the first round',dcNext:'National cups start next season.',dcInfo:'Single-match knockout, penalties if level; the lower-division club hosts; final on neutral ground.',dcSf2:'Two-legged semi-finals.',
+cupWks:'weeks {a} and {b}',ntFriendly:'Friendly',ntCaps:'Caps',ntGoals:'Int. goals',ntSeason:'This season',ntSquadL:'In squad',ntTitle:'National team',ntSe:'Intl: {n} apps, {g} goals',ntMine:'Your clients on international duty',ntRecent:'Latest internationals',dcLbl:'National cups',dcFmt:'{c} National Cup',dcRound:'Round {n}',dcByes:'{n} clubs have a bye in the first round',dcNext:'National cups start next season.',dcInfo:'Single-match knockout, penalties if level; the lower-division club hosts; final on neutral ground.',dcSf2:'Two-legged semi-finals.',
 notifs:'Notifications',allNotifs:'View All',newNotifsT:'new notification(s)',viewProfile:'Profile',
 ibUnread:'unread',ibAllRead:'All caught up',ibReadAll:'Mark all read',
 ibFAct:'Action',ibFPly:'Players',ibFFin:'Finance',ibFWorld:'World',
@@ -5964,6 +5964,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} şampiyon oldu.`+(p.s?` G
 finalN:p=>`${lkL(p.li,lgName(p.li))} Finali: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Şampiyon: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: Kupayı ${lkT(p.tid,p.c)} kazandı!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: Kupayı ${lkT(p.tid,p.c)} kazandı!`,
+ntCall:p=>`${tx(NATNAME[p.nat])} milli takımı: ${lkP(p.pid,p.n)} kadroya çağrıldı.`,
+ntCall1:p=>`${tx(NATNAME[p.nat])} milli takımı: ${lkP(p.pid,p.n)} ilk kez kadroda!`,
 wcWin:p=>`${lkC(3,t("wcLbl"))}'nı ${p.n} kazandı!`,
 promoted:p=>`${lkT(p.tid,p.c)} bir üst lige yükseldi — yeni adres: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Dünyaya yeni bir lig eklendi: ${lkL(p.li,lgName(p.li))}. Kulüpleri ve oyuncuları artık dünyada.`,
@@ -6005,6 +6007,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} are champions.`+(p.s?` To
 finalN:p=>`${lkL(p.li,lgName(p.li))} Final: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Champions: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} lift the trophy!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ${lkT(p.tid,p.c)} lift the trophy!`,
+ntCall:p=>`${tx(NATNAME[p.nat])}: ${lkP(p.pid,p.n)} has been called up.`,
+ntCall1:p=>`${tx(NATNAME[p.nat])}: first call-up for ${lkP(p.pid,p.n)}!`,
 wcWin:p=>`${p.n} win the ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} have been promoted — new home: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`A new league has joined the world: ${lkL(p.li,lgName(p.li))}. Its clubs and players are now part of it.`,
@@ -6089,7 +6093,7 @@ cupMd:'Jornada {n}',
 cupLegs:'Ida {a} · Vuelta {b}',
 cupPen:'pen.',
 cupZones:'1–8 octavos · 9–24 playoffs · 25–36 eliminados',
-cupWks:'semanas {a} y {b}',dcLbl:'Copas nacionales',dcFmt:'{c} · Copa Nacional',dcRound:'Ronda {n}',dcByes:'{n} clubes quedan exentos de la primera ronda',dcNext:'Las copas nacionales empiezan la próxima temporada.',dcInfo:'Eliminatoria a partido único, penaltis si hay empate; juega en casa el club de categoría inferior; final en campo neutral.',dcSf2:'Semifinales a doble partido.',
+cupWks:'semanas {a} y {b}',ntFriendly:'Amistoso',ntCaps:'Partidos',ntGoals:'Goles',ntSeason:'Esta temporada',ntSquadL:'Convocado',ntTitle:'Selección',ntSe:'Selección: {n} PJ, {g} goles',ntMine:'Tus representados convocados',ntRecent:'Últimos partidos de selecciones',dcLbl:'Copas nacionales',dcFmt:'{c} · Copa Nacional',dcRound:'Ronda {n}',dcByes:'{n} clubes quedan exentos de la primera ronda',dcNext:'Las copas nacionales empiezan la próxima temporada.',dcInfo:'Eliminatoria a partido único, penaltis si hay empate; juega en casa el club de categoría inferior; final en campo neutral.',dcSf2:'Semifinales a doble partido.',
 notifs:'Notificaciones',allNotifs:'Ver todas',newNotifsT:'notificación(es) nueva(s)',viewProfile:'Perfil',
 ibUnread:'sin leer',ibAllRead:'Todo al día',ibReadAll:'Marcar todo como leído',
 ibFAct:'Acción',ibFPly:'Jugadores',ibFFin:'Finanzas',ibFWorld:'Mundo',
@@ -6360,6 +6364,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ¡${lkT(p.tid,p.c)}, campeón!`+(p.s?` Máx
 finalN:p=>`Final de ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Campeón: ${lkT(p.cid,p.c)}.`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ¡${lkT(p.tid,p.c)} levanta el trofeo!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ¡${lkT(p.tid,p.c)} levanta el trofeo!`,
+ntCall:p=>`Selección (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} ha sido convocado.`,
+ntCall1:p=>`Selección (${tx(NATNAME[p.nat])}): ¡primera convocatoria para ${lkP(p.pid,p.n)}!`,
 wcWin:p=>`¡${p.n} gana la ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`¡${lkT(p.tid,p.c)} asciende! Nueva casa: ${lkL(p.li,lgName(p.li))}.`,
 newLg:p=>`Se ha sumado una nueva liga al mundo: ${lkL(p.li,lgName(p.li))}. Sus clubes y jugadores ya forman parte de él.`,
@@ -6443,7 +6449,7 @@ cupMd:'Rodada {n}',
 cupLegs:'Ida {a} · Volta {b}',
 cupPen:'pên.',
 cupZones:'1–8 oitavas · 9–24 playoffs · 25–36 eliminados',
-cupWks:'semanas {a} e {b}',dcLbl:'Copas nacionais',dcFmt:'{c} · Copa Nacional',dcRound:'{n}ª fase',dcByes:'{n} clubes folgam na primeira fase',dcNext:'As copas nacionais começam na próxima temporada.',dcInfo:'Mata-mata em jogo único, pênaltis em caso de empate; o clube da divisão inferior joga em casa; final em campo neutro.',dcSf2:'Semifinais em ida e volta.',
+cupWks:'semanas {a} e {b}',ntFriendly:'Amistoso',ntCaps:'Jogos',ntGoals:'Gols',ntSeason:'Nesta temporada',ntSquadL:'Convocado',ntTitle:'Seleção',ntSe:'Seleção: {n} jogos, {g} gols',ntMine:'Seus clientes convocados',ntRecent:'Últimos jogos de seleções',dcLbl:'Copas nacionais',dcFmt:'{c} · Copa Nacional',dcRound:'{n}ª fase',dcByes:'{n} clubes folgam na primeira fase',dcNext:'As copas nacionais começam na próxima temporada.',dcInfo:'Mata-mata em jogo único, pênaltis em caso de empate; o clube da divisão inferior joga em casa; final em campo neutro.',dcSf2:'Semifinais em ida e volta.',
 notifs:'Notificações',allNotifs:'Ver todas',newNotifsT:'notificação(ões) nova(s)',viewProfile:'Perfil',
 ibUnread:'não lidas',ibAllRead:'Tudo em dia',ibReadAll:'Marcar tudo como lido',
 ibFAct:'Ação',ibFPly:'Jogadores',ibFFin:'Finanças',ibFWorld:'Mundo',
@@ -6714,6 +6720,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} é campeão!`+(p.s?` Arti
 finalN:p=>`Final · ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg} x ${p.ag} ${lkT(p.aid,p.a)}. Campeão: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} levanta a taça!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ${lkT(p.tid,p.c)} levanta a taça!`,
+ntCall:p=>`Seleção (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} foi convocado.`,
+ntCall1:p=>`Seleção (${tx(NATNAME[p.nat])}): primeira convocação para ${lkP(p.pid,p.n)}!`,
 wcWin:p=>`${p.n} vence a ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} subiu de divisão. Nova casa: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Uma nova liga entrou no mundo: ${lkL(p.li,lgName(p.li))}. Os clubes e jogadores dela já fazem parte dele.`,
@@ -6797,7 +6805,7 @@ cupMd:'{n}. Spieltag',
 cupLegs:'Hinspiel {a} · Rückspiel {b}',
 cupPen:'i. E.',
 cupZones:'1–8 Achtelfinale · 9–24 Play-offs · 25–36 raus',
-cupWks:'Wochen {a} und {b}',dcLbl:'Nationale Pokale',dcFmt:'{c} · Nationalpokal',dcRound:'{n}. Runde',dcByes:'{n} Vereine haben in der ersten Runde ein Freilos',dcNext:'Die nationalen Pokale beginnen nächste Saison.',dcInfo:'K.-o.-Runden in einem Spiel, bei Gleichstand Elfmeterschießen; der klassentiefere Verein hat Heimrecht; Finale auf neutralem Platz.',dcSf2:'Halbfinale mit Hin- und Rückspiel.',
+cupWks:'Wochen {a} und {b}',ntFriendly:'Testspiel',ntCaps:'Länderspiele',ntGoals:'Tore',ntSeason:'Diese Saison',ntSquadL:'Im Kader',ntTitle:'Nationalteam',ntSe:'Nationalteam: {n} Spiele, {g} Tore',ntMine:'Deine Klienten im Nationalteam',ntRecent:'Letzte Länderspiele',dcLbl:'Nationale Pokale',dcFmt:'{c} · Nationalpokal',dcRound:'{n}. Runde',dcByes:'{n} Vereine haben in der ersten Runde ein Freilos',dcNext:'Die nationalen Pokale beginnen nächste Saison.',dcInfo:'K.-o.-Runden in einem Spiel, bei Gleichstand Elfmeterschießen; der klassentiefere Verein hat Heimrecht; Finale auf neutralem Platz.',dcSf2:'Halbfinale mit Hin- und Rückspiel.',
 notifs:'Benachrichtigungen',allNotifs:'Alle ansehen',newNotifsT:'neue Benachrichtigung(en)',viewProfile:'Profil',
 ibUnread:'ungelesen',ibAllRead:'Alles gelesen',ibReadAll:'Alle als gelesen markieren',
 ibFAct:'Aktion',ibFPly:'Spieler',ibFFin:'Finanzen',ibFWorld:'Welt',
@@ -7068,6 +7076,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} ist Meister.`+(p.s?` Tors
 finalN:p=>`Finale ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg}:${p.ag} ${lkT(p.aid,p.a)}. Sieger: ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} holt den Pokal!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ${lkT(p.tid,p.c)} holt den Pokal!`,
+ntCall:p=>`Nationalteam (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} wurde nominiert.`,
+ntCall1:p=>`Nationalteam (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} erstmals nominiert!`,
 wcWin:p=>`${p.n} gewinnt den ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} steigt auf — neue Heimat: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Eine neue Liga ist dazugekommen: ${lkL(p.li,lgName(p.li))}. Ihre Vereine und Spieler gehören jetzt zur Welt.`,
@@ -7154,7 +7164,7 @@ cupMd:'{n}e journée',
 cupLegs:'Aller {a} · Retour {b}',
 cupPen:'t.a.b.',
 cupZones:'1–8 huitièmes · 9–24 barrages · 25–36 éliminés',
-cupWks:'semaines {a} et {b}',dcLbl:'Coupes nationales',dcFmt:'{c} · Coupe nationale',dcRound:'{n}e tour',dcByes:'{n} clubs sont exemptés du premier tour',dcNext:'Les coupes nationales commencent la saison prochaine.',dcInfo:'Élimination directe sur un match, tirs au but en cas d’égalité ; le club de division inférieure reçoit ; finale sur terrain neutre.',dcSf2:'Demi-finales en matchs aller-retour.',
+cupWks:'semaines {a} et {b}',ntFriendly:'Match amical',ntCaps:'Sélections',ntGoals:'Buts',ntSeason:'Cette saison',ntSquadL:'Convoqué',ntTitle:'Sélection',ntSe:'Sélection : {n} matchs, {g} buts',ntMine:'Tes joueurs en sélection',ntRecent:'Derniers matchs internationaux',dcLbl:'Coupes nationales',dcFmt:'{c} · Coupe nationale',dcRound:'{n}e tour',dcByes:'{n} clubs sont exemptés du premier tour',dcNext:'Les coupes nationales commencent la saison prochaine.',dcInfo:'Élimination directe sur un match, tirs au but en cas d’égalité ; le club de division inférieure reçoit ; finale sur terrain neutre.',dcSf2:'Demi-finales en matchs aller-retour.',
 notifs:"Notifications",allNotifs:"Tout voir",newNotifsT:"nouvelle(s) notification(s)",viewProfile:"Profil",
 ibUnread:"non lus",ibAllRead:"Tout est lu",ibReadAll:"Tout marquer comme lu",
 ibFAct:"Action",ibFPly:"Joueurs",ibFFin:"Finances",ibFWorld:"Monde",
@@ -7425,6 +7435,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))} : ${lkT(p.tid,p.c)} est champion.`+(p.s?` 
 finalN:p=>`Finale · ${lkL(p.li,lgName(p.li))} : ${lkT(p.hid,p.h)} ${p.hg} - ${p.ag} ${lkT(p.aid,p.a)}. Vainqueur : ${lkT(p.cid,p.c)} !`,
 cupWin:p=>`${lkC(p.ci,p.cup)} : ${lkT(p.tid,p.c)} soulève le trophée !`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))} : ${lkT(p.tid,p.c)} soulève le trophée !`,
+ntCall:p=>`Sélection (${tx(NATNAME[p.nat])}) : ${lkP(p.pid,p.n)} est convoqué.`,
+ntCall1:p=>`Sélection (${tx(NATNAME[p.nat])}) : première convocation pour ${lkP(p.pid,p.n)} !`,
 wcWin:p=>`${p.n} remporte la ${lkC(3,t("wcLbl"))} !`,
 promoted:p=>`${lkT(p.tid,p.c)} est promu : nouvelle maison, ${lkL(p.li,lgName(p.li))} !`,
 newLg:p=>`Une nouvelle ligue rejoint le monde : ${lkL(p.li,lgName(p.li))}. Ses clubs et ses joueurs en font désormais partie.`,
@@ -7510,7 +7522,7 @@ cupMd:'{n}ª giornata',
 cupLegs:'Andata {a} · Ritorno {b}',
 cupPen:'rig.',
 cupZones:'1–8 ottavi · 9–24 spareggi · 25–36 eliminati',
-cupWks:'settimane {a} e {b}',dcLbl:'Coppe nazionali',dcFmt:'{c} · Coppa Nazionale',dcRound:'{n}° turno',dcByes:'{n} club saltano il primo turno',dcNext:'Le coppe nazionali iniziano la prossima stagione.',dcInfo:'Eliminazione diretta in gara unica, rigori in caso di parità; gioca in casa il club di categoria inferiore; finale in campo neutro.',dcSf2:'Semifinali con andata e ritorno.',
+cupWks:'settimane {a} e {b}',ntFriendly:'Amichevole',ntCaps:'Presenze',ntGoals:'Gol',ntSeason:'Questa stagione',ntSquadL:'Convocato',ntTitle:'Nazionale',ntSe:'Nazionale: {n} presenze, {g} gol',ntMine:'I tuoi assistiti in nazionale',ntRecent:'Ultime partite delle nazionali',dcLbl:'Coppe nazionali',dcFmt:'{c} · Coppa Nazionale',dcRound:'{n}° turno',dcByes:'{n} club saltano il primo turno',dcNext:'Le coppe nazionali iniziano la prossima stagione.',dcInfo:'Eliminazione diretta in gara unica, rigori in caso di parità; gioca in casa il club di categoria inferiore; finale in campo neutro.',dcSf2:'Semifinali con andata e ritorno.',
 notifs:"Notifiche",allNotifs:"Vedi tutte",newNotifsT:"nuova/e notifica/he",viewProfile:"Profilo",
 ibUnread:"da leggere",ibAllRead:"Tutto letto",ibReadAll:"Segna tutto come letto",
 ibFAct:"Azione",ibFPly:"Giocatori",ibFFin:"Finanze",ibFWorld:"Mondo",
@@ -7781,6 +7793,8 @@ champ:p=>`${lkL(p.li,lgName(p.li))}: ${lkT(p.tid,p.c)} è campione.`+(p.s?` Capo
 finalN:p=>`Finale · ${lkL(p.li,lgName(p.li))}: ${lkT(p.hid,p.h)} ${p.hg}-${p.ag} ${lkT(p.aid,p.a)}. Vince ${lkT(p.cid,p.c)}!`,
 cupWin:p=>`${lkC(p.ci,p.cup)}: ${lkT(p.tid,p.c)} alza il trofeo!`,
 dcWin:p=>`${lkD(p.ctry,dcName(p.ctry))}: ${lkT(p.tid,p.c)} alza il trofeo!`,
+ntCall:p=>`Nazionale (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} è stato convocato.`,
+ntCall1:p=>`Nazionale (${tx(NATNAME[p.nat])}): prima convocazione per ${lkP(p.pid,p.n)}!`,
 wcWin:p=>`${p.n} vince la ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} è promosso: nuova casa, ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Un nuovo campionato entra nel mondo: ${lkL(p.li,lgName(p.li))}. I suoi club e i suoi giocatori ne fanno ormai parte.`,
@@ -11850,6 +11864,17 @@ nz:{c:'NZL',f:['Chris','Liberato','Marko','Matthew','Joe','Elijah','Callum','Ben
  l:['Wilson','Thompson','Walker','Robertson','Campbell','Stewart','Mitchell','Clark','Ngata','Parata','Tane','Henare','Bell','Turner','Morgan','Fraser','Reid','Hunter']}
 };
 const NATKEYS=Object.keys(NATS);
+/* Futbol ülkesi olarak kalite (0–1), gerçek FIFA sıralamasının kabaca beş
+   basamağı. pickNat() yabancı oyuncunun uyruğunu seçerken kulübün gücüne göre
+   buna bakıyor: güçlü kulüp güçlü ülkeden, zayıf kulüp zayıf ülkeden. Bu olmasa
+   ligi olmayan küçük ülkelerin oyuncuları dev kulüplere de aynı olasılıkla düşüyor
+   ve milli takımları yapay güçleniyordu (Jamaika Hırvatistan'ın önündeydi). */
+const NAT_Q={
+ es:1.0,fr:1.0,ar:1.0,en:1.0,br:1.0,pt:1.0,nl:1.0,be:1.0,de:1.0,it:1.0,hr:1.0,
+ ma:0.8,co:0.8,uy:0.8,us:0.8,mx:0.8,jp:0.8,sn:0.8,ch:0.8,dk:0.8,at:0.8,ir:0.8,kr:0.8,ec:0.8,tr:0.8,no:0.8,
+ au:0.6,ua:0.6,se:0.6,rs:0.6,pl:0.6,cz:0.6,sct:0.6,ng:0.6,ci:0.6,eg:0.6,dz:0.6,pe:0.6,cl:0.6,py:0.6,ca:0.6,pa:0.6,gr:0.6,hu:0.6,ru:0.6,sk:0.6,ro:0.6,tn:0.6,
+ ie:0.4,si:0.4,ve:0.4,ml:0.4,cm:0.4,cd:0.4,gh:0.4,sa:0.4,uz:0.4,jo:0.4,iq:0.4,ae:0.4,cr:0.4,jm:0.4,za:0.4,cv:0.4,bf:0.4,gn:0.4,ga:0.4,bg:0.4,qa:0.4,
+ cn:0.2,om:0.2,id:0.2,ht:0.2,cw:0.2,hn:0.2,sr:0.2,nz:0.2,cy:0.2,az:0.2,bo:0.2};
 const AFR=['ng','sn','gh','cm','ci','ml','cd','cv','ga','bf','gn'];
 const NAF=['eg','ma','dz','tn'];
 /* agent nationality → home country (league network) */
@@ -14280,7 +14305,11 @@ function genName(nat){
   const pool=NATS[nat];
   return pool.f[R(0,pool.f.length-1)]+' '+pool.l[R(0,pool.l.length-1)];
 }
-function pickNat(domestic){
+/* str: kulübün gücü (genPlayer). Verilirse yabancı uyruk ağırlığı ülkenin kalitesiyle
+   (NAT_Q) kulübün gücüne göre eğiliyor: 85'lik kulüpte en üst basamak ~4 kat, en
+   alt ~4'te bir; 55'lik kulüpte tersi, daha yumuşak. Yerli oran (0.62) değişmiyor. */
+const NAT_BIAS=1.4;
+function pickNat(domestic,str){
   if(domestic==='af')domestic=AFR[R(0,AFR.length-1)];
   else if(domestic==='afN')domestic=NAF[R(0,NAF.length-1)];
   if(RF()<0.62)return domestic;
@@ -14290,16 +14319,18 @@ function pickNat(domestic){
     cy:0.1,hu:0.3,sk:0.3,si:0.3,bg:0.2,az:0.1,
     /* Milli takım genişlemesi: ligi olmayan ülkeler; ağırlık bir kadroluk oyuncu çıkacak kadar */
     bo:0.3,ca:0.5,pa:0.3,cr:0.3,jm:0.4,ht:0.25,cw:0.3,hn:0.25,sr:0.25,cv:0.3,za:0.3,ga:0.25,bf:0.3,gn:0.3,qa:0.25,uz:0.3,jo:0.25,iq:0.25,ae:0.25,om:0.25,id:0.25,nz:0.3};
-  let tot=0;others.forEach(n=>tot+=w[n]||1);
+  const b=str===undefined?0:clamp((str-65)/20,-1,1);
+  const wt=n=>(w[n]||1)*(b?Math.exp(NAT_BIAS*b*((NAT_Q[n]===undefined?0.5:NAT_Q[n])-0.5)*2):1);
+  let tot=0;others.forEach(n=>tot+=wt(n));
   let x=RF()*tot;
-  for(const n of others){x-=(w[n]||1);if(x<=0)return n;}
+  for(const n of others){x-=wt(n);if(x<=0)return n;}
   return others[0];
 }
 /* yaş → güç eğrisi: genç oyuncu kulübünün seviyesinin belirgin altında başlar,
    zirveye 24-30 arasında ulaşır, sonra geriler. forceAge verilirse r/pot O yaşa göre hesaplanır. */
 function genPlayer(team,pos,forceAge){
   const str=team.str;
-  const nat=pickNat(LEAGUES[team.lg].nat);
+  const nat=pickNat(LEAGUES[team.lg].nat,team.str);
   const low=str<=60;
   const age=forceAge||(low?(RF()<0.5?R(16,21):R(22,32)):R(17,34));
   let r;
@@ -15198,8 +15229,10 @@ function cupLpTable(cp){
 /* ===== MAÇ =====
    Ayaklar lig skor modeliyle (beraberlik var, ev avantajı var); final tarafsız
    sahada. Oyuncu tarafı her yarışmada aynı motor: playFixture (sim.js). */
-function cupScore(h,a,neutral){
-  const sh=teamStr(h),sa=teamStr(a),hf=neutral?1.3:1.45,af=neutral?1.3:1.15;
+function cupScore(h,a,neutral){return goalPair(teamStr(h),teamStr(a),neutral);}
+/* Güçten skor: kupa ayakları ve milli maçlar (nations.js) aynı modeli kullanıyor. */
+function goalPair(sh,sa,neutral){
+  const hf=neutral?1.3:1.45,af=neutral?1.3:1.15;
   return [poisson(clamp(hf*Math.pow(sh/sa,2.4),0.3,4.2)),poisson(clamp(af*Math.pow(sa/sh,2.4),0.3,4.2))];
 }
 function cupPlay(m,ci,cp,neutral){
@@ -15462,6 +15495,180 @@ function dcWinner(c){
   return x&&x.se===S.season&&S.teams[x.tid]&&LEAGUES[S.teams[x.tid].lg].ctry===c?x.tid:null;
 }
 
+/* js/nations.js — milli takımlar: kadro çağrısı, milli maç aralarındaki hazırlık
+   maçları ve yaz haftalarında oynanan Milletler Kupası.
+
+   Maçın oyuncu tarafı kulüp maçlarıyla aynı motordan geçiyor (playFixture, sim.js):
+   kadro burada çağrılıyor, skor burada üretiliyor, gerisi — kim oynar, kim atar,
+   maç puanı, form/moral, piyasa değeri, son 5 maç, haftalık rapor — ortak. Sayaçlar
+   ayrı: sezonluk p.ns {app,min,g,a} (tallyOf), kariyer boyu p.caps ve p.ig.
+
+   Takvim gerçek milli maç aralarının karşılığı: Eylül, Ekim, Kasım ve Mart'ta
+   ikişer maç; hafta numaraları Avrupa (CUP_WK) ve ulusal kupa (DC_RW) haftalarının
+   dışında. Oyuncular o hafta kulübünde de oynuyor — gerçekte ara haftasında lig
+   durur, burada 20 kulüplü ligler 38 haftanın hepsini kullanıyor.
+
+   Turnuva sezonlarında (S.season % NC_EVERY === 0) lig bittikten sonra yaz
+   haftaları ekleniyor: seasonLen() = totalWeeks() + summerWeeks(). Sezon sonu
+   (endSeason) turnuvadan sonra geliyor; turnuva o sezonun arşivine giriyor. */
+
+const NT_WK=[3,5,7,11,14,18,22,24];
+const NT_CALL=[3,7,14,22];
+const NT_SQ={KL:3,DF:8,OS:8,FV:7};
+const NT_SIZE=26;
+/* Turnuvalara katılmıyor: Rusya FIFA/UEFA turnuvalarından men edilmiş durumda ve
+   kulüp kupalarında da dışarıda (kullanıcı kararı). Hazırlık maçı oynayabiliyor —
+   gerçekte de men turnuvalardan. */
+const NT_BAN=['ru'];
+const NC_EVERY=4;
+const NC_N=16;
+/* Gerçek eleme ağacı sırası: 1 ile 2 ancak finalde karşılaşabilsin. */
+const NC_ORDER=[1,16,8,9,5,12,4,13,3,14,6,11,7,10,2,15];
+
+function ncSeason(){return !!S&&S.season%NC_EVERY===0;}
+function summerWeeks(){return ncSeason()?Math.round(Math.log2(NC_N)):0;}
+function seasonLen(){return totalWeeks()+summerWeeks();}
+/* Ekranda gösterilen hafta: yaz haftalarında da gerçek hafta numarası. */
+function shownWeek(){return Math.min(S.week,seasonLen());}
+
+/* ===== KADRO ===== */
+/* Teknik direktörün tercihi: güç ve form; kulüpsüz oyuncu ancak eksik kalırsa. */
+function ntScore(p){return p.r+(p.form-50)*0.1-(p.team<0?15:0);}
+function ntPick(list){
+  const sorted=list.slice().sort((a,b)=>ntScore(b)-ntScore(a)||a.id-b.id);
+  const out=[];
+  Object.keys(NT_SQ).forEach(k=>sorted.filter(p=>p.pos===k).slice(0,NT_SQ[k]).forEach(p=>out.push(p)));
+  sorted.forEach(p=>{if(out.length<NT_SIZE&&out.indexOf(p)<0)out.push(p);});
+  return out;
+}
+/* Pencere başında bütün ülkeler kadro çağırıyor. Önceki pencerede kadroda olmayan
+   müşteri için haber; hiç milli maçı yoksa "ilk kez". */
+function ntCallUp(){
+  const by={};
+  S.players.forEach(p=>{(by[p.nat]=by[p.nat]||[]).push(p);});
+  const was=new Set(Object.values((S.nt&&S.nt.sq)||{}).flat());
+  const sq={};
+  NATKEYS.forEach(n=>{if((by[n]||[]).length>=11)sq[n]=ntPick(by[n]).map(p=>p.id);});
+  S.nt={se:S.season,w:S.week,sq,m:[]};
+  S.clients.forEach(id=>{
+    const p=byId(id);if(!p)return;
+    const s=sq[p.nat];
+    if(!s||s.indexOf(id)<0||was.has(id))return;
+    pushNews((p.caps||0)?'ntCall':'ntCall1',{n:p.n,pid:p.id,nat:p.nat},'good');
+  });
+}
+/* Maç için iki taraf: kadro (o an hâlâ o ülkenin oyuncusu olanlar) ve güç.
+   Güç teamStr() ile aynı kural: en iyi 11'in gücü + form. */
+function ntSide(nat,ix){
+  const sq=((S.nt&&S.nt.sq[nat])||[]).map(id=>ix.get(id)).filter(p=>p&&p.nat===nat);
+  const top=sq.slice().sort((a,b)=>b.r-a.r).slice(0,11);
+  const str=top.length?top.reduce((s,p)=>s+p.r+(p.form-50)*0.08,0)/top.length:40;
+  return {sq,str};
+}
+function ntIndex(){return new Map(S.players.map(p=>[p.id,p]));}
+/* Bir maç: skor ortak gol modelinden (goalPair, cups.js), oyuncu tarafı ortak motordan. */
+function ntPlay(m,cp,ix,neutral){
+  const ns={[m.h]:ntSide(m.h,ix),[m.a]:ntSide(m.a,ix)};
+  const [g1,g2]=goalPair(ns[m.h].str,ns[m.a].str,neutral);
+  m.hg=g1;m.ag=g2;
+  return {gm:playFixture(m,cp,ns),ns};
+}
+
+/* ===== HAZIRLIK MAÇLARI =====
+   Her milli maç gününde kadrosu olan bütün ülkeler eşleşiyor; tek kalan dinlenir.
+   Eleme ve turnuvalar gelene kadar milli maç aralarını bunlar dolduruyor. */
+function ntFriendlies(){
+  if(!S.nt||S.nt.se!==S.season)ntCallUp();
+  const ix=ntIndex();
+  const L=cupShuffle(Object.keys(S.nt.sq));
+  for(let i=0;i+1<L.length;i+=2){
+    const m={h:L[i],a:L[i+1],hg:null,ag:null};
+    ntPlay(m,'n:f',ix,false);
+    S.nt.m.push({w:S.week,h:m.h,a:m.a,hg:m.hg,ag:m.ag});
+  }
+}
+
+/* ===== MİLLETLER KUPASI =====
+   Yaz haftalarında, tek maçlık eleme, tarafsız saha, eşitlikte penaltılar. Kadro
+   yazın başında yeniden çağrılıyor; en güçlü 16 ülke katılıyor (eleme sonraki
+   aşamada). Kayıt: S.wc {v:2, se, r:[[tie]], w, sc}; eski kayıtlardaki S.wc
+   (rounds/champ) geçmiş bir turnuvanın sonucu olarak olduğu gibi çiziliyor. */
+function ncStart(){
+  ntCallUp();
+  const ix=ntIndex();
+  const str={};Object.keys(S.nt.sq).forEach(n=>{str[n]=ntSide(n,ix).str;});
+  const seeds=Object.keys(str).filter(n=>!NT_BAN.includes(n))
+    .sort((a,b)=>str[b]-str[a]||(a<b?-1:1)).slice(0,NC_N);
+  const ord=NC_ORDER.map(k=>seeds[k-1]).filter(Boolean);
+  const r0=[];
+  for(let i=0;i+1<ord.length;i+=2)r0.push(cupTie(ord[i],ord[i+1],true));
+  S.wc={v:2,se:S.season,r:[r0],w:null,sc:{}};
+}
+/* Penaltılar: cupTieEnd'in kuralı, güç milli kadrodan. */
+function ncTieEnd(ti,sh,su){
+  const m=ti.m[0],gs=m.h===ti.s?m.hg:m.ag,gu=m.h===ti.s?m.ag:m.hg;
+  if(gs!==gu){ti.w=gs>gu?ti.s:ti.u;return;}
+  ti.pen=1;
+  ti.w=RF()<clamp(0.5+(sh-su)*0.01,0.35,0.65)?ti.s:ti.u;
+}
+function ncRound(){
+  const W=S.wc;if(!W||W.v!==2||W.w)return;
+  const ties=W.r[W.r.length-1];
+  const ix=ntIndex();
+  ties.forEach(ti=>{
+    if(ti.w)return;
+    const {gm,ns}=ntPlay(ti.m[0],'n:wc',ix,true);
+    for(const id in gm)W.sc[id]=(W.sc[id]||0)+gm[id];
+    ncTieEnd(ti,ns[ti.s].str,ns[ti.u].str);
+  });
+  if(ties.length>1){
+    const nx=[];
+    for(let i=0;i+1<ties.length;i+=2)nx.push(cupTie(ties[i].w,ties[i+1].w,true));
+    W.r.push(nx);
+    return;
+  }
+  const c=ties[0].w;W.w=c;
+  (S.wcHist=S.wcHist||[]).push({se:S.season,nat:c});
+  if(S.wcHist.length>20)S.wcHist.shift();
+  pushNews('wcWin',{n:NATS[c].c},'good');
+  /* Kupayı kaldıran kadroda müşterin varsa: büyük bir turnuva, büyük bir itibar. */
+  const sq=new Set((S.nt.sq[c]||[]));
+  if(S.clients.some(id=>sq.has(id)))repEvent(1.5);
+}
+
+/* simWeek()'ten, ligler ve kupalardan sonra. */
+function simNat(){
+  const w=S.week,T=totalWeeks();
+  if(w<=T){
+    if(NT_CALL.includes(w))ntCallUp();
+    if(NT_WK.includes(w))ntFriendlies();
+    return;
+  }
+  if(!ncSeason()||w>seasonLen())return;
+  if(w===T+1)ncStart();
+  ncRound();
+}
+
+/* ===== OKUYUCULAR (arayüz) ===== */
+/* Milli maç satırlarında rakip bir ülke: rozet ve ad çizilebilsin diye takım
+   biçiminde bir nesne. Kayda girmiyor; ad dile göre değiştiği için önbellek dile
+   göre. Renk ülke kodundan türüyor — gerçek bir bayrak değil, ayırt etmek için. */
+const NT_COL=['#c8102e','#0033a0','#007a3d','#f1bf00','#111111','#ff7900','#6cace4','#7a1f3d','#00843d','#5b2c86'];
+let NTPS={},NTPSL='';
+function ntPseudo(nat){
+  if(NTPSL!==L){NTPS={};NTPSL=L;}
+  if(NTPS[nat])return NTPS[nat];
+  let h=0;for(const ch of String(nat))h=(h*31+ch.charCodeAt(0))>>>0;
+  const nm=NATNAME[nat]?tx(NATNAME[nat]):String(nat);
+  return (NTPS[nat]={id:-1,n:nm,ab:NATS[nat]?NATS[nat].c:'—',c1:NT_COL[h%NT_COL.length],c2:NT_COL[(h>>3)%NT_COL.length],lg:-1,str:50});
+}
+/* Bir maç kaydının rakibi: milli maçta ülke, kulüp maçında takım. */
+function oppOf(o,nt){return nt?ntPseudo(o):S.teams[o];}
+function ntInSquad(pid){
+  const p=byId(pid);
+  return !!(p&&S.nt&&S.nt.se===S.season&&(S.nt.sq[p.nat]||[]).indexOf(pid)>=0);
+}
+
 /* js/sim.js — haftalık maç simülasyonu, sezon sonu, gelişim, küme düşme/yükselme, milli turnuva */
 /* ================= SIM ================= */
 /* Takım → kadro dizini. YALNIZ simWeek() süresince dolu, dışında null.
@@ -15540,13 +15747,17 @@ function pickWeighted(ps,wf){
    (p.app/min/g/a) yazar — gol krallığı, asist listesi, gol bonusu anlaşmaları ve
    sezon arşivi bunları "lig" diye okuyor. Kupa maçı ayrı bir sezonluk deftere
    (p.cs) yazar: kupa golü lig gol krallığına karışmasın. Maç puanı ise iki yerde
-   de aynı rtSum/rtN'ye giriyor — piyasa değeri büyük gecelerdeki oyunu da görsün. */
+   de aynı rtSum/rtN'ye giriyor — piyasa değeri büyük gecelerdeki oyunu da görsün.
+   Milli maç ('n:…') kendi defterine (p.ns): kupa satırına da karışmasın. */
 function tallyOf(p,cp){
   if(cp===undefined)return p;
+  if(typeof cp==='string'&&cp[0]==='n')return p.ns||(p.ns={app:0,min:0,g:0,a:0});
   return p.cs||(p.cs={app:0,min:0,g:0,a:0});
 }
-function playMatchSide(tid,cp){
-  const sq=squadOf(tid);
+function playMatchSide(tid,cp){return playSquad(squadOf(tid),cp);}
+/* Bir kadrodan sahaya çıkanlar. Kulüp maçında kadro takımınki, milli maçta çağrılan
+   26 kişi (nations.js) — dizilişin kuralı ikisinde de aynı. */
+function playSquad(sq,cp){
   const sorted=sq.map(p=>({p,s:p.r+(p.form-50)*0.1+R(-6,6)})).sort((a,b)=>b.s-a.s).map(x=>x.p);
   const gk=sorted.find(p=>p.pos==='KL');
   /* Dizilişi mevkiye göre kur: sadece en iyi 10'u alırsak 10 forvetli takım çıkabiliyor.
@@ -15582,18 +15793,22 @@ function playMatchSide(tid,cp){
    kimin attığı, maç puanı, form/moral geri beslemesi, piyasa değeri, son 5 maç,
    Maçın Adamı ve haftalık rapor her yarışmada aynı kural. Tek yerde durmasının
    nedeni bu: kupa maçı ayrı bir kopya olsaydı ikisi er geç ayrışırdı.
-   cp: kupa indeksi (CUPS). Lig maçında yok — o zaman her şey eskisi gibi. */
-function playFixture(m,cp){
+   cp: kupa indeksi (CUPS), ulusal kupada 'd:XX', milli maçta 'n:…'. Lig maçında
+   yok — o zaman her şey eskisi gibi.
+   ns: yalnız milli maçta — {ülke: {sq, str}}. m.h/m.a o zaman ülke kodu; kadro ve
+   güç takımdan değil buradan okunuyor, kayıtlar (l5, haftalık rapor) nt taşıyor. */
+function playFixture(m,cp,ns){
   const cup=cp!==undefined;
   const playedMap={},gMap={},aMap={};
-  playedMap[m.h]=playMatchSide(m.h,cp);
-  playedMap[m.a]=playMatchSide(m.a,cp);
+  playedMap[m.h]=ns?playSquad(ns[m.h].sq,cp):playMatchSide(m.h,cp);
+  playedMap[m.a]=ns?playSquad(ns[m.a].sq,cp):playMatchSide(m.a,cp);
   [[m.h,m.hg],[m.a,m.ag]].forEach(([tid,goals])=>{
     const squad=playedMap[tid].out;
     if(!squad.length)return;
     for(let g=0;g<goals;g++){
       const sc=pickWeighted(squad,p=>(p.pos==='FV'?9:p.pos==='OS'?3.2:0.8)*p.r/70);
       tallyOf(sc,cp).g++;gMap[sc.id]=(gMap[sc.id]||0)+1;
+      if(ns)sc.ig=(sc.ig||0)+1;
       /* gol zaten maç puanına giriyor; buradaki artış sadece ek güven payı */
       sc.form=clamp(sc.form+3,0,100);moraleEvent(sc,2);
       if(RF()<0.75&&squad.length>1){
@@ -15605,7 +15820,13 @@ function playFixture(m,cp){
   });
   /* --- maç puanları, son 5 maç ve Maçın Adamı --- */
   let motm=null,best=0;
-  const strH=teamStr(m.h),strA=teamStr(m.a);
+  const strH=ns?ns[m.h].str:teamStr(m.h),strA=ns?ns[m.a].str:teamStr(m.a);
+  /* Milli maç sayısı kariyer boyu (p.caps). İlk maçı oynayan müşteri menajerine de
+     itibar getiriyor: "milli oyuncu temsil ediyor" sektörde bir basamak. */
+  if(ns)[m.h,m.a].forEach(k=>playedMap[k].all.forEach(p=>{
+    p.caps=(p.caps||0)+1;
+    if(p.caps===1&&p.agent==='you')repEvent(0.3);
+  }));
   [[m.h,m.hg,m.ag],[m.a,m.ag,m.hg]].forEach(([tid,gf,ga])=>{
     const res=gf>ga?'W':gf<ga?'L':'D';
     const oppStr=tid===m.h?strA:strH;
@@ -15625,6 +15846,7 @@ function playFixture(m,cp){
       const e={o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,
         sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0};
       if(cup)e.cp=cp;
+      if(ns)e.nt=1;
       (p.l5=p.l5||[]).push(e);
       if(p.l5.length>5)p.l5.shift();
       if(rt>best){best=rt;motm=p;}
@@ -15641,19 +15863,25 @@ function playFixture(m,cp){
   playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
     if(p.agent!=='you')return;
     const last=p.l5[p.l5.length-1];
-    const r={pid:p.id,n:p.n,tid:p.team,opp:last.o,res:last.res,sc:last.sc,
+    /* Milli maçta tid oyuncunun ülkesi: satırın rozeti kulübü değil milli takımı göstersin. */
+    const r={pid:p.id,n:p.n,tid:ns?p.nat:p.team,opp:last.o,res:last.res,sc:last.sc,
       min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0};
     if(cup)r.cp=cp;
+    if(ns)r.nt=1;
     S.wkRep.push(r);
   });
   S.clients.forEach(cid=>{
     const p=byId(cid);
-    if(!p||(p.team!==m.h&&p.team!==m.a))return;
-    if(playedMap[p.team].all.indexOf(p)>=0)return;
-    const r={pid:p.id,n:p.n,tid:p.team,opp:p.team===m.h?m.a:m.h,
-      res:(p.team===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
-      sc:(p.team===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1};
+    /* Kadroda olup oynamayan: kulüp maçında kulübünün, milli maçta çağrıldığı ülkenin */
+    const k=ns?(ns[m.h]&&ns[m.h].sq.indexOf(p)>=0?m.h:ns[m.a]&&ns[m.a].sq.indexOf(p)>=0?m.a:null)
+      :(p&&(p.team===m.h||p.team===m.a)?p.team:null);
+    if(!p||k===null)return;
+    if(playedMap[k].all.indexOf(p)>=0)return;
+    const r={pid:p.id,n:p.n,tid:k,opp:k===m.h?m.a:m.h,
+      res:(k===m.h?m.hg-m.ag:m.ag-m.hg)>0?'W':(m.hg===m.ag?'D':'L'),
+      sc:(k===m.h?m.hg+'-'+m.ag:m.ag+'-'+m.hg),dnp:1};
     if(cup)r.cp=cp;
+    if(ns)r.nt=1;
     S.wkRep.push(r);
   });
   return gMap;
@@ -15662,7 +15890,7 @@ function playFixture(m,cp){
    teamStr() çağrısı bayat kadroyu okurdu. */
 function simWeek(){
   SQIDX=weekSquads();
-  try{simWeekRun();}finally{SQIDX=null;}
+  try{simWeekRun();simNat();}finally{SQIDX=null;}
 }
 function simWeekRun(){
   const wk=S.week-1;
@@ -15863,7 +16091,8 @@ function nextWeek(){
     }
   }
   S.week++;
-  const seasonOver=S.week>totalWeeks();
+  /* Turnuva sezonunda lig bittikten sonra yaz haftaları var (nations.js). */
+  const seasonOver=S.week>seasonLen();
   /* Reklam arası hakkı save()'den ÖNCE isteniyor: işaret diske bu haftayla
      birlikte düşmeli. */
   const brk=adBreakClaim();
@@ -15957,37 +16186,7 @@ function endSeason(){
     down.forEach(tm=>{tm.lg=si;if(myTids.has(tm.id))pushNews('relegated',{c:tm.n,tid:tm.id,li:si},'bad');});
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
-  /* --- milli takımlar turnuvası: her 4 sezonda bir --- */
-  if(S.season%4===0){
-    const natStr=nat=>{
-      const ps=S.players.filter(p=>p.nat===nat).sort((a,b)=>b.r-a.r).slice(0,11);
-      return ps.length?ps.reduce((s,p)=>s+p.r,0)/ps.length:0;
-    };
-    const strMap={};NATKEYS.forEach(n=>strMap[n]=natStr(n));
-    const seeds=NATKEYS.slice().sort((a,b)=>strMap[b]-strMap[a]).slice(0,16);
-    const rounds=[];
-    let cur=null;
-    /* first round: seed 1 vs 16, 2 vs 15 ... */
-    let rd=[];const nxt=[];
-    for(let i=0;i<8;i++){
-      const A=seeds[i],B=seeds[15-i];
-      const [g1,g2]=playKO(strMap[A],strMap[B]);
-      rd.push({h:A,a:B,hg:g1,ag:g2});nxt.push(g1>g2?A:B);
-    }
-    rounds.push(rd);cur=nxt;
-    while(cur.length>1){
-      rd=[];const n2=[];
-      for(let i=0;i<cur.length;i+=2){
-        const A=cur[i],B=cur[i+1];
-        const [g1,g2]=playKO(strMap[A],strMap[B]);
-        rd.push({h:A,a:B,hg:g1,ag:g2});n2.push(g1>g2?A:B);
-      }
-      rounds.push(rd);cur=n2;
-    }
-    S.wc={se:S.season,rounds,champ:cur[0]};
-    (S.wcHist=S.wcHist||[]).push({se:S.season,nat:cur[0]});
-    pushNews('wcWin',{n:NATS[cur[0]].c},'good');
-  }
+  /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
   const tstr={};S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});
   /* --- gol bonusu anlaşmaları: 10+ gol atan transferden pay --- */
   (S.deals=S.deals||[]).forEach(d=>{
@@ -16002,11 +16201,12 @@ function endSeason(){
   const gone=[];
   S.players.forEach(p=>{
     p.seasons=p.seasons||[];
-    const csApp=p.cs&&p.cs.app>0;
-    if(p.app>0||p.g>0||csApp||p.agent==='you'){
+    const csApp=p.cs&&p.cs.app>0,nsApp=p.ns&&p.ns.app>0;
+    if(p.app>0||p.g>0||csApp||nsApp||p.agent==='you'){
       const rec={se:S.season,tm:teamOf(p).n,g:p.g,a:p.a,app:p.app||0,min:p.min||0,rt:p.rtN?Math.round(p.rtSum/p.rtN*10)/10:0};
       /* kupa sayaçları ayrı alan: g/a/app lig olarak kalıyor, eski kayıtlarda alan yok */
       if(csApp)rec.cs={app:p.cs.app,g:p.cs.g||0,a:p.cs.a||0};
+      if(nsApp)rec.ns={app:p.ns.app,g:p.ns.g||0};
       p.seasons.push(rec);
     }
     if(p.seasons.length>6)p.seasons.shift();
@@ -16039,7 +16239,7 @@ function endSeason(){
       if(p.r>lvl+6&&p.age<=29){pushNews('outgrow',{n:p.n,pid:p.id,c:teamOf(p).n,tid:p.team},'warn');p.morale=clamp(p.morale-12,0,100);}
     }
     p.g=0;p.a=0;p.app=0;p.min=0;p.rtSum=0;p.rtN=0;p.form=R(40,65);
-    delete p.cs;
+    delete p.cs;delete p.ns;
     p.vmAt=0;if(p.vm)p.vm=+(1+(p.vm-1)*VAL.revert).toFixed(3);
     /* --- kulüpsüz oyuncular: uzun süre imza bulamazsa futbolu bırakır --- */
     if(isFree(p)){
@@ -19488,7 +19688,7 @@ const IB_CAT=[
    keys:['firedRival','chaseOn','chaseLost','poachWarn','poached','poachHeld']},
   {id:'growth',grp:'players',ic:'data:image/webp;base64,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',
    n:{tr:'Gelişim',en:'Development',es:'Progresión',pt:'Evolução',de:'Entwicklung',fr:'Progression',it:'Crescita'},
-   keys:['valUp','valDown','devUp']},
+   keys:['valUp','valDown','devUp','ntCall','ntCall1']},
   {id:'status',grp:'players',ic:'data:image/webp;base64,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',
    n:{tr:'Oyuncu Durumu',en:'Squad Status',es:'Situación en la plantilla',pt:'Situação no elenco',de:'Kaderstatus',fr:"Statut dans l'effectif",it:'Situazione in rosa'},
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
@@ -19799,12 +19999,20 @@ function setF(k,v){S.f=S.f||{lg:'all',pos:'all',age:'all',sort:'r',elig:true};S.
    playFixture); lig maçında ve eski kayıtlarda boş döner, satır eskisi gibi çizilir. */
 /* Ulusal kupa maçında cp 'd:XX' (ülke kodu) — Avrupa kupalarının indeksiyle karışmasın. */
 function cupTag(cp){
-  if(typeof cp==='string')return cp.slice(0,2)==='d:'?dcName(cp.slice(2)):'';
+  if(typeof cp==='string'){
+    if(cp.slice(0,2)==='d:')return dcName(cp.slice(2));
+    /* milli maç: hazırlık maçı ya da Milletler Kupası (nations.js) */
+    return cp==='n:wc'?t('wcLbl'):cp[0]==='n'?t('ntFriendly'):'';
+  }
   const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';
 }
 function cupTagPre(cp){const s=cupTag(cp);return s?esc(s)+' · ':'';}
 /* Sezon arşivindeki kupa ekinin tek biçimi — iki profil de buradan okuyor. */
 function cupSeTxt(s){return s&&s.cs?fmtStr(t('cupSe'),{n:s.cs.app,g:s.cs.g||0}):'';}
+/* Aynı arşivin milli maç eki (rec.ns, sim.js endSeason). */
+function ntSeTxt(s){return s&&s.ns?fmtStr(t('ntSe'),{n:s.ns.app,g:s.ns.g||0}):'';}
+/* Bir maç kaydının rakibine dokununca: kulüp sayfası, milli maçta Milletler Kupası ekranı. */
+function oppGo(o,nt){return nt?'goCup(3)':`pushV('team',${o.id})`;}
 /* Kupa ekranının iki kartı: kupanın kendi gol defterinden (cp.sc) gol krallığı ve
    bu kupada takımı olan müşteriler. İkisi de yalnız okuyor. */
 function cupExtraHtml(cp){
@@ -19933,6 +20141,72 @@ function dcHtml(){
     <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`:'';
   return conChips+ctryChips+head+rounds+cupExtraHtml(dc)+histH;
 }
+/* ===== Milletler Kupası ve milli maçlar =====
+   S.wc iki biçimde olabilir: v:2 (yaz haftalarında oynanan, eşleşmeli) ve eski
+   kayıtlardaki {rounds, champ} (sezon sonunda tek seferde oynanmış). İkincisi
+   geçmiş bir sonuç olarak eskisi gibi çiziliyor. */
+function ntTieHtml(ti){
+  const s=ntPseudo(ti.s),u=ntPseudo(ti.u),m=ti.m[0];
+  const played=m.hg!==null;
+  const gs=played?(m.h===ti.s?m.hg:m.ag):0,gu=played?(m.h===ti.s?m.ag:m.hg):0;
+  const mine=new Set(S.clients.map(id=>(byId(id)||{}).nat));
+  const nm=(o,k)=>{const b=ti.w===k?'b':'span';return `<${b}>${esc(o.n)}</${b}>${mine.has(k)?' <span style="color:var(--acc)">★</span>':''}`;};
+  return `<div class="matchrow">
+    <span class="tn r">${nm(s,ti.s)}</span>${tmBadge(s,20)}
+    <span class="sc ${played?'':'f'}">${played?gs+' : '+gu:'–'}</span>
+    ${tmBadge(u,20)}<span class="tn">${nm(u,ti.u)}</span></div>
+    ${ti.pen?`<div class="sub" style="text-align:center;margin:-2px 0 6px">${t('cupPen')}</div>`:''}`;
+}
+function ncHtml(RL){
+  let h='';
+  const W=S.wc;
+  const nextSe=ncSeason()&&!(W&&W.v===2&&W.se===S.season&&W.w)?S.season:(Math.floor(S.season/NC_EVERY)+1)*NC_EVERY;
+  if(W&&W.v===2){
+    const n=W.r[0].length*2,R=Math.round(Math.log2(n));
+    const lbl=ri=>{const k=R-1-ri;return k===0?t('finalLbl'):k===1?t('sf'):k===2?t('qf'):k===3?t('r16'):fmtStr(t('dcRound'),{n:ri+1});};
+    const live=W.se===S.season;
+    h+=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+      ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
+      <div class="sub">${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`;
+    h+=W.r.map((ties,ri)=>`<div class="card"><div class="sect">${lbl(ri)}${live?' · '+t('week')+' '+(totalWeeks()+ri+1):''}</div>
+      ${ties.map(ntTieHtml).join('')}</div>`).join('');
+    const sc=Object.keys(W.sc||{}).map(id=>[byId(+id),W.sc[id]]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(sc.length)h+=`<div class="card"><div class="sect">${t('cupScorers')}</div>
+      ${sc.map(([p,g])=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)}${p.agent==='you'?' <span style="color:var(--acc)">★</span>':''} · ${NATS[p.nat].c}</span>
+      <span class="v num">${g} ${t('gShort')}</span></div>`).join('')}</div>`;
+  } else if(W&&W.rounds){
+    const wcRL=W.rounds.length===4?RL:RL.slice(4-W.rounds.length);
+    h+=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+      <div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${NATS[W.champ].c}</span></div>
+      <div class="sub">${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`
+    +W.rounds.map((rd,ri)=>`<div class="card">
+      <div class="sect">${wcRL[ri]}</div>
+      ${rd.map(m=>`<div class="matchrow">
+        <span class="tn r"><b>${NATS[m.h].c}</b></span>
+        <span class="sc">${m.hg} : ${m.ag}</span>
+        <span class="tn"><b>${NATS[m.a].c}</b></span></div>`).join('')}</div>`).join('');
+  } else {
+    h+=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+nextSe)}</div>`;
+  }
+  /* Kadrodaki müşterilerin ve son milli maç günü — müşterilerinin ülkeleri ve kendi
+     ülken önce, en fazla on maç. */
+  const mine=S.clients.map(byId).filter(p=>p&&(p.caps||ntInSquad(p.id)));
+  if(mine.length)h+=`<div class="card"><div class="sect">${t('ntMine')}</div>
+    ${mine.map(p=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)} · ${NATS[p.nat].c}${ntInSquad(p.id)?' <span style="color:var(--acc)">✓</span>':''}</span>
+    <span class="v num">${p.caps||0} ${t('mShort')} · ${p.ig||0} ${t('gShort')}</span></div>`).join('')}</div>`;
+  const M=(S.nt&&S.nt.m)||[];
+  if(M.length){
+    const lw=Math.max(...M.map(m=>m.w));
+    const pri=new Set(S.clients.map(id=>(byId(id)||{}).nat).concat(S.agent?[S.agent.nat]:[]));
+    const day=M.filter(m=>m.w===lw).sort((a,b)=>(pri.has(b.h)||pri.has(b.a))-(pri.has(a.h)||pri.has(a.a))).slice(0,10);
+    h+=`<div class="card"><div class="sect">${t('ntRecent')} · ${t('week')} ${lw}</div>
+      ${day.map(m=>{const a=ntPseudo(m.h),b=ntPseudo(m.a);return `<div class="matchrow">
+        <span class="tn r">${esc(a.n)}</span>${tmBadge(a,20)}<span class="sc">${m.hg} : ${m.ag}</span>${tmBadge(b,20)}<span class="tn">${esc(b.n)}</span></div>`;}).join('')}</div>`;
+  }
+  if((S.wcHist||[]).length)h+=`<div class="card"><div class="sect">${t('history')}</div>
+    ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
+  return h;
+}
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
     `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
@@ -19969,25 +20243,8 @@ function cupView(){
         <span class="v" style="cursor:pointer" onclick="pushV('team',${x.tid})">${S.teams[x.tid].n}</span></div>`).join('')}</div>`;
     }
   } else {
-    /* milli takımlar turnuvası */
-    if(!S.wc){
-      const next=Math.ceil(S.season/4)*4;
-      body=`<div class="card">${emptyState('league',t('noCupYet'),t('nextWc')+': '+t('season')+' '+next)}</div>`;
-    } else {
-      const wcRL=S.wc.rounds.length===4?RL:RL.slice(4-S.wc.rounds.length);
-      body=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${S.wc.se}</div>
-        <div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${NATS[S.wc.champ].c}</span></div></div>`
-      +S.wc.rounds.map((rd,ri)=>`<div class="card">
-        <div class="sect">${wcRL[ri]}</div>
-        ${rd.map(m=>`<div class="matchrow">
-          <span class="tn r"><b>${NATS[m.h].c}</b></span>
-          <span class="sc">${m.hg} : ${m.ag}</span>
-          <span class="tn"><b>${NATS[m.a].c}</b></span></div>`).join('')}</div>`).join('');
-      const next=S.wc.se+4;
-      body+=`<div class="card"><div class="sub">${t('nextWc')}: ${t('season')} ${next}</div></div>`;
-      if((S.wcHist||[]).length>1)body+=`<div class="card"><div class="sect">${t('history')}</div>
-        ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${NATS[x.nat].c}</span></div>`).join('')}</div>`;
-    }
+    /* milli takımlar: Milletler Kupası (nations.js) ve milli maçlar */
+    body=ncHtml(RL);
   }
   return `${conChips}${cupChips}${body}`;
 }
@@ -20775,6 +21032,19 @@ function pfSectHtml(k,title,sub){
     <span class="pfSectT"><b>${title}</b>${sub?`<em>${sub}</em>`:''}</span>
   </div>`;
 }
+/* Milli takım kartı: yalnız milli maçı olan ya da şu an kadroda olan oyuncuda. */
+function pfNtHtml(p){
+  if(!(p.caps||ntInSquad(p.id)))return '';
+  return `<div class="card pfCard">
+    <div class="pfSub">${t('ntTitle')} · ${esc(tx(NATNAME[p.nat]))}</div>
+    <div class="pfGrid pfG4">
+      ${pfCell(p.caps||0,t('ntCaps'))}
+      ${pfCell(p.ig||0,t('ntGoals'))}
+      ${pfCell(p.ns?p.ns.app:0,t('ntSeason'))}
+      ${pfCell(ntInSquad(p.id)?'✓':'—',t('ntSquadL'))}
+    </div>
+  </div>`;
+}
 function pfCell(v,lbl){
   return `<span class="pfCell"><b class="num">${v}</b><em>${lbl}</em></span>`;
 }
@@ -20916,7 +21186,7 @@ function pfOvHtml(p,tm,cx){
       ${pfCell(p.h?p.h+' cm':'—',t('height'))}
       ${pfCell(p.ft==='L'?t('left'):t('right'),t('foot'))}
     </div>
-  </div>`;
+  </div>${pfNtHtml(p)}`;
 }
 
 /* ---------- sekme 2: maçlar ----------
@@ -20929,10 +21199,10 @@ function pfMtHtml(p,tm,cx){
   const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
   const l5=(p.l5||[]).slice().reverse();
   const rows=l5.length?l5.map(m5=>{
-    const o=S.teams[m5.o];
+    const o=oppOf(m5.o,m5.nt);
     const facts=[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
       m5.mm?`<b class="pfMotm">${t('motm')}</b>`:''].filter(Boolean).join(' · ');
-    return `<button class="pfMatch" onclick="pushV('team',${o.id})">
+    return `<button class="pfMatch" onclick="${oppGo(o,m5.nt)}">
       ${tmBadge(o,28)}
       <span class="pfMatchM">
         <span class="pfMatchT">${esc(o.n)}</span>
@@ -20976,7 +21246,7 @@ function pfMtHtml(p,tm,cx){
     ${seasons.map(s=>`<div class="pfSeason">
       <span class="pfSeasonS num">S${s.se}</span>
       <span class="pfSeasonT">${esc(s.tm)}</span>
-      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}${s.cs?' · '+cupSeTxt(s):''}</span>
+      <span class="pfSeasonV num">${s.app!==undefined?s.app+' '+t('apps')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?` · <b class="${pfRtCls(s.rt)}">${s.rt.toFixed(1)}</b>`:''}${s.cs?' · '+cupSeTxt(s):''}${s.ns?' · '+ntSeTxt(s):''}</span>
     </div>`).join('')}
   </div>`:''}`;
 }
@@ -21690,7 +21960,7 @@ settings(){
   <div class="sect">${t('dataLbl')}</div>
   <div class="card">
     <div class="kv"><span class="k">${t('slotN').replace('{n}',curSlot)}</span><span class="v">${esc(S.agent.agency)}</span></div>
-    <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${Math.min(S.week,totalWeeks())}</span></div>
+    <div class="kv"><span class="k">${t('season')}</span><span class="v">${S.season} · ${t('week')} ${shownWeek()}</span></div>
     <div class="kv"><span class="k">${t('clients')}</span><span class="v">${S.clients.length}/${maxClients()}</span></div>
     <div class="kv"><span class="k">${t('scoutNet')}</span><span class="v">${(S.known||[]).length}/${LEAGUES.length}</span></div>
   </div>
@@ -21874,11 +22144,11 @@ player(id){
   ${(p.l5&&p.l5.length)?`<div class="card">
     <div class="sect">${t('last5')}</div>
     ${p.l5.slice().reverse().map(m5=>{
-      const o=S.teams[m5.o];
+      const o=oppOf(m5.o,m5.nt);
       const rc=m5.rt>=7.5?'var(--acc)':m5.rt>=6.5?'var(--warn)':'var(--bad)';
       const resCh=pfResCh(m5.res);
       const resCol=m5.res==='W'?'var(--acc)':m5.res==='L'?'var(--bad)':'var(--warn)';
-      return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="pushV('team',${o.id})">
+      return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="${oppGo(o,m5.nt)}">
         ${tmBadge(o,26)}
         <div style="flex:1;min-width:0">
           <div style="font-size:12.5px;font-weight:600">${o.n} <span class="faint" style="font-variant-numeric:tabular-nums">${m5.sc}</span>
@@ -21894,6 +22164,7 @@ player(id){
   <div class="card">
     <div class="sect">${t('personal')}</div>
     <div class="kv"><span class="k">${t('nation')}</span><span class="v">${NATS[p.nat].c}</span></div>
+    ${p.caps?`<div class="kv"><span class="k">${t('ntTitle')}</span><span class="v">${p.caps} ${t('ntCaps')} · ${p.ig||0} ${t('gShort')}${ntInSquad(p.id)?' · '+t('ntSquadL'):''}</span></div>`:''}
     <div class="kv"><span class="k">${t('age')}</span><span class="v">${p.age}</span></div>
     ${/* Boy yoksa birim de yazılmaz: "— cm" diye bir ölçü yok. Saha profili
          (pfOvHtml) zaten böyle davranıyor. */''}
@@ -21918,7 +22189,7 @@ player(id){
   ${(seasons.length||hist.length)?`<div class="card">
     <div class="sect">${t('career')}</div>
     ${hist.map(h=>`<div class="kv"><span class="k">S${h.se} · ${t('transferH')}</span><span class="v">${h.a} → ${h.b} (${fmtM(h.f)})</span></div>`).join('')}
-    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}${s.cs?' · '+cupSeTxt(s):''}</span></div>`).join('')}
+    ${seasons.map(s=>`<div class="kv"><span class="k">S${s.se} · ${s.tm}</span><span class="v">${s.app!==undefined?s.app+' '+t('mShort')+' · '+(s.min||0)+"' · ":''}${s.g} ${t('gShort')} · ${s.a} ${t('aShort')}${s.rt?' · <b>'+s.rt.toFixed(1)+'</b>':''}${s.cs?' · '+cupSeTxt(s):''}${s.ns?' · '+ntSeTxt(s):''}</span></div>`).join('')}
   </div>`:''}
   ${mine?`
     <div class="grid2">
@@ -22497,7 +22768,7 @@ function render(){
   }
   showChrome(true);
   document.getElementById('hBack').classList.toggle('show',stack.length>1);
-  let t1='Menajer',t2=fmtStr(t('seWk'),{s:S.season,w:Math.min(S.week,totalWeeks())});
+  let t1='Menajer',t2=fmtStr(t('seWk'),{s:S.season,w:shownWeek()});
   if(c.v==='team')t1=S.teams[c.id].n;
   else if(c.v==='player')t1=byId(c.id).n;
   else if(c.v==='settings')t1=t('settings');
@@ -22629,7 +22900,7 @@ function wkSahaCell(v,lbl){
   return '<span class="wrCell"><b class="num">'+v+'</b><em>'+lbl+'</em></span>';
 }
 function wkSahaCard(r){
-  const tm=S.teams[r.tid],opp=S.teams[r.opp];
+  const tm=oppOf(r.tid,r.nt),opp=oppOf(r.opp,r.nt);
   const resCh=pfResCh(r.res);
   const resCls=r.res==='W'?'w':r.res==='L'?'l':'d';
   const stat=(v,lbl,cls)=>'<i class="wrStat'+(cls?' '+cls:'')+'"><b class="num">'+v+'</b><em>'+lbl+'</em></i>';
@@ -22883,7 +23154,7 @@ function showWeekReport(wk){
     <div style="width:30px;flex-shrink:0"></div><div style="flex:1;min-width:0"></div>
     ${cell(t('minShort'),W.min)}${cell('G',W.g)}${cell('A',W.a)}${cell(t('ratingShort'),W.rt)}</div>`;
   const body=rows.map(r=>{
-    const tm=S.teams[r.tid],opp=S.teams[r.opp];
+    const tm=oppOf(r.tid,r.nt),opp=oppOf(r.opp,r.nt);
     const rc=r.rt>=7.5?'var(--acc)':r.rt>=6.5?'var(--warn)':'var(--bad)';
     const dim='color:var(--txt3)';
     return `<div class="pitem" style="gap:11px" onclick="closeModal();pushV('player',${r.pid})">
