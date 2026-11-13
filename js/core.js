@@ -89,14 +89,19 @@ const NAT_BIAS=1.4;
 function pickNat(domestic,str){
   if(domestic==='af')domestic=AFR[R(0,AFR.length-1)];
   else if(domestic==='afN')domestic=NAF[R(0,NAF.length-1)];
-  if(RF()<0.62)return domestic;
+  const b=str===undefined?0:clamp((str-65)/20,-1,1);
+  /* Yerli payı güçlü kulüpte, futbolu zayıf bir ülkenin liginde düşüyor: Suudi
+     liginin dev kulüplerinin yıldızları gerçekte yabancı (en güçlü kulüpte ~%40
+     yerli). Düşmeseydi o kulüplerin yerli oyuncuları milli takımı yapay
+     güçlendiriyordu — Suudi Arabistan Milletler Kupası kazanabiliyordu. */
+  const q0=NAT_Q[domestic]===undefined?0.5:NAT_Q[domestic];
+  if(RF()<0.62-Math.max(0,b)*(1-q0)*0.5)return domestic;
   const others=NATKEYS.filter(n=>n!==domestic);
   const w={br:3,ar:2,fr:1.5,es:1.2,nl:1.2,de:1,it:1,en:0.8,tr:0.8,pt:1,mx:0.8,us:0.5,jp:0.3,sa:0.2,eg:0.4,ma:0.4,ng:0.5,sn:0.5,gh:0.4,cm:0.4,be:0.8,hr:0.6,rs:0.6,pl:0.6,cz:0.4,gr:0.4,no:0.4,se:0.5,dk:0.5,ch:0.5,at:0.4,ua:0.5,ro:0.3,sct:0.4,ie:0.3,ru:0.4,co:0.9,uy:0.6,cl:0.5,pe:0.4,ec:0.4,py:0.3,ve:0.3,ci:0.6,dz:0.5,tn:0.4,ml:0.4,cd:0.4,kr:0.4,ir:0.3,au:0.3,cn:0.2,
     /* Kademe B uyrukları: tanımsız bir uyruk 1 sayılırdı, yani Almanya kadar sık yabancı oyuncu çıkarırdı */
     cy:0.1,hu:0.3,sk:0.3,si:0.3,bg:0.2,az:0.1,
     /* Milli takım genişlemesi: ligi olmayan ülkeler; ağırlık bir kadroluk oyuncu çıkacak kadar */
     bo:0.3,ca:0.5,pa:0.3,cr:0.3,jm:0.4,ht:0.25,cw:0.3,hn:0.25,sr:0.25,cv:0.3,za:0.3,ga:0.25,bf:0.3,gn:0.3,qa:0.25,uz:0.3,jo:0.25,iq:0.25,ae:0.25,om:0.25,id:0.25,nz:0.3};
-  const b=str===undefined?0:clamp((str-65)/20,-1,1);
   const wt=n=>(w[n]||1)*(b?Math.exp(NAT_BIAS*b*((NAT_Q[n]===undefined?0.5:NAT_Q[n])-0.5)*2):1);
   let tot=0;others.forEach(n=>tot+=wt(n));
   let x=RF()*tot;

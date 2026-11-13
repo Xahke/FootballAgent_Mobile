@@ -254,6 +254,10 @@ async function scan(cfg) {
       for (let ci = 0; ci < 5; ci++) { reset(); shot('cup' + ci, "goCup(" + ci + ");"); }
       /* ulusal kupalar: rövanşlı yarı finalli, iki kademeli, tek kademeli ve Avrupa dışı birer ülke */
       for (const c of ['ES','EN','NL','US']) { reset(); shot('dc-' + c, "goDc('" + c + "');"); }
+      /* Milletler Kupası: elemeler (her konfederasyon ve kıtalar arası) ve 48 takımlı turnuva;
+         taramanın kurduğu sezon elemelere ulaşmıyor, bu yüzden kura burada çekiliyor. */
+      for (const c of ['eu','sam','nam','af','as','oc','ic']) { reset(); shot('ncq-' + c, "ntCallUp();ncqDraw(4,ntIndex());NCPH='q';NCCF='" + c + "';goCup(3);"); }
+      for (const g of [0, 11, -1]) { reset(); shot('nct-' + g, "ntCallUp();ncStart();NCPH='t';NCG=" + g + ";goCup(3);"); }
       reset(); shot('lg-pick', "goLg(0);lgPickOpen();");
 
       /* ---- kişiler ve takımlar ---- */
