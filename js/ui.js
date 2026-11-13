@@ -681,7 +681,7 @@ const IB_CAT=[
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
   {id:'trophy',grp:'world',ic:'assets/ui/inbox-trophy.webp',
    n:{tr:'Şampiyonluk',en:'Silverware',es:'Títulos',pt:'Títulos',de:'Titel',fr:'Trophées',it:'Trofei'},
-   keys:['champ','finalN','cupWin','dcWin','wcWin']},
+   keys:['champ','finalN','cupWin','dcWin','wcWin','ncIn','ncOut']},
   {id:'league',grp:'world',ic:'assets/ui/inbox-league.webp',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
    keys:['promoted','relegated','newLg','newLgs']},
@@ -989,7 +989,7 @@ function cupTag(cp){
   if(typeof cp==='string'){
     if(cp.slice(0,2)==='d:')return dcName(cp.slice(2));
     /* milli maç: hazırlık maçı ya da Milletler Kupası (nations.js) */
-    return cp==='n:wc'?t('wcLbl'):cp[0]==='n'?t('ntFriendly'):'';
+    return cp==='n:wc'?t('wcLbl'):cp==='n:q'?t('ncQualL'):cp[0]==='n'?t('ntFriendly'):'';
   }
   const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';
 }
@@ -1144,11 +1144,95 @@ function ntTieHtml(ti){
     ${tmBadge(u,20)}<span class="tn">${nm(u,ti.u)}</span></div>
     ${ti.pen?`<div class="sub" style="text-align:center;margin:-2px 0 6px">${t('cupPen')}</div>`:''}`;
 }
+/* Elemeler ve 48 takımlı turnuva (nations.js). Aşama, konfederasyon ve grup seçimi
+   ekran durumu (CUPPH gibi): kayda girmiyor. */
+let NCPH=null,NCCF=null,NCG=0;
+function setNcPh(p){NCPH=p;render();}
+function setNcCf(c){NCCF=c;render();}
+function setNcG(i){NCG=i;render();}
+function ncCfName(c){const x=NCONTS.find(k=>k[0]===c);return x?tx(x[1]):c;}
+function ncTblHtml(rows,zone){
+  const mine=new Set(S.clients.map(id=>(byId(id)||{}).nat));
+  return `<div class="card tight"><table>
+    <tr><th></th><th>${t('team')}</th><th class="c">${t('P')}</th><th class="c">${t('GD')}</th><th class="c">${t('PTS')}</th></tr>
+    ${rows.map((r,i)=>{const o=ntPseudo(r.n);return `<tr class="${mine.has(r.n)?'hl':''}">
+      <td><span class="posn ${zone?zone(r.n):''}">${i+1}</span></td>
+      <td class="tmc"><div class="row" style="gap:8px;min-width:0">${tmBadge(o,22)}
+        <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(o.n)}</b></div></td>
+      <td class="c">${r.pl}</td><td class="c">${r.gf-r.ga}</td><td class="c"><b>${r.pts}</b></td></tr>`;}).join('')}
+  </table></div>`;
+}
+function ncMatchHtml(m){
+  const a=ntPseudo(m.h),b=ntPseudo(m.a);
+  return `<div class="matchrow"><span class="tn r">${esc(a.n)}</span>${tmBadge(a,20)}
+    <span class="sc ${m.hg===null?'f':''}">${m.hg===null?'–':m.hg+' : '+m.ag}</span>${tmBadge(b,20)}<span class="tn">${esc(b.n)}</span></div>`;
+}
+function ncQHtml(){
+  const Q=S.ncq,cs=Object.keys(Q.c);
+  const home=S.agent?ncFed(S.agent.nat):'';
+  const cf=NCCF==='ic'||cs.includes(NCCF)?NCCF:(cs.includes(home)?home:cs[0]);
+  let h=`<div class="chips">${cs.map(c=>`<button class="${cf===c?'on':''}" onclick="setNcCf('${c}')">${esc(ncCfName(c))}</button>`).join('')}
+    <button class="${cf==='ic'?'on':''}" onclick="setNcCf('ic')">${t('ncIC')}</button></div>`;
+  h+=`<div class="card"><div class="sect">${t('ncQual')} · ${t('wcLbl')} · ${t('season')} ${Q.ed}</div>
+    <div class="sub">${t('ncHosts')}: ${Q.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')}</div></div>`;
+  if(cf==='ic'){
+    const I=Q.ic;
+    if(!I||!I.t.length)return h+`<div class="card">${emptyState('league',t('noCupYet'),t('week')+' '+NC_POW)}</div>`;
+    h+=`<div class="card"><div class="sect">${t('sf')} · ${t('week')} ${NC_POW}</div>${I.sf.map(ntTieHtml).join('')}</div>`;
+    if(I.f.length)h+=`<div class="card"><div class="sect">${t('finalLbl')} · ${t('week')} ${NC_ICF}</div>${I.f.map(ntTieHtml).join('')}</div>`;
+    return h;
+  }
+  const C=Q.c[cf],up=Math.min(NC_UPO[cf]||0,C.D);
+  h+=`<div class="sub" style="margin:0 2px 10px">${fmtStr(t('ncQuota'),{d:C.D-up,p:up||NC_IC[cf]||0})}</div>`;
+  if(!C.g.length)return h+`<div class="card">${C.d.map(n=>`<div class="kv"><span class="k">${esc(ntPseudo(n).n)}</span><span class="v">✓</span></div>`).join('')}</div>`;
+  const dec=C.d.length>0,po=new Set(C.po.flatMap(x=>[x.s,x.u]).concat(C.ic));
+  const zone=dec?(n=>C.d.includes(n)?'zone1':po.has(n)?'zone2':''):null;
+  C.g.forEach((G,gi)=>{
+    if(C.g.length>1)h+=`<div class="sect" style="margin:10px 2px 6px">${fmtStr(t('ncGroup'),{g:String.fromCharCode(65+gi)})}</div>`;
+    h+=ncTblHtml(ncTable(G.t,G.fx),zone);
+  });
+  if(dec)h+=`<div class="sub" style="margin:-4px 2px 10px">${t('ncZones')}</div>`;
+  if(C.po.length)h+=`<div class="card"><div class="sect">${t('ncPO')} · ${t('week')} ${NC_POW}</div>${C.po.map(ntTieHtml).join('')}</div>`;
+  return h;
+}
+function ncTHtml(W,nextSe){
+  const live=W.se===S.season,T=totalWeeks();
+  let h=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+    ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
+    <div class="sub">${t('ncHosts')}: ${W.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')} · ${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`;
+  const gi=NCG>=0&&NCG<W.g.length?NCG:-1;
+  h+=`<div class="chips">${W.g.map((_,i)=>`<button class="${gi===i?'on':''}" onclick="setNcG(${i})">${String.fromCharCode(65+i)}</button>`).join('')}
+    <button class="${gi<0?'on':''}" onclick="setNcG(-1)">${t('ncKO')}</button></div>`;
+  if(gi>=0){
+    const G=W.g[gi],in32=new Set(W.ko.r32?W.ko.r32.flatMap(x=>[x.s,x.u]):[]);
+    h+=`<div class="sect" style="margin:4px 2px 6px">${fmtStr(t('ncGroup'),{g:String.fromCharCode(65+gi)})}</div>`;
+    h+=ncTblHtml(ncTable(G.t,G.fx),W.ko.r32?(n=>in32.has(n)?'zone1':''):null);
+    h+=[0,1,2].map(md=>`<div class="card"><div class="sect">${fmtStr(t('cupMd'),{n:md+1})}${live?' · '+t('week')+' '+(T+md+1):''}</div>
+      ${G.fx.filter(m=>m.md===md).map(ncMatchHtml).join('')}</div>`).join('');
+  } else {
+    const rows=[['r32','ncR32',4],['r16','r16',5],['qf','qf',6],['sf','sf',7],['t3','ncThird',8],['f','finalLbl',8]];
+    const ko=rows.filter(([k])=>W.ko[k]&&W.ko[k].length);
+    h+=ko.length?ko.map(([k,l,wk])=>`<div class="card"><div class="sect">${t(l)}${live?' · '+t('week')+' '+(T+wk):''}</div>${W.ko[k].map(ntTieHtml).join('')}</div>`).join('')
+      :`<div class="card">${emptyState('league',t('noCupYet'),live?t('week')+' '+(T+4):'')}</div>`;
+  }
+  const sc=Object.keys(W.sc||{}).map(id=>[byId(+id),W.sc[id]]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(sc.length)h+=`<div class="card"><div class="sect">${t('cupScorers')}</div>
+    ${sc.map(([p,g])=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)}${p.agent==='you'?' <span style="color:var(--acc)">★</span>':''} · ${NATS[p.nat].c}</span>
+    <span class="v num">${g} ${t('gShort')}</span></div>`).join('')}</div>`;
+  return h;
+}
 function ncHtml(RL){
   let h='';
   const W=S.wc;
-  const nextSe=ncSeason()&&!(W&&W.v===2&&W.se===S.season&&W.w)?S.season:(Math.floor(S.season/NC_EVERY)+1)*NC_EVERY;
-  if(W&&W.v===2){
+  const nextSe=ncSeason()&&!(W&&W.se===S.season&&W.w)?S.season:(Math.floor(S.season/NC_EVERY)+1)*NC_EVERY;
+  const Q=S.ncq&&S.ncq.ed===ncEd()?S.ncq:null;
+  const tour=W&&W.v===3&&(!Q||W.se===Q.ed);
+  const ph=NCPH==='q'&&Q?'q':NCPH==='t'&&W?'t':(Q&&!tour?'q':'t');
+  if(Q)h+=`<div class="chips"><button class="${ph==='q'?'on':''}" onclick="setNcPh('q')">${t('ncQual')}</button>
+    <button class="${ph==='t'?'on':''}"${W?` onclick="setNcPh('t')"`:' disabled'}>${t('ncTour')}</button></div>`;
+  if(ph==='q')h+=ncQHtml();
+  else if(W&&W.v===3)h+=ncTHtml(W,nextSe);
+  else if(W&&W.v===2){
     const n=W.r[0].length*2,R=Math.round(Math.log2(n));
     const lbl=ri=>{const k=R-1-ri;return k===0?t('finalLbl'):k===1?t('sf'):k===2?t('qf'):k===3?t('r16'):fmtStr(t('dcRound'),{n:ri+1});};
     const live=W.se===S.season;

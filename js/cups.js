@@ -385,8 +385,10 @@ function cupLpTable(cp){
    sahada. Oyuncu tarafı her yarışmada aynı motor: playFixture (sim.js). */
 function cupScore(h,a,neutral){return goalPair(teamStr(h),teamStr(a),neutral);}
 /* Güçten skor: kupa ayakları ve milli maçlar (nations.js) aynı modeli kullanıyor. */
+/* neutral 'h': turnuvada ev sahibi — kulüp maçının tam saha avantajı (1.45/1.15)
+   her maçta uygulanınca ev sahibi neredeyse her turnuvayı kazanıyordu. */
 function goalPair(sh,sa,neutral){
-  const hf=neutral?1.3:1.45,af=neutral?1.3:1.15;
+  const hf=neutral==='h'?1.36:neutral?1.3:1.45,af=neutral==='h'?1.24:neutral?1.3:1.15;
   return [poisson(clamp(hf*Math.pow(sh/sa,2.4),0.3,4.2)),poisson(clamp(af*Math.pow(sa/sh,2.4),0.3,4.2))];
 }
 function cupPlay(m,ci,cp,neutral){

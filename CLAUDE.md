@@ -1361,24 +1361,82 @@ seeds over two seasons.
   the previous squad gets `ntCall` (`ntCall1` the first time).
 - **Friendlies** on weeks 3, 5, 7, 11, 14, 18, 22, 24 — outside the European (`CUP_WK`)
   and national-cup (`DC_RW`) weeks, one match per week as the real two per window. Every
-  nation with a squad plays; the pairing is random. Qualifiers replace them in a later
-  phase. Players still play their league match that week: a 20-club league uses all 38
+  nation with a squad and no qualifier or play-off that day plays; the pairing is random
+  (Russia, out of tournaments, only ever plays these). Players still play their league
+  match that week: a 20-club league uses all 38
   weeks, so there is no break to put them in.
 - **Counters**: the season's `p.ns {app,min,g,a}` (archived as `ns: {app, g}` and deleted
   at season end like `p.cs`), the career's `p.caps` and `p.ig`. A client's first cap is
   +0.3 reputation.
-- **The Nations Cup moved into summer weeks.** In a season where `S.season % NC_EVERY`
-  (4) is 0, `seasonLen()` is `totalWeeks() + summerWeeks()` and `nextWeek()` ends the
-  season on that, so `endSeason()` comes after the tournament and the tournament lands in
-  that season's archive. `simNat()` runs from `simWeek()` after the leagues and cups; on
-  the first summer week `ncStart()` calls squads up and seeds the 16 strongest nations
-  (Russia, `NT_BAN`, stays out by the user's decision) into the real bracket order, then
-  one round a week: single match, neutral ground, penalties on a level score
-  (`ncTieEnd()`, the cup rule with squad strength). `S.wc` is now `{v:2, se, r, w, sc}`;
-  an old save's `{rounds, champ}` is drawn as the past result it is. Winning with a
-  client in the squad is +1.5 reputation. The header and the season row show the real
-  week through `shownWeek()`, so summer reads "week 39–42". The format becomes the real
-  48-team one, with qualifiers, in the next phase.
+- **Summer weeks.** In a season where `S.season % NC_EVERY` (4) is 0, `seasonLen()` is
+  `totalWeeks() + summerWeeks()` (8) and `nextWeek()` ends the season on that, so
+  `endSeason()` comes after the tournament and the tournament lands in that season's
+  archive. `simNat()` runs from `simWeek()` after the leagues and cups. The header and the
+  season row show the real week through `shownWeek()`, so summer reads "week 39–46".
+
+### The Nations Cup is FIFA's 48-team format, with real qualifiers
+
+**Quotas are FIFA's for 48 teams** (`NC_QUOTA`): Europe 16, Africa 9, Asia 8, South
+America 6, North/Central America 6, Oceania 1, and two from a six-team inter-confederation
+play-off (`NC_IC` gives each confederation's play-off places). **Hosts qualify
+automatically** and come off their confederation's quota, in the real order (`NC_HOSTS`):
+USA/Mexico/Canada, then Spain/Portugal/Morocco with Uruguay/Argentina/Paraguay (2030's six
+hosts all qualify), then Saudi Arabia, then round again. Russia (`NT_BAN`) is left out.
+`ncFed()` is `NATCON` except Australia, which plays in Asia.
+
+**Qualifying** (`S.ncq`) spans two seasons, as the real one spans two calendar years: nine
+matchdays from week 18 of the season before the tournament to week 18 of the tournament
+season (`NC_QMD`), all on international-window weeks. The draw (`ncqDraw()`) on the first
+of them puts each confederation's non-host nations into groups of at most five by
+strength pots — a double round robin of five is eight matches, which fits nine days —
+except South America, which is the real single league (here single round robin, nine
+rounds). A confederation with no more teams than places (Oceania: New Zealand) qualifies
+outright. After the last matchday `ncqRank()` ranks across groups (group position first,
+then points, goal difference and goals per game, because groups differ in size): the
+first `D` qualify, Europe's next four play its own play-off for two places (single match,
+better-ranked side at home, week 22), the others' next teams go to the inter-confederation
+play-off. That one (`ncIcStart()`) takes six — a vacant place, like Oceania's, goes to the
+strongest eliminated side of a participating confederation — sends the two strongest
+straight to the finals, as the real one does, and plays semi-finals on week 22 and finals
+on week 24 at a neutral venue. Every qualifier and play-off goes through `ntPlay()` with
+`cp = 'n:q'`; nations without a match that day play friendlies. A save that missed the
+draw (an old one, or one opened after week 18) has no `S.ncq` for that edition and the
+tournament fills by quota and strength instead (`ncStart()`), which is also the path the
+scan exercises.
+
+**The tournament** (`S.wc = {v:3, se, hosts, g, ko, w, sc}`): twelve groups of four drawn
+from four pots of twelve (hosts first, then strength) with the real rule — at most one team
+per confederation in a group, Europe at most two (`ncGroupDraw()`, backtracking per pot;
+the unconstrained fallback has not been reached). Three matchdays, then the 12 winners, 12
+runners-up and 8 best thirds go to a round of 32 seeded 1–32 in the standard bracket order,
+with a swap so that two teams from one group never meet there — an adaptation of the real
+fixed third-place table. Round of 32, 16, quarter-finals, semi-finals, and the final with
+the third-place match in the same week. A host playing at home gets a mild edge
+(`goalPair(..., 'h')`, 1.36/1.24 against 1.3 neutral): the clubs' full home advantage made a
+host the winner in three of six 2026 editions. Winning with a client in the squad is +1.5
+reputation; `ncIn`/`ncOut` tell the agent when their own nation or a client's nation
+qualifies or falls short. A 16-team `v:2` tournament an old save left half-played finishes
+on its own rules (`ncV2Round()`, four summer weeks), and `{rounds, champ}` is drawn as the
+past result it is.
+
+The screen (`ncHtml()`) has two phases: qualifiers — a chip per confederation and one for
+the inter-confederation play-off, group tables with the direct/play-off zones once decided,
+the European play-off ties — and the tournament — a chip per group (table and three
+matchdays) and one for the knockouts. `NCPH`/`NCCF`/`NCG` are view state like `CUPPH`.
+
+**Domestic share also follows club strength.** A strong club in a league of a weaker
+football nation now keeps fewer of its own (`pickNat()`: `0.62 − b·(1 − NAT_Q)·0.5`, ~40%
+at Saudi Arabia's strongest): the giants of the Saudi league are really built on foreign
+stars, and while they were 62% Saudi the national team was strong enough to win a Nations
+Cup. Saudi Arabia's best eleven went from 77 to 74.
+
+Measured on nine seeds over eight seasons (two tournaments each): population
+11,502–11,524, free agents 60, mean age 25.3, unrepresented share 66%, every nation 26–30
+players. The 18 tournaments went to Italy (4), Brazil (3), Portugal (2), Germany, Türkiye,
+France, England, the Netherlands, Spain, Croatia and Saudi Arabia (once, beating the
+Netherlands in the final); hosts won three of nine 2030 editions and none of the 2026 ones.
+Old saves from `main` opened mid-qualifying (week 20 of a season before a tournament) and
+mid-way through a 16-team summer tournament played on cleanly.
 
 **Foreign nationality now follows club strength.** National strength is the best eleven
 of a nation's players, and a nation without a league only has foreigners — who used to be
