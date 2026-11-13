@@ -116,7 +116,7 @@ call time. The parts that are load-time real:
 | `js/ads.js` | Age gate (`AD_AGE_MIN`, birth year in `PREFS`) + UMP consent flow + rewarded-ad adapter + the every-ten-weeks interstitial (`@capacitor-community/admob`). Android only; a prototype, see *Rewarded ads* below |
 | `js/iap.js` | Store catalogue, the two purchase ledgers, the paid-transaction queue and the Play Billing flow (`@capgo/native-purchases` 8.7.0 / Play Billing 8.3.0) — see *The store sells* below |
 | `js/review.js` | Play's in-app review sheet: when to ask, the device-scoped ask counter, the Settings row that opens the store page — see *The review prompt* below |
-| `js/data.js` | Name pools, 42 leagues over 36 territories, 714 clubs, 3 cups, 58 nationalities — all original names |
+| `js/data.js` | Name pools, 42 leagues over 36 territories, 714 clubs, 3 cups, 80 nationalities — all original names |
 | `js/worldgeo.js` | **Generated.** `GEO` — world geometry as SVG paths, per territory. Source: `tools/build-geo.js` |
 | `js/atlas.js` | Exploration map: league↔territory mapping, derived territory state, SVG render, camera (pan/zoom) |
 | `js/rivals.js` | Fourteen named rival agencies: archetypes, who represents whom, signing races, poaching your clients |
@@ -1744,6 +1744,45 @@ proportional, and still not measured on a phone.
 
 Every added league is in the European cups from the season after it joins: the access
 list reads UEFA ranks, so the 28 associations in the game take part.
+
+### Nationalities are appended too, and every one can field a squad
+
+The national-team work needs the real FIFA quotas of a 48-team tournament to leave
+someone out in every confederation, and 58 nationalities could not: Asia had five, North
+America two. **22 were added** (November 2026), all from the last rounds of the real 2026
+qualifiers — Bolivia; Canada, Panama, Costa Rica, Jamaica, Haiti, Curaçao, Honduras,
+Suriname; Cape Verde, South Africa, Gabon, Burkina Faso, Guinea; Qatar, Uzbekistan, Jordan,
+Iraq, UAE, Oman, Indonesia; New Zealand. Israel stays out by the user's decision. Each is a
+`NATS` pool (FIFA code, 18 first and 18 last names), a `NATNAME` in seven languages, a
+`NATCON` picker continent (federation-based, like Türkiye and Russia in Europe, except
+Australia, an Asian federation member, under Oceania), a `NAT2CTRY` home league for agents born there
+and a `pickNat()` weight. None has a league: their players are foreigners elsewhere, and
+`cv`/`ga`/`bf`/`gn` also join `AFR`, the West Africa league's domestic pool.
+
+**A nation needs `NAT_MIN` (26) players**, and two things keep it there:
+
+- `growNations()` (core.js) tops every nationality up to `NAT_MIN` with players on random
+  clubs, positions in squad balance. It runs **once per nationality list**: `S.natv`
+  records the `NATKEYS.length` a save was completed against, so `newGame()` and an old
+  save's first `loadSlot()` run it and nothing after. "Only nations with no players" was
+  the first rule and it failed on the Play build's saves: `growLeagues()` runs first and
+  hands the new nations a few players (South Africa got 6). Topping up on *every* load
+  failed the other way — a nation that retirement had pushed below the threshold grew on
+  open, so loading changed the save (`tools/savetest.js` caught it).
+- In play, `regenPlayer()` keeps a retiree's nationality when that nation is at or under
+  `NAT_MIN`, and `natFill()` gives a squad-rebalancing youth the smallest nation's
+  nationality while one is under it (`natCount()` memoises the census per week and
+  player count). Population is untouched; only nationality moves. Without them small
+  nations melted — China went to 14 in eight seasons.
+
+Measured on six seeds over eight seasons against `main`: population 11,507–11,523 (was
+11,503–11,515), free agents 60, mean age 25.3, unrepresented share 66%; the smallest
+nation at season 8 had 24–26 players (was 14–27, China under 23 in two seeds). The new
+nations' best 23 average 52 (Bolivia) to 65 (Canada) after a season. Foreign places are
+now shared by 80 nations, so Brazil, the heaviest weight, fell from 546–619 players to
+487–529. Old saves from the Play build and from `main` opened with every nation at 26,
+played into the next season clean, and reopened unchanged; an old save starts ~570 players
+over the new-game population and settles back as squads rebalance.
 
 ### Saves must degrade gracefully
 

@@ -89,7 +89,9 @@ function pickNat(domestic){
   const others=NATKEYS.filter(n=>n!==domestic);
   const w={br:3,ar:2,fr:1.5,es:1.2,nl:1.2,de:1,it:1,en:0.8,tr:0.8,pt:1,mx:0.8,us:0.5,jp:0.3,sa:0.2,eg:0.4,ma:0.4,ng:0.5,sn:0.5,gh:0.4,cm:0.4,be:0.8,hr:0.6,rs:0.6,pl:0.6,cz:0.4,gr:0.4,no:0.4,se:0.5,dk:0.5,ch:0.5,at:0.4,ua:0.5,ro:0.3,sct:0.4,ie:0.3,ru:0.4,co:0.9,uy:0.6,cl:0.5,pe:0.4,ec:0.4,py:0.3,ve:0.3,ci:0.6,dz:0.5,tn:0.4,ml:0.4,cd:0.4,kr:0.4,ir:0.3,au:0.3,cn:0.2,
     /* Kademe B uyrukları: tanımsız bir uyruk 1 sayılırdı, yani Almanya kadar sık yabancı oyuncu çıkarırdı */
-    cy:0.1,hu:0.3,sk:0.3,si:0.3,bg:0.2,az:0.1};
+    cy:0.1,hu:0.3,sk:0.3,si:0.3,bg:0.2,az:0.1,
+    /* Milli takım genişlemesi: ligi olmayan ülkeler; ağırlık bir kadroluk oyuncu çıkacak kadar */
+    bo:0.3,ca:0.5,pa:0.3,cr:0.3,jm:0.4,ht:0.25,cw:0.3,hn:0.25,sr:0.25,cv:0.3,za:0.3,ga:0.25,bf:0.3,gn:0.3,qa:0.25,uz:0.3,jo:0.25,iq:0.25,ae:0.25,om:0.25,id:0.25,nz:0.3};
   let tot=0;others.forEach(n=>tot+=w[n]||1);
   let x=RF()*tot;
   for(const n of others){x-=(w[n]||1);if(x<=0)return n;}
@@ -152,9 +154,38 @@ function releaseToFree(p){
   p.morale=clamp(p.morale-10,0,100);
   delete p.grp;
 }
-/* ayrılan oyuncunun yerine yeni bir oyuncu doğar — id korunur, eski kayıtlar silinir */
+/* Uyruk sayımı: regenPlayer her çağrıda bütün oyuncuları saymasın diye hafta
+   başına bir kez, sonra değişiklikle birlikte güncelleniyor. Kariyer değişince
+   (başka bir S) ya da oyuncu sayısı değişince (silinen, eklenen) yeniden sayılıyor. */
+let NATCNT=null,NATCNTK='',NATCNTS=null;
+function natCount(){
+  const k=S.season+':'+(S.tw||0)+':'+S.players.length;
+  if(!NATCNT||NATCNTK!==k||NATCNTS!==S){
+    NATCNT={};S.players.forEach(p=>{NATCNT[p.nat]=(NATCNT[p.nat]||0)+1;});
+    NATCNTK=k;NATCNTS=S;
+  }
+  return NATCNT;
+}
+/* ayrılan oyuncunun yerine yeni bir oyuncu doğar — id korunur, eski kayıtlar silinir.
+   Ülkesi NAT_MIN'in altındaysa yerine gelen genç de o ülkeden: ligi olmayan küçük
+   ülkeler yalnız yabancı oyuncu olarak var ve emeklilikle eriyordu (8 sezonda Çin
+   14'e indi) — milli takım kadro kuramazdı. Nüfus değişmiyor, yalnız uyruk. */
+/* Kadro dengelemesinde doğan genç: eşiğin altında bir ülke varsa en az oyuncusu
+   olan o ülkeden. Kulüpsüz kalıp futbolu bırakanlar ve serbest oyuncu fazlası
+   silindiği için küçük ülkeler yalnız emeklilikle değil bu yolla da eriyor. */
+function natFill(p){
+  const c=natCount();
+  let lo=null;
+  NATKEYS.forEach(n=>{if(lo===null||(c[n]||0)<(c[lo]||0))lo=n;});
+  if(lo===null||(c[lo]||0)>=NAT_MIN||p.nat===lo)return;
+  c[p.nat]=(c[p.nat]||0)-1;c[lo]=(c[lo]||0)+1;
+  p.nat=lo;p.n=genName(lo);
+}
 function regenPlayer(p){
+  const c=natCount(),old=p.nat;
   Object.assign(p,genPlayer(teamOf(p),p.pos,intakeAge()),{id:p.id});
+  if((c[old]||0)<=NAT_MIN&&p.nat!==old){p.nat=old;p.n=genName(old);}
+  if(p.nat!==old){c[old]=(c[old]||0)-1;c[p.nat]=(c[p.nat]||0)+1;}
   delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
   delete p.ra;                         // artık başka bir insan; eski ajansıyla işi yok
 }
@@ -164,6 +195,7 @@ function newGame(){
      Aynı yuvada silinip yeniden kurulan kariyer yeni bir kimlik alır. */
   S={cid:newCid(),lang:L,week:1,season:1,cash:250,rep:5,tw:0,curLg:0,curCon:'eu',curCtry:'TR',mLg:'all',agent:null,known:[],scout:[],clients:[],inbox:[],players:[],teams:[],fx:[],offers:[],pending:[],pendC:[],pendPay:[],deals:[],lgHist:LEAGUES.map(()=>[])};
   TEAMS.forEach((_,lg)=>addLeagueTeams(lg));
+  growNations();
   buildAllFixtures();
   seedCups();
   seedDomCups();
@@ -221,6 +253,37 @@ function growLeagues(){
      çekenler adlı bir ajansa bağlanmalı, yoksa o ligde herkes isimsiz kalırdı. */
   if(S.rivals&&S.rivals.length&&typeof claimNotable==='function')claimNotable();
   return added;
+}
+/* ===== MİLLİYET GÖÇÜ =====
+   Bir milli takımın kadro kurabilmesi için en az NAT_MIN oyuncusu olmalı. Ligi
+   olmayan ülkelerin oyuncuları yalnız başka liglere yabancı olarak düşüyor
+   (pickNat); sonradan eklenen bir ülkenin eski kayıtta hiç oyuncusu yok ve gençlik
+   akışıyla dolması sezonlar sürerdi. Eksik kadar oyuncu rastgele kulüplere
+   ekleniyor; mevki sırası bir kadronun dengesi (3 KL, 8 DF, 8 OS, 7 FV).
+   Bir kez çalışıyor: S.natv kaydın hangi uyruk listesine göre tamamlandığını
+   tutuyor (yeni oyunda da). Liste büyümediyse hiçbir şey yapmıyor — emeklilikle
+   eşiğin altına inen bir ülkeye her açılışta oyuncu eklemek kaydı açılışta
+   değiştirirdi; o erimeyi regenPlayer()/natFill() oyun içinde karşılıyor.
+   "Hiç oyuncusu olmayan ülke" ölçütü yetmiyordu: Play'deki sürümün kaydında
+   önce growLeagues() yirmi ligi kuruyor ve yeni ülkelere birkaç oyuncu düşüyor
+   (Güney Afrika 6'da kaldı). Çalıştıysa eklenen sayıyı, çalışmadıysa null döndürür. */
+const NAT_MIN=26;
+const NAT_POS=['KL','DF','OS','FV','DF','OS','FV','DF','OS','KL','DF','OS','FV','DF','OS','FV','DF','OS','FV','DF','OS','KL','DF','OS','FV','FV'];
+function growNations(){
+  if(!S||!Array.isArray(S.players)||!Array.isArray(S.teams)||!S.teams.length)return null;
+  if((S.natv||0)>=NATKEYS.length)return null;
+  const cnt={};S.players.forEach(p=>{cnt[p.nat]=(cnt[p.nat]||0)+1;});
+  let n=0;
+  NATKEYS.forEach(nat=>{
+    for(let k=cnt[nat]||0;k<NAT_MIN;k++){
+      const p=genPlayer(S.teams[R(0,S.teams.length-1)],NAT_POS[k%NAT_POS.length]);
+      p.nat=nat;p.n=genName(nat);
+      S.players.push(p);n++;
+    }
+  });
+  S.natv=NATKEYS.length;
+  if(n&&S.rivals&&S.rivals.length&&typeof claimNotable==='function')claimNotable();
+  return n;
 }
 /* Ligin bu sezon en az bir maç oynayıp oynamadığı. Göçle sezonun sonunda
    katılan bir lig sıfır puanlı bir tablo taşır; ondan şampiyon çıkmaz. */

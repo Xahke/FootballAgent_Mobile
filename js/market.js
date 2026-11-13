@@ -191,7 +191,7 @@ function rebalanceSquads(){
     POS.forEach(k=>{
       while(idx[tm.id][k].length<POSMIN[k]){
         if(take(tm,k))continue;
-        const np=genPlayer(tm,k,R(16,19));
+        const np=genPlayer(tm,k,R(16,19));natFill(np);
         S.players.push(np);idx[tm.id][k].push(np);
       }
     });
@@ -204,7 +204,7 @@ function rebalanceSquads(){
          doluyken kulüpler önce oradan beslenir — yoksa serbest oyuncular birikir. */
       const youthShare=pool.length>70?0.10:0.35;
       if(RF()<youthShare||!take(tm,k)){
-        const np=genPlayer(tm,k,R(16,19));
+        const np=genPlayer(tm,k,R(16,19));natFill(np);
         S.players.push(np);idx[tm.id][k].push(np);
       }
       tot++;

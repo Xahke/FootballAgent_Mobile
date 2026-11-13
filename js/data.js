@@ -118,16 +118,64 @@ si:{c:'SVN',f:['Jan','Žan','Luka','Nejc','Jaka','Miha','Rok','Tim','Benjamin','
 bg:{c:'BUL',f:['Georgi','Dimitar','Ivan','Nikolay','Petar','Hristo','Todor','Stoyan','Martin','Kiril','Valentin','Radoslav','Borislav','Aleksandar','Plamen','Simeon','Ilian','Andrey'],
  l:['Ivanov','Georgiev','Dimitrov','Petrov','Nikolov','Hristov','Stoyanov','Todorov','Iliev','Atanasov','Angelov','Vasilev','Kostov','Popov','Marinov','Despodov','Chochev','Karabelyov']},
 az:{c:'AZE',f:['Emin','Ramil','Mahir','Toral','Elvin','Rashad','Bahlul','Abbas','Namik','Ismayil','Renat','Ruslan','Tural','Samir','Kamal','Javid','Rahman','Hamid'],
- l:['Mammadov','Aliyev','Huseynov','Hasanov','Ismayilov','Guliyev','Abbasov','Rzayev','Mustafazade','Garayev','Sheydayev','Nazarov','Dadashov','Bayramov','Hajiyev','Salahli','Medvedev','Jafarguliyev']}
+ l:['Mammadov','Aliyev','Huseynov','Hasanov','Ismayilov','Guliyev','Abbasov','Rzayev','Mustafazade','Garayev','Sheydayev','Nazarov','Dadashov','Bayramov','Hajiyev','Salahli','Medvedev','Jafarguliyev']},
+/* Milli takım genişlemesi (2026/11): 48 takımlı Milletler Kupası'nın gerçek
+   kontenjanları için gerçek 2026 elemelerinin son turlarındaki ülkeler. Ligleri
+   yok; oyuncuları başka liglerde yabancı olarak oynuyor (pickNat ağırlıkları). */
+bo:{c:'BOL',f:['Marcelo','Luis','Carlos','Diego','José','Juan','Ramiro','Gabriel','Leonardo','Henry','Roberto','Fernando','Miguel','Erwin','Pablo','Moisés','Jaime','Boris'],
+ l:['Mamani','Quispe','Flores','Rojas','Vaca','Gutiérrez','Justiniano','Arce','Saavedra','Villarroel','Chura','Suárez','Paniagua','Vargas','Cuéllar','Terrazas','Choque','Ribera']},
+ca:{c:'CAN',f:['Liam','Noah','Ethan','Lucas','Owen','Nathan','Jacob','Tyler','Ryan','Matthew','Kyle','Jonathan','Ismaël','Mathieu','Samuel','Daniel','Alistair','Derek'],
+ l:['Smith','Brown','Tremblay','Martin','Roy','Wilson','MacDonald','Gagnon','Johnson','Taylor','Côté','Campbell','Anderson','Leblanc','Lee','Gauthier','Morin','Bouchard']},
+pa:{c:'PAN',f:['Adalberto','José','Édgar','Cecilio','Ismael','Michael','Fidel','Éric','Abdiel','Alberto','Gabriel','Rolando','Luis','Armando','Cristian','Yoel','Ricardo','Omar'],
+ l:['Carrasquilla','Bárcenas','Murillo','Escobar','Blackburn','Waterman','Davis','Fajardo','Ayarza','Harvey','Quintero','Torres','Rodríguez','Mosquera','Valdés','Cummings','Gondola','Pimentel']},
+cr:{c:'CRC',f:['José','Bryan','Joel','Francisco','Kendall','Celso','Óscar','Randall','Johan','Ariel','Esteban','Andrés','Kenneth','Manfred','Orlando','Brandon','Álvaro','Jefferson'],
+ l:['Vargas','Mora','Jiménez','Rojas','Solano','Calvo','Ugalde','Salas','Chacón','Madrigal','Quesada','Arias','Brenes','Hernández','Alfaro','Venegas','Zamora','Leiva']},
+jm:{c:'JAM',f:['Andre','Shamar','Damion','Leon','Kemar','Ravel','Dexter','Javain','Ethan','Tyreek','Kaheem','Romario','Nicholas','Jahmali','Demarai','Adrian','Dujuan','Junior'],
+ l:['Campbell','Brown','Williams','Thomas','Gordon','Bailey','Nicholson','Lawrence','Morrison','Powell','Reid','Grant','Pinnock','Bell','Lewis','Clarke','Francis','Richards']},
+ht:{c:'HAI',f:['Jean','Frantz','Duckens','Derrick','Carlens','Steeven','Mechack','Wilson','Ricardo','Johny','Josué','Danley','Kevin','Louicius','Garven','Bryan','Ruben','Alexandre'],
+ l:['Pierre','Jean-Baptiste','Joseph','Charles','Louis','Étienne','Désir','Paul','Jérôme','Lafontant','Bellegarde','Placide','Alcéus','Saint-Fleur','Dorsainvil','Cadet','Fils-Aimé','Augustin']},
+cw:{c:'CUW',f:['Leandro','Juninho','Kenji','Jürgen','Tahith','Gervane','Brandley','Shurandy','Livano','Rangelo','Sherel','Jeremy','Godfried','Jearl','Elson','Vurnon','Jarchinio','Riechedly'],
+ l:['Martina','Kastaneer','Comenencia','Floranus','Antonia','Gaari','Hooi','Margaritha','Sambo','Chong','Anita','Roemeratoe','Felida','Zimmerman','Doran','Isenia','Rosaria','Statia']},
+hn:{c:'HON',f:['Alberth','Romell','Luis','Antony','Denil','Bryan','Kervin','Deybi','Edrick','Jorge','Carlos','Andy','Joseph','Marlon','Wilmer','Héctor','Óscar','Jonathan'],
+ l:['López','Palma','Maldonado','Acosta','Arriaga','Flores','Menjívar','Álvarez','Castillo','Rosales','Pereira','Martínez','Núñez','Reyes','Mejía','Zelaya','Bonilla','Figueroa']},
+sr:{c:'SUR',f:['Sheraldo','Ryan','Kelvin','Gleofilo','Diego','Tjaronn','Dion','Myenty','Jaden','Florian','Damil','Nigel','Joël','Virgil','Warner','Stefano','Mitchell','Denzel'],
+ l:['Donk','Leerdam','Vlijter','Biswane','Chery','Malone','Abena','Breinburg','Zinhagel','Kleine','Pinas','Fonkel','Vlug','Amatdjais','Tjin','Wongsodikromo','Sandvliet','Kensmil']},
+cv:{c:'CPV',f:['Ryan','Garry','Jovane','Dylan','Kevin','Willy','Steven','Logan','Jamiro','Hélio','Nuno','Gilson','Rui','Patrick','Kenny','Marco','Sidny','Telmo'],
+ l:['Mendes','Rodrigues','Semedo','Tavares','Monteiro','Lopes','Gomes','Fortes','Pina','Borges','Varela','Cabral','Andrade','Évora','Santos','Duarte','Moreira','Delgado']},
+za:{c:'RSA',f:['Percy','Themba','Teboho','Thapelo','Lyle','Siyabonga','Mothobi','Ronwen','Khuliso','Aubrey','Oswin','Bongokuhle','Sipho','Lebo','Thabo','Mandla','Sizwe','Kamogelo'],
+ l:['Mokoena','Morena','Foster','Ngcobo','Mvala','Williams','Mudau','Modiba','Appollis','Hlongwane','Dlamini','Nkosi','Mahlangu','Khumalo','Ndlovu','Sithole','Zungu','Maseko']},
+ga:{c:'GAB',f:['Pierre','Denis','Mario','Bruno','Guélor','Aaron','Didier','Jim','Lloyd','Shavy','Axel','Junior','Jérémy','André','Johann','Ulrich','Louis','Alexander'],
+ l:['Ndong','Obiang','Ecuele','Allevinah','Nzé','Mouandza','Ogowe','Kanga','Moussono','Biyogo','Mbina','Nguema','Ondo','Mintsa','Essono','Mba','Bouanga','Meye']},
+bf:{c:'BFA',f:['Bertrand','Issa','Edmond','Hervé','Ousmane','Lassina','Abdoul','Adama','Cyrille','Mohamed','Steeve','Hassane','Saïdou','Arsène','Ibrahim','Abdou','Moussa','Dramane'],
+ l:['Traoré','Ouédraogo','Sawadogo','Kaboré','Compaoré','Zongo','Tapsoba','Ouattara','Koné','Bayala','Sanou','Konaté','Yago','Dayo','Nikiéma','Kiemdé','Simporé','Ilboudo']},
+gn:{c:'GUI',f:['Naby','Serhou','Mohamed','Ibrahima','Amadou','Mamadou','Abdoulaye','Moussa','Morlaye','Ousmane','Aguibou','Issiaga','Facinet','Sékou','Alseny','Mory','Saïdou','Lamine'],
+ l:['Camara','Keïta','Diallo','Bah','Sylla','Soumah','Touré','Condé','Kouyaté','Barry','Cissé','Fofana','Doumbouya','Sow','Kanté','Conté','Bangoura','Diakité']},
+qa:{c:'QAT',f:['Akram','Hassan','Abdulaziz','Tarek','Karim','Homam','Mohammed','Yusuf','Assim','Ahmed','Ali','Ismaeel','Khalid','Mostafa','Bassam','Salem','Meshaal','Jassem'],
+ l:['Al-Marri','Al-Kuwari','Al-Sulaiti','Al-Mohannadi','Al-Naimi','Al-Hajri','Al-Dosari','Al-Kaabi','Al-Ansari','Al-Jaber','Al-Muftah','Al-Khater','Al-Malki','Al-Hamad','Al-Emadi','Al-Abdulla','Al-Shammari','Al-Yazidi']},
+uz:{c:'UZB',f:['Eldor','Abbosbek','Jaloliddin','Otabek','Oston','Khojimat','Dostonbek','Odil','Jamshid','Sherzod','Bobur','Rustam','Azizbek','Farrukh','Umar','Husniddin','Akmal','Islom'],
+ l:['Karimov','Rakhimov','Yusupov','Tursunov','Abdullaev','Saidov','Nurmatov','Ergashev','Khamdamov','Ismoilov','Alikulov','Sultonov','Mirzaev','Rashidov','Umarov','Kholmatov','Usmonov','Juraev']},
+jo:{c:'JOR',f:['Musa','Yazan','Ali','Mahmoud','Nizar','Ehsan','Ibrahim','Mohammad','Saleem','Anas','Hamza','Amer','Yousef','Rajaei','Baha','Nour','Feras','Ahmad'],
+ l:['Al-Rawabdeh','Haddad','Obeidat','Al-Zoubi','Khalil','Al-Naimat','Al-Ajalin','Nasib','Al-Shalabi','Al-Momani','Al-Khatib','Bani-Yaseen','Al-Rashdan','Abu-Zeid','Al-Hourani','Qasem','Al-Atoum','Saadeh']},
+iq:{c:'IRQ',f:['Aymen','Ali','Mohanad','Ibrahim','Amir','Zidane','Hussein','Ahmed','Bashar','Mustafa','Saad','Osama','Hasan','Ayman','Karrar','Muntadher','Safaa','Jalal'],
+ l:['Hussein','Al-Ammari','Bayesh','Natiq','Rashid','Jasim','Kadhim','Abbas','Hamid','Salman','Kareem','Mahdi','Tariq','Sabah','Al-Saadi','Jabbar','Fadhil','Yousif']},
+ae:{c:'UAE',f:['Ali','Khalil','Harib','Yahya','Abdullah','Majid','Fahad','Saeed','Abdulrahman','Walid','Mohammed','Ahmed','Omar','Khalifa','Rashid','Sultan','Hamad','Zayed'],
+ l:['Al-Hammadi','Al-Shamsi','Al-Mansoori','Al-Ameri','Al-Kaabi','Al-Ghassani','Al-Mazrouei','Al-Dhaheri','Al-Ketbi','Al-Nuaimi','Al-Suwaidi','Al-Hosani','Al-Junaibi','Al-Marzooqi','Salem','Ismail','Juma','Khalfan']},
+om:{c:'OMA',f:['Mohsin','Salaah','Abdullah','Issam','Harib','Arshad','Ahmed','Khalid','Jameel','Ali','Muhannad','Zahir','Amjad','Said','Saleh','Thani','Fahmi','Nasser'],
+ l:['Al-Yahyaei','Fawaz','Al-Saadi','Al-Habsi','Al-Busaidi','Al-Rawahi','Al-Alawi','Al-Mukhaini','Al-Kharusi','Al-Hinai','Al-Balushi','Al-Maqbali','Al-Siyabi','Al-Shukaili','Al-Mahrouqi','Al-Harthi','Al-Riyami','Al-Ghafri']},
+id:{c:'IDN',f:['Asnawi','Egy','Witan','Rizky','Marselino','Pratama','Ernando','Sandy','Yakob','Dimas','Ricky','Arhan','Fachruddin','Irfan','Andik','Evan','Hokky','Saddil'],
+ l:['Saputra','Wijaya','Santoso','Nugroho','Hidayat','Setiawan','Kurniawan','Gunawan','Siregar','Simanjuntak','Sihombing','Ramadhan','Firmansyah','Utomo','Hakim','Purnomo','Lestaluhu','Sitompul']},
+nz:{c:'NZL',f:['Chris','Liberato','Marko','Matthew','Joe','Elijah','Callum','Ben','Tim','Kosta','Michael','Bill','Finn','Tyler','Max','Alex','Logan','Hamish'],
+ l:['Wilson','Thompson','Walker','Robertson','Campbell','Stewart','Mitchell','Clark','Ngata','Parata','Tane','Henare','Bell','Turner','Morgan','Fraser','Reid','Hunter']}
 };
 const NATKEYS=Object.keys(NATS);
-const AFR=['ng','sn','gh','cm','ci','ml','cd'];
+const AFR=['ng','sn','gh','cm','ci','ml','cd','cv','ga','bf','gn'];
 const NAF=['eg','ma','dz','tn'];
 /* agent nationality → home country (league network) */
 const NAT2CTRY={tr:'TR',en:'EN',es:'ES',de:'DE',it:'IT',fr:'FR',nl:'NL',pt:'PT',br:'BR',ar:'AR',
  us:'US',mx:'MX',sa:'SA',jp:'JP',ng:'WAF',sn:'WAF',gh:'WAF',cm:'WAF',eg:'NAF',ma:'NAF',
  be:'BE',hr:'HR',rs:'RS',pl:'PL',cz:'CZ',gr:'GR',no:'NO',se:'SE',dk:'DK',ch:'CH',at:'AT',ua:'UA',ro:'RO',sct:'SCT',ie:'EN',ru:'DE',co:'BR',uy:'AR',cl:'AR',pe:'BR',ec:'BR',py:'AR',ve:'BR',ci:'WAF',dz:'NAF',tn:'NAF',ml:'WAF',cd:'WAF',kr:'JP',ir:'SA',au:'EN',cn:'JP',
- cy:'CY',hu:'HU',sk:'SK',si:'SI',bg:'BG',az:'AZ'};
+ cy:'CY',hu:'HU',sk:'SK',si:'SI',bg:'BG',az:'AZ',
+ bo:'AR',ca:'US',pa:'MX',cr:'MX',jm:'US',ht:'US',cw:'NL',hn:'MX',sr:'NL',cv:'WAF',za:'WAF',ga:'WAF',bf:'WAF',gn:'WAF',qa:'SA',uz:'SA',jo:'SA',iq:'SA',ae:'SA',om:'SA',id:'JP',nz:'EN'};
 const NATNAME={
  tr:{tr:'Türkiye',en:'Türkiye',es:'Turquía',pt:'Turquia',de:'Türkei',fr:'Turquie',it:'Turchia'},en:{tr:'İngiltere',en:'England',es:'Inglaterra',pt:'Inglaterra',de:'England',fr:'Angleterre',it:'Inghilterra'},es:{tr:'İspanya',en:'Spain',es:'España',pt:'Espanha',de:'Spanien',fr:'Espagne',it:'Spagna'},
  de:{tr:'Almanya',en:'Germany',es:'Alemania',pt:'Alemanha',de:'Deutschland',fr:'Allemagne',it:'Germania'},it:{tr:'İtalya',en:'Italy',es:'Italia',pt:'Itália',de:'Italien',fr:'Italie',it:'Italia'},fr:{tr:'Fransa',en:'France',es:'Francia',pt:'França',de:'Frankreich',fr:'France',it:'Francia'},
@@ -173,7 +221,29 @@ const NATNAME={
  sk:{tr:'Slovakya',en:'Slovakia',es:'Eslovaquia',pt:'Eslováquia',de:'Slowakei',fr:'Slovaquie',it:'Slovacchia'},
  si:{tr:'Slovenya',en:'Slovenia',es:'Eslovenia',pt:'Eslovênia',de:'Slowenien',fr:'Slovénie',it:'Slovenia'},
  bg:{tr:'Bulgaristan',en:'Bulgaria',es:'Bulgaria',pt:'Bulgária',de:'Bulgarien',fr:'Bulgarie',it:'Bulgaria'},
- az:{tr:'Azerbaycan',en:'Azerbaijan',es:'Azerbaiyán',pt:'Azerbaijão',de:'Aserbaidschan',fr:'Azerbaïdjan',it:'Azerbaigian'}};
+ az:{tr:'Azerbaycan',en:'Azerbaijan',es:'Azerbaiyán',pt:'Azerbaijão',de:'Aserbaidschan',fr:'Azerbaïdjan',it:'Azerbaigian'},
+ bo:{tr:'Bolivya',en:'Bolivia',es:'Bolivia',pt:'Bolívia',de:'Bolivien',fr:'Bolivie',it:'Bolivia'},
+ ca:{tr:'Kanada',en:'Canada',es:'Canadá',pt:'Canadá',de:'Kanada',fr:'Canada',it:'Canada'},
+ pa:{tr:'Panama',en:'Panama',es:'Panamá',pt:'Panamá',de:'Panama',fr:'Panama',it:'Panama'},
+ cr:{tr:'Kosta Rika',en:'Costa Rica',es:'Costa Rica',pt:'Costa Rica',de:'Costa Rica',fr:'Costa Rica',it:'Costa Rica'},
+ jm:{tr:'Jamaika',en:'Jamaica',es:'Jamaica',pt:'Jamaica',de:'Jamaika',fr:'Jamaïque',it:'Giamaica'},
+ ht:{tr:'Haiti',en:'Haiti',es:'Haití',pt:'Haiti',de:'Haiti',fr:'Haïti',it:'Haiti'},
+ cw:{tr:'Curaçao',en:'Curaçao',es:'Curazao',pt:'Curaçao',de:'Curaçao',fr:'Curaçao',it:'Curaçao'},
+ hn:{tr:'Honduras',en:'Honduras',es:'Honduras',pt:'Honduras',de:'Honduras',fr:'Honduras',it:'Honduras'},
+ sr:{tr:'Surinam',en:'Suriname',es:'Surinam',pt:'Suriname',de:'Suriname',fr:'Suriname',it:'Suriname'},
+ cv:{tr:'Yeşil Burun',en:'Cape Verde',es:'Cabo Verde',pt:'Cabo Verde',de:'Kap Verde',fr:'Cap-Vert',it:'Capo Verde'},
+ za:{tr:'G. Afrika',en:'South Africa',es:'Sudáfrica',pt:'África do Sul',de:'Südafrika',fr:'Afrique du Sud',it:'Sudafrica'},
+ ga:{tr:'Gabon',en:'Gabon',es:'Gabón',pt:'Gabão',de:'Gabun',fr:'Gabon',it:'Gabon'},
+ bf:{tr:'Burkina Faso',en:'Burkina Faso',es:'Burkina Faso',pt:'Burkina Faso',de:'Burkina Faso',fr:'Burkina Faso',it:'Burkina Faso'},
+ gn:{tr:'Gine',en:'Guinea',es:'Guinea',pt:'Guiné',de:'Guinea',fr:'Guinée',it:'Guinea'},
+ qa:{tr:'Katar',en:'Qatar',es:'Catar',pt:'Catar',de:'Katar',fr:'Qatar',it:'Qatar'},
+ uz:{tr:'Özbekistan',en:'Uzbekistan',es:'Uzbekistán',pt:'Uzbequistão',de:'Usbekistan',fr:'Ouzbékistan',it:'Uzbekistan'},
+ jo:{tr:'Ürdün',en:'Jordan',es:'Jordania',pt:'Jordânia',de:'Jordanien',fr:'Jordanie',it:'Giordania'},
+ iq:{tr:'Irak',en:'Iraq',es:'Irak',pt:'Iraque',de:'Irak',fr:'Irak',it:'Iraq'},
+ ae:{tr:'BAE',en:'UAE',es:'EAU',pt:'EAU',de:'VAE',fr:'EAU',it:'EAU'},
+ om:{tr:'Umman',en:'Oman',es:'Omán',pt:'Omã',de:'Oman',fr:'Oman',it:'Oman'},
+ id:{tr:'Endonezya',en:'Indonesia',es:'Indonesia',pt:'Indonésia',de:'Indonesien',fr:'Indonésie',it:'Indonesia'},
+ nz:{tr:'Y. Zelanda',en:'New Zealand',es:'Nueva Zelanda',pt:'Nova Zelândia',de:'Neuseeland',fr:'Nouvelle-Zélande',it:'Nuova Zelanda'}};
 /* ================= LEAGUES / TEAMS ================= */
 const CONTS=[
  ['eu', {tr:'Avrupa',en:'Europe',es:'Europa',pt:'Europa',de:'Europa',fr:'Europe',it:'Europa'}],
@@ -744,8 +814,11 @@ const NATCON={
  br:'sam',ar:'sam',co:'sam',uy:'sam',cl:'sam',pe:'sam',ec:'sam',py:'sam',ve:'sam',
  us:'nam',mx:'nam',
  ng:'af',sn:'af',gh:'af',cm:'af',eg:'af',ma:'af',ci:'af',dz:'af',tn:'af',ml:'af',cd:'af',
+ cv:'af',za:'af',ga:'af',bf:'af',gn:'af',
  sa:'as',jp:'as',kr:'as',ir:'as',cn:'as',
- au:'oc'};
+ qa:'as',uz:'as',jo:'as',iq:'as',ae:'as',om:'as',id:'as',
+ bo:'sam',ca:'nam',pa:'nam',cr:'nam',jm:'nam',ht:'nam',cw:'nam',hn:'nam',sr:'nam',
+ au:'oc',nz:'oc'};
 const POS=['KL','DF','OS','FV'];
 const POSL={tr:{KL:'KL',DF:'DF',OS:'OS',FV:'FV'},en:{KL:'GK',DF:'DF',OS:'MF',FV:'FW'},es:{KL:'POR',DF:'DEF',OS:'MED',FV:'DEL'},pt:{KL:'GOL',DF:'DEF',OS:'MEI',FV:'ATA'},de:{KL:'TW',DF:'AB',OS:'MF',FV:'ST'},fr:{KL:'GB',DF:'DÉF',OS:'MIL',FV:'ATT'},it:{KL:'POR',DF:'DIF',OS:'CEN',FV:'ATT'}};
 const POSFULL={tr:{KL:'Kaleci',DF:'Defans',OS:'Orta Saha',FV:'Forvet'},en:{KL:'Goalkeeper',DF:'Defender',OS:'Midfielder',FV:'Forward'},es:{KL:'Portero',DF:'Defensa',OS:'Centrocampista',FV:'Delantero'},pt:{KL:'Goleiro',DF:'Defensor',OS:'Meio-campista',FV:'Atacante'},de:{KL:'Torwart',DF:'Verteidiger',OS:'Mittelfeldspieler',FV:'Stürmer'},fr:{KL:'Gardien',DF:'Défenseur',OS:'Milieu',FV:'Attaquant'},it:{KL:'Portiere',DF:'Difensore',OS:'Centrocampista',FV:'Attaccante'}};
