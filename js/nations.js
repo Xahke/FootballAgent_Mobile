@@ -101,42 +101,84 @@ const NC_HOSTS=[['us','mx','ca'],['es','pt','ma','uy','ar','py'],['sa']];
    22 (Avrupa play-off'u, kıtalar arası yarı final), 24 (kıtalar arası final). */
 const NC_QMD=[[-1,18],[-1,22],[-1,24],[0,3],[0,5],[0,7],[0,11],[0,14],[0,18]];
 const NC_POW=22,NC_ICF=24;
-/* Yaz haftaları: üç grup maç günü, son 32, son 16, çeyrek, yarı final, final
-   (üçüncülük maçı finalle aynı hafta). */
-const NC_SUMMER=8;
+
+/* ===== KITA TURNUVALARI =====
+   Gerçek takvim: Milletler Kupası'ndan bir yıl sonra Asya ve Kuzey-Orta Amerika
+   (2027 gibi), iki yıl sonra Avrupa, Güney Amerika ve Afrika (2028 gibi). Biçimler:
+   Avrupa gerçek 24 takım (6 grup, ilk iki + en iyi 4 üçüncü), elemeli; Güney
+   Amerika 2024'teki gibi 16 (10 + Kuzey Amerika'nın en güçlü 6 davetlisi); Afrika
+   oyundaki 16 ülke; Asya 12, Kuzey Amerika 8 — bu üçünde oyundaki ülke sayısı gerçek
+   kontenjanın altında, eleme yok, en güçlüler katılıyor.
+   g: grup sayısı (dörder), top: gruptan doğrudan çıkan, th: en iyi üçüncülerden
+   çıkan, t3: üçüncülük maçı. Milletler Kupası da aynı motoru kullanıyor (wc). */
+const CT_FMT={
+  wc:{g:12,top:2,th:8,t3:true},
+  eu:{g:6,top:2,th:4,t3:false},
+  sam:{g:4,top:2,th:0,t3:true},
+  af:{g:4,top:2,th:0,t3:true},
+  as:{g:3,top:2,th:2,t3:false},
+  nam:{g:2,top:2,th:0,t3:false}};
+/* S.season % NC_EVERY → o yazın turnuvaları. 3: yaz yok (Uluslar Ligi sonra). */
+const CT_SCHED={0:['wc'],1:['as','nam'],2:['eu','sam','af']};
+const CT_IDS=['eu','sam','af','as','nam'];
+/* Avrupa ev sahipleri: 2028 Birleşik Krallık ve İrlanda (oyunda İngiltere,
+   İskoçya, İrlanda), 2032 İtalya ve Türkiye; sonra döngü. Doğrudan katılıyorlar. */
+const EU_HOSTS=[['en','sct','ie'],['it','tr']];
+const EU_N=24,EU_UPO=3;
 
 function ncSeason(){return !!S&&S.season%NC_EVERY===0;}
-/* Elemesi ya da kendisi bu sezon oynanan turnuvanın sezonu; yoksa 0. */
+/* Elemesi ya da kendisi bu sezon oynanan Milletler Kupası'nın sezonu; yoksa 0. */
 function ncEd(){
   if(!S)return 0;
   const r=S.season%NC_EVERY;
   return r===0?S.season:r===NC_EVERY-1?S.season+1:0;
 }
+/* Avrupa turnuvasının: Milletler Kupası'ndan iki sezon sonra, elemeler bir önceki sezon. */
+function ecEd(){
+  if(!S)return 0;
+  const r=S.season%NC_EVERY;
+  return r===2?S.season:r===1?S.season+1:0;
+}
 function ncHosts(ed){return NC_HOSTS[(Math.max(1,ed/NC_EVERY)-1)%NC_HOSTS.length].slice();}
+function ecHosts(ed){return EU_HOSTS[Math.max(0,Math.floor((ed-2)/NC_EVERY))%EU_HOSTS.length].slice();}
 /* Konfederasyon: seçim ekranının kıtası; tek fark Avustralya (Asya federasyonunda). */
 function ncFed(n){return n==='au'?'as':NATCON[n];}
+function ctKeys(n){return n>=32?['r32','r16','qf','sf','f']:n>=16?['r16','qf','sf','f']:n>=8?['qf','sf','f']:['sf','f'];}
+function ctSize(id){const f=CT_FMT[id];return f.g*f.top+f.th;}
+function ctWeeks(id){return 3+ctKeys(ctSize(id)).length;}
+/* Turnuvanın adı: kıta + kalıp — gerçek turnuva markalarına yaklaşmıyor. */
+function ctName(id){
+  if(id==='wc')return t('wcLbl');
+  const x=NCONTS.find(k=>k[0]===id);
+  return fmtStr(t('ctFmt'),{c:x?tx(x[1]):id});
+}
 function summerWeeks(){
-  if(!ncSeason())return 0;
+  if(!S)return 0;
   /* Önceki sürümün 16 takımlı yaz turnuvası yarıda kaldıysa onun dört haftası. */
-  if(S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w)return 4;
-  return NC_SUMMER;
+  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w)return 4;
+  return Math.max(0,...(CT_SCHED[S.season%NC_EVERY]||[]).map(ctWeeks));
 }
 function seasonLen(){return totalWeeks()+summerWeeks();}
 /* Ekranda gösterilen hafta: yaz haftalarında da gerçek hafta numarası. */
 function shownWeek(){return Math.min(S.week,seasonLen());}
 function ncStrMap(ix){const m={};Object.keys(S.nt.sq).forEach(n=>{m[n]=ntSide(n,ix).str;});return m;}
 /* Haber yalnız menajerin kendi ülkesi ve müşterilerinin ülkeleri için, ülke başına bir kez. */
-function ncNews(n,ok){
-  const Q=S.ncq;if(!Q||Q.nw[n])return;
+function ncNews(Q,n,ok){
+  if(!Q||Q.nw[n])return;
   const pri=new Set(S.clients.map(id=>(byId(id)||{}).nat).concat(S.agent?[S.agent.nat]:[]));
   if(!pri.has(n))return;
   Q.nw[n]=1;
-  pushNews(ok?'ncIn':'ncOut',{nat:n,se:Q.ed},ok?'good':'bad');
+  if(Q.kind==='eu')pushNews(ok?'ctIn':'ctOut',{nat:n,ct:'eu'},ok?'good':'bad');
+  else pushNews(ok?'ncIn':'ncOut',{nat:n,se:Q.ed},ok?'good':'bad');
 }
 /* Bir milli maç ve kaydı: S.nt.m son milli maç gününü ekranda gösteriyor. */
 function ntLog(m,cp){(S.nt.m=S.nt.m||[]).push({w:S.week,h:m.h,a:m.a,hg:m.hg,ag:m.ag,cp});}
 
-/* ===== ELEMELER ===== */
+/* ===== ELEMELER =====
+   İki eleme var: Milletler Kupası'nınki (S.ncq, bütün konfederasyonlar, kıtalar arası
+   play-off'lu) ve Avrupa turnuvasınınki (S.ecq, yalnız Avrupa). Biçimleri aynı;
+   konfederasyon kaydı kendi play-off sayısını (up) ve kıtalar arası yerini (icn)
+   taşıyor. */
 /* Çember yöntemiyle lig fikstürü; dbl ise rövanşlar arkadan. */
 function ncRR(t,dbl){
   const ids=t.slice();if(ids.length%2)ids.push(null);
@@ -166,20 +208,39 @@ function ncqGroups(t,single){
   });
   return G;
 }
+/* Bir konfederasyonun eleme kaydı: t adaylar (güç sırasıyla), D doğrudan + play-off yeri. */
+function ncqConf(t,D,up,icn,single){
+  const C={D,up:Math.min(up,D),icn,g:[],d:[],po:[],ic:[]};
+  if(t.length<=D)C.d=t.slice();
+  else C.g=ncqGroups(t,single);
+  return C;
+}
 function ncqDraw(ed,ix){
   const hosts=ncHosts(ed),str=ncStrMap(ix);
-  const Q={ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  const Q={kind:'wc',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
   S.ncq=Q;
   Object.keys(NC_QUOTA).forEach(c=>{
     const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)===c&&!NT_BAN.includes(n)&&!hosts.includes(n))
       .sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
     const D=Math.max(0,NC_QUOTA[c]-hosts.filter(h=>ncFed(h)===c).length);
-    const C={D,g:[],d:[],po:[],ic:[]};
-    if(t.length<=D){C.d=t.slice();Q.q.push(...t);}
-    else C.g=ncqGroups(t,c==='sam');
+    const C=ncqConf(t,D,NC_UPO[c]||0,NC_IC[c]||0,c==='sam');
+    Q.q.push(...C.d);
     Q.c[c]=C;
   });
-  Q.q.forEach(n=>ncNews(n,true));
+  Q.q.forEach(n=>ncNews(Q,n,true));
+}
+/* Avrupa turnuvası elemesi: ev sahipleri doğrudan, kalan yerlerin üçü play-off'tan
+   (gerçekte Uluslar Ligi yolları). */
+function ecqDraw(ed,ix){
+  const hosts=ecHosts(ed),str=ncStrMap(ix);
+  const Q={kind:'eu',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  S.ecq=Q;
+  const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)==='eu'&&!NT_BAN.includes(n)&&!hosts.includes(n))
+    .sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
+  const C=ncqConf(t,Math.max(0,EU_N-Q.q.length),EU_UPO,0,false);
+  Q.q.push(...C.d);
+  Q.c.eu=C;
+  Q.q.forEach(n=>ncNews(Q,n,true));
 }
 function ncTable(t,fx){
   const R={};t.forEach(n=>{R[n]={n,pl:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};});
@@ -202,26 +263,28 @@ function ncLevels(tabs){
   }
   return L;
 }
-/* Grup aşaması bitti: doğrudan katılanlar, Avrupa play-off'u, kıtalar arası adaylar. */
-function ncqRank(){
-  const Q=S.ncq;
+/* Grup aşaması bitti: doğrudan katılanlar, konfederasyon play-off'u, kıtalar arası
+   adaylar. up/icn eski kayıtlarda (bu alanlar gelmeden çekilmiş elemeler) yok:
+   o zaman Milletler Kupası değerleri. */
+function ncqRank(Q){
   Object.keys(Q.c).forEach(c=>{
     const C=Q.c[c];if(!C.g.length)return;
     const L=ncLevels(C.g.map(G=>ncTable(G.t,G.fx)));
-    const up=Math.min(NC_UPO[c]||0,C.D);
+    const up=C.up!==undefined?C.up:Math.min(NC_UPO[c]||0,C.D);
+    const icn=C.icn!==undefined?C.icn:(NC_IC[c]||0);
     C.d=L.slice(0,C.D-up);
     const rest=L.slice(C.D-up);
     if(up){
       const P=rest.slice(0,2*up);
       for(let i=0;i<up&&P[2*up-1-i];i++)C.po.push(cupTie(P[i],P[2*up-1-i],true));
-    } else C.ic=rest.slice(0,NC_IC[c]||0);
+    } else C.ic=rest.slice(0,icn);
     Q.q.push(...C.d);
-    C.d.forEach(n=>ncNews(n,true));
+    C.d.forEach(n=>ncNews(Q,n,true));
     const alive=new Set(C.d.concat(C.ic,C.po.flatMap(t=>[t.s,t.u])));
-    L.forEach(n=>{if(!alive.has(n))ncNews(n,false);});
+    L.forEach(n=>{if(!alive.has(n))ncNews(Q,n,false);});
   });
 }
-/* Tek maçlık eleme maçı: s önde; ev sahibi değilse tarafsız saha. */
+/* Tek maçlık eleme maçı: s önde; neutral değilse s ev sahibi. */
 function ncTie(ti,cp,ix,neutral){
   const {gm,ns}=ntPlay(ti.m[0],cp,ix,neutral);
   ntLog(ti.m[0],cp);
@@ -231,8 +294,8 @@ function ncTie(ti,cp,ix,neutral){
 /* Kıtalar arası play-off: konfederasyonların adayları; Okyanusya'nın yeri gibi boş
    kalan yerler katılan konfederasyonların en güçlü elenenlerine. En güçlü iki takım
    doğrudan finalde (gerçek kural), diğer dördü yarı finalde; tarafsız saha. */
-function ncIcStart(ix){
-  const Q=S.ncq,str=ncStrMap(ix);
+function ncIcStart(Q,ix){
+  const str=ncStrMap(ix);
   const t=[].concat(...Object.values(Q.c).map(C=>C.ic));
   const out=new Set(Q.q.concat(t,[].concat(...Object.values(Q.c).map(C=>C.po.flatMap(x=>[x.s,x.u])))));
   Object.keys(S.nt.sq).filter(n=>NC_IC[ncFed(n)]&&!NT_BAN.includes(n)&&!out.has(n)&&ncFed(n)!=='oc')
@@ -241,51 +304,61 @@ function ncIcStart(ix){
   Q.ic={t,sf:[],f:[]};
   if(t.length>=6)Q.ic.sf=[cupTie(t[2],t[5],true),cupTie(t[3],t[4],true)];
 }
-function ncqWeek(ed,busy,ix){
+/* Bir milli maç gününde bir elemenin işi. cp 'n:q' (Milletler Kupası) ya da 'n:eq'. */
+function ncqWeek(Q,busy,ix){
+  const ed=Q.ed,cp=Q.kind==='eu'?'n:eq':'n:q';
   const md=NC_QMD.findIndex(([d,wk])=>S.season===ed+d&&S.week===wk);
-  if(md===0&&(!S.ncq||S.ncq.ed!==ed))ncqDraw(ed,ix);
-  const Q=S.ncq;
-  /* Elemeleri kaçırmış kayıt (eski sürüm, ya da çekiliş haftasından sonra açılmış):
-     turnuva yazın kontenjan ve güçle doluyor (ncStart). */
-  if(!Q||Q.ed!==ed)return;
   if(md>=0){
     Object.values(Q.c).forEach(C=>C.g.forEach(G=>G.fx.forEach(m=>{
       if(m.md!==md||m.hg!==null)return;
-      ntPlay(m,'n:q',ix,false);ntLog(m,'n:q');busy.add(m.h);busy.add(m.a);
+      ntPlay(m,cp,ix,false);ntLog(m,cp);busy.add(m.h);busy.add(m.a);
     })));
-    if(md===NC_QMD.length-1)ncqRank();
+    if(md===NC_QMD.length-1)ncqRank(Q);
   }
   if(S.season!==ed)return;
   if(S.week===NC_POW){
     Object.values(Q.c).forEach(C=>C.po.forEach(ti=>{
       if(ti.w)return;
-      ncTie(ti,'n:q',ix,false);busy.add(ti.s);busy.add(ti.u);
-      Q.q.push(ti.w);ncNews(ti.w,true);ncNews(cupLoser(ti),false);
+      ncTie(ti,cp,ix,false);busy.add(ti.s);busy.add(ti.u);
+      Q.q.push(ti.w);ncNews(Q,ti.w,true);ncNews(Q,cupLoser(ti),false);
     }));
-    ncIcStart(ix);
-    Q.ic.sf.forEach(ti=>{ncTie(ti,'n:q',ix,true);busy.add(ti.s);busy.add(ti.u);ncNews(cupLoser(ti),false);});
+    if(Q.kind!=='eu'){
+      ncIcStart(Q,ix);
+      Q.ic.sf.forEach(ti=>{ncTie(ti,cp,ix,true);busy.add(ti.s);busy.add(ti.u);ncNews(Q,cupLoser(ti),false);});
+    }
   }
   if(S.week===NC_ICF&&Q.ic&&Q.ic.sf.length===2&&!Q.ic.f.length){
     const t=Q.ic.t;
     Q.ic.f=[cupTie(t[0],Q.ic.sf[1].w,true),cupTie(t[1],Q.ic.sf[0].w,true)];
     Q.ic.f.forEach(ti=>{
-      ncTie(ti,'n:q',ix,true);busy.add(ti.s);busy.add(ti.u);
-      Q.q.push(ti.w);ncNews(ti.w,true);ncNews(cupLoser(ti),false);
+      ncTie(ti,cp,ix,true);busy.add(ti.s);busy.add(ti.u);
+      Q.q.push(ti.w);ncNews(Q,ti.w,true);ncNews(Q,cupLoser(ti),false);
     });
   }
 }
+/* Elemenin işi bu hafta: çekiliş ilk eleme gününde; kaçırılmışsa (eski kayıt ya da
+   çekiliş haftasından sonra açılmış) turnuva yazın kontenjan ve güçle doluyor. */
+function ncqTick(key,ed,draw,busy,ix){
+  if(!ed)return;
+  const [d0,w0]=NC_QMD[0];
+  if(S.season===ed+d0&&S.week===w0&&(!S[key]||S[key].ed!==ed))draw(ed,ix);
+  const Q=S[key];
+  if(Q&&Q.ed===ed)ncqWeek(Q,busy,ix);
+}
 
-/* ===== TURNUVA: 12 GRUP, SON 32 ===== */
-/* Bir grupta bir konfederasyondan en fazla bir takım, Avrupa'dan en fazla iki
-   (gerçek kura kuralı). Torba torba, geri izlemeyle; tutmazsa yeniden. */
-function ncGroupDraw(pots){
-  const can=(G,n)=>{const c=ncFed(n);return G.filter(x=>ncFed(x)===c).length<(c==='eu'?2:1);};
+/* ===== TURNUVA MOTORU: GRUPLAR VE ELEME AĞACI =====
+   Milletler Kupası ve kıta turnuvaları aynı motordan: dörder takımlı gruplar, üç maç
+   günü, sonra gruptan çıkanlarla seri başlı eleme ağacı. Milletler Kupası'nda kura
+   konfederasyon kuralıyla (bir grupta bir konfederasyondan en fazla bir, Avrupa'dan
+   iki); kıta turnuvalarında herkes aynı konfederasyondan, kural yok. */
+function ncGroupDraw(pots,g,rule){
+  const can=(G,n)=>{if(!rule)return true;const c=ncFed(n);return G.filter(x=>ncFed(x)===c).length<(c==='eu'?2:1);};
   for(let tr=0;tr<300;tr++){
-    const G=Array.from({length:12},()=>[]);
+    const G=Array.from({length:g},()=>[]);
     let ok=true;
     for(const pot of pots){
       const P=cupShuffle(pot.slice());
-      const lvl=Math.min(...G.map(g=>g.length));
+      const lvl=Math.min(...G.map(x=>x.length));
       const rec=j=>{
         if(j===P.length)return true;
         for(const i of cupShuffle(G.map((_,k)=>k))){
@@ -299,8 +372,8 @@ function ncGroupDraw(pots){
     if(ok)return G;
   }
   /* Kural tutmuyorsa (hiç görülmedi) torbalar sırayla — sezon durmasın. */
-  const G=Array.from({length:12},()=>[]);
-  pots.forEach(pot=>pot.forEach((n,i)=>G[i%12].push(n)));
+  const G=Array.from({length:g},()=>[]);
+  pots.forEach(pot=>pot.forEach((n,i)=>G[i%g].push(n)));
   return G;
 }
 /* Ev sahibi kendi sahasında oynuyor (hafif avantaj, goalPair 'h'); diğer maçlar
@@ -308,6 +381,18 @@ function ncGroupDraw(pots){
 function ncHostSide(m,hosts){
   if(hosts.includes(m.a)&&!hosts.includes(m.h)){const x=m.h;m.h=m.a;m.a=x;}
   return hosts.includes(m.h)&&!hosts.includes(m.a)?'h':true;
+}
+/* Turnuva kaydı: katılanlar ev sahipleri önde, sonra güç; dört torba; grup fikstürü. */
+function ctMake(id,q,hosts,str){
+  const f=CT_FMT[id];
+  const ord=hosts.filter(n=>q.includes(n)).concat(q.filter(n=>!hosts.includes(n)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1)));
+  const pots=[0,1,2,3].map(k=>ord.slice(k*f.g,k*f.g+f.g));
+  const G=ncGroupDraw(pots,f.g,id==='wc').map(t=>{
+    const fx=[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].filter(([x,y])=>t[x]&&t[y])
+      .map(([x,y],i)=>({md:Math.floor(i/2),h:t[x],a:t[y],hg:null,ag:null}));
+    return {t,fx};
+  });
+  return {v:3,id,se:S.season,hosts,g:G,ko:{},w:null,sc:{}};
 }
 function ncStart(){
   ntCallUp();
@@ -324,77 +409,106 @@ function ncStart(){
     });
     Object.keys(S.nt.sq).filter(free).sort((a,b)=>str[b]-str[a]).forEach(n=>{if(q.length<NC_N)q.push(n);});
   }
-  q=q.slice(0,NC_N);
-  const ord=hosts.filter(n=>q.includes(n)).concat(q.filter(n=>!hosts.includes(n)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1)));
-  const pots=[0,1,2,3].map(k=>ord.slice(k*12,k*12+12));
-  const G=ncGroupDraw(pots).map(t=>{
-    const fx=[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].map(([x,y],i)=>({md:Math.floor(i/2),h:t[x],a:t[y],hg:null,ag:null}));
-    return {t,fx};
-  });
-  S.wc={v:3,se:ed,hosts,g:G,ko:{},w:null,sc:{}};
+  S.wc=ctMake('wc',q.slice(0,NC_N),hosts,str);
 }
-/* Grup sonrası: 12 birinci, 12 ikinci ve en iyi 8 üçüncü; aynı sıradakiler puan,
-   averaj, golle. Son 32 eşleşmesi seri başı sırasıyla (1–32, 16–17 …) — gerçek
-   turnuvanın üçüncüler tablosu yerine — ve aynı gruptan iki takım ilk turda
+/* Kıta turnuvasının katılımcıları. Avrupa elemeden (kaçırılmışsa ev sahipleri ve
+   güç sırası); diğerleri o kıtanın en güçlüleri, Güney Amerika'ya Kuzey Amerika'nın
+   en güçlü altısı davetli. */
+function ctStart(id,str){
+  const n=CT_FMT[id].g*4;
+  const pool=c=>Object.keys(S.nt.sq).filter(x=>ncFed(x)===c&&!NT_BAN.includes(x)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
+  let q=[],hosts=[];
+  if(id==='eu'){
+    const Q=S.ecq&&S.ecq.ed===S.season?S.ecq:null;
+    hosts=Q?Q.hosts:ecHosts(S.season);
+    q=(Q?Q.q:[]).concat(hosts).filter((x,i,a)=>S.nt.sq[x]&&a.indexOf(x)===i);
+    pool('eu').forEach(x=>{if(q.length<n&&q.indexOf(x)<0)q.push(x);});
+  } else if(id==='sam'){
+    q=pool('sam').concat(pool('nam').slice(0,6));
+  } else q=pool(id);
+  q=q.slice(0,n);
+  (S.ct=S.ct||{})[id]=ctMake(id,q,hosts.filter(x=>q.includes(x)),str);
+}
+/* Grup sonrası: her gruptan top, sonra en iyi th üçüncü; aynı sıradakiler puan,
+   averaj, golle. Eleme ağacı seri başı sırasıyla (1–n, …) — Milletler Kupası'nda
+   gerçek turnuvanın üçüncüler tablosu yerine — ve aynı gruptan iki takım ilk turda
    karşılaşmasın diye komşu eşleşmeyle takas. */
 function ncSeedOrder(n){let o=[1];while(o.length<n){const m=o.length*2;o=o.flatMap(x=>[x,m+1-x]);}return o;}
-function ncR32(){
-  const W=S.wc,tabs=W.g.map(G=>ncTable(G.t,G.fx));
+function ctFmtOf(W){return CT_FMT[W.id||'wc'];}
+function ctBracket(W){
+  const f=ctFmtOf(W),tabs=W.g.map(G=>ncTable(G.t,G.fx));
   const grp={};W.g.forEach((G,i)=>G.t.forEach(n=>{grp[n]=i;}));
-  const lvl=pos=>tabs.map(x=>x[pos]).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||(a.n<b.n?-1:1)).map(r=>r.n);
-  const seeds=lvl(0).concat(lvl(1),lvl(2).slice(0,8));
-  const o=ncSeedOrder(32).map(k=>seeds[k-1]);
-  for(let pass=0;pass<4;pass++)for(let i=0;i<32;i+=2){
+  const lvl=pos=>tabs.map(x=>x[pos]).filter(Boolean).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||(a.n<b.n?-1:1)).map(r=>r.n);
+  let seeds=[];for(let p=0;p<f.top;p++)seeds=seeds.concat(lvl(p));
+  seeds=seeds.concat(lvl(f.top).slice(0,f.th));
+  const N=seeds.length,o=ncSeedOrder(N).map(k=>seeds[k-1]);
+  for(let pass=0;pass<4;pass++)for(let i=0;i<N;i+=2){
     if(grp[o[i]]!==grp[o[i+1]])continue;
-    for(let j=(i+2)%32;j!==i;j=(j+2)%32){
+    for(let j=(i+2)%N;j!==i;j=(j+2)%N){
       if(grp[o[j+1]]!==grp[o[i]]&&grp[o[i+1]]!==grp[o[j]]){const x=o[i+1];o[i+1]=o[j+1];o[j+1]=x;break;}
     }
   }
-  W.ko.r32=[];for(let i=0;i<32;i+=2)W.ko.r32.push(cupTie(o[i],o[i+1],true));
-  W.g.forEach((G,i)=>tabs[i].forEach((r,pos)=>{if(pos===3||(pos===2&&seeds.indexOf(r.n)<0))ncNews(r.n,false);}));
+  const k0=ctKeys(N)[0];
+  W.ko[k0]=[];for(let i=0;i+1<N;i+=2)W.ko[k0].push(cupTie(o[i],o[i+1],true));
+  if((W.id||'wc')==='wc'){
+    const Q=S.ncq&&S.ncq.ed===W.se?S.ncq:null;
+    const inKo=new Set(seeds);
+    W.g.forEach(G=>G.t.forEach(n=>{if(!inKo.has(n))ncNews(Q,n,false);}));
+  }
 }
-function ncKo(key,ix){
-  const W=S.wc,ties=W.ko[key];if(!ties)return;
+function ctCp(W){return (W.id||'wc')==='wc'?'n:wc':'n:c:'+W.id;}
+function ctKo(W,key,ix){
+  const ties=W.ko[key];if(!ties)return;
   ties.forEach(ti=>{
     if(ti.w)return;
-    const neutral=ncHostSide(ti.m[0],W.hosts);
-    const gm=ncTie(ti,'n:wc',ix,neutral);
+    const neutral=ncHostSide(ti.m[0],W.hosts||[]);
+    const gm=ncTie(ti,ctCp(W),ix,neutral);
     for(const id in gm)W.sc[id]=(W.sc[id]||0)+gm[id];
   });
 }
-const NC_KO=['r32','r16','qf','sf','f'];
-function ncSummer(ri){
-  const W=S.wc,ix=ntIndex();
+/* Yazın ri. haftası (0'dan): 0–2 grup maç günleri, sonra eleme turları. */
+function ctRound(W,ri,ix){
+  const f=ctFmtOf(W);
   if(ri<3){
     W.g.forEach(G=>G.fx.forEach(m=>{
       if(m.md!==ri||m.hg!==null)return;
-      const neutral=ncHostSide(m,W.hosts);
-      const {gm}=ntPlay(m,'n:wc',ix,neutral);ntLog(m,'n:wc');
+      const neutral=ncHostSide(m,W.hosts||[]);
+      const {gm}=ntPlay(m,ctCp(W),ix,neutral);ntLog(m,ctCp(W));
       for(const id in gm)W.sc[id]=(W.sc[id]||0)+gm[id];
     }));
-    if(ri===2)ncR32();
+    if(ri===2)ctBracket(W);
     return;
   }
-  const key=NC_KO[ri-3];if(!key)return;
-  ncKo(key,ix);
+  const ks=ctKeys(ctSize(W.id||'wc')),key=ks[ri-3];
+  if(!key||!W.ko[key])return;
+  ctKo(W,key,ix);
   if(key==='f'){
-    if(W.ko.t3)ncKo('t3',ix);
-    ncChampion(W.ko.f[0].w);
+    if(W.ko.t3)ctKo(W,'t3',ix);
+    ctChampion(W,W.ko.f[0].w);
     return;
   }
   const ties=W.ko[key],nx=[];
   for(let i=0;i+1<ties.length;i+=2)nx.push(cupTie(ties[i].w,ties[i+1].w,true));
-  W.ko[NC_KO[ri-2]]=nx;
-  if(key==='sf')W.ko.t3=[cupTie(cupLoser(ties[0]),cupLoser(ties[1]),true)];
+  W.ko[ks[ri-2]]=nx;
+  if(key==='sf'&&f.t3)W.ko.t3=[cupTie(cupLoser(ties[0]),cupLoser(ties[1]),true)];
 }
-function ncChampion(c){
-  const W=S.wc;W.w=c;
-  (S.wcHist=S.wcHist||[]).push({se:S.season,nat:c});
-  if(S.wcHist.length>20)S.wcHist.shift();
-  pushNews('wcWin',{n:NATS[c].c},'good');
-  /* Kupayı kaldıran kadroda müşterin varsa: büyük bir turnuva, büyük bir itibar. */
+function ctChampion(W,c){
+  W.w=c;
+  const id=W.id||'wc';
+  if(id==='wc'){
+    (S.wcHist=S.wcHist||[]).push({se:S.season,nat:c});
+    if(S.wcHist.length>20)S.wcHist.shift();
+    pushNews('wcWin',{n:NATS[c].c},'good');
+  } else {
+    S.ctHist=S.ctHist||{};
+    const h=S.ctHist[id]=S.ctHist[id]||[];
+    h.push({se:S.season,nat:c});if(h.length>20)h.shift();
+    pushNews('ctWin',{ct:id,nat:c},'good');
+  }
+  /* Kupayı kaldıran kadroda müşterin varsa: büyük bir turnuva, büyük bir itibar —
+     Milletler Kupası kıta turnuvasından büyük. */
   const sq=new Set((S.nt.sq[c]||[]));
-  if(S.clients.some(id=>sq.has(id)))repEvent(1.5);
+  if(S.clients.some(x=>sq.has(x)))repEvent(id==='wc'?1.5:1.0);
 }
 
 /* Penaltılar: cupTieEnd'in kuralı, güç milli kadrodan. */
@@ -431,23 +545,38 @@ function ncV2Round(){
   if(S.clients.some(id=>sq.has(id)))repEvent(1.5);
 }
 
-/* simWeek()'ten, ligler ve kupalardan sonra. */
+/* simWeek()'ten, ligler ve kupalardan sonra. Milli maç gününde: kadro, iki elemenin
+   işi (Milletler Kupası ve Avrupa turnuvası), maçı olmayanlara hazırlık maçı. Yaz
+   haftalarında: o sezonun turnuvaları (CT_SCHED), her biri kendi tur sayısınca. */
 function simNat(){
   const w=S.week,T=totalWeeks();
   if(w<=T){
     if(NT_CALL.includes(w))ntCallUp();
     if(!NT_WK.includes(w))return;
     if(!S.nt||S.nt.se!==S.season)ntCallUp();
-    const busy=new Set(),ix=ntIndex(),ed=ncEd();
-    if(ed)ncqWeek(ed,busy,ix);
+    const busy=new Set(),ix=ntIndex();
+    ncqTick('ncq',ncEd(),ncqDraw,busy,ix);
+    ncqTick('ecq',ecEd(),ecqDraw,busy,ix);
     ntFriendlies(busy,ix);
     return;
   }
-  if(!ncSeason()||w>seasonLen())return;
-  if(S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w){ncV2Round();return;}
-  const ri=w-T-1;
-  if(ri===0)ncStart();
-  if(S.wc&&S.wc.v===3&&S.wc.se===S.season&&!S.wc.w)ncSummer(ri);
+  if(w>seasonLen())return;
+  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w){ncV2Round();return;}
+  const ri=w-T-1,ids=CT_SCHED[S.season%NC_EVERY]||[];
+  if(ri===0){
+    if(ids.includes('wc'))ncStart();
+    const others=ids.filter(x=>x!=='wc');
+    if(others.length){
+      if(!ids.includes('wc'))ntCallUp();
+      const str=ncStrMap(ntIndex());
+      others.forEach(id=>ctStart(id,str));
+    }
+  }
+  const ix=ntIndex();
+  ids.forEach(id=>{
+    const W=id==='wc'?S.wc:(S.ct||{})[id];
+    if(W&&W.v===3&&W.se===S.season&&!W.w&&ri<ctWeeks(id))ctRound(W,ri,ix);
+  });
 }
 
 /* ===== OKUYUCULAR (arayüz) ===== */

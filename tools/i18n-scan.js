@@ -258,6 +258,10 @@ async function scan(cfg) {
          taramanın kurduğu sezon elemelere ulaşmıyor, bu yüzden kura burada çekiliyor. */
       for (const c of ['eu','sam','nam','af','as','oc','ic']) { reset(); shot('ncq-' + c, "ntCallUp();ncqDraw(4,ntIndex());NCPH='q';NCCF='" + c + "';goCup(3);"); }
       for (const g of [0, 11, -1]) { reset(); shot('nct-' + g, "ntCallUp();ncStart();NCPH='t';NCG=" + g + ";goCup(3);"); }
+      /* Kıta turnuvaları: her biri kurulup grup ve eleme görünümleri; Avrupa elemesi */
+      for (const id of ['eu','sam','af','as','nam']) for (const g of [0, -1]) { reset(); shot('ct-' + id + g, "ntCallUp();ctStart('" + id + "',ncStrMap(ntIndex()));CTSEL='" + id + "';NCPH='t';NCG=" + g + ";goCup(5);"); }
+      reset(); shot('ct-euq', "S.season=1;S.week=20;ntCallUp();ecqDraw(2,ntIndex());CTSEL='eu';NCPH='q';goCup(5);");
+      reset(); shot('ct-none', "S.ct={};CTSEL='as';goCup(5);");
       reset(); shot('lg-pick', "goLg(0);lgPickOpen();");
 
       /* ---- kişiler ve takımlar ---- */

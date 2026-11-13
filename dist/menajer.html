@@ -5237,7 +5237,7 @@ cupMd:'{n}. maç günü',
 cupLegs:'1. maç {a} · 2. maç {b}',
 cupPen:'pen.',
 cupZones:'1–8 son 16 · 9–24 play-off · 25–36 elenir',
-cupWks:'{a}. ve {b}. hafta',ncQual:'Elemeler',ncTour:'Turnuva',ncGroup:'Grup {g}',ncHosts:'Ev sahibi',ncIC:'Kıtalar arası',ncPO:'Play-off',ncQuota:'Doğrudan {d} · play-off {p}',ncR32:'Son 32',ncThird:'Üçüncülük maçı',ncKO:'Eleme turları',ncQualL:'Milletler Kupası elemesi',ncZones:'Yeşil: doğrudan katılım · mavi: play-off',ntFriendly:'Hazırlık maçı',ntCaps:'Milli maç',ntGoals:'Milli gol',ntSeason:'Bu sezon',ntSquadL:'Kadroda',ntTitle:'Milli takım',ntSe:'Milli: {n} maç, {g} gol',ntMine:'Milli takımdaki müşterilerin',ntRecent:'Son milli maçlar',dcLbl:'Ulusal kupalar',dcFmt:'{c} Ulusal Kupası',dcRound:'{n}. tur',dcByes:'{n} kulüp ilk turu bay geçiyor',dcNext:'Ulusal kupalar gelecek sezon başlıyor.',dcInfo:'Tek maçlık eleme, eşitlikte penaltılar; alt ligdeki kulüp ev sahibi; final tarafsız sahada.',dcSf2:'Yarı final rövanşlı.',
+cupWks:'{a}. ve {b}. hafta',ctLbl:'Kıta turnuvaları',ctFmt:'{c} Milletler Turnuvası',ctNext:'Sonraki turnuva',ncQual:'Elemeler',ncTour:'Turnuva',ncGroup:'Grup {g}',ncHosts:'Ev sahibi',ncIC:'Kıtalar arası',ncPO:'Play-off',ncQuota:'Doğrudan {d} · play-off {p}',ncR32:'Son 32',ncThird:'Üçüncülük maçı',ncKO:'Eleme turları',ncQualL:'Milletler Kupası elemesi',ncZones:'Yeşil: doğrudan katılım · mavi: play-off',ntFriendly:'Hazırlık maçı',ntCaps:'Milli maç',ntGoals:'Milli gol',ntSeason:'Bu sezon',ntSquadL:'Kadroda',ntTitle:'Milli takım',ntSe:'Milli: {n} maç, {g} gol',ntMine:'Milli takımdaki müşterilerin',ntRecent:'Son milli maçlar',dcLbl:'Ulusal kupalar',dcFmt:'{c} Ulusal Kupası',dcRound:'{n}. tur',dcByes:'{n} kulüp ilk turu bay geçiyor',dcNext:'Ulusal kupalar gelecek sezon başlıyor.',dcInfo:'Tek maçlık eleme, eşitlikte penaltılar; alt ligdeki kulüp ev sahibi; final tarafsız sahada.',dcSf2:'Yarı final rövanşlı.',
 notifs:'Bildirimler',allNotifs:'Tümünü Gör',newNotifsT:'yeni bildirim',viewProfile:'Profil',
 ibUnread:'okunmamış',ibAllRead:'Hepsi okundu',ibReadAll:'Tümünü oku',
 ibFAct:'Aksiyon',ibFPly:'Oyuncular',ibFFin:'Finans',ibFWorld:'Dünya',
@@ -5581,7 +5581,7 @@ cupMd:'Matchday {n}',
 cupLegs:'1st leg {a} · 2nd leg {b}',
 cupPen:'pens',
 cupZones:'1–8 last 16 · 9–24 play-offs · 25–36 out',
-cupWks:'weeks {a} and {b}',ncQual:'Qualifiers',ncTour:'Tournament',ncGroup:'Group {g}',ncHosts:'Hosts',ncIC:'Inter-confederation',ncPO:'Play-offs',ncQuota:'Direct {d} · play-off {p}',ncR32:'Round of 32',ncThird:'Third-place match',ncKO:'Knockouts',ncQualL:'Nations Cup qualifier',ncZones:'Green: qualified · blue: play-off',ntFriendly:'Friendly',ntCaps:'Caps',ntGoals:'Int. goals',ntSeason:'This season',ntSquadL:'In squad',ntTitle:'National team',ntSe:'Intl: {n} apps, {g} goals',ntMine:'Your clients on international duty',ntRecent:'Latest internationals',dcLbl:'National cups',dcFmt:'{c} National Cup',dcRound:'Round {n}',dcByes:'{n} clubs have a bye in the first round',dcNext:'National cups start next season.',dcInfo:'Single-match knockout, penalties if level; the lower-division club hosts; final on neutral ground.',dcSf2:'Two-legged semi-finals.',
+cupWks:'weeks {a} and {b}',ctLbl:'Continental',ctFmt:'{c} Nations Tournament',ctNext:'Next edition',ncQual:'Qualifiers',ncTour:'Tournament',ncGroup:'Group {g}',ncHosts:'Hosts',ncIC:'Inter-confederation',ncPO:'Play-offs',ncQuota:'Direct {d} · play-off {p}',ncR32:'Round of 32',ncThird:'Third-place match',ncKO:'Knockouts',ncQualL:'Nations Cup qualifier',ncZones:'Green: qualified · blue: play-off',ntFriendly:'Friendly',ntCaps:'Caps',ntGoals:'Int. goals',ntSeason:'This season',ntSquadL:'In squad',ntTitle:'National team',ntSe:'Intl: {n} apps, {g} goals',ntMine:'Your clients on international duty',ntRecent:'Latest internationals',dcLbl:'National cups',dcFmt:'{c} National Cup',dcRound:'Round {n}',dcByes:'{n} clubs have a bye in the first round',dcNext:'National cups start next season.',dcInfo:'Single-match knockout, penalties if level; the lower-division club hosts; final on neutral ground.',dcSf2:'Two-legged semi-finals.',
 notifs:'Notifications',allNotifs:'View All',newNotifsT:'new notification(s)',viewProfile:'Profile',
 ibUnread:'unread',ibAllRead:'All caught up',ibReadAll:'Mark all read',
 ibFAct:'Action',ibFPly:'Players',ibFFin:'Finance',ibFWorld:'World',
@@ -5935,12 +5935,14 @@ const PRIVACY_URL={tr:'https://xahke.github.io/privacy/pro-football-agent/tr.htm
 /* inline links inside news: player → profile, team → team page, league → standings, cup → bracket */
 function goLg(i){S.curLg=i;S.curCtry=LEAGUES[i].ctry;S.curCon=LEAGUES[i].con;S.ltab='table';S.vSe=undefined;navTo('league');}
 function goCup(i){S.curCon='cup';S.curCup=i;navTo('league');}
+function goCt(id){S.curCon='cup';S.curCup=5;CTSEL=id;navTo('league');}
 function goDc(c){S.curCon='cup';S.curCup=4;S.curDc=c;navTo('league');}
 const lkP=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('player',${id})">${n}</span>`:n;
 const lkT=(id,n)=>id!==undefined?`<span class="lnk" onclick="pushV('team',${id})">${n}</span>`:n;
 const lkL=(i,n)=>i!==undefined?`<span class="lnk" onclick="goLg(${i})">${n}</span>`:n;
 const lkC=(ci,n)=>ci!==undefined?`<span class="lnk" onclick="goCup(${ci})">${n}</span>`:n;
 const lkD=(c,n)=>c?`<span class="lnk" onclick="goDc('${c}')">${n}</span>`:n;
+const lkCt=(id,n)=>id?`<span class="lnk" onclick="goCt('${id}')">${n}</span>`:n;
 /* Rakip ajans adı → ajans sayfası. Çok eski kayıtlarda ajans olmayabilir; o zaman
    haber yine okunabilir olsun diye düz metne düşüyor. */
 const lkR=(ri,n)=>ri!==undefined&&n?`<span class="lnk" onclick="pushV('rival',${ri})">${n}</span>`:(n||'');
@@ -5968,6 +5970,9 @@ ntCall:p=>`${tx(NATNAME[p.nat])} milli takımı: ${lkP(p.pid,p.n)} kadroya çağ
 ntCall1:p=>`${tx(NATNAME[p.nat])} milli takımı: ${lkP(p.pid,p.n)} ilk kez kadroda!`,
 ncIn:p=>`${tx(NATNAME[p.nat])}, Milletler Kupası'na katılmayı garantiledi!`,
 ncOut:p=>`${tx(NATNAME[p.nat])}, Milletler Kupası'na katılamadı.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: ${tx(NATNAME[p.nat])} şampiyon oldu!`,
+ctIn:p=>`${tx(NATNAME[p.nat])}, ${ctName(p.ct)}'na katılmayı garantiledi!`,
+ctOut:p=>`${tx(NATNAME[p.nat])}, ${ctName(p.ct)}'na katılamadı.`,
 wcWin:p=>`${lkC(3,t("wcLbl"))}'nı ${p.n} kazandı!`,
 promoted:p=>`${lkT(p.tid,p.c)} bir üst lige yükseldi — yeni adres: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Dünyaya yeni bir lig eklendi: ${lkL(p.li,lgName(p.li))}. Kulüpleri ve oyuncuları artık dünyada.`,
@@ -6013,6 +6018,9 @@ ntCall:p=>`${tx(NATNAME[p.nat])}: ${lkP(p.pid,p.n)} has been called up.`,
 ntCall1:p=>`${tx(NATNAME[p.nat])}: first call-up for ${lkP(p.pid,p.n)}!`,
 ncIn:p=>`${tx(NATNAME[p.nat])} have qualified for the ${t('wcLbl')}!`,
 ncOut:p=>`${tx(NATNAME[p.nat])} have failed to qualify for the ${t('wcLbl')}.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: ${tx(NATNAME[p.nat])} are champions!`,
+ctIn:p=>`${tx(NATNAME[p.nat])} have qualified for the ${ctName(p.ct)}!`,
+ctOut:p=>`${tx(NATNAME[p.nat])} have failed to qualify for the ${ctName(p.ct)}.`,
 wcWin:p=>`${p.n} win the ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} have been promoted — new home: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`A new league has joined the world: ${lkL(p.li,lgName(p.li))}. Its clubs and players are now part of it.`,
@@ -6097,7 +6105,7 @@ cupMd:'Jornada {n}',
 cupLegs:'Ida {a} · Vuelta {b}',
 cupPen:'pen.',
 cupZones:'1–8 octavos · 9–24 playoffs · 25–36 eliminados',
-cupWks:'semanas {a} y {b}',ncQual:'Clasificación',ncTour:'Torneo',ncGroup:'Grupo {g}',ncHosts:'Anfitriones',ncIC:'Repesca intercontinental',ncPO:'Repesca',ncQuota:'Directos {d} · repesca {p}',ncR32:'Dieciseisavos',ncThird:'Tercer puesto',ncKO:'Eliminatorias',ncQualL:'Clasificatorio',ncZones:'Verde: clasificado · azul: repesca',ntFriendly:'Amistoso',ntCaps:'Partidos',ntGoals:'Goles',ntSeason:'Esta temporada',ntSquadL:'Convocado',ntTitle:'Selección',ntSe:'Selección: {n} PJ, {g} goles',ntMine:'Tus representados convocados',ntRecent:'Últimos partidos de selecciones',dcLbl:'Copas nacionales',dcFmt:'{c} · Copa Nacional',dcRound:'Ronda {n}',dcByes:'{n} clubes quedan exentos de la primera ronda',dcNext:'Las copas nacionales empiezan la próxima temporada.',dcInfo:'Eliminatoria a partido único, penaltis si hay empate; juega en casa el club de categoría inferior; final en campo neutral.',dcSf2:'Semifinales a doble partido.',
+cupWks:'semanas {a} y {b}',ctLbl:'Continentales',ctFmt:'{c} · Torneo de Naciones',ctNext:'Próxima edición',ncQual:'Clasificación',ncTour:'Torneo',ncGroup:'Grupo {g}',ncHosts:'Anfitriones',ncIC:'Repesca intercontinental',ncPO:'Repesca',ncQuota:'Directos {d} · repesca {p}',ncR32:'Dieciseisavos',ncThird:'Tercer puesto',ncKO:'Eliminatorias',ncQualL:'Clasificatorio',ncZones:'Verde: clasificado · azul: repesca',ntFriendly:'Amistoso',ntCaps:'Partidos',ntGoals:'Goles',ntSeason:'Esta temporada',ntSquadL:'Convocado',ntTitle:'Selección',ntSe:'Selección: {n} PJ, {g} goles',ntMine:'Tus representados convocados',ntRecent:'Últimos partidos de selecciones',dcLbl:'Copas nacionales',dcFmt:'{c} · Copa Nacional',dcRound:'Ronda {n}',dcByes:'{n} clubes quedan exentos de la primera ronda',dcNext:'Las copas nacionales empiezan la próxima temporada.',dcInfo:'Eliminatoria a partido único, penaltis si hay empate; juega en casa el club de categoría inferior; final en campo neutral.',dcSf2:'Semifinales a doble partido.',
 notifs:'Notificaciones',allNotifs:'Ver todas',newNotifsT:'notificación(es) nueva(s)',viewProfile:'Perfil',
 ibUnread:'sin leer',ibAllRead:'Todo al día',ibReadAll:'Marcar todo como leído',
 ibFAct:'Acción',ibFPly:'Jugadores',ibFFin:'Finanzas',ibFWorld:'Mundo',
@@ -6372,6 +6380,9 @@ ntCall:p=>`Selección (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} ha sido convoca
 ntCall1:p=>`Selección (${tx(NATNAME[p.nat])}): ¡primera convocatoria para ${lkP(p.pid,p.n)}!`,
 ncIn:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} consigue la clasificación.`,
 ncOut:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} se queda sin billete.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: ¡título para ${tx(NATNAME[p.nat])}!`,
+ctIn:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} consigue la clasificación.`,
+ctOut:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} se queda sin billete.`,
 wcWin:p=>`¡${p.n} gana la ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`¡${lkT(p.tid,p.c)} asciende! Nueva casa: ${lkL(p.li,lgName(p.li))}.`,
 newLg:p=>`Se ha sumado una nueva liga al mundo: ${lkL(p.li,lgName(p.li))}. Sus clubes y jugadores ya forman parte de él.`,
@@ -6455,7 +6466,7 @@ cupMd:'Rodada {n}',
 cupLegs:'Ida {a} · Volta {b}',
 cupPen:'pên.',
 cupZones:'1–8 oitavas · 9–24 playoffs · 25–36 eliminados',
-cupWks:'semanas {a} e {b}',ncQual:'Eliminatórias',ncTour:'Torneio',ncGroup:'Grupo {g}',ncHosts:'Sedes',ncIC:'Repescagem intercontinental',ncPO:'Repescagem',ncQuota:'Diretas {d} · repescagem {p}',ncR32:'16 avos de final',ncThird:'Disputa do 3º lugar',ncKO:'Mata-mata',ncQualL:'Eliminatória',ncZones:'Verde: classificado · azul: repescagem',ntFriendly:'Amistoso',ntCaps:'Jogos',ntGoals:'Gols',ntSeason:'Nesta temporada',ntSquadL:'Convocado',ntTitle:'Seleção',ntSe:'Seleção: {n} jogos, {g} gols',ntMine:'Seus clientes convocados',ntRecent:'Últimos jogos de seleções',dcLbl:'Copas nacionais',dcFmt:'{c} · Copa Nacional',dcRound:'{n}ª fase',dcByes:'{n} clubes folgam na primeira fase',dcNext:'As copas nacionais começam na próxima temporada.',dcInfo:'Mata-mata em jogo único, pênaltis em caso de empate; o clube da divisão inferior joga em casa; final em campo neutro.',dcSf2:'Semifinais em ida e volta.',
+cupWks:'semanas {a} e {b}',ctLbl:'Continentais',ctFmt:'{c} · Torneio das Nações',ctNext:'Próxima edição',ncQual:'Eliminatórias',ncTour:'Torneio',ncGroup:'Grupo {g}',ncHosts:'Sedes',ncIC:'Repescagem intercontinental',ncPO:'Repescagem',ncQuota:'Diretas {d} · repescagem {p}',ncR32:'16 avos de final',ncThird:'Disputa do 3º lugar',ncKO:'Mata-mata',ncQualL:'Eliminatória',ncZones:'Verde: classificado · azul: repescagem',ntFriendly:'Amistoso',ntCaps:'Jogos',ntGoals:'Gols',ntSeason:'Nesta temporada',ntSquadL:'Convocado',ntTitle:'Seleção',ntSe:'Seleção: {n} jogos, {g} gols',ntMine:'Seus clientes convocados',ntRecent:'Últimos jogos de seleções',dcLbl:'Copas nacionais',dcFmt:'{c} · Copa Nacional',dcRound:'{n}ª fase',dcByes:'{n} clubes folgam na primeira fase',dcNext:'As copas nacionais começam na próxima temporada.',dcInfo:'Mata-mata em jogo único, pênaltis em caso de empate; o clube da divisão inferior joga em casa; final em campo neutro.',dcSf2:'Semifinais em ida e volta.',
 notifs:'Notificações',allNotifs:'Ver todas',newNotifsT:'notificação(ões) nova(s)',viewProfile:'Perfil',
 ibUnread:'não lidas',ibAllRead:'Tudo em dia',ibReadAll:'Marcar tudo como lido',
 ibFAct:'Ação',ibFPly:'Jogadores',ibFFin:'Finanças',ibFWorld:'Mundo',
@@ -6730,6 +6741,9 @@ ntCall:p=>`Seleção (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} foi convocado.`,
 ntCall1:p=>`Seleção (${tx(NATNAME[p.nat])}): primeira convocação para ${lkP(p.pid,p.n)}!`,
 ncIn:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} garante a vaga!`,
 ncOut:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} fica de fora.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: título para ${tx(NATNAME[p.nat])}!`,
+ctIn:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} garante a vaga!`,
+ctOut:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} fica de fora.`,
 wcWin:p=>`${p.n} vence a ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} subiu de divisão. Nova casa: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Uma nova liga entrou no mundo: ${lkL(p.li,lgName(p.li))}. Os clubes e jogadores dela já fazem parte dele.`,
@@ -6813,7 +6827,7 @@ cupMd:'{n}. Spieltag',
 cupLegs:'Hinspiel {a} · Rückspiel {b}',
 cupPen:'i. E.',
 cupZones:'1–8 Achtelfinale · 9–24 Play-offs · 25–36 raus',
-cupWks:'Wochen {a} und {b}',ncQual:'Qualifikation',ncTour:'Turnier',ncGroup:'Gruppe {g}',ncHosts:'Gastgeber',ncIC:'Interkontinentale Play-offs',ncPO:'Play-offs',ncQuota:'Direkt {d} · Play-offs {p}',ncR32:'Sechzehntelfinale',ncThird:'Spiel um Platz 3',ncKO:'K.-o.-Runden',ncQualL:'Qualifikationsspiel',ncZones:'Grün: qualifiziert · blau: Play-offs',ntFriendly:'Testspiel',ntCaps:'Länderspiele',ntGoals:'Tore',ntSeason:'Diese Saison',ntSquadL:'Im Kader',ntTitle:'Nationalteam',ntSe:'Nationalteam: {n} Spiele, {g} Tore',ntMine:'Deine Klienten im Nationalteam',ntRecent:'Letzte Länderspiele',dcLbl:'Nationale Pokale',dcFmt:'{c} · Nationalpokal',dcRound:'{n}. Runde',dcByes:'{n} Vereine haben in der ersten Runde ein Freilos',dcNext:'Die nationalen Pokale beginnen nächste Saison.',dcInfo:'K.-o.-Runden in einem Spiel, bei Gleichstand Elfmeterschießen; der klassentiefere Verein hat Heimrecht; Finale auf neutralem Platz.',dcSf2:'Halbfinale mit Hin- und Rückspiel.',
+cupWks:'Wochen {a} und {b}',ctLbl:'Kontinentalturniere',ctFmt:'{c} · Nationenturnier',ctNext:'Nächste Ausgabe',ncQual:'Qualifikation',ncTour:'Turnier',ncGroup:'Gruppe {g}',ncHosts:'Gastgeber',ncIC:'Interkontinentale Play-offs',ncPO:'Play-offs',ncQuota:'Direkt {d} · Play-offs {p}',ncR32:'Sechzehntelfinale',ncThird:'Spiel um Platz 3',ncKO:'K.-o.-Runden',ncQualL:'Qualifikationsspiel',ncZones:'Grün: qualifiziert · blau: Play-offs',ntFriendly:'Testspiel',ntCaps:'Länderspiele',ntGoals:'Tore',ntSeason:'Diese Saison',ntSquadL:'Im Kader',ntTitle:'Nationalteam',ntSe:'Nationalteam: {n} Spiele, {g} Tore',ntMine:'Deine Klienten im Nationalteam',ntRecent:'Letzte Länderspiele',dcLbl:'Nationale Pokale',dcFmt:'{c} · Nationalpokal',dcRound:'{n}. Runde',dcByes:'{n} Vereine haben in der ersten Runde ein Freilos',dcNext:'Die nationalen Pokale beginnen nächste Saison.',dcInfo:'K.-o.-Runden in einem Spiel, bei Gleichstand Elfmeterschießen; der klassentiefere Verein hat Heimrecht; Finale auf neutralem Platz.',dcSf2:'Halbfinale mit Hin- und Rückspiel.',
 notifs:'Benachrichtigungen',allNotifs:'Alle ansehen',newNotifsT:'neue Benachrichtigung(en)',viewProfile:'Profil',
 ibUnread:'ungelesen',ibAllRead:'Alles gelesen',ibReadAll:'Alle als gelesen markieren',
 ibFAct:'Aktion',ibFPly:'Spieler',ibFFin:'Finanzen',ibFWorld:'Welt',
@@ -7088,6 +7102,9 @@ ntCall:p=>`Nationalteam (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} wurde nominie
 ntCall1:p=>`Nationalteam (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} erstmals nominiert!`,
 ncIn:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} hat sich qualifiziert!`,
 ncOut:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} hat die Qualifikation verpasst.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: ${tx(NATNAME[p.nat])} holt den Titel!`,
+ctIn:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} hat sich qualifiziert!`,
+ctOut:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} hat die Qualifikation verpasst.`,
 wcWin:p=>`${p.n} gewinnt den ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} steigt auf — neue Heimat: ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Eine neue Liga ist dazugekommen: ${lkL(p.li,lgName(p.li))}. Ihre Vereine und Spieler gehören jetzt zur Welt.`,
@@ -7174,7 +7191,7 @@ cupMd:'{n}e journée',
 cupLegs:'Aller {a} · Retour {b}',
 cupPen:'t.a.b.',
 cupZones:'1–8 huitièmes · 9–24 barrages · 25–36 éliminés',
-cupWks:'semaines {a} et {b}',ncQual:'Qualifications',ncTour:'Tournoi',ncGroup:'Groupe {g}',ncHosts:'Hôtes',ncIC:'Barrage intercontinental',ncPO:'Barrages',ncQuota:'Directes {d} · barrages {p}',ncR32:'Seizièmes de finale',ncThird:'Match pour la 3e place',ncKO:'Phase finale',ncQualL:'Match qualificatif',ncZones:'Vert : qualifié · bleu : barrages',ntFriendly:'Match amical',ntCaps:'Sélections',ntGoals:'Buts',ntSeason:'Cette saison',ntSquadL:'Convoqué',ntTitle:'Sélection',ntSe:'Sélection : {n} matchs, {g} buts',ntMine:'Tes joueurs en sélection',ntRecent:'Derniers matchs internationaux',dcLbl:'Coupes nationales',dcFmt:'{c} · Coupe nationale',dcRound:'{n}e tour',dcByes:'{n} clubs sont exemptés du premier tour',dcNext:'Les coupes nationales commencent la saison prochaine.',dcInfo:'Élimination directe sur un match, tirs au but en cas d’égalité ; le club de division inférieure reçoit ; finale sur terrain neutre.',dcSf2:'Demi-finales en matchs aller-retour.',
+cupWks:'semaines {a} et {b}',ctLbl:'Tournois continentaux',ctFmt:'{c} · Tournoi des nations',ctNext:'Prochaine édition',ncQual:'Qualifications',ncTour:'Tournoi',ncGroup:'Groupe {g}',ncHosts:'Hôtes',ncIC:'Barrage intercontinental',ncPO:'Barrages',ncQuota:'Directes {d} · barrages {p}',ncR32:'Seizièmes de finale',ncThird:'Match pour la 3e place',ncKO:'Phase finale',ncQualL:'Match qualificatif',ncZones:'Vert : qualifié · bleu : barrages',ntFriendly:'Match amical',ntCaps:'Sélections',ntGoals:'Buts',ntSeason:'Cette saison',ntSquadL:'Convoqué',ntTitle:'Sélection',ntSe:'Sélection : {n} matchs, {g} buts',ntMine:'Tes joueurs en sélection',ntRecent:'Derniers matchs internationaux',dcLbl:'Coupes nationales',dcFmt:'{c} · Coupe nationale',dcRound:'{n}e tour',dcByes:'{n} clubs sont exemptés du premier tour',dcNext:'Les coupes nationales commencent la saison prochaine.',dcInfo:'Élimination directe sur un match, tirs au but en cas d’égalité ; le club de division inférieure reçoit ; finale sur terrain neutre.',dcSf2:'Demi-finales en matchs aller-retour.',
 notifs:"Notifications",allNotifs:"Tout voir",newNotifsT:"nouvelle(s) notification(s)",viewProfile:"Profil",
 ibUnread:"non lus",ibAllRead:"Tout est lu",ibReadAll:"Tout marquer comme lu",
 ibFAct:"Action",ibFPly:"Joueurs",ibFFin:"Finances",ibFWorld:"Monde",
@@ -7449,6 +7466,9 @@ ntCall:p=>`Sélection (${tx(NATNAME[p.nat])}) : ${lkP(p.pid,p.n)} est convoqu�
 ntCall1:p=>`Sélection (${tx(NATNAME[p.nat])}) : première convocation pour ${lkP(p.pid,p.n)} !`,
 ncIn:p=>`${t('wcLbl')} : billet obtenu pour ${tx(NATNAME[p.nat])} !`,
 ncOut:p=>`${t('wcLbl')} : ${tx(NATNAME[p.nat])} ne se qualifie pas.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))} : titre pour ${tx(NATNAME[p.nat])} !`,
+ctIn:p=>`${ctName(p.ct)} : billet obtenu pour ${tx(NATNAME[p.nat])} !`,
+ctOut:p=>`${ctName(p.ct)} : ${tx(NATNAME[p.nat])} ne se qualifie pas.`,
 wcWin:p=>`${p.n} remporte la ${lkC(3,t("wcLbl"))} !`,
 promoted:p=>`${lkT(p.tid,p.c)} est promu : nouvelle maison, ${lkL(p.li,lgName(p.li))} !`,
 newLg:p=>`Une nouvelle ligue rejoint le monde : ${lkL(p.li,lgName(p.li))}. Ses clubs et ses joueurs en font désormais partie.`,
@@ -7534,7 +7554,7 @@ cupMd:'{n}ª giornata',
 cupLegs:'Andata {a} · Ritorno {b}',
 cupPen:'rig.',
 cupZones:'1–8 ottavi · 9–24 spareggi · 25–36 eliminati',
-cupWks:'settimane {a} e {b}',ncQual:'Qualificazioni',ncTour:'Torneo',ncGroup:'Girone {g}',ncHosts:'Paesi ospitanti',ncIC:'Spareggio intercontinentale',ncPO:'Spareggi',ncQuota:'Dirette {d} · spareggi {p}',ncR32:'Sedicesimi',ncThird:'Finale 3º posto',ncKO:'Fase a eliminazione',ncQualL:'Qualificazione',ncZones:'Verde: qualificata · blu: spareggi',ntFriendly:'Amichevole',ntCaps:'Presenze',ntGoals:'Gol',ntSeason:'Questa stagione',ntSquadL:'Convocato',ntTitle:'Nazionale',ntSe:'Nazionale: {n} presenze, {g} gol',ntMine:'I tuoi assistiti in nazionale',ntRecent:'Ultime partite delle nazionali',dcLbl:'Coppe nazionali',dcFmt:'{c} · Coppa Nazionale',dcRound:'{n}° turno',dcByes:'{n} club saltano il primo turno',dcNext:'Le coppe nazionali iniziano la prossima stagione.',dcInfo:'Eliminazione diretta in gara unica, rigori in caso di parità; gioca in casa il club di categoria inferiore; finale in campo neutro.',dcSf2:'Semifinali con andata e ritorno.',
+cupWks:'settimane {a} e {b}',ctLbl:'Tornei continentali',ctFmt:'{c} · Torneo delle Nazioni',ctNext:'Prossima edizione',ncQual:'Qualificazioni',ncTour:'Torneo',ncGroup:'Girone {g}',ncHosts:'Paesi ospitanti',ncIC:'Spareggio intercontinentale',ncPO:'Spareggi',ncQuota:'Dirette {d} · spareggi {p}',ncR32:'Sedicesimi',ncThird:'Finale 3º posto',ncKO:'Fase a eliminazione',ncQualL:'Qualificazione',ncZones:'Verde: qualificata · blu: spareggi',ntFriendly:'Amichevole',ntCaps:'Presenze',ntGoals:'Gol',ntSeason:'Questa stagione',ntSquadL:'Convocato',ntTitle:'Nazionale',ntSe:'Nazionale: {n} presenze, {g} gol',ntMine:'I tuoi assistiti in nazionale',ntRecent:'Ultime partite delle nazionali',dcLbl:'Coppe nazionali',dcFmt:'{c} · Coppa Nazionale',dcRound:'{n}° turno',dcByes:'{n} club saltano il primo turno',dcNext:'Le coppe nazionali iniziano la prossima stagione.',dcInfo:'Eliminazione diretta in gara unica, rigori in caso di parità; gioca in casa il club di categoria inferiore; finale in campo neutro.',dcSf2:'Semifinali con andata e ritorno.',
 notifs:"Notifiche",allNotifs:"Vedi tutte",newNotifsT:"nuova/e notifica/he",viewProfile:"Profilo",
 ibUnread:"da leggere",ibAllRead:"Tutto letto",ibReadAll:"Segna tutto come letto",
 ibFAct:"Azione",ibFPly:"Giocatori",ibFFin:"Finanze",ibFWorld:"Mondo",
@@ -7809,6 +7829,9 @@ ntCall:p=>`Nazionale (${tx(NATNAME[p.nat])}): ${lkP(p.pid,p.n)} è stato convoca
 ntCall1:p=>`Nazionale (${tx(NATNAME[p.nat])}): prima convocazione per ${lkP(p.pid,p.n)}!`,
 ncIn:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} si qualifica!`,
 ncOut:p=>`${t('wcLbl')}: ${tx(NATNAME[p.nat])} non si qualifica.`,
+ctWin:p=>`${lkCt(p.ct,ctName(p.ct))}: titolo per ${tx(NATNAME[p.nat])}!`,
+ctIn:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} si qualifica!`,
+ctOut:p=>`${ctName(p.ct)}: ${tx(NATNAME[p.nat])} non si qualifica.`,
 wcWin:p=>`${p.n} vince la ${lkC(3,t("wcLbl"))}!`,
 promoted:p=>`${lkT(p.tid,p.c)} è promosso: nuova casa, ${lkL(p.li,lgName(p.li))}!`,
 newLg:p=>`Un nuovo campionato entra nel mondo: ${lkL(p.li,lgName(p.li))}. I suoi club e i suoi giocatori ne fanno ormai parte.`,
@@ -15618,42 +15641,84 @@ const NC_HOSTS=[['us','mx','ca'],['es','pt','ma','uy','ar','py'],['sa']];
    22 (Avrupa play-off'u, kıtalar arası yarı final), 24 (kıtalar arası final). */
 const NC_QMD=[[-1,18],[-1,22],[-1,24],[0,3],[0,5],[0,7],[0,11],[0,14],[0,18]];
 const NC_POW=22,NC_ICF=24;
-/* Yaz haftaları: üç grup maç günü, son 32, son 16, çeyrek, yarı final, final
-   (üçüncülük maçı finalle aynı hafta). */
-const NC_SUMMER=8;
+
+/* ===== KITA TURNUVALARI =====
+   Gerçek takvim: Milletler Kupası'ndan bir yıl sonra Asya ve Kuzey-Orta Amerika
+   (2027 gibi), iki yıl sonra Avrupa, Güney Amerika ve Afrika (2028 gibi). Biçimler:
+   Avrupa gerçek 24 takım (6 grup, ilk iki + en iyi 4 üçüncü), elemeli; Güney
+   Amerika 2024'teki gibi 16 (10 + Kuzey Amerika'nın en güçlü 6 davetlisi); Afrika
+   oyundaki 16 ülke; Asya 12, Kuzey Amerika 8 — bu üçünde oyundaki ülke sayısı gerçek
+   kontenjanın altında, eleme yok, en güçlüler katılıyor.
+   g: grup sayısı (dörder), top: gruptan doğrudan çıkan, th: en iyi üçüncülerden
+   çıkan, t3: üçüncülük maçı. Milletler Kupası da aynı motoru kullanıyor (wc). */
+const CT_FMT={
+  wc:{g:12,top:2,th:8,t3:true},
+  eu:{g:6,top:2,th:4,t3:false},
+  sam:{g:4,top:2,th:0,t3:true},
+  af:{g:4,top:2,th:0,t3:true},
+  as:{g:3,top:2,th:2,t3:false},
+  nam:{g:2,top:2,th:0,t3:false}};
+/* S.season % NC_EVERY → o yazın turnuvaları. 3: yaz yok (Uluslar Ligi sonra). */
+const CT_SCHED={0:['wc'],1:['as','nam'],2:['eu','sam','af']};
+const CT_IDS=['eu','sam','af','as','nam'];
+/* Avrupa ev sahipleri: 2028 Birleşik Krallık ve İrlanda (oyunda İngiltere,
+   İskoçya, İrlanda), 2032 İtalya ve Türkiye; sonra döngü. Doğrudan katılıyorlar. */
+const EU_HOSTS=[['en','sct','ie'],['it','tr']];
+const EU_N=24,EU_UPO=3;
 
 function ncSeason(){return !!S&&S.season%NC_EVERY===0;}
-/* Elemesi ya da kendisi bu sezon oynanan turnuvanın sezonu; yoksa 0. */
+/* Elemesi ya da kendisi bu sezon oynanan Milletler Kupası'nın sezonu; yoksa 0. */
 function ncEd(){
   if(!S)return 0;
   const r=S.season%NC_EVERY;
   return r===0?S.season:r===NC_EVERY-1?S.season+1:0;
 }
+/* Avrupa turnuvasının: Milletler Kupası'ndan iki sezon sonra, elemeler bir önceki sezon. */
+function ecEd(){
+  if(!S)return 0;
+  const r=S.season%NC_EVERY;
+  return r===2?S.season:r===1?S.season+1:0;
+}
 function ncHosts(ed){return NC_HOSTS[(Math.max(1,ed/NC_EVERY)-1)%NC_HOSTS.length].slice();}
+function ecHosts(ed){return EU_HOSTS[Math.max(0,Math.floor((ed-2)/NC_EVERY))%EU_HOSTS.length].slice();}
 /* Konfederasyon: seçim ekranının kıtası; tek fark Avustralya (Asya federasyonunda). */
 function ncFed(n){return n==='au'?'as':NATCON[n];}
+function ctKeys(n){return n>=32?['r32','r16','qf','sf','f']:n>=16?['r16','qf','sf','f']:n>=8?['qf','sf','f']:['sf','f'];}
+function ctSize(id){const f=CT_FMT[id];return f.g*f.top+f.th;}
+function ctWeeks(id){return 3+ctKeys(ctSize(id)).length;}
+/* Turnuvanın adı: kıta + kalıp — gerçek turnuva markalarına yaklaşmıyor. */
+function ctName(id){
+  if(id==='wc')return t('wcLbl');
+  const x=NCONTS.find(k=>k[0]===id);
+  return fmtStr(t('ctFmt'),{c:x?tx(x[1]):id});
+}
 function summerWeeks(){
-  if(!ncSeason())return 0;
+  if(!S)return 0;
   /* Önceki sürümün 16 takımlı yaz turnuvası yarıda kaldıysa onun dört haftası. */
-  if(S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w)return 4;
-  return NC_SUMMER;
+  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w)return 4;
+  return Math.max(0,...(CT_SCHED[S.season%NC_EVERY]||[]).map(ctWeeks));
 }
 function seasonLen(){return totalWeeks()+summerWeeks();}
 /* Ekranda gösterilen hafta: yaz haftalarında da gerçek hafta numarası. */
 function shownWeek(){return Math.min(S.week,seasonLen());}
 function ncStrMap(ix){const m={};Object.keys(S.nt.sq).forEach(n=>{m[n]=ntSide(n,ix).str;});return m;}
 /* Haber yalnız menajerin kendi ülkesi ve müşterilerinin ülkeleri için, ülke başına bir kez. */
-function ncNews(n,ok){
-  const Q=S.ncq;if(!Q||Q.nw[n])return;
+function ncNews(Q,n,ok){
+  if(!Q||Q.nw[n])return;
   const pri=new Set(S.clients.map(id=>(byId(id)||{}).nat).concat(S.agent?[S.agent.nat]:[]));
   if(!pri.has(n))return;
   Q.nw[n]=1;
-  pushNews(ok?'ncIn':'ncOut',{nat:n,se:Q.ed},ok?'good':'bad');
+  if(Q.kind==='eu')pushNews(ok?'ctIn':'ctOut',{nat:n,ct:'eu'},ok?'good':'bad');
+  else pushNews(ok?'ncIn':'ncOut',{nat:n,se:Q.ed},ok?'good':'bad');
 }
 /* Bir milli maç ve kaydı: S.nt.m son milli maç gününü ekranda gösteriyor. */
 function ntLog(m,cp){(S.nt.m=S.nt.m||[]).push({w:S.week,h:m.h,a:m.a,hg:m.hg,ag:m.ag,cp});}
 
-/* ===== ELEMELER ===== */
+/* ===== ELEMELER =====
+   İki eleme var: Milletler Kupası'nınki (S.ncq, bütün konfederasyonlar, kıtalar arası
+   play-off'lu) ve Avrupa turnuvasınınki (S.ecq, yalnız Avrupa). Biçimleri aynı;
+   konfederasyon kaydı kendi play-off sayısını (up) ve kıtalar arası yerini (icn)
+   taşıyor. */
 /* Çember yöntemiyle lig fikstürü; dbl ise rövanşlar arkadan. */
 function ncRR(t,dbl){
   const ids=t.slice();if(ids.length%2)ids.push(null);
@@ -15683,20 +15748,39 @@ function ncqGroups(t,single){
   });
   return G;
 }
+/* Bir konfederasyonun eleme kaydı: t adaylar (güç sırasıyla), D doğrudan + play-off yeri. */
+function ncqConf(t,D,up,icn,single){
+  const C={D,up:Math.min(up,D),icn,g:[],d:[],po:[],ic:[]};
+  if(t.length<=D)C.d=t.slice();
+  else C.g=ncqGroups(t,single);
+  return C;
+}
 function ncqDraw(ed,ix){
   const hosts=ncHosts(ed),str=ncStrMap(ix);
-  const Q={ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  const Q={kind:'wc',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
   S.ncq=Q;
   Object.keys(NC_QUOTA).forEach(c=>{
     const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)===c&&!NT_BAN.includes(n)&&!hosts.includes(n))
       .sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
     const D=Math.max(0,NC_QUOTA[c]-hosts.filter(h=>ncFed(h)===c).length);
-    const C={D,g:[],d:[],po:[],ic:[]};
-    if(t.length<=D){C.d=t.slice();Q.q.push(...t);}
-    else C.g=ncqGroups(t,c==='sam');
+    const C=ncqConf(t,D,NC_UPO[c]||0,NC_IC[c]||0,c==='sam');
+    Q.q.push(...C.d);
     Q.c[c]=C;
   });
-  Q.q.forEach(n=>ncNews(n,true));
+  Q.q.forEach(n=>ncNews(Q,n,true));
+}
+/* Avrupa turnuvası elemesi: ev sahipleri doğrudan, kalan yerlerin üçü play-off'tan
+   (gerçekte Uluslar Ligi yolları). */
+function ecqDraw(ed,ix){
+  const hosts=ecHosts(ed),str=ncStrMap(ix);
+  const Q={kind:'eu',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  S.ecq=Q;
+  const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)==='eu'&&!NT_BAN.includes(n)&&!hosts.includes(n))
+    .sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
+  const C=ncqConf(t,Math.max(0,EU_N-Q.q.length),EU_UPO,0,false);
+  Q.q.push(...C.d);
+  Q.c.eu=C;
+  Q.q.forEach(n=>ncNews(Q,n,true));
 }
 function ncTable(t,fx){
   const R={};t.forEach(n=>{R[n]={n,pl:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};});
@@ -15719,26 +15803,28 @@ function ncLevels(tabs){
   }
   return L;
 }
-/* Grup aşaması bitti: doğrudan katılanlar, Avrupa play-off'u, kıtalar arası adaylar. */
-function ncqRank(){
-  const Q=S.ncq;
+/* Grup aşaması bitti: doğrudan katılanlar, konfederasyon play-off'u, kıtalar arası
+   adaylar. up/icn eski kayıtlarda (bu alanlar gelmeden çekilmiş elemeler) yok:
+   o zaman Milletler Kupası değerleri. */
+function ncqRank(Q){
   Object.keys(Q.c).forEach(c=>{
     const C=Q.c[c];if(!C.g.length)return;
     const L=ncLevels(C.g.map(G=>ncTable(G.t,G.fx)));
-    const up=Math.min(NC_UPO[c]||0,C.D);
+    const up=C.up!==undefined?C.up:Math.min(NC_UPO[c]||0,C.D);
+    const icn=C.icn!==undefined?C.icn:(NC_IC[c]||0);
     C.d=L.slice(0,C.D-up);
     const rest=L.slice(C.D-up);
     if(up){
       const P=rest.slice(0,2*up);
       for(let i=0;i<up&&P[2*up-1-i];i++)C.po.push(cupTie(P[i],P[2*up-1-i],true));
-    } else C.ic=rest.slice(0,NC_IC[c]||0);
+    } else C.ic=rest.slice(0,icn);
     Q.q.push(...C.d);
-    C.d.forEach(n=>ncNews(n,true));
+    C.d.forEach(n=>ncNews(Q,n,true));
     const alive=new Set(C.d.concat(C.ic,C.po.flatMap(t=>[t.s,t.u])));
-    L.forEach(n=>{if(!alive.has(n))ncNews(n,false);});
+    L.forEach(n=>{if(!alive.has(n))ncNews(Q,n,false);});
   });
 }
-/* Tek maçlık eleme maçı: s önde; ev sahibi değilse tarafsız saha. */
+/* Tek maçlık eleme maçı: s önde; neutral değilse s ev sahibi. */
 function ncTie(ti,cp,ix,neutral){
   const {gm,ns}=ntPlay(ti.m[0],cp,ix,neutral);
   ntLog(ti.m[0],cp);
@@ -15748,8 +15834,8 @@ function ncTie(ti,cp,ix,neutral){
 /* Kıtalar arası play-off: konfederasyonların adayları; Okyanusya'nın yeri gibi boş
    kalan yerler katılan konfederasyonların en güçlü elenenlerine. En güçlü iki takım
    doğrudan finalde (gerçek kural), diğer dördü yarı finalde; tarafsız saha. */
-function ncIcStart(ix){
-  const Q=S.ncq,str=ncStrMap(ix);
+function ncIcStart(Q,ix){
+  const str=ncStrMap(ix);
   const t=[].concat(...Object.values(Q.c).map(C=>C.ic));
   const out=new Set(Q.q.concat(t,[].concat(...Object.values(Q.c).map(C=>C.po.flatMap(x=>[x.s,x.u])))));
   Object.keys(S.nt.sq).filter(n=>NC_IC[ncFed(n)]&&!NT_BAN.includes(n)&&!out.has(n)&&ncFed(n)!=='oc')
@@ -15758,51 +15844,61 @@ function ncIcStart(ix){
   Q.ic={t,sf:[],f:[]};
   if(t.length>=6)Q.ic.sf=[cupTie(t[2],t[5],true),cupTie(t[3],t[4],true)];
 }
-function ncqWeek(ed,busy,ix){
+/* Bir milli maç gününde bir elemenin işi. cp 'n:q' (Milletler Kupası) ya da 'n:eq'. */
+function ncqWeek(Q,busy,ix){
+  const ed=Q.ed,cp=Q.kind==='eu'?'n:eq':'n:q';
   const md=NC_QMD.findIndex(([d,wk])=>S.season===ed+d&&S.week===wk);
-  if(md===0&&(!S.ncq||S.ncq.ed!==ed))ncqDraw(ed,ix);
-  const Q=S.ncq;
-  /* Elemeleri kaçırmış kayıt (eski sürüm, ya da çekiliş haftasından sonra açılmış):
-     turnuva yazın kontenjan ve güçle doluyor (ncStart). */
-  if(!Q||Q.ed!==ed)return;
   if(md>=0){
     Object.values(Q.c).forEach(C=>C.g.forEach(G=>G.fx.forEach(m=>{
       if(m.md!==md||m.hg!==null)return;
-      ntPlay(m,'n:q',ix,false);ntLog(m,'n:q');busy.add(m.h);busy.add(m.a);
+      ntPlay(m,cp,ix,false);ntLog(m,cp);busy.add(m.h);busy.add(m.a);
     })));
-    if(md===NC_QMD.length-1)ncqRank();
+    if(md===NC_QMD.length-1)ncqRank(Q);
   }
   if(S.season!==ed)return;
   if(S.week===NC_POW){
     Object.values(Q.c).forEach(C=>C.po.forEach(ti=>{
       if(ti.w)return;
-      ncTie(ti,'n:q',ix,false);busy.add(ti.s);busy.add(ti.u);
-      Q.q.push(ti.w);ncNews(ti.w,true);ncNews(cupLoser(ti),false);
+      ncTie(ti,cp,ix,false);busy.add(ti.s);busy.add(ti.u);
+      Q.q.push(ti.w);ncNews(Q,ti.w,true);ncNews(Q,cupLoser(ti),false);
     }));
-    ncIcStart(ix);
-    Q.ic.sf.forEach(ti=>{ncTie(ti,'n:q',ix,true);busy.add(ti.s);busy.add(ti.u);ncNews(cupLoser(ti),false);});
+    if(Q.kind!=='eu'){
+      ncIcStart(Q,ix);
+      Q.ic.sf.forEach(ti=>{ncTie(ti,cp,ix,true);busy.add(ti.s);busy.add(ti.u);ncNews(Q,cupLoser(ti),false);});
+    }
   }
   if(S.week===NC_ICF&&Q.ic&&Q.ic.sf.length===2&&!Q.ic.f.length){
     const t=Q.ic.t;
     Q.ic.f=[cupTie(t[0],Q.ic.sf[1].w,true),cupTie(t[1],Q.ic.sf[0].w,true)];
     Q.ic.f.forEach(ti=>{
-      ncTie(ti,'n:q',ix,true);busy.add(ti.s);busy.add(ti.u);
-      Q.q.push(ti.w);ncNews(ti.w,true);ncNews(cupLoser(ti),false);
+      ncTie(ti,cp,ix,true);busy.add(ti.s);busy.add(ti.u);
+      Q.q.push(ti.w);ncNews(Q,ti.w,true);ncNews(Q,cupLoser(ti),false);
     });
   }
 }
+/* Elemenin işi bu hafta: çekiliş ilk eleme gününde; kaçırılmışsa (eski kayıt ya da
+   çekiliş haftasından sonra açılmış) turnuva yazın kontenjan ve güçle doluyor. */
+function ncqTick(key,ed,draw,busy,ix){
+  if(!ed)return;
+  const [d0,w0]=NC_QMD[0];
+  if(S.season===ed+d0&&S.week===w0&&(!S[key]||S[key].ed!==ed))draw(ed,ix);
+  const Q=S[key];
+  if(Q&&Q.ed===ed)ncqWeek(Q,busy,ix);
+}
 
-/* ===== TURNUVA: 12 GRUP, SON 32 ===== */
-/* Bir grupta bir konfederasyondan en fazla bir takım, Avrupa'dan en fazla iki
-   (gerçek kura kuralı). Torba torba, geri izlemeyle; tutmazsa yeniden. */
-function ncGroupDraw(pots){
-  const can=(G,n)=>{const c=ncFed(n);return G.filter(x=>ncFed(x)===c).length<(c==='eu'?2:1);};
+/* ===== TURNUVA MOTORU: GRUPLAR VE ELEME AĞACI =====
+   Milletler Kupası ve kıta turnuvaları aynı motordan: dörder takımlı gruplar, üç maç
+   günü, sonra gruptan çıkanlarla seri başlı eleme ağacı. Milletler Kupası'nda kura
+   konfederasyon kuralıyla (bir grupta bir konfederasyondan en fazla bir, Avrupa'dan
+   iki); kıta turnuvalarında herkes aynı konfederasyondan, kural yok. */
+function ncGroupDraw(pots,g,rule){
+  const can=(G,n)=>{if(!rule)return true;const c=ncFed(n);return G.filter(x=>ncFed(x)===c).length<(c==='eu'?2:1);};
   for(let tr=0;tr<300;tr++){
-    const G=Array.from({length:12},()=>[]);
+    const G=Array.from({length:g},()=>[]);
     let ok=true;
     for(const pot of pots){
       const P=cupShuffle(pot.slice());
-      const lvl=Math.min(...G.map(g=>g.length));
+      const lvl=Math.min(...G.map(x=>x.length));
       const rec=j=>{
         if(j===P.length)return true;
         for(const i of cupShuffle(G.map((_,k)=>k))){
@@ -15816,8 +15912,8 @@ function ncGroupDraw(pots){
     if(ok)return G;
   }
   /* Kural tutmuyorsa (hiç görülmedi) torbalar sırayla — sezon durmasın. */
-  const G=Array.from({length:12},()=>[]);
-  pots.forEach(pot=>pot.forEach((n,i)=>G[i%12].push(n)));
+  const G=Array.from({length:g},()=>[]);
+  pots.forEach(pot=>pot.forEach((n,i)=>G[i%g].push(n)));
   return G;
 }
 /* Ev sahibi kendi sahasında oynuyor (hafif avantaj, goalPair 'h'); diğer maçlar
@@ -15825,6 +15921,18 @@ function ncGroupDraw(pots){
 function ncHostSide(m,hosts){
   if(hosts.includes(m.a)&&!hosts.includes(m.h)){const x=m.h;m.h=m.a;m.a=x;}
   return hosts.includes(m.h)&&!hosts.includes(m.a)?'h':true;
+}
+/* Turnuva kaydı: katılanlar ev sahipleri önde, sonra güç; dört torba; grup fikstürü. */
+function ctMake(id,q,hosts,str){
+  const f=CT_FMT[id];
+  const ord=hosts.filter(n=>q.includes(n)).concat(q.filter(n=>!hosts.includes(n)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1)));
+  const pots=[0,1,2,3].map(k=>ord.slice(k*f.g,k*f.g+f.g));
+  const G=ncGroupDraw(pots,f.g,id==='wc').map(t=>{
+    const fx=[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].filter(([x,y])=>t[x]&&t[y])
+      .map(([x,y],i)=>({md:Math.floor(i/2),h:t[x],a:t[y],hg:null,ag:null}));
+    return {t,fx};
+  });
+  return {v:3,id,se:S.season,hosts,g:G,ko:{},w:null,sc:{}};
 }
 function ncStart(){
   ntCallUp();
@@ -15841,77 +15949,106 @@ function ncStart(){
     });
     Object.keys(S.nt.sq).filter(free).sort((a,b)=>str[b]-str[a]).forEach(n=>{if(q.length<NC_N)q.push(n);});
   }
-  q=q.slice(0,NC_N);
-  const ord=hosts.filter(n=>q.includes(n)).concat(q.filter(n=>!hosts.includes(n)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1)));
-  const pots=[0,1,2,3].map(k=>ord.slice(k*12,k*12+12));
-  const G=ncGroupDraw(pots).map(t=>{
-    const fx=[[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].map(([x,y],i)=>({md:Math.floor(i/2),h:t[x],a:t[y],hg:null,ag:null}));
-    return {t,fx};
-  });
-  S.wc={v:3,se:ed,hosts,g:G,ko:{},w:null,sc:{}};
+  S.wc=ctMake('wc',q.slice(0,NC_N),hosts,str);
 }
-/* Grup sonrası: 12 birinci, 12 ikinci ve en iyi 8 üçüncü; aynı sıradakiler puan,
-   averaj, golle. Son 32 eşleşmesi seri başı sırasıyla (1–32, 16–17 …) — gerçek
-   turnuvanın üçüncüler tablosu yerine — ve aynı gruptan iki takım ilk turda
+/* Kıta turnuvasının katılımcıları. Avrupa elemeden (kaçırılmışsa ev sahipleri ve
+   güç sırası); diğerleri o kıtanın en güçlüleri, Güney Amerika'ya Kuzey Amerika'nın
+   en güçlü altısı davetli. */
+function ctStart(id,str){
+  const n=CT_FMT[id].g*4;
+  const pool=c=>Object.keys(S.nt.sq).filter(x=>ncFed(x)===c&&!NT_BAN.includes(x)).sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
+  let q=[],hosts=[];
+  if(id==='eu'){
+    const Q=S.ecq&&S.ecq.ed===S.season?S.ecq:null;
+    hosts=Q?Q.hosts:ecHosts(S.season);
+    q=(Q?Q.q:[]).concat(hosts).filter((x,i,a)=>S.nt.sq[x]&&a.indexOf(x)===i);
+    pool('eu').forEach(x=>{if(q.length<n&&q.indexOf(x)<0)q.push(x);});
+  } else if(id==='sam'){
+    q=pool('sam').concat(pool('nam').slice(0,6));
+  } else q=pool(id);
+  q=q.slice(0,n);
+  (S.ct=S.ct||{})[id]=ctMake(id,q,hosts.filter(x=>q.includes(x)),str);
+}
+/* Grup sonrası: her gruptan top, sonra en iyi th üçüncü; aynı sıradakiler puan,
+   averaj, golle. Eleme ağacı seri başı sırasıyla (1–n, …) — Milletler Kupası'nda
+   gerçek turnuvanın üçüncüler tablosu yerine — ve aynı gruptan iki takım ilk turda
    karşılaşmasın diye komşu eşleşmeyle takas. */
 function ncSeedOrder(n){let o=[1];while(o.length<n){const m=o.length*2;o=o.flatMap(x=>[x,m+1-x]);}return o;}
-function ncR32(){
-  const W=S.wc,tabs=W.g.map(G=>ncTable(G.t,G.fx));
+function ctFmtOf(W){return CT_FMT[W.id||'wc'];}
+function ctBracket(W){
+  const f=ctFmtOf(W),tabs=W.g.map(G=>ncTable(G.t,G.fx));
   const grp={};W.g.forEach((G,i)=>G.t.forEach(n=>{grp[n]=i;}));
-  const lvl=pos=>tabs.map(x=>x[pos]).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||(a.n<b.n?-1:1)).map(r=>r.n);
-  const seeds=lvl(0).concat(lvl(1),lvl(2).slice(0,8));
-  const o=ncSeedOrder(32).map(k=>seeds[k-1]);
-  for(let pass=0;pass<4;pass++)for(let i=0;i<32;i+=2){
+  const lvl=pos=>tabs.map(x=>x[pos]).filter(Boolean).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||(a.n<b.n?-1:1)).map(r=>r.n);
+  let seeds=[];for(let p=0;p<f.top;p++)seeds=seeds.concat(lvl(p));
+  seeds=seeds.concat(lvl(f.top).slice(0,f.th));
+  const N=seeds.length,o=ncSeedOrder(N).map(k=>seeds[k-1]);
+  for(let pass=0;pass<4;pass++)for(let i=0;i<N;i+=2){
     if(grp[o[i]]!==grp[o[i+1]])continue;
-    for(let j=(i+2)%32;j!==i;j=(j+2)%32){
+    for(let j=(i+2)%N;j!==i;j=(j+2)%N){
       if(grp[o[j+1]]!==grp[o[i]]&&grp[o[i+1]]!==grp[o[j]]){const x=o[i+1];o[i+1]=o[j+1];o[j+1]=x;break;}
     }
   }
-  W.ko.r32=[];for(let i=0;i<32;i+=2)W.ko.r32.push(cupTie(o[i],o[i+1],true));
-  W.g.forEach((G,i)=>tabs[i].forEach((r,pos)=>{if(pos===3||(pos===2&&seeds.indexOf(r.n)<0))ncNews(r.n,false);}));
+  const k0=ctKeys(N)[0];
+  W.ko[k0]=[];for(let i=0;i+1<N;i+=2)W.ko[k0].push(cupTie(o[i],o[i+1],true));
+  if((W.id||'wc')==='wc'){
+    const Q=S.ncq&&S.ncq.ed===W.se?S.ncq:null;
+    const inKo=new Set(seeds);
+    W.g.forEach(G=>G.t.forEach(n=>{if(!inKo.has(n))ncNews(Q,n,false);}));
+  }
 }
-function ncKo(key,ix){
-  const W=S.wc,ties=W.ko[key];if(!ties)return;
+function ctCp(W){return (W.id||'wc')==='wc'?'n:wc':'n:c:'+W.id;}
+function ctKo(W,key,ix){
+  const ties=W.ko[key];if(!ties)return;
   ties.forEach(ti=>{
     if(ti.w)return;
-    const neutral=ncHostSide(ti.m[0],W.hosts);
-    const gm=ncTie(ti,'n:wc',ix,neutral);
+    const neutral=ncHostSide(ti.m[0],W.hosts||[]);
+    const gm=ncTie(ti,ctCp(W),ix,neutral);
     for(const id in gm)W.sc[id]=(W.sc[id]||0)+gm[id];
   });
 }
-const NC_KO=['r32','r16','qf','sf','f'];
-function ncSummer(ri){
-  const W=S.wc,ix=ntIndex();
+/* Yazın ri. haftası (0'dan): 0–2 grup maç günleri, sonra eleme turları. */
+function ctRound(W,ri,ix){
+  const f=ctFmtOf(W);
   if(ri<3){
     W.g.forEach(G=>G.fx.forEach(m=>{
       if(m.md!==ri||m.hg!==null)return;
-      const neutral=ncHostSide(m,W.hosts);
-      const {gm}=ntPlay(m,'n:wc',ix,neutral);ntLog(m,'n:wc');
+      const neutral=ncHostSide(m,W.hosts||[]);
+      const {gm}=ntPlay(m,ctCp(W),ix,neutral);ntLog(m,ctCp(W));
       for(const id in gm)W.sc[id]=(W.sc[id]||0)+gm[id];
     }));
-    if(ri===2)ncR32();
+    if(ri===2)ctBracket(W);
     return;
   }
-  const key=NC_KO[ri-3];if(!key)return;
-  ncKo(key,ix);
+  const ks=ctKeys(ctSize(W.id||'wc')),key=ks[ri-3];
+  if(!key||!W.ko[key])return;
+  ctKo(W,key,ix);
   if(key==='f'){
-    if(W.ko.t3)ncKo('t3',ix);
-    ncChampion(W.ko.f[0].w);
+    if(W.ko.t3)ctKo(W,'t3',ix);
+    ctChampion(W,W.ko.f[0].w);
     return;
   }
   const ties=W.ko[key],nx=[];
   for(let i=0;i+1<ties.length;i+=2)nx.push(cupTie(ties[i].w,ties[i+1].w,true));
-  W.ko[NC_KO[ri-2]]=nx;
-  if(key==='sf')W.ko.t3=[cupTie(cupLoser(ties[0]),cupLoser(ties[1]),true)];
+  W.ko[ks[ri-2]]=nx;
+  if(key==='sf'&&f.t3)W.ko.t3=[cupTie(cupLoser(ties[0]),cupLoser(ties[1]),true)];
 }
-function ncChampion(c){
-  const W=S.wc;W.w=c;
-  (S.wcHist=S.wcHist||[]).push({se:S.season,nat:c});
-  if(S.wcHist.length>20)S.wcHist.shift();
-  pushNews('wcWin',{n:NATS[c].c},'good');
-  /* Kupayı kaldıran kadroda müşterin varsa: büyük bir turnuva, büyük bir itibar. */
+function ctChampion(W,c){
+  W.w=c;
+  const id=W.id||'wc';
+  if(id==='wc'){
+    (S.wcHist=S.wcHist||[]).push({se:S.season,nat:c});
+    if(S.wcHist.length>20)S.wcHist.shift();
+    pushNews('wcWin',{n:NATS[c].c},'good');
+  } else {
+    S.ctHist=S.ctHist||{};
+    const h=S.ctHist[id]=S.ctHist[id]||[];
+    h.push({se:S.season,nat:c});if(h.length>20)h.shift();
+    pushNews('ctWin',{ct:id,nat:c},'good');
+  }
+  /* Kupayı kaldıran kadroda müşterin varsa: büyük bir turnuva, büyük bir itibar —
+     Milletler Kupası kıta turnuvasından büyük. */
   const sq=new Set((S.nt.sq[c]||[]));
-  if(S.clients.some(id=>sq.has(id)))repEvent(1.5);
+  if(S.clients.some(x=>sq.has(x)))repEvent(id==='wc'?1.5:1.0);
 }
 
 /* Penaltılar: cupTieEnd'in kuralı, güç milli kadrodan. */
@@ -15948,23 +16085,38 @@ function ncV2Round(){
   if(S.clients.some(id=>sq.has(id)))repEvent(1.5);
 }
 
-/* simWeek()'ten, ligler ve kupalardan sonra. */
+/* simWeek()'ten, ligler ve kupalardan sonra. Milli maç gününde: kadro, iki elemenin
+   işi (Milletler Kupası ve Avrupa turnuvası), maçı olmayanlara hazırlık maçı. Yaz
+   haftalarında: o sezonun turnuvaları (CT_SCHED), her biri kendi tur sayısınca. */
 function simNat(){
   const w=S.week,T=totalWeeks();
   if(w<=T){
     if(NT_CALL.includes(w))ntCallUp();
     if(!NT_WK.includes(w))return;
     if(!S.nt||S.nt.se!==S.season)ntCallUp();
-    const busy=new Set(),ix=ntIndex(),ed=ncEd();
-    if(ed)ncqWeek(ed,busy,ix);
+    const busy=new Set(),ix=ntIndex();
+    ncqTick('ncq',ncEd(),ncqDraw,busy,ix);
+    ncqTick('ecq',ecEd(),ecqDraw,busy,ix);
     ntFriendlies(busy,ix);
     return;
   }
-  if(!ncSeason()||w>seasonLen())return;
-  if(S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w){ncV2Round();return;}
-  const ri=w-T-1;
-  if(ri===0)ncStart();
-  if(S.wc&&S.wc.v===3&&S.wc.se===S.season&&!S.wc.w)ncSummer(ri);
+  if(w>seasonLen())return;
+  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w){ncV2Round();return;}
+  const ri=w-T-1,ids=CT_SCHED[S.season%NC_EVERY]||[];
+  if(ri===0){
+    if(ids.includes('wc'))ncStart();
+    const others=ids.filter(x=>x!=='wc');
+    if(others.length){
+      if(!ids.includes('wc'))ntCallUp();
+      const str=ncStrMap(ntIndex());
+      others.forEach(id=>ctStart(id,str));
+    }
+  }
+  const ix=ntIndex();
+  ids.forEach(id=>{
+    const W=id==='wc'?S.wc:(S.ct||{})[id];
+    if(W&&W.v===3&&W.se===S.season&&!W.w&&ri<ctWeeks(id))ctRound(W,ri,ix);
+  });
 }
 
 /* ===== OKUYUCULAR (arayüz) ===== */
@@ -20012,7 +20164,7 @@ const IB_CAT=[
    keys:['outgrow','rivalSigned','unhappyMsg','wantsOutMsg']},
   {id:'trophy',grp:'world',ic:'data:image/webp;base64,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',
    n:{tr:'Şampiyonluk',en:'Silverware',es:'Títulos',pt:'Títulos',de:'Titel',fr:'Trophées',it:'Trofei'},
-   keys:['champ','finalN','cupWin','dcWin','wcWin','ncIn','ncOut']},
+   keys:['champ','finalN','cupWin','dcWin','wcWin','ncIn','ncOut','ctWin','ctIn','ctOut']},
   {id:'league',grp:'world',ic:'data:image/webp;base64,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',
    n:{tr:'Lig',en:'League',es:'Liga',pt:'Liga',de:'Liga',fr:'Ligue',it:'Campionato'},
    keys:['promoted','relegated','newLg','newLgs']},
@@ -20320,6 +20472,8 @@ function cupTag(cp){
   if(typeof cp==='string'){
     if(cp.slice(0,2)==='d:')return dcName(cp.slice(2));
     /* milli maç: hazırlık maçı ya da Milletler Kupası (nations.js) */
+    if(cp.slice(0,4)==='n:c:')return ctName(cp.slice(4));
+    if(cp==='n:eq')return ctName('eu')+' · '+t('ncQual');
     return cp==='n:wc'?t('wcLbl'):cp==='n:q'?t('ncQualL'):cp[0]==='n'?t('ntFriendly'):'';
   }
   const c=cp===undefined?null:CUPS[cp];return c?tx(c.n):'';
@@ -20498,13 +20652,13 @@ function ncMatchHtml(m){
   return `<div class="matchrow"><span class="tn r">${esc(a.n)}</span>${tmBadge(a,20)}
     <span class="sc ${m.hg===null?'f':''}">${m.hg===null?'–':m.hg+' : '+m.ag}</span>${tmBadge(b,20)}<span class="tn">${esc(b.n)}</span></div>`;
 }
-function ncQHtml(){
-  const Q=S.ncq,cs=Object.keys(Q.c);
+function ncQHtml(Q){
+  const cs=Object.keys(Q.c),ic=Q.kind!=='eu';
   const home=S.agent?ncFed(S.agent.nat):'';
-  const cf=NCCF==='ic'||cs.includes(NCCF)?NCCF:(cs.includes(home)?home:cs[0]);
-  let h=`<div class="chips">${cs.map(c=>`<button class="${cf===c?'on':''}" onclick="setNcCf('${c}')">${esc(ncCfName(c))}</button>`).join('')}
-    <button class="${cf==='ic'?'on':''}" onclick="setNcCf('ic')">${t('ncIC')}</button></div>`;
-  h+=`<div class="card"><div class="sect">${t('ncQual')} · ${t('wcLbl')} · ${t('season')} ${Q.ed}</div>
+  const cf=(ic&&NCCF==='ic')||cs.includes(NCCF)?NCCF:(cs.includes(home)?home:cs[0]);
+  let h=cs.length>1||ic?`<div class="chips">${cs.map(c=>`<button class="${cf===c?'on':''}" onclick="setNcCf('${c}')">${esc(ncCfName(c))}</button>`).join('')}
+    ${ic?`<button class="${cf==='ic'?'on':''}" onclick="setNcCf('ic')">${t('ncIC')}</button>`:''}</div>`:'';
+  h+=`<div class="card"><div class="sect">${t('ncQual')} · ${esc(ctName(Q.kind==='eu'?'eu':'wc'))} · ${t('season')} ${Q.ed}</div>
     <div class="sub">${t('ncHosts')}: ${Q.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')}</div></div>`;
   if(cf==='ic'){
     const I=Q.ic;
@@ -20513,8 +20667,8 @@ function ncQHtml(){
     if(I.f.length)h+=`<div class="card"><div class="sect">${t('finalLbl')} · ${t('week')} ${NC_ICF}</div>${I.f.map(ntTieHtml).join('')}</div>`;
     return h;
   }
-  const C=Q.c[cf],up=Math.min(NC_UPO[cf]||0,C.D);
-  h+=`<div class="sub" style="margin:0 2px 10px">${fmtStr(t('ncQuota'),{d:C.D-up,p:up||NC_IC[cf]||0})}</div>`;
+  const C=Q.c[cf],up=C.up!==undefined?C.up:Math.min(NC_UPO[cf]||0,C.D),icn=C.icn!==undefined?C.icn:(NC_IC[cf]||0);
+  h+=`<div class="sub" style="margin:0 2px 10px">${fmtStr(t('ncQuota'),{d:C.D-up,p:up||icn})}</div>`;
   if(!C.g.length)return h+`<div class="card">${C.d.map(n=>`<div class="kv"><span class="k">${esc(ntPseudo(n).n)}</span><span class="v">✓</span></div>`).join('')}</div>`;
   const dec=C.d.length>0,po=new Set(C.po.flatMap(x=>[x.s,x.u]).concat(C.ic));
   const zone=dec?(n=>C.d.includes(n)?'zone1':po.has(n)?'zone2':''):null;
@@ -20527,10 +20681,11 @@ function ncQHtml(){
   return h;
 }
 function ncTHtml(W,nextSe){
-  const live=W.se===S.season,T=totalWeeks();
-  let h=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
+  const live=W.se===S.season,T=totalWeeks(),id=W.id||'wc';
+  const hs=(W.hosts||[]).length?`${t('ncHosts')}: ${W.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')} · `:'';
+  let h=`<div class="card"><div class="sect">${esc(ctName(id))} · ${t('season')} ${W.se}</div>
     ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
-    <div class="sub">${t('ncHosts')}: ${W.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')} · ${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`;
+    <div class="sub">${hs}${id==='wc'?t('nextWc'):t('ctNext')}: ${t('season')} ${nextSe}</div></div>`;
   const gi=NCG>=0&&NCG<W.g.length?NCG:-1;
   h+=`<div class="chips">${W.g.map((_,i)=>`<button class="${gi===i?'on':''}" onclick="setNcG(${i})">${String.fromCharCode(65+i)}</button>`).join('')}
     <button class="${gi<0?'on':''}" onclick="setNcG(-1)">${t('ncKO')}</button></div>`;
@@ -20541,7 +20696,9 @@ function ncTHtml(W,nextSe){
     h+=[0,1,2].map(md=>`<div class="card"><div class="sect">${fmtStr(t('cupMd'),{n:md+1})}${live?' · '+t('week')+' '+(T+md+1):''}</div>
       ${G.fx.filter(m=>m.md===md).map(ncMatchHtml).join('')}</div>`).join('');
   } else {
-    const rows=[['r32','ncR32',4],['r16','r16',5],['qf','qf',6],['sf','sf',7],['t3','ncThird',8],['f','finalLbl',8]];
+    const LB={r32:'ncR32',r16:'r16',qf:'qf',sf:'sf',f:'finalLbl'},ks=ctKeys(ctSize(id));
+    const rows=ks.map((k,i)=>[k,LB[k],4+i]);
+    rows.splice(rows.length-1,0,['t3','ncThird',3+ks.length]);
     const ko=rows.filter(([k])=>W.ko[k]&&W.ko[k].length);
     h+=ko.length?ko.map(([k,l,wk])=>`<div class="card"><div class="sect">${t(l)}${live?' · '+t('week')+' '+(T+wk):''}</div>${W.ko[k].map(ntTieHtml).join('')}</div>`).join('')
       :`<div class="card">${emptyState('league',t('noCupYet'),live?t('week')+' '+(T+4):'')}</div>`;
@@ -20561,7 +20718,7 @@ function ncHtml(RL){
   const ph=NCPH==='q'&&Q?'q':NCPH==='t'&&W?'t':(Q&&!tour?'q':'t');
   if(Q)h+=`<div class="chips"><button class="${ph==='q'?'on':''}" onclick="setNcPh('q')">${t('ncQual')}</button>
     <button class="${ph==='t'?'on':''}"${W?` onclick="setNcPh('t')"`:' disabled'}>${t('ncTour')}</button></div>`;
-  if(ph==='q')h+=ncQHtml();
+  if(ph==='q')h+=ncQHtml(Q);
   else if(W&&W.v===3)h+=ncTHtml(W,nextSe);
   else if(W&&W.v===2){
     const n=W.r[0].length*2,R=Math.round(Math.log2(n));
@@ -20609,6 +20766,34 @@ function ncHtml(RL){
     ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
   return h;
 }
+/* Kıta turnuvaları (nations.js): turnuva seçimi ekran durumu (CTSEL), kayda girmiyor.
+   Avrupa'nın elemesi sürüyorsa önce elemeler. */
+let CTSEL=null;
+function setCt(id){CTSEL=id;NCPH=null;NCG=0;render();}
+function ctNextSe(id){
+  const r=CT_SCHED[1].includes(id)?1:2,W=(S.ct||{})[id];
+  let s=S.season;
+  if(W&&W.se===s&&W.w)s++;
+  while(s%NC_EVERY!==r)s++;
+  return s;
+}
+function ctHtml(){
+  const home=S.agent?ncFed(S.agent.nat):'';
+  const id=CT_IDS.includes(CTSEL)?CTSEL:(CT_IDS.includes(home)?home:CT_IDS[0]);
+  let h=`<div class="chips">${CT_IDS.map(x=>`<button class="${id===x?'on':''}" onclick="setCt('${x}')">${esc(ncCfName(x))}</button>`).join('')}</div>`;
+  const W=(S.ct||{})[id],Q=id==='eu'&&S.ecq&&S.ecq.ed===ecEd()?S.ecq:null;
+  const tour=W&&(!Q||W.se===Q.ed);
+  const ph=NCPH==='q'&&Q?'q':NCPH==='t'&&W?'t':(Q&&!tour?'q':'t');
+  if(Q)h+=`<div class="chips"><button class="${ph==='q'?'on':''}" onclick="setNcPh('q')">${t('ncQual')}</button>
+    <button class="${ph==='t'?'on':''}"${W?` onclick="setNcPh('t')"`:' disabled'}>${t('ncTour')}</button></div>`;
+  if(ph==='q')h+=ncQHtml(Q);
+  else if(W)h+=ncTHtml(W,ctNextSe(id));
+  else h+=`<div class="card"><div class="sect">${esc(ctName(id))}</div>${emptyState('league',t('noCupYet'),t('ctNext')+': '+t('season')+' '+ctNextSe(id))}</div>`;
+  const hist=((S.ctHist||{})[id]||[]);
+  if(hist.length)h+=`<div class="card"><div class="sect">${t('history')}</div>
+    ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
+  return h;
+}
 function cupView(){
   const conChips=`<div class="chips">${CONTS.map(([cc,nm])=>
     `<button class="${(S.curCon||'eu')===cc?'on':''}" onclick="setCon('${cc}')">${tx(nm)}</button>`).join('')}</div>`;
@@ -20616,10 +20801,12 @@ function cupView(){
   const cupChips=`<div class="chips">${CUPS.map((cp,i)=>
     `<button class="${ci===i?'on':''}" onclick="setCup(${i})">${tx(cp.n)}</button>`).join('')}
     <button class="${ci===4?'on':''}" onclick="setCup(4)">${t('dcLbl')}</button>
-    <button class="${ci===3?'on':''}" onclick="setCup(3)">${t('wcLbl')}</button></div>`;
+    <button class="${ci===3?'on':''}" onclick="setCup(3)">${t('wcLbl')}</button>
+    <button class="${ci===5?'on':''}" onclick="setCup(5)">${t('ctLbl')}</button></div>`;
   const RL=[t('r16'),t('qf'),t('sf'),t('finalLbl')];
   let body='';
   if(ci===4)body=dcHtml();
+  else if(ci===5)body=ctHtml();
   else if(ci<3){
     const cp=(S.cups||[])[ci];
     if(!cp){body=`<div class="card">${emptyState('league',t('noCupYet'),'')}</div>`;}
