@@ -448,9 +448,10 @@ async function tTwoSeasons() {
   await a.booted;
   a.R("curSlot=1;newGame();createAgent('Test','Agent','tr','TestCo');");
   const t0 = Date.now();
-  for (let i = 0; i < 80; i++) a.R('nextWeek();save();');
+  /* Yaz haftaları (milli turnuvalar) sezonları 38 haftadan uzatıyor: sayıyla değil sezonla dur. */
+  for (let i = 0; i < 120 && a.R('S.season') < 3; i++) a.R('nextWeek();save();');
   await a.R('saveDrain()');
-  console.log('       80 hafta + her hafta kayıt: ' + (Date.now() - t0) + 'ms');
+  console.log('       iki sezon + her hafta kayıt: ' + (Date.now() - t0) + 'ms');
   const before = a.R('JSON.stringify(S)');
   const stats = JSON.parse(a.R("JSON.stringify({pop:S.players.length,season:S.season,week:S.week,rep:Math.round(S.rep)})"));
   console.log('       ' + JSON.stringify(stats));
@@ -2553,7 +2554,7 @@ async function tPrivacyFeedback() {
    dokunmadan bir hafta ilerletiyor. */
 const PRE_BREAK = 'S.tw=((S.adb&&S.adb.w)||0)+AD_BREAK.gap-1;';
 async function atBreak(a) { a.R(PRE_BREAK + 'nextWeek();'); await tick(); }
-async function atEnd(a) { a.R(PRE_BREAK + 'S.week=totalWeeks();nextWeek();'); await tick(); }
+async function atEnd(a) { a.R(PRE_BREAK + 'S.week=seasonLen();nextWeek();'); await tick(); }
 async function wk(a) { a.R('nextWeek();'); await tick(); }
 
 async function tSeasonBreakAds() {
@@ -6174,7 +6175,7 @@ async function tInAppReview() {
     await a.booted; await careerIn(a, 1);
     const fake = fakeReview(a.ctx);
     ok(a.R('rvWhy(Date.now())') === 'early', '(2) ilk sezonda sorulmuyor');
-    a.R('S.cash=Math.max(S.cash,1000);S.tw=40;S.adb={w:35};S.week=totalWeeks();nextWeek();');
+    a.R('S.cash=Math.max(S.cash,1000);S.tw=40;S.adb={w:35};S.week=seasonLen();nextWeek();');
     await waitFor(() => a.R('modalOpen()'), 'sezon özeti', 3000);
     const sh = a.nodes.sheet._html;
     ok(a.R('S.season') === 2, '(2) sezon döndü');

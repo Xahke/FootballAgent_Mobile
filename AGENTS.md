@@ -123,7 +123,7 @@ call time. The parts that are load-time real:
 | `js/badges.js` | Procedural team badges: 24 emblems, 10 frames, 10 patterns, the semantic name→emblem map and `badgeDescriptor()`. `tmBadge()` draws from here |
 | `js/core.js` | Game state `S`, fixtures, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
 | `js/cups.js` | The three European cups in the real format: the access list, qualifying, the league-phase draw and table, the knockout bracket, and the old 16-team format for saves that began a season on it — see *European cups follow the real format* below. Also the 34 national cups — see *Every country has its own cup* |
-| `js/nations.js` | National teams: call-ups, the friendlies in the international windows, the summer weeks and the Nations Cup played in them — see *National teams play through the same engine* |
+| `js/nations.js` | National teams: call-ups, friendlies, the qualifiers, the summer weeks and the tournaments played in them (the Nations Cup and five continental championships) — see *National teams play through the same engine* and the two sections after it |
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |
 | `js/events.js` | Event definitions (32, of which 8 are small), weighted selection, `applyEff` |
@@ -1368,8 +1368,10 @@ seeds over two seasons.
 - **Counters**: the season's `p.ns {app,min,g,a}` (archived as `ns: {app, g}` and deleted
   at season end like `p.cs`), the career's `p.caps` and `p.ig`. A client's first cap is
   +0.3 reputation.
-- **Summer weeks.** In a season where `S.season % NC_EVERY` (4) is 0, `seasonLen()` is
-  `totalWeeks() + summerWeeks()` (8) and `nextWeek()` ends the season on that, so
+- **Summer weeks.** `seasonLen()` is `totalWeeks() + summerWeeks()`, and
+  `summerWeeks()` is the longest of that season's tournaments (`CT_SCHED`: 8 in a Nations
+  Cup season, 6 the season after, 7 the one after that, none in the fourth); `nextWeek()`
+  ends the season on that, so
   `endSeason()` comes after the tournament and the tournament lands in that season's
   archive. `simNat()` runs from `simWeek()` after the leagues and cups. The header and the
   season row show the real week through `shownWeek()`, so summer reads "week 39–46".
@@ -1460,6 +1462,55 @@ unchanged at 568–619) — internationals are rated eight more times a season. 
 the Play build and from `main` (weeks 20–38, and one opened at week 35 of a Nations Cup
 season, which then played its summer weeks 39–42) ran clean, drew clean in four themes and
 reopened unchanged.
+
+### Continental championships share the tournament engine
+
+The Nations Cup's group-and-bracket code is the general tournament engine
+(`ctMake()` → `ctRound()` → `ctBracket()`/`ctKo()` → `ctChampion()`, formats in `CT_FMT`), and
+five continental championships run on it in the real calendar: the season after a Nations
+Cup (2027-like) Asia and North/Central America, the season after that (2028-like) Europe,
+South America and Africa (`CT_SCHED`). Names are `ctName()` — the continent and a neutral
+template (`ctFmt`), never a real competition's mark.
+
+| | Teams | Format | Entry |
+|---|---|---|---|
+| Europe | 24 | 6 groups, top 2 + best 4 thirds → last 16 | qualifiers (`S.ecq`); hosts in the real order — 2028 England/Scotland/Ireland, 2032 Italy/Türkiye (`EU_HOSTS`) — qualify outright |
+| South America | 16 | 4 groups → quarter-finals, third-place match | all ten plus North America's six strongest, as 2024's guests |
+| Africa | 16 | 4 groups → quarter-finals, third-place match | every nation the game has |
+| Asia | 12 | 3 groups, top 2 + best 2 thirds → quarter-finals | the twelve strongest (thirteen in the game) |
+| North/Central America | 8 | 2 groups → semi-finals | the eight strongest (ten in the game) |
+
+Only Europe has more nations than the real tournament has places, so only Europe plays
+qualifiers; the others take their strongest, which is stated here rather than dressed up as
+qualifying. The European qualifiers reuse the Nations Cup's machinery: `S.ecq` has the same
+shape as `S.ncq` (`kind: 'eu'`, no inter-confederation play-off), `ncqConf()` stores each
+confederation's play-off places (`up`) and inter-confederation places (`icn`) so
+`ncqRank(Q)`/`ncqWeek(Q, …)` serve both, and `ncqTick()` draws each on its first matchday.
+The two never overlap: Nations Cup qualifiers run from week 18 of the season before it to
+its spring, the European ones in the two seasons after. Europe takes its hosts plus 18
+direct and three from a play-off of the next six (`EU_UPO`). Matches carry `cp = 'n:eq'`
+(European qualifier) and `'n:c:<id>'` (continental tournament), and `cupTag()` names them.
+
+Records: `S.ct = {id: tournament}` (last edition of each, the same `{v:3, id, se, hosts, g,
+ko, w, sc}` shape as `S.wc`), `S.ctHist = {id: [{se, nat}]}`, news `ctWin` for every
+champion and `ctIn`/`ctOut` for the agent's or a client's nation in the European
+qualifiers. A client in a continental champion's squad is +1.0 reputation (the Nations Cup
++1.5). The screen is the sixth cup chip (`setCup(5)`, `ctHtml()`), with a chip per
+continent and, while Europe's qualifiers run, the qualifier/tournament phases;
+`ncQHtml(Q)` and `ncTHtml(W)` draw both tournaments' screens.
+
+**Two tests changed meaning, not behaviour.** `tools/savetest.js` block 8 ran 80 weeks and
+expected season 3, and the season-end helpers jumped to `totalWeeks()`; with summer weeks in
+season 1 that is now season 2 week 37, so they stop on the season and jump to `seasonLen()`.
+
+Measured on six seeds over eight seasons against `main`: population 11,501–11,519, free
+agents 60, mean age 25.2–25.4, unrepresented share 66%, every nation 25–29 players. Europe
+went to Portugal (4), Italy (3), England, France (2 each) and Spain; Africa and Asia were
+varied (Jordan once — it really reached the 2023 Asian Cup final); North/Central America
+mostly Mexico and the USA; South America's guests won 4 of 12, their strength being close
+to Colombia's and Uruguay's. Thirteen more summer weeks every four seasons cost **~6%
+simulation time**. Old saves from `main` opened in week 37 of a season before a
+continental summer played it through cleanly.
 
 ### Balance constants live in named blocks
 
