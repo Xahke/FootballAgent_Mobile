@@ -86,11 +86,11 @@ other file nothing does.
 
 `js/badges.js` was a worked example: it sits after `data.js` (badges read a team object)
 and before `core.js` (where `tmBadge()` lives), and the same position appears in every
-list. The five language files went through it, and `js/cups.js` (after `core.js`) was
-the most recent.
+list. The five language files went through it, then `js/cups.js` (after `core.js`), and
+`js/nations.js` (after `cups.js`, before `sim.js`) is the most recent.
 
 Load order:
-`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → review → data → worldgeo → atlas → rivals → badges → core → cups → sim → market → events → skills → sfx → actions → ui → main`
+`i18n → lang-es → lang-pt → lang-de → lang-fr → lang-it → store → saves → reward → ads-testcfg → ads → iap → review → data → worldgeo → atlas → rivals → badges → core → cups → nations → sim → market → events → skills → sfx → actions → ui → main`
 
 Almost every file is nothing but declarations, so most of this order only matters at
 call time. The parts that are load-time real:
@@ -123,6 +123,7 @@ call time. The parts that are load-time real:
 | `js/badges.js` | Procedural team badges: 24 emblems, 10 frames, 10 patterns, the semantic name→emblem map and `badgeDescriptor()`. `tmBadge()` draws from here |
 | `js/core.js` | Game state `S`, fixtures, scouting network (`buyScout`/`openScout`), economy formulas, the mutation funnels |
 | `js/cups.js` | The three European cups in the real format: the access list, qualifying, the league-phase draw and table, the knockout bracket, and the old 16-team format for saves that began a season on it — see *European cups follow the real format* below. Also the 34 national cups — see *Every country has its own cup* |
+| `js/nations.js` | National teams: call-ups, the friendlies in the international windows, the summer weeks and the Nations Cup played in them — see *National teams play through the same engine* |
 | `js/sim.js` | Weekly simulation, match ratings, season rollover, development, retirement, promotion/relegation |
 | `js/market.js` | AI transfer market — clubs buy and sell each other's players independently |
 | `js/events.js` | Event definitions (32, of which 8 are small), weighted selection, `applyEff` |
@@ -1175,8 +1176,9 @@ A new competition gets its own scoring and its own bookkeeping and calls
 The extraction was proven neutral: on a seeded run the whole `{S, PID}` hashed
 identically before and after, with cups still on the old path.
 
-`cp` is the cup index into `CUPS` — or `'d:XX'`, a country code, for a national cup —
-absent for a league match. It decides one thing:
+`cp` is the cup index into `CUPS` — or `'d:XX'`, a country code, for a national cup, or
+`'n:f'`/`'n:wc'` for a national-team match (whose counters go to `p.ns` instead of
+`p.cs`) — absent for a league match. It decides one thing:
 **where the counters go** (`tallyOf()`):
 
 | | league | cup |
@@ -1338,6 +1340,68 @@ country chips like the league view — 34 countries in one row would be a wall �
 selection in `S.curDc` (default: the agent's home country), one card per round, the byes
 noted on the first, the European cup cards' scorers/clients (`cupExtraHtml()` reads
 `cupTeams()`, which knows a national cup by its `ctry`) and the history.
+
+### National teams play through the same engine
+
+`js/nations.js` gives the 80 nationalities a squad and matches. **`playFixture(m, cp, ns)`
+is the same function** — `ns` (`{nat: {sq, str}}`) is passed only for a national match,
+and then the two sides come from those squads (`playSquad()`, which `playMatchSide()` now
+calls with the club squad) and their strength from `ns`, not from a team id. The l5 entry
+and the week-report row carry `nt: 1`, the report row's `tid` is the player's nationality,
+and the UI resolves both through `oppOf()`/`ntPseudo()` (a team-shaped object with the
+country's name and a colour derived from its code — not a flag). Proved neutral: with
+national matches switched off the whole `{S, PID}` hashed identically to `main` on two
+seeds over two seasons.
+
+- **Call-ups** (`ntCallUp()`) at the start of each window — weeks 3, 7, 14, 22, the real
+  September, October, November and March — and at the start of the summer: 26 players per
+  nation, 3/8/8/7 by position, best `ntScore()` (rating plus form, a clubless player only
+  if the squad would be short). `S.nt = {se, w, sq: {nat: [pid]}, m}` holds the current
+  squads and this window's results; it is replaced each window. A client who was not in
+  the previous squad gets `ntCall` (`ntCall1` the first time).
+- **Friendlies** on weeks 3, 5, 7, 11, 14, 18, 22, 24 — outside the European (`CUP_WK`)
+  and national-cup (`DC_RW`) weeks, one match per week as the real two per window. Every
+  nation with a squad plays; the pairing is random. Qualifiers replace them in a later
+  phase. Players still play their league match that week: a 20-club league uses all 38
+  weeks, so there is no break to put them in.
+- **Counters**: the season's `p.ns {app,min,g,a}` (archived as `ns: {app, g}` and deleted
+  at season end like `p.cs`), the career's `p.caps` and `p.ig`. A client's first cap is
+  +0.3 reputation.
+- **The Nations Cup moved into summer weeks.** In a season where `S.season % NC_EVERY`
+  (4) is 0, `seasonLen()` is `totalWeeks() + summerWeeks()` and `nextWeek()` ends the
+  season on that, so `endSeason()` comes after the tournament and the tournament lands in
+  that season's archive. `simNat()` runs from `simWeek()` after the leagues and cups; on
+  the first summer week `ncStart()` calls squads up and seeds the 16 strongest nations
+  (Russia, `NT_BAN`, stays out by the user's decision) into the real bracket order, then
+  one round a week: single match, neutral ground, penalties on a level score
+  (`ncTieEnd()`, the cup rule with squad strength). `S.wc` is now `{v:2, se, r, w, sc}`;
+  an old save's `{rounds, champ}` is drawn as the past result it is. Winning with a
+  client in the squad is +1.5 reputation. The header and the season row show the real
+  week through `shownWeek()`, so summer reads "week 39–42". The format becomes the real
+  48-team one, with qualifiers, in the next phase.
+
+**Foreign nationality now follows club strength.** National strength is the best eleven
+of a nation's players, and a nation without a league only has foreigners — who used to be
+dropped on clubs regardless of either side's level, so Jamaica (73.7) sat above Croatia
+and next to the Netherlands, the spread was compressed and upsets were the rule: the old
+code's Nations Cup was won by Saudi Arabia (twice) and DR Congo in three of twelve runs. `NAT_Q`
+(data.js) rates each nationality 0.2–1.0 in five steps from the real FIFA ranking, and
+`pickNat(domestic, str)` tilts the foreign weight by it against the club's strength
+(`NAT_BIAS` 1.4: at an 85 club the top step weighs ~4× and the bottom ~¼, at a 55 club the
+reverse, more gently); the domestic share (0.62) is unchanged. After it, the strongest
+squads are England, Italy, Spain, Germany, France, Argentina and Brazil, Jamaica 63, and
+twelve tournaments over six seeds were won by Spain (5), England (2), Italy, Germany,
+Belgium, the Netherlands and Türkiye. Brazil, the heaviest foreign weight, dropped again,
+to 449–475 players, because weak clubs now take it less.
+
+Measured on six seeds over eight seasons against `main`: population 11,509–11,523, free
+agents 60, mean age 25.3, unrepresented share 66%, every nation 24–29 players, bot
+reputation in the same band. About 320 friendlies a season cost **~3% simulation time**.
+The value spread widened at the bottom (`vm ≤ 0.75` 384–449 → 443–477; `vm ≥ 1.3`
+unchanged at 568–619) — internationals are rated eight more times a season. Old saves from
+the Play build and from `main` (weeks 20–38, and one opened at week 35 of a Nations Cup
+season, which then played its summer weeks 39–42) ran clean, drew clean in four themes and
+reopened unchanged.
 
 ### Balance constants live in named blocks
 

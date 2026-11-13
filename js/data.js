@@ -168,6 +168,17 @@ nz:{c:'NZL',f:['Chris','Liberato','Marko','Matthew','Joe','Elijah','Callum','Ben
  l:['Wilson','Thompson','Walker','Robertson','Campbell','Stewart','Mitchell','Clark','Ngata','Parata','Tane','Henare','Bell','Turner','Morgan','Fraser','Reid','Hunter']}
 };
 const NATKEYS=Object.keys(NATS);
+/* Futbol ülkesi olarak kalite (0–1), gerçek FIFA sıralamasının kabaca beş
+   basamağı. pickNat() yabancı oyuncunun uyruğunu seçerken kulübün gücüne göre
+   buna bakıyor: güçlü kulüp güçlü ülkeden, zayıf kulüp zayıf ülkeden. Bu olmasa
+   ligi olmayan küçük ülkelerin oyuncuları dev kulüplere de aynı olasılıkla düşüyor
+   ve milli takımları yapay güçleniyordu (Jamaika Hırvatistan'ın önündeydi). */
+const NAT_Q={
+ es:1.0,fr:1.0,ar:1.0,en:1.0,br:1.0,pt:1.0,nl:1.0,be:1.0,de:1.0,it:1.0,hr:1.0,
+ ma:0.8,co:0.8,uy:0.8,us:0.8,mx:0.8,jp:0.8,sn:0.8,ch:0.8,dk:0.8,at:0.8,ir:0.8,kr:0.8,ec:0.8,tr:0.8,no:0.8,
+ au:0.6,ua:0.6,se:0.6,rs:0.6,pl:0.6,cz:0.6,sct:0.6,ng:0.6,ci:0.6,eg:0.6,dz:0.6,pe:0.6,cl:0.6,py:0.6,ca:0.6,pa:0.6,gr:0.6,hu:0.6,ru:0.6,sk:0.6,ro:0.6,tn:0.6,
+ ie:0.4,si:0.4,ve:0.4,ml:0.4,cm:0.4,cd:0.4,gh:0.4,sa:0.4,uz:0.4,jo:0.4,iq:0.4,ae:0.4,cr:0.4,jm:0.4,za:0.4,cv:0.4,bf:0.4,gn:0.4,ga:0.4,bg:0.4,qa:0.4,
+ cn:0.2,om:0.2,id:0.2,ht:0.2,cw:0.2,hn:0.2,sr:0.2,nz:0.2,cy:0.2,az:0.2,bo:0.2};
 const AFR=['ng','sn','gh','cm','ci','ml','cd','cv','ga','bf','gn'];
 const NAF=['eg','ma','dz','tn'];
 /* agent nationality → home country (league network) */
