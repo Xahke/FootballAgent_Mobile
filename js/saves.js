@@ -216,6 +216,10 @@ function loadSlot(n){
       else pushNews('newLgs',{lis:grown},'info');
       saveToSlot(n);
     }
+    /* Sonradan eklenen milli takımlar: eski kayıtta oyuncuları yok ya da çok az
+       (growNations, core.js). Sessiz — oyuncu için yeni bir şey değil, dünyanın
+       bir parçası. Kayıt hemen yazılıyor ki tamamlama bir kez olsun. */
+    if(growNations()!==null)saveToSlot(n);
     /* Kariyer kimliği eski kayıtlarda yok; ilk açılışta veriliyor ve hemen
        yazılıyor. saveToSlot() senkron dönüyor ama bu yalnız "kuyruğa alındı"
        demek — yazmanın gerçekten tuttuğunu SAVEH söylüyor ve başarısızlık
