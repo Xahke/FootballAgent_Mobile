@@ -170,7 +170,9 @@ function playFixture(m,cp,ns){
       p.rtSum=(p.rtSum||0)+rt;p.rtN=(p.rtN||0)+1;
       /* belirli maç aralıklarıyla piyasa değeri sahadaki işe göre güncellenir */
       const vd=updateValue(p);
-      if(vd&&p.agent==='you'&&Math.abs(vd)>=0.05)
+      /* Eşik 0,08: değer artık hedefe yaklaşarak hareket ediyor ve güncelleme başına
+         oynama eskisinin iki katı; 0,05'te müşteri değer haberleri ~1,9 kat artıyordu. */
+      if(vd&&p.agent==='you'&&Math.abs(vd)>=0.08)
         pushNews(vd>0?'valUp':'valDown',{n:p.n,pid:p.id,v:fmtM(valueOf(p))},vd>0?'good':'warn');
       /* cp yalnız kupa maçında yazılıyor: lig kaydının biçimi bayt bayt aynı kalsın */
       const e={o:tid===m.h?m.a:m.h,res,g:gMap[p.id]||0,a:aMap[p.id]||0,rt,mm:false,

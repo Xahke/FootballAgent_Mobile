@@ -1287,7 +1287,7 @@ simulation time +~6% for ~530 cup matches a season (was 45). **The value spread 
 the mean multiplier stayed at 1.00, but players at `vm ≥ 1.3` went from 308–353 to
 359–409 and at `vm ≤ 0.75` from 347–392 to 357–430 — big-club players are rated up to 17
 more times a season, so `updateValue()` (every `VAL.every` = 12 ratings) fires more often
-for them. If that needs pulling back, `VAL.every` or `VAL.gain` is the dial. Winners now
+for them. (Since fixed at the root — see *Market value follows performance, not match count*.) Winners now
 include BE, CZ and GR clubs now and then.
 
 ### Every country has its own cup
@@ -1332,8 +1332,8 @@ seasons, a second-tier club winning 0–1 times per run. About 610 more matches 
 cost **~12% simulation time** (3 seasons, sequential: 35.5/38.3 s → 39.4/43.8 s). **The
 value spread widened again**, now across every league rather than only the European
 clubs: players at `vm ≥ 1.3` 462–514 → 561–613, at `vm ≤ 0.75` 347–421 → 407–438, mean
-multiplier still 1.01–1.02. `VAL.every` / `VAL.gain` remain the dial if it needs pulling
-back.
+multiplier still 1.01–1.02. (Since fixed at the root — see *Market value follows performance,
+not match count*.)
 
 The screen is the fifth chip on the cup view (`setCup(4)`, `dcHtml()`): continent and
 country chips like the league view — 34 countries in one row would be a wall — with the
@@ -1525,11 +1525,46 @@ to Colombia's and Uruguay's. Thirteen more summer weeks every four seasons cost 
 simulation time**. Old saves from `main` opened in week 37 of a season before a
 continental summer played it through cleanly.
 
+### Market value follows performance, not match count
+
+`p.vm`, the value multiplier, used to **accumulate**: every `VAL.every` (12) ratings
+`updateValue()` added the season average's deviation from `expectedRating()` again. With
+the deviation constant the multiplier still grew with the number of updates, so the
+European cups, national cups, internationals and summer tournaments — 50–70 rated matches
+a season for a big-club player instead of ~38 — turned match count into value: players
+with 50+ apps were 24–30% at `vm ≥ 1.3`, players under 40 apps 3%.
+
+Now the season average gives a **target** — `1 + (avg − expected)/expected · VAL.gain` —
+and the multiplier moves `VAL.ease` of the way to it. The target is never overshot, so more
+matches only get there sooner. Three choices, each measured:
+
+- **The season average, not the last 12 matches.** The first attempt (a Codex run) used
+  the last 12-match window and jumped straight to its target: the spread hit the goal but
+  the multiplier moved 16% per update on average, against 4% before, and client value news
+  rose ~2.5×. The season average settles as matches accumulate.
+- **Easing (0.6), not a sample-size weight.** Weighting the step by matches played brought
+  the per-update move back to ~5%, but players with few matches then hardly moved at all —
+  the match-count dependence again, the other way round.
+- **A relative deviation and a re-centred line** (`ratingBase` 6.13, `ratingSlope` 0.047):
+  half a point over an expected 6 is a bigger surprise than over 7.5, and the old line left
+  the mean multiplier at 1.01–1.02.
+
+Measured on six seeds over eight seasons against `main`: `vm ≥ 1.3` 5.2–5.4% → 3.2–3.6%
+(the pre-cup world sat at 3.4–3.9%), `vm ≤ 0.75` 3.9–4.2% → 3.6–4.0%, mean 0.99; players
+with 50+ apps at `vm ≥ 1.3` 27–28% → 6–9% against 2.7–3.0% for the rest — some gap remains
+and is genuine, since big-club players win more and are rated higher. Population, free
+agents, age and errors unchanged. The cost is **volatility**: 8.5% per update against 4%,
+so the client news threshold (`valUp`/`valDown` in `playFixture()`) went from 0.05 to 0.08,
+where about the same share of updates crosses it as before (39% against 31%). The save
+format did not change; an old save's accumulated extreme (1.42) eases to its target within
+a few updates. `gain`, `ease` and `ratingBase` were tuned together — move one, re-measure
+all three.
+
 ### Balance constants live in named blocks
 
 Tuning happens at these, not scattered magic numbers:
 
-- `VAL` (core.js) — market value drift from performance: update interval, gain, bounds, season revert
+- `VAL` (core.js) — market value from performance: update interval, `gain` (relative deviation → target), `ease` (how far toward the target per update), bounds, season revert, and the expected-rating line (`ratingBase`/`ratingRef`/`ratingSlope`) — see *Market value follows performance, not match count*
 - `REP_SOFT` / `repFactor()` (core.js) — reputation soft cap, and the single strongest
   brake in the game. `repFactor()` is `clamp(1 − rep/125, REP_FLOOR, 1)` with `REP_FLOOR` at 0.30, so above
   rep ≈88 every gain is throttled to 30%. The floor was 0.15 (binding at ≈106) until it
