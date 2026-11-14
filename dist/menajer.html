@@ -14459,6 +14459,10 @@ function regenPlayer(p){
   if(p.nat!==old){c[old]=(c[old]||0)-1;c[p.nat]=(c[p.nat]||0)+1;}
   delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
   delete p.ra;                         // artık başka bir insan; eski ajansıyla işi yok
+  /* Milli maç ve gol sayaçları genPlayer'da yok, Object.assign onları silmiyordu:
+     73 milli maçlık emeklinin yerine gelen 17'lik genç 73 maçla doğuyor ve ilk
+     milli maç itibarı hiç verilmiyordu (Codex incelemesi, 2026/11). */
+  delete p.caps;delete p.ig;delete p.ns;
 }
 function newGame(){
   PID=1;
@@ -15636,10 +15640,18 @@ const NC_N=48;
    sonra döngü. Turnuva sırası S.season/NC_EVERY. */
 const NC_HOSTS=[['us','mx','ca'],['es','pt','ma','uy','ar','py'],['sa']];
 /* Eleme maç günleri, turnuva sezonuna göre [sezon farkı, hafta]: bir önceki sezonun
-   Mart'ından (18, 22, 24) turnuva sezonunun Kasım'ına (18) kadar dokuz gün — gerçekte
-   de elemeler iki takvim yılına yayılıyor. Play-off'lar turnuva sezonunun Mart'ında:
-   22 (Avrupa play-off'u, kıtalar arası yarı final), 24 (kıtalar arası final). */
-const NC_QMD=[[-1,18],[-1,22],[-1,24],[0,3],[0,5],[0,7],[0,11],[0,14],[0,18]];
+   Kasım'ından (14) ve Mart'ından (18, 22, 24) turnuva sezonunun Kasım'ına (18) kadar
+   on gün — gerçekte de elemeler iki takvim yılına yayılıyor. Play-off'lar turnuva
+   sezonunun Mart'ında: 22 (Avrupa play-off'u, kıtalar arası yarı final), 24
+   (kıtalar arası final).
+   On, çünkü beş takımlı grubun çift devresi on tur (her takım iki tur bay geçiyor):
+   dokuz güne sıkıştırılınca ilk iki tur aynı haftaya düşüyor ve üç ülke o hafta iki
+   eleme maçı oynuyordu (Codex incelemesi, 2026/11). Çekilmiş bir eleme takvimini
+   kendi kaydında taşıyor (Q.qmd); taşımayan, dokuz günle çekilmiş eski bir eleme
+   NC_QMD9 ile bitiyor. */
+const NC_QMD=[[-1,14],[-1,18],[-1,22],[-1,24],[0,3],[0,5],[0,7],[0,11],[0,14],[0,18]];
+const NC_QMD9=[[-1,18],[-1,22],[-1,24],[0,3],[0,5],[0,7],[0,11],[0,14],[0,18]];
+function ncqMd(Q){return Q.qmd||NC_QMD9;}
 const NC_POW=22,NC_ICF=24;
 
 /* ===== KITA TURNUVALARI =====
@@ -15694,8 +15706,10 @@ function ctName(id){
 }
 function summerWeeks(){
   if(!S)return 0;
-  /* Önceki sürümün 16 takımlı yaz turnuvası yarıda kaldıysa onun dört haftası. */
-  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season&&!S.wc.w)return 4;
+  /* Önceki sürümün 16 takımlı yaz turnuvasının sezonu: dört hafta — final oynandıktan
+     sonra da. "Bitmediyse" diye sorulunca final haftası 8'e çıkıyor ve sezon boş dört
+     hafta uzuyordu (Codex incelemesi, 2026/11). */
+  if(ncSeason()&&S.wc&&S.wc.v===2&&S.wc.se===S.season)return 4;
   return Math.max(0,...(CT_SCHED[S.season%NC_EVERY]||[]).map(ctWeeks));
 }
 function seasonLen(){return totalWeeks()+summerWeeks();}
@@ -15757,7 +15771,7 @@ function ncqConf(t,D,up,icn,single){
 }
 function ncqDraw(ed,ix){
   const hosts=ncHosts(ed),str=ncStrMap(ix);
-  const Q={kind:'wc',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  const Q={kind:'wc',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{},qmd:NC_QMD.slice()};
   S.ncq=Q;
   Object.keys(NC_QUOTA).forEach(c=>{
     const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)===c&&!NT_BAN.includes(n)&&!hosts.includes(n))
@@ -15773,7 +15787,7 @@ function ncqDraw(ed,ix){
    (gerçekte Uluslar Ligi yolları). */
 function ecqDraw(ed,ix){
   const hosts=ecHosts(ed),str=ncStrMap(ix);
-  const Q={kind:'eu',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{}};
+  const Q={kind:'eu',ed,hosts,c:{},ic:null,q:hosts.filter(n=>S.nt.sq[n]),nw:{},qmd:NC_QMD.slice()};
   S.ecq=Q;
   const t=Object.keys(S.nt.sq).filter(n=>ncFed(n)==='eu'&&!NT_BAN.includes(n)&&!hosts.includes(n))
     .sort((a,b)=>str[b]-str[a]||(a<b?-1:1));
@@ -15821,7 +15835,12 @@ function ncqRank(Q){
     Q.q.push(...C.d);
     C.d.forEach(n=>ncNews(Q,n,true));
     const alive=new Set(C.d.concat(C.ic,C.po.flatMap(t=>[t.s,t.u])));
-    L.forEach(n=>{if(!alive.has(n))ncNews(Q,n,false);});
+    /* Kıtalar arası play-off'a yeri olan konfederasyonda "elendi" haberi bekliyor:
+       Okyanusya'nın boş yeri gibi boşluklar elenenlerden dolduruluyor (ncIcStart),
+       erken haber hem yanlış oluyor hem de Q.nw yüzünden sonraki "katıldı"yı
+       susturuyordu (Codex incelemesi, 2026/11). */
+    if(icn)C.wait=1;
+    else L.forEach(n=>{if(!alive.has(n))ncNews(Q,n,false);});
   });
 }
 /* Tek maçlık eleme maçı: s önde; neutral değilse s ev sahibi. */
@@ -15847,13 +15866,14 @@ function ncIcStart(Q,ix){
 /* Bir milli maç gününde bir elemenin işi. cp 'n:q' (Milletler Kupası) ya da 'n:eq'. */
 function ncqWeek(Q,busy,ix){
   const ed=Q.ed,cp=Q.kind==='eu'?'n:eq':'n:q';
-  const md=NC_QMD.findIndex(([d,wk])=>S.season===ed+d&&S.week===wk);
+  const QMD=ncqMd(Q);
+  const md=QMD.findIndex(([d,wk])=>S.season===ed+d&&S.week===wk);
   if(md>=0){
     Object.values(Q.c).forEach(C=>C.g.forEach(G=>G.fx.forEach(m=>{
       if(m.md!==md||m.hg!==null)return;
       ntPlay(m,cp,ix,false);ntLog(m,cp);busy.add(m.h);busy.add(m.a);
     })));
-    if(md===NC_QMD.length-1)ncqRank(Q);
+    if(md===QMD.length-1)ncqRank(Q);
   }
   if(S.season!==ed)return;
   if(S.week===NC_POW){
@@ -15864,6 +15884,12 @@ function ncqWeek(Q,busy,ix){
     }));
     if(Q.kind!=='eu'){
       ncIcStart(Q,ix);
+      const inIc=new Set(Q.ic.t);
+      Object.values(Q.c).forEach(C=>{
+        if(!C.wait)return;
+        C.g.forEach(G=>G.t.forEach(n=>{if(!Q.q.includes(n)&&!inIc.has(n))ncNews(Q,n,false);}));
+        delete C.wait;
+      });
       Q.ic.sf.forEach(ti=>{ncTie(ti,cp,ix,true);busy.add(ti.s);busy.add(ti.u);ncNews(Q,cupLoser(ti),false);});
     }
   }

@@ -199,6 +199,10 @@ function regenPlayer(p){
   if(p.nat!==old){c[old]=(c[old]||0)-1;c[p.nat]=(c[p.nat]||0)+1;}
   delete p.so;delete p.cd;delete p.hm; // önceki oyuncudan miras kalan durumlar
   delete p.ra;                         // artık başka bir insan; eski ajansıyla işi yok
+  /* Milli maç ve gol sayaçları genPlayer'da yok, Object.assign onları silmiyordu:
+     73 milli maçlık emeklinin yerine gelen 17'lik genç 73 maçla doğuyor ve ilk
+     milli maç itibarı hiç verilmiyordu (Codex incelemesi, 2026/11). */
+  delete p.caps;delete p.ig;delete p.ns;
 }
 function newGame(){
   PID=1;

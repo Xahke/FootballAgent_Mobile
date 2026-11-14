@@ -1386,13 +1386,17 @@ USA/Mexico/Canada, then Spain/Portugal/Morocco with Uruguay/Argentina/Paraguay (
 hosts all qualify), then Saudi Arabia, then round again. Russia (`NT_BAN`) is left out.
 `ncFed()` is `NATCON` except Australia, which plays in Asia.
 
-**Qualifying** (`S.ncq`) spans two seasons, as the real one spans two calendar years: nine
-matchdays from week 18 of the season before the tournament to week 18 of the tournament
+**Qualifying** (`S.ncq`) spans two seasons, as the real one spans two calendar years: ten
+matchdays from week 14 of the season before the tournament to week 18 of the tournament
 season (`NC_QMD`), all on international-window weeks. The draw (`ncqDraw()`) on the first
 of them puts each confederation's non-host nations into groups of at most five by
-strength pots — a double round robin of five is eight matches, which fits nine days —
-except South America, which is the real single league (here single round robin, nine
-rounds). A confederation with no more teams than places (Oceania: New Zealand) qualifies
+strength pots — a five-team double round robin is **ten rounds**, because every team sits
+out two, so it needs all ten days — except South America, which is the real single league
+(here single round robin, nine rounds). There used to be nine matchdays, on the belief that
+five teams make eight rounds; squeezed into nine days, rounds 0 and 1 landed on the same
+week and three nations played two qualifiers in it. A drawn qualifier carries its own
+calendar (`Q.qmd`); one drawn on the nine-day calendar has none and finishes on `NC_QMD9`
+(`ncqMd()`), so a save opened mid-qualifying is not reshuffled. A confederation with no more teams than places (Oceania: New Zealand) qualifies
 outright. After the last matchday `ncqRank()` ranks across groups (group position first,
 then points, goal difference and goals per game, because groups differ in size): the
 first `D` qualify, Europe's next four play its own play-off for two places (single match,
@@ -1417,9 +1421,18 @@ the third-place match in the same week. A host playing at home gets a mild edge
 (`goalPair(..., 'h')`, 1.36/1.24 against 1.3 neutral): the clubs' full home advantage made a
 host the winner in three of six 2026 editions. Winning with a client in the squad is +1.5
 reputation; `ncIn`/`ncOut` tell the agent when their own nation or a client's nation
-qualifies or falls short. A 16-team `v:2` tournament an old save left half-played finishes
-on its own rules (`ncV2Round()`, four summer weeks), and `{rounds, champ}` is drawn as the
-past result it is.
+qualifies or falls short. In a confederation that sends teams to the inter-confederation
+play-off, `ncOut` waits until that play-off's six are known (`C.wait`), because a vacant
+place is filled from the eliminated — an early "you are out" went to a nation that then
+entered the play-off, and `Q.nw` (one message per nation) silenced its "you qualified". A
+16-team `v:2` tournament an old save left half-played finishes on its own rules
+(`ncV2Round()`), and its season keeps four summer weeks **after the final too** — asking
+"is it unfinished?" made the final week flip the season to eight. `{rounds, champ}` is drawn
+as the past result it is.
+
+**These three, and the caps bug below, were found by a Codex review** (GPT-6-Astra,
+read-only, November 2026) of the whole national-team diff — four findings, all reproduced
+and all real, none of them caught by the scan, `savetest` or the regressions.
 
 The screen (`ncHtml()`) has two phases: qualifiers — a chip per confederation and one for
 the inter-confederation play-off, group tables with the direct/play-off zones once decided,
@@ -1943,7 +1956,8 @@ and a `pickNat()` weight. None has a league: their players are foreigners elsewh
   failed the other way — a nation that retirement had pushed below the threshold grew on
   open, so loading changed the save (`tools/savetest.js` caught it).
 - In play, `regenPlayer()` keeps a retiree's nationality when that nation is at or under
-  `NAT_MIN`, and `natFill()` gives a squad-rebalancing youth the smallest nation's
+  `NAT_MIN` (and clears `caps`/`ig`/`ns`: `genPlayer()` does not set them, so
+  `Object.assign` used to hand a 73-cap retiree's record to the 17-year-old replacing him), and `natFill()` gives a squad-rebalancing youth the smallest nation's
   nationality while one is under it (`natCount()` memoises the census per week and
   player count). Population is untouched; only nationality moves. Without them small
   nations melted — China went to 14 in eight seasons.
