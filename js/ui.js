@@ -2541,12 +2541,13 @@ dash(){
      Hiçbir müşteride hareket yoksa kart hiç çizilmiyor.
 
      Bu kart HAFTALIK bir fark göstermiyor ve göstermeye çalışmamalı: aşağıdaki
-     gain, taban değerin üzerine binmiş BİRİKMİŞ primdir —
+     gain, taban değerin üzerindeki GÜNCEL primdir —
      marketValue(p.r) · (p.vm − 1) · (1 + skillBonus('val')). p.vm yalnızca
      VAL.every (12) maçta bir yazılıyor (core.js — updateValue) ve sezon geçişinde
-     VAL.revert ile sönüyor (sim.js — endSeason), yani haftadan haftaya çoğu zaman
-     hiç değişmiyor. Ölçüldü: 38 haftalık bir sezonda müşteri değerleri yalnız 3
-     haftada hareket ediyor. Başlık bir dönem "Haftanın Yükseleni" diyordu; veri
+     VAL.revert ile sönüyor (sim.js — endSeason). Sezon ortalamasının
+     beklentiden oransal sapması bir hedef prim verir ve çarpan ona VAL.ease kadar
+     yaklaşır. Aynı sapma tekrar eklenmez, daha çok maç kendi başına prim büyütmez. Haftadan haftaya çoğu
+     zaman hiç değişmez. Başlık bir dönem "Haftanın Yükseleni" diyordu; veri
      hiçbir zaman haftalık olmadığı için başlık değişti, hesap değil.
 
      gain M € cinsindendir (valueOf → marketValue), bu yüzden fmtM ile basılıyor.

@@ -25,19 +25,38 @@ const marketValue=r=>{
 
    Beklenen puan oyuncunun seviyesinden türetiliyor — yoksa iyi oyuncular zaten
    yüksek puan aldığı için sürekli değerlenir, kötüler sürekli değer kaybederdi. */
-const VAL={every:12, gain:0.18, lo:0.62, hi:1.60, revert:0.70};
-function expectedRating(r){return 6.10+(r-50)*0.045;}
+/* VAL.every maçta bir: sezon ortalamasının beklentiden oransal sapması bir HEDEF
+   çarpan verir (1 + sapma · gain) ve çarpan ona VAL.ease kadar yaklaşır.
+   Neden hedef: eskiden aynı sapma her güncellemede çarpana yeniden EKLENİYORDU.
+   Sapma sabitken bile çarpan güncelleme sayısıyla büyüyordu; Avrupa kupaları,
+   ulusal kupalar ve milli maçlarla büyük kulüp oyuncusu sezonda 3 yerine 5–6
+   güncelleme alınca uçlar açıldı — 50+ maç oynayanların %24–30'u 1,3'ün üstündeydi,
+   40'tan az oynayanların %3'ü. Hedef aşılmadığı için maç sayısı artık primi
+   büyütmüyor, yalnız hedefe varmayı hızlandırıyor.
+   Neden sezon ortalaması: son 12 maçlık pencere çok gürültülü; hedefe ondan
+   gidilince değer her güncellemede ortalama %16 oynuyordu (Codex'in ilk denemesi).
+   Sezon ortalaması maç arttıkça durulur.
+   Neden oransal sapma: 6 beklenenden 0,5 fazla almak, 7,5 beklenenden aynı farkı
+   almaktan daha büyük sürprizdir.
+   Ölçüm (6 tohum × 8 sezon): 1,3 üstü %3,4–3,6, 0,75 altı %3,7–4,0, ortalama 0,99;
+   güncelleme başına ortalama oynama %8,5 (eskiden %4, birikmeli). gain, ease ve
+   ratingBase birlikte ayarlandı; biri değişirse ötekiler de yeniden ölçülmeli. */
+const VAL={every:12, gain:7, ease:0.6, lo:0.62, hi:1.60, revert:0.70,
+  ratingBase:6.13, ratingRef:50, ratingSlope:0.047};
+function expectedRating(r){return VAL.ratingBase+(r-VAL.ratingRef)*VAL.ratingSlope;}
 function valueMult(p){return p&&p.vm?p.vm:1;}
 function valueOf(p){const v=marketValue(p.r)*valueMult(p)*(1+(p.agent==='you'?skillBonus('val'):0));return +v.toFixed(v<10?1:0);}
-/* Her VAL.every maçta bir çalışır. Dönüşü: değer arttı mı azaldı mı (bildirim için). */
+/* Her VAL.every maçta bir çalışır. Dönüşü: değer arttı mı azaldı mı (bildirim için).
+   Kayıt biçimi değişmedi: p.vm ve p.vmAt eski kayıtlarda zaten var. Eski sistemin
+   biriktirdiği uç bir çarpan (1,42 gibi) ilk güncellemelerde hedefe iner. */
 function updateValue(p){
   if(!p.rtN||p.rtN<VAL.every)return 0;
   if((p.vmAt||0)+VAL.every>p.rtN)return 0;
   p.vmAt=p.rtN;
-  const avg=p.rtSum/p.rtN;
-  const diff=avg-expectedRating(p.r);
+  const avg=p.rtSum/p.rtN,expected=expectedRating(p.r),diff=(avg-expected)/expected;
   const before=valueMult(p);
-  p.vm=+clamp(before+diff*VAL.gain,VAL.lo,VAL.hi).toFixed(3);
+  const target=clamp(1+diff*VAL.gain,VAL.lo,VAL.hi);
+  p.vm=+clamp(before+(target-before)*VAL.ease,VAL.lo,VAL.hi).toFixed(3);
   return p.vm-before;
 }
 /* Menajerlik komisyonu itibara bağlıdır: adı olmayan menajer düşük oranla çalışır,
