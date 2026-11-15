@@ -2541,7 +2541,8 @@ with no keystore at all, so don't "fix" that path by making the config mandatory
 
 `versionCode` must increase on every Play upload; the same number cannot be uploaded
 twice. It is 11 today (bumped 9 November 2026 for the cup-engine release; 10 came in
-with commit `010cd4a`); 5 is what the closed-test track carried on 2 October 2026.
+with commit `010cd4a`), shipped with `versionName` **1.1.0** — the 42-league, cups and
+national-teams release (the name was 1.0.0 until then); 5 is what the closed-test track carried on 2 October 2026.
 Bundles numbered 6 (9 October), 7 (11 October) and 8 (12 October) were built and may
 have been uploaded, so each next build took a new number rather than risk a duplicate.
 **9 is on Play** (reported 23 October 2026); the bump to 9 is commit `98fdfc8`

@@ -1,6 +1,6 @@
 {
   "name": "menajer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Futbolcu menajerliği simülasyonu — mobil öncelikli, çevrimdışı, TR/EN",
   "private": true,
   "engines": {
