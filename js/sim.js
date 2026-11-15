@@ -508,8 +508,9 @@ function endSeason(){
   showSeasonModal(champs.filter(Boolean));
   /* --- next season's continental cups seeded from final standings --- */
   seedCups();
-  /* --- ulusal kupalar da düşme/çıkmadan önce, biten sezonun tablosundan --- */
-  seedDomCups();
+  /* --- ulusal kupaların tohum sırası biten sezonun tablosundan, düşme/çıkmadan önce;
+     kura düşme/çıkmadan sonra, yeni sezonun kademeleriyle (seedDomCups) --- */
+  const dcOrd=dcSeedOrder();
   /* --- promotion & relegation: bottom 3 ↔ top 3 in tiered countries --- */
   const myTids=new Set(S.clients.map(id=>byId(id).team));
   TIERS.forEach(([tc,sc])=>{
@@ -518,6 +519,7 @@ function endSeason(){
     down.forEach(tm=>{tm.lg=si;if(myTids.has(tm.id))pushNews('relegated',{c:tm.n,tid:tm.id,li:si},'bad');});
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
+  seedDomCups(dcOrd);
   /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
   const tstr={};S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});
   /* --- gol bonusu anlaşmaları: 10+ gol atan transferden pay --- */
