@@ -1161,6 +1161,66 @@ game is ~11,420 players across 714 clubs over a 38-week season. Any change to
 player-facing economy has to be checked against this background economy — it's easy to
 break the free-agent pool or the age pyramid without noticing.
 
+### A week is measured on a slowed CPU, and a faster week must leave the world identical
+
+The simulation grew roughly threefold over the cup and national-team work, and the
+question was what that costs on a phone. A desktop or the Android emulator (which runs
+on the host CPU) cannot answer it. The method is Chromium with
+`Emulation.setCPUThrottlingRate` through Playwright: **4× is what Lighthouse calls a
+mid-tier phone, 6× a weak one.** The real `index.html` is served (`npm run serve`), a
+career is started, and every `nextWeek()` is timed from the call to the frame after it
+— rendering included, with the week's modals closed as a player would. A CPU profile
+(`Profiler.start`) over the slow weeks says where the time goes. The weekly save's
+`put()` partly lands after that frame, so the profile, not the frame time, is the
+measure of save cost.
+
+Measured on one seed, 55 weeks (a season and the start of the next), `main` against
+the fixes, back to back:
+
+| | 4× `main` | 4× fixed | 6× `main` | 6× fixed |
+|---|---|---|---|---|
+| median week | 0.72 s | 0.51 s | 1.14 s | 0.64 s |
+| slowest 10% | 1.75 s | 0.82 s | 2.38 s | 1.01 s |
+| season-end week | 5.2 s | 1.5 s | 13.3 s | 1.9 s |
+| 55 weeks | 47.5 s | 29.6 s | 85.1 s | 38.0 s |
+
+Four hot spots, each found by the profile, not guessed:
+
+- **`natCount()`** — the census was keyed on the player count, and every youth that
+  `rebalanceSquads()` adds changed it, so all 11,500 players were recounted once per
+  new youth. `natFill()` now counts the newcomer itself and moves the key on to the
+  count after the push (both callers push straight after).
+- **`teamStr()` outside the week** — at season end (`endSeason()`'s `tstr` and the
+  prestige loop at the end of `rebalanceSquads()`) `SQIDX` was null, so `squadOf()`
+  filtered every player for each of the 714 clubs. Both loops now build the index for
+  themselves and drop it in `finally`; neither moves a player.
+- **`freeAgents()` in `simTransfers()`** — called once per buying club, each a full
+  filter. It is now taken once per window week; `aiTransfer()` never frees a player, so
+  skipping those signed meanwhile (`p.team >= 0`) yields the same list in the same order.
+- **The weekly save copy.** `put()` is a structured clone of the whole career on the main
+  thread, and `p.l5` — five small objects per player, 57,000 in all — was 40% of the
+  save and about half of the clone. It is now **one string per player**
+  (`l5Enc()`/`l5Dec()` in core.js: entries split by `|`, fields by `,`, in the order
+  `o,res,g,a,rt,mm,sc,min,cp,nt`). Read it only through `l5List(p)` and write it only
+  through `l5Push()`/`l5Motm()`; nothing touches `p.l5` directly any more. Numbers
+  round-trip exactly through `String`/`Number`, so a decoded entry is the entry that was
+  written, optional `cp`/`nt` included. Old saves carry arrays: every reader accepts
+  both and a player's list is rewritten as a string at its next match, with no
+  migration step. Clone at 4×: 593 → 311 ms; the save from 9.3 MB to 6.6 MB at season 2.
+  A build older than this one would crash on a string `l5` — Play does not install
+  downgrades, but a side-loaded older APK over a newer save would.
+
+**Every one of these is proved neutral, not argued.** Two seeds over two seasons and
+one over four seasons, `{S, PID}` hashed with `l5` decoded back to arrays: identical to
+`main`. A save written by `main` (all 11,430 players in the array form) opened in the new
+code and played six weeks clean; 621 players who had not played yet were still arrays,
+which the readers accept.
+
+What is left is mostly the remaining clone (`p.seasons` is the next largest field at
+~2 MB, six objects per player) and the match engine itself. Re-measure with the same
+method before and after touching either, and **measure a real phone** before trusting
+the throttled numbers for anything more than ratios.
+
 ### Every match goes through one engine, whatever the competition
 
 `playFixture(m, cp)` in `sim.js` is the player side of a match: who starts, minutes,
@@ -1185,7 +1245,7 @@ identically before and after, with cups still on the old path.
 |---|---|---|
 | apps, minutes, goals, assists | `p.app/min/g/a` | `p.cs = {app,min,g,a}` |
 | rating | `p.rtSum/rtN` | `p.rtSum/rtN` — the same, on purpose |
-| `p.l5` / `S.wkRep` row | as before | same row plus `cp` |
+| `p.l5` (via `l5Push()`) / `S.wkRep` row | as before | same row plus `cp` |
 
 The split is deliberate. `p.g`/`p.a` stay **league** numbers because the top-scorer
 race, the assist list, the league archive and the goal-bonus deals (`S.deals`, "10+
