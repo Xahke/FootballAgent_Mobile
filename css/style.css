@@ -136,6 +136,9 @@ html[data-theme="saha"] .tb{border-radius:9px;display:flex;align-items:center;ju
 html[data-theme="saha"] .tb i{position:absolute;left:0;right:0;bottom:0;height:22%;font-style:normal}
 html[data-theme="saha"] .tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
 html[data-theme="saha"] .tb.tbv>svg{display:block;width:100%;height:100%}
+html[data-theme="saha"] .tb.tbf{background:none;box-shadow:none;border-radius:0;overflow:visible}
+html[data-theme="saha"] .tb.tbf>img{display:block;width:100%;height:75%;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+html[data-theme="saha"] .flg{display:inline-block;width:1.3em;height:.975em;vertical-align:-.12em;margin-right:.35em;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
 html[data-theme="saha"] .pitem{display:flex;align-items:center;gap:11px;padding:11px 13px;cursor:pointer;border-bottom:1px solid var(--line);
   position:relative;transition:background var(--tap)}
 html[data-theme="saha"] .pitem:last-child{border-bottom:none}
@@ -2375,6 +2378,9 @@ html[data-theme="gazete"] .tb{border-radius:2px;display:flex;align-items:center;
 html[data-theme="gazete"] .tb i{position:absolute;left:0;right:0;bottom:0;height:20%;font-style:normal}
 html[data-theme="gazete"] .tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
 html[data-theme="gazete"] .tb.tbv>svg{display:block;width:100%;height:100%}
+html[data-theme="gazete"] .tb.tbf{background:none;box-shadow:none;border-radius:0;overflow:visible}
+html[data-theme="gazete"] .tb.tbf>img{display:block;width:100%;height:75%;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+html[data-theme="gazete"] .flg{display:inline-block;width:1.3em;height:.975em;vertical-align:-.12em;margin-right:.35em;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
 html[data-theme="gazete"] .pitem{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer;
   border-bottom:1px solid var(--line);position:relative;min-height:56px;background:none}
 html[data-theme="gazete"] .pitem:last-child{border-bottom:none}
@@ -3342,6 +3348,9 @@ html[data-theme="terminal"] .tb{border-radius:3px;display:flex;align-items:cente
 html[data-theme="terminal"] .tb i{position:absolute;left:0;right:0;bottom:0;height:20%;font-style:normal}
 html[data-theme="terminal"] .tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
 html[data-theme="terminal"] .tb.tbv>svg{display:block;width:100%;height:100%}
+html[data-theme="terminal"] .tb.tbf{background:none;box-shadow:none;border-radius:0;overflow:visible}
+html[data-theme="terminal"] .tb.tbf>img{display:block;width:100%;height:75%;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+html[data-theme="terminal"] .flg{display:inline-block;width:1.3em;height:.975em;vertical-align:-.12em;margin-right:.35em;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
 html[data-theme="terminal"] .pitem{display:flex;align-items:center;gap:11px;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--line);
   position:relative;min-height:54px;transition:background var(--tap)}
 html[data-theme="terminal"] .pitem:last-child{border-bottom:none}
@@ -4311,6 +4320,9 @@ html[data-theme="dosya"] .tb{border-radius:5px;display:flex;align-items:center;j
 html[data-theme="dosya"] .tb i{position:absolute;left:0;right:0;bottom:0;height:20%;font-style:normal}
 html[data-theme="dosya"] .tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
 html[data-theme="dosya"] .tb.tbv>svg{display:block;width:100%;height:100%}
+html[data-theme="dosya"] .tb.tbf{background:none;box-shadow:none;border-radius:0;overflow:visible}
+html[data-theme="dosya"] .tb.tbf>img{display:block;width:100%;height:75%;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+html[data-theme="dosya"] .flg{display:inline-block;width:1.3em;height:.975em;vertical-align:-.12em;margin-right:.35em;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
 html[data-theme="dosya"] .pitem{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;
   border-bottom:1px solid var(--line);position:relative;min-height:60px;transition:background var(--tap)}
 html[data-theme="dosya"] .pitem:last-child{border-bottom:none}

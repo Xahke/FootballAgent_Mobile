@@ -797,7 +797,7 @@ function playerRow(p,opts){
   return `<div class="pitem${p.agent==='you'?' mine':''}" onclick="pushV('player',${p.id})">
     ${opts.noBadge?'':tmBadge(tm,34)}
     <div class="pinfo"><div class="pname"><span style="overflow:hidden;text-overflow:ellipsis">${p.n}</span>${p.agent==='you'?'<span class="star">★</span>':''}${wonder}
-      <span class="natc">${NATS[p.nat].c}</span></div>
+      <span class="natc">${natFlag(p.nat)}${NATS[p.nat].c}</span></div>
     <div class="psub">${lgTag}${tx(POSL)[p.pos]} · ${p.age} · ${fmtK(p.wage)}/${t('wk')} · ${p.yrs} ${t('yrs')}${potTag}${extra}${chTag}</div></div>
     <div class="mood"><i style="height:${Math.round(p.morale)}%;background:${moodColor(p.morale)}"></i></div>
     <div class="rt ${rtClass(p.r)}">${p.r}</div></div>`;
@@ -1176,7 +1176,7 @@ function ncQHtml(Q){
   let h=cs.length>1||ic?`<div class="chips">${cs.map(c=>`<button class="${cf===c?'on':''}" onclick="setNcCf('${c}')">${esc(ncCfName(c))}</button>`).join('')}
     ${ic?`<button class="${cf==='ic'?'on':''}" onclick="setNcCf('ic')">${t('ncIC')}</button>`:''}</div>`:'';
   h+=`<div class="card"><div class="sect">${t('ncQual')} · ${esc(ctName(Q.kind==='eu'?'eu':'wc'))} · ${t('season')} ${Q.ed}</div>
-    <div class="sub">${t('ncHosts')}: ${Q.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')}</div></div>`;
+    <div class="sub">${t('ncHosts')}: ${Q.hosts.map(n=>natFlag(n)+esc(ntPseudo(n).n)).join(', ')}</div></div>`;
   if(cf==='ic'){
     const I=Q.ic;
     if(!I||!I.t.length)return h+`<div class="card">${emptyState('league',t('noCupYet'),t('week')+' '+NC_POW)}</div>`;
@@ -1186,7 +1186,7 @@ function ncQHtml(Q){
   }
   const C=Q.c[cf],up=C.up!==undefined?C.up:Math.min(NC_UPO[cf]||0,C.D),icn=C.icn!==undefined?C.icn:(NC_IC[cf]||0);
   h+=`<div class="sub" style="margin:0 2px 10px">${fmtStr(t('ncQuota'),{d:C.D-up,p:up||icn})}</div>`;
-  if(!C.g.length)return h+`<div class="card">${C.d.map(n=>`<div class="kv"><span class="k">${esc(ntPseudo(n).n)}</span><span class="v">✓</span></div>`).join('')}</div>`;
+  if(!C.g.length)return h+`<div class="card">${C.d.map(n=>`<div class="kv"><span class="k">${natFlag(n)}${esc(ntPseudo(n).n)}</span><span class="v">✓</span></div>`).join('')}</div>`;
   const dec=C.d.length>0,po=new Set(C.po.flatMap(x=>[x.s,x.u]).concat(C.ic));
   const zone=dec?(n=>C.d.includes(n)?'zone1':po.has(n)?'zone2':''):null;
   C.g.forEach((G,gi)=>{
@@ -1199,9 +1199,9 @@ function ncQHtml(Q){
 }
 function ncTHtml(W,nextSe){
   const live=W.se===S.season,T=totalWeeks(),id=W.id||'wc';
-  const hs=(W.hosts||[]).length?`${t('ncHosts')}: ${W.hosts.map(n=>esc(ntPseudo(n).n)).join(', ')} · `:'';
+  const hs=(W.hosts||[]).length?`${t('ncHosts')}: ${W.hosts.map(n=>natFlag(n)+esc(ntPseudo(n).n)).join(', ')} · `:'';
   let h=`<div class="card"><div class="sect">${esc(ctName(id))} · ${t('season')} ${W.se}</div>
-    ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
+    ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${natFlag(W.w)}${esc(ntPseudo(W.w).n)}</span></div>`:''}
     <div class="sub">${hs}${id==='wc'?t('nextWc'):t('ctNext')}: ${t('season')} ${nextSe}</div></div>`;
   const gi=NCG>=0&&NCG<W.g.length?NCG:-1;
   h+=`<div class="chips">${W.g.map((_,i)=>`<button class="${gi===i?'on':''}" onclick="setNcG(${i})">${String.fromCharCode(65+i)}</button>`).join('')}
@@ -1242,7 +1242,7 @@ function ncHtml(RL){
     const lbl=ri=>{const k=R-1-ri;return k===0?t('finalLbl'):k===1?t('sf'):k===2?t('qf'):k===3?t('r16'):fmtStr(t('dcRound'),{n:ri+1});};
     const live=W.se===S.season;
     h+=`<div class="card"><div class="sect">${t('wcLbl')} · ${t('season')} ${W.se}</div>
-      ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${esc(ntPseudo(W.w).n)}</span></div>`:''}
+      ${W.w?`<div class="row" style="margin-bottom:8px"><span class="tag g">${t('champion')}: ${natFlag(W.w)}${esc(ntPseudo(W.w).n)}</span></div>`:''}
       <div class="sub">${t('nextWc')}: ${t('season')} ${nextSe}</div></div>`;
     h+=W.r.map((ties,ri)=>`<div class="card"><div class="sect">${lbl(ri)}${live?' · '+t('week')+' '+(totalWeeks()+ri+1):''}</div>
       ${ties.map(ntTieHtml).join('')}</div>`).join('');
@@ -1268,7 +1268,7 @@ function ncHtml(RL){
      ülken önce, en fazla on maç. */
   const mine=S.clients.map(byId).filter(p=>p&&(p.caps||ntInSquad(p.id)));
   if(mine.length)h+=`<div class="card"><div class="sect">${t('ntMine')}</div>
-    ${mine.map(p=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)} · ${NATS[p.nat].c}${ntInSquad(p.id)?' <span style="color:var(--acc)">✓</span>':''}</span>
+    ${mine.map(p=>`<div class="kv" style="cursor:pointer" onclick="pushV('player',${p.id})"><span class="k">${esc(p.n)} · ${natFlag(p.nat)}${NATS[p.nat].c}${ntInSquad(p.id)?' <span style="color:var(--acc)">✓</span>':''}</span>
     <span class="v num">${p.caps||0} ${t('mShort')} · ${p.ig||0} ${t('gShort')}</span></div>`).join('')}</div>`;
   const M=(S.nt&&S.nt.m)||[];
   if(M.length){
@@ -1280,7 +1280,7 @@ function ncHtml(RL){
         <span class="tn r">${esc(a.n)}</span>${tmBadge(a,20)}<span class="sc">${m.hg} : ${m.ag}</span>${tmBadge(b,20)}<span class="tn">${esc(b.n)}</span></div>`;}).join('')}</div>`;
   }
   if((S.wcHist||[]).length)h+=`<div class="card"><div class="sect">${t('history')}</div>
-    ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
+    ${S.wcHist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${natFlag(x.nat)}${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
   return h;
 }
 /* Kıta turnuvaları (nations.js): turnuva seçimi ekran durumu (CTSEL), kayda girmiyor.
@@ -1308,7 +1308,7 @@ function ctHtml(){
   else h+=`<div class="card"><div class="sect">${esc(ctName(id))}</div>${emptyState('league',t('noCupYet'),t('ctNext')+': '+t('season')+' '+ctNextSe(id))}</div>`;
   const hist=((S.ctHist||{})[id]||[]);
   if(hist.length)h+=`<div class="card"><div class="sect">${t('history')}</div>
-    ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
+    ${hist.slice().reverse().map(x=>`<div class="kv"><span class="k">S${x.se}</span><span class="v">${natFlag(x.nat)}${esc(ntPseudo(x.nat).n)}</span></div>`).join('')}</div>`;
   return h;
 }
 function cupView(){
@@ -1455,7 +1455,7 @@ function clCard(p){
     ${clAvatar(p,tm)}
     <span class="clBody">
       <span class="clName">${esc(p.n)}</span>
-      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
+      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${natFlag(p.nat)}${tx(NATNAME[p.nat])}</span>
       <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b>${isFree(p)?''
         :`<i></i><span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
       ${st?`<span class="clStat">${ICONS[st.ic]}<span>${st.lbl(p)}</span></span>`:''}
@@ -1578,7 +1578,7 @@ function mkCard(p){
     ${clAvatar(p,tm)}
     <span class="clBody">
       <span class="clName">${esc(p.n)}${gem}</span>
-      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
+      <span class="clMeta">${tx(POSFULL)[p.pos]} · ${natFlag(p.nat)}${tx(NATNAME[p.nat])}</span>
       <span class="clFacts"><b class="num">${fmtM(valueOf(p))}</b><i></i>${isFree(p)
         ?`<span class="mkFree">${t('faShort')}</span>`
         :`<span class="num">${t('contract')} ${p.yrs} ${t('yrs')}</span>`}</span>
@@ -2142,7 +2142,7 @@ function pfSectHtml(k,title,sub){
 function pfNtHtml(p){
   if(!(p.caps||ntInSquad(p.id)))return '';
   return `<div class="card pfCard">
-    <div class="pfSub">${t('ntTitle')} · ${esc(tx(NATNAME[p.nat]))}</div>
+    <div class="pfSub">${t('ntTitle')} · ${natFlag(p.nat)}${esc(tx(NATNAME[p.nat]))}</div>
     <div class="pfGrid pfG4">
       ${pfCell(p.caps||0,t('ntCaps'))}
       ${pfCell(p.ig||0,t('ntGoals'))}
@@ -2215,7 +2215,7 @@ function pfHeadHtml(p,tm,cx){
       ${tmBadge(tm,46)}
       <span class="pfIdT">
         <span class="pfName">${esc(p.n)}</span>
-        <span class="pfMeta">${p.age} ${t('ageU')} · ${tx(POSFULL)[p.pos]} · ${tx(NATNAME[p.nat])}</span>
+        <span class="pfMeta">${p.age} ${t('ageU')} · ${tx(POSFULL)[p.pos]} · ${natFlag(p.nat)}${tx(NATNAME[p.nat])}</span>
       </span>
       <span class="pfRt ${rtClass(p.r)}"><b class="num">${p.r}</b><em>${t('rating')}</em></span>
     </div>
@@ -3197,7 +3197,7 @@ player(id){
   const tags=[];
   if(mine)tags.push(`<span class="tag g">${t('myClient')}</span>`);
   tags.push(`<span class="tag pos">${tx(POSFULL)[p.pos]}</span>`);
-  tags.push(`<span class="tag n">${NATS[p.nat].c}</span>`);
+  tags.push(`<span class="tag n">${natFlag(p.nat)}${NATS[p.nat].c}</span>`);
   if(p.yrs<=1)tags.push(`<span class="tag w">${t('expiring')}</span>`);
   if(mine&&p.morale<40)tags.push(`<span class="tag b">${p.wage<marketWage(p.r)*0.8?t('wantsNew'):t('wantsOut')}</span>`);
   const offs=(S.offers||[]).filter(x=>x.pid===p.id),off=offs[0],pen=pendingFor(p.id),pc=pendCFor(p.id);
@@ -3213,7 +3213,7 @@ player(id){
     <div class="row">
       ${tmBadge(tm,44)}
       <div style="flex:1;min-width:0"><div class="hname">${p.n}</div>
-      <div class="hsub">${p.age} ${t('ageUL')} · ${tx(POSFULL)[p.pos]} · ${NATS[p.nat].c}</div></div>
+      <div class="hsub">${p.age} ${t('ageUL')} · ${tx(POSFULL)[p.pos]} · ${natFlag(p.nat)}${NATS[p.nat].c}</div></div>
       <div class="bigrt ${rtClass(p.r)}"><span class="n">${p.r}</span><span class="l">${t('rating')}</span></div>
     </div>
     <div style="margin-top:14px">${tags.join('')}</div>
@@ -3270,7 +3270,7 @@ player(id){
   </div>`:''}
   <div class="card">
     <div class="sect">${t('personal')}</div>
-    <div class="kv"><span class="k">${t('nation')}</span><span class="v">${NATS[p.nat].c}</span></div>
+    <div class="kv"><span class="k">${t('nation')}</span><span class="v">${natFlag(p.nat)}${NATS[p.nat].c}</span></div>
     ${p.caps?`<div class="kv"><span class="k">${t('ntTitle')}</span><span class="v">${p.caps} ${t('ntCaps')} · ${p.ig||0} ${t('gShort')}${ntInSquad(p.id)?' · '+t('ntSquadL'):''}</span></div>`:''}
     <div class="kv"><span class="k">${t('age')}</span><span class="v">${p.age}</span></div>
     ${/* Boy yoksa birim de yazılmaz: "— cm" diye bir ölçü yok. Saha profili
@@ -3792,7 +3792,7 @@ function setupSync(){
 
   const lgs=nat?setupKnownLgs(nat):[];
   const natN=(nat&&NATNAME[nat])?tx(NATNAME[nat]):'';
-  const nt=g('mcNat');if(nt)nt.textContent=natN;
+  const nt=g('mcNat');if(nt)nt.innerHTML=(nat?natFlag(nat):'')+esc(natN);
   const lc=g('mcLgN');if(lc)lc.textContent=lgs.length+' '+t('knownLbl');
   const box=g('mcLgs');
   if(box)box.innerHTML=lgs.map(i=>`<span class="mcLg">${esc(lgName(i))}</span>`).join('');

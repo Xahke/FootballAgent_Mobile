@@ -162,7 +162,7 @@ function objectsWithKeys(src) {
 const EXEMPT = [/^const PRIVACY_URL=/,
   /^const (STR|NEWS)=\{/];   // diğer diller js/lang-*.js'ten dolduruyor; bütünlükleri yukarıda ölçülüyor
 const EXEMPT_FILES = ['badges.js'];
-const jsFiles = fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js') && !/^lang-/.test(f) && f !== 'worldgeo.js');
+const jsFiles = fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js') && !/^lang-/.test(f) && f !== 'worldgeo.js' && f !== 'flags.js');
 const incomplete = [];
 let nObj = 0;
 for (const f of jsFiles.filter(f => EXEMPT_FILES.indexOf(f) < 0)) {
