@@ -158,7 +158,8 @@ npm run serve     # local server for development
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Bundled third-party data (national flags from
+flag-icons, map geometry from Natural Earth) is listed in [LICENSES.md](LICENSES.md).
 
 Not affiliated with any football club, league or governing body. All names in the
 game are fictional.

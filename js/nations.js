@@ -604,7 +604,8 @@ function simNat(){
 /* ===== OKUYUCULAR (arayüz) ===== */
 /* Milli maç satırlarında rakip bir ülke: rozet ve ad çizilebilsin diye takım
    biçiminde bir nesne. Kayda girmiyor; ad dile göre değiştiği için önbellek dile
-   göre. Renk ülke kodundan türüyor — gerçek bir bayrak değil, ayırt etmek için. */
+   göre. Rozet olarak gerçek bayrak çiziliyor (flag → tmBadge, js/flags.js); renkler
+   yalnız bayrağı olmayan bir kod için yedek. */
 const NT_COL=['#c8102e','#0033a0','#007a3d','#f1bf00','#111111','#ff7900','#6cace4','#7a1f3d','#00843d','#5b2c86'];
 let NTPS={},NTPSL='';
 function ntPseudo(nat){
@@ -612,7 +613,7 @@ function ntPseudo(nat){
   if(NTPS[nat])return NTPS[nat];
   let h=0;for(const ch of String(nat))h=(h*31+ch.charCodeAt(0))>>>0;
   const nm=NATNAME[nat]?tx(NATNAME[nat]):String(nat);
-  return (NTPS[nat]={id:-1,n:nm,ab:NATS[nat]?NATS[nat].c:'—',c1:NT_COL[h%NT_COL.length],c2:NT_COL[(h>>3)%NT_COL.length],lg:-1,str:50});
+  return (NTPS[nat]={id:-1,n:nm,ab:NATS[nat]?NATS[nat].c:'—',c1:NT_COL[h%NT_COL.length],c2:NT_COL[(h>>3)%NT_COL.length],lg:-1,str:50,flag:nat});
 }
 /* Bir maç kaydının rakibi: milli maçta ülke, kulüp maçında takım. */
 function oppOf(o,nt){return nt?ntPseudo(o):S.teams[o];}

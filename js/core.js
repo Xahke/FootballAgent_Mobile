@@ -81,6 +81,8 @@ function lum(hex){const n=parseInt(hex.slice(1),16);return 0.299*(n>>16)+0.587*(
    tanınabilir bir kutu görünsün. Yedek kendisi atmaz. */
 function tmBadge(tm,size){
   const s=size||36;
+  /* Millî takım: gerçek bayrağı (js/flags.js). ntPseudo() 'flag' taşıyor. */
+  if(tm&&tm.flag){const f=flagBadge(tm.flag,s);if(f)return f;}
   const v=(typeof badgeVector==='function')?badgeVector(tm,s):null;
   if(v)return `<div class="tb tbv" style="width:${s}px;height:${s}px">${v}</div>`;
   return tmBadgeLetter(tm,s);
@@ -95,6 +97,33 @@ function tmBadgeLetter(tm,size){
   const lbl=t.ab||(typeof t.n==='string'?t.n.slice(0,3):'')||'—';
   return `<div class="tb" style="width:${s}px;height:${s}px;font-size:${f}px;color:${txt};background:${c1}">
     ${typeof esc==='function'?esc(lbl):lbl}<i style="background:${c2}"></i></div>`;
+}
+/* ===== BAYRAKLAR =====
+   js/flags.js uyruk başına bir SVG dizesi tutuyor. Çizim <img> ile: img içindeki SVG
+   betik çalıştıramaz ve iç id'leri sayfanınkilerle çakışmaz. Adres bayrak başına BİR
+   kez kurulan bir blob: URL — armalı bir bayrak 180 KB'a kadar çıkıyor ve data: URI
+   olarak her satıra kopyalanırsa 48 takımlı bir tablo megabaytlarca işaretleme olurdu.
+   Blob olmayan ortamda (Node'daki testler) data: URI'ye düşüyor. */
+const FLAGURL={};
+function flagSrc(nat){
+  if(typeof FLAGS==='undefined'||!FLAGS[nat])return null;
+  if(FLAGURL[nat])return FLAGURL[nat];
+  let u=null;
+  try{
+    if(typeof Blob!=='undefined'&&typeof URL!=='undefined'&&URL.createObjectURL)
+      u=URL.createObjectURL(new Blob([FLAGS[nat]],{type:'image/svg+xml'}));
+  }catch(e){u=null;}
+  return (FLAGURL[nat]=u||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(FLAGS[nat]));
+}
+/* Rozet yerine bayrak: kare kutu korunuyor ki satır hizası kulüp rozetiyle aynı kalsın. */
+function flagBadge(nat,s){
+  const u=flagSrc(nat);
+  return u?`<div class="tb tbf" style="width:${s}px;height:${s}px"><img src="${u}" alt="" draggable="false"></div>`:null;
+}
+/* Metin içi küçük bayrak (uyruk yazısının önünde). Bayrak yoksa boş. */
+function natFlag(nat){
+  const u=flagSrc(nat);
+  return u?`<img class="flg" src="${u}" alt="">`:'';
 }
 let PID=1;
 function genName(nat){

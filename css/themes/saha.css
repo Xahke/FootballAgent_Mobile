@@ -162,6 +162,11 @@ h2.sec{font-size:17px;font-weight:800;margin:2px 0 12px;letter-spacing:-.02em}
    kurallar çalışmaya devam etsin, SVG de onlarla birlikte küçülsün. */
 .tb.tbv{background:none;box-shadow:none;border-radius:0;overflow:visible}
 .tb.tbv>svg{display:block;width:100%;height:100%}
+/* Millî takım bayrağı (flagBadge) ve metin içi uyruk bayrağı (natFlag). Gri
+   çerçeve beyaz zeminli bayrakların (Japonya) açık temada kaybolmaması için. */
+.tb.tbf{background:none;box-shadow:none;border-radius:0;overflow:visible}
+.tb.tbf>img{display:block;width:100%;height:75%;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+.flg{display:inline-block;width:1.3em;height:.975em;vertical-align:-.12em;margin-right:.35em;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
 
 /* ===================== PLAYER CARDS ===================== */
 .pitem{display:flex;align-items:center;gap:11px;padding:11px 13px;cursor:pointer;border-bottom:1px solid var(--line);

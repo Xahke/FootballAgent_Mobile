@@ -49,3 +49,7 @@ GoogleService-Info.plist
 
 # node tools/playtest.js çıktısı (CSV, ham JSON, özet). Her koşuda yeniden üretilir.
 playtest-out/
+
+# flag-icons paketinin yerel kopyası (tools/build-flags.js). Üretilen js/flags.js
+# depoda; paket yalnız yeniden üretirken indirilir.
+tools/.flagcache/
