@@ -1283,7 +1283,7 @@ user's decision, and 26, Russia, suspended by UEFA; 31–55 are not in the game)
 | Qualifying play-off | 2, 4 | one two-legged round per cup; ŞL losers drop into the AL league phase, AL losers into the KL league phase |
 | League phase | 6–23 | 36 clubs in one table; ŞL/AL 8 matches (4 pots × 9, two opponents per pot, one home one away), KL 6 (6 pots × 6, one per pot, 3 home 3 away) |
 | Knockout play-off | 25, 26 | 9/10–23/24, 11/12–21/22, 13/14–19/20, 15/16–17/18; 25–36 are out |
-| Last 16 → semi-final | 28–35 | two legs each; 1/2 meet the 15–18 winners, 3/4 the 13–20, 5/6 the 11–22, 7/8 the 9–24, in two halves so 1 and 2 meet at the earliest in the final |
+| Last 16 → semi-final | 28–35 | two legs each; 1/2 meet the 15–18 winners, 3/4 the 13–20, 5/6 the 11–22, 7/8 the 9–24, in two halves so 1 and 2 meet at the earliest in the final. The seed path hosts the return leg: 1–8 in the last 16, 1–4 in the quarter-finals, 1–2 in the semi-finals, and a club that knocks a seed out takes over its path (`t.ps`, `cupNext()`) |
 | Final | 37 | one match, neutral ground |
 
 **Who goes where is data, not a formula.** `cupAllocate()` reads `UEFA_ASSOC` (rank and
@@ -1303,26 +1303,72 @@ overlaps rebalance themselves. Lists that run out continue round-robin over asso
 up to a per-rank cap close to the real totals. A new game draws on fresh tables, i.e. in
 team order. The function is pure (no RNG, no writes), so the league tables read the same
 answer: `lgZoneOf()` colours positions by `cupProj()`, "if the season ended now".
+`cupProj()` memoises per week, and the cache is also tied to the career object
+(`CUPPROJS === S`): the key alone (season, `tw`, week) is the same for two careers at the
+same point, and loading one after the other showed the first one's European zones.
+
+Four of the fixes in this section — the tie-break order, seed inheritance in the bracket,
+the holder's pot and the home/away sequence — and the `cupProj()` cache came from a Codex
+review of `js/cups.js` (GPT-6-Astra, read-only, November 2026): five findings, all
+reproduced, none caught by the scan or `savetest`. The national-cup seeding order (next
+section) was found while verifying them.
 
 **Pots use fixed club coefficients** (`CCOEF`, data.js): each club's real 5-year UEFA
 coefficient (2021/22–2025/26, from kassiesa.net's `trank2026`, an independent compilation
 using UEFA's method — not UEFA itself), keyed by the game club's **name**, and the
 association floor for everyone else. The user decided these stay fixed at today's values
-for now; in-game results do not move them. The ŞL holder is forced into pot 1.
+for now; in-game results do not move them. The ŞL holder is forced into pot 1 —
+`cupDrawLp()` reads it as `cupHolder(0, S.season−1)`, because the draw runs in week 4 of
+the *next* season, after `S.season` has gone up. Read with the default season it found no
+holder at all, and the holder was drawn by coefficient like everyone else.
+
+**The table uses UEFA's full tie-break order** (Art. 18): points, goal difference, goals,
+away goals, wins, away wins, then the league-phase opponents' total points, goal
+difference and goals, then the club coefficient. Disciplinary points sit between the
+opponents' goals and the coefficient in the real list; the game has no cards, so that step
+is skipped. Without away wins and the opponent criteria, the coefficient used to decide
+the 24th/25th line.
 
 **The league-phase draw is a constructive search, and it is measured, not assumed.**
 `cupEdges8()`/`cupEdges6()` build each pot pairing with backtracking (`cupMatch`) under
 the real rules — no club meets its own association, at most two opponents from any one
 association (`cupCap`, enforced *while* pairing; checking it afterwards failed 300 of 300
-ŞL draws once England and Spain sent five clubs each) — and `cupColor()` splits the
-matches into matchdays so a club plays exactly once per matchday, by Kempe-chain edge
-colouring. KL orientation comes from an Euler circuit, which gives every club 3 home and
-3 away. When a pot cannot satisfy the rules at all (a KL pot of six once held four clubs
-of one association), `cupDrawLp()` swaps a few clubs with the neighbouring pot and tries
-again. Measured: 1,500 draws over five seeds, every one valid on every rule, the slowest
-116 ms; with the 28 associations of Kademe B, 810 more, all valid, the slowest 42 ms —
-more associations make the country rules easier to satisfy. `cupDrawLpLoose()` (round robin, rules relaxed) exists only so an impossible draw
-can never stop a season; it was not reached in those 1,500.
+ŞL draws once England and Spain sent five clubs each). When a pot cannot satisfy the
+rules at all (a KL pot of six once held four clubs of one association), `cupDrawLp()`
+swaps a few clubs with the neighbouring pot and tries again. `cupDrawLpLoose()` (round
+robin, rules relaxed) exists only so an impossible draw can never stop a season; it was
+not reached in any measured draw.
+
+**The calendar follows UEFA's home/away sequence rule** (Art. 17.02): no club plays more
+than two home or two away matches in a row, and every club has one home and one away
+match across the first two and across the last two matchdays. The opponents are the
+draw's; the matchday of each match and who hosts it are built to satisfy the rule — in the
+real draw, home and away are also decided together with the schedule. Splitting the
+matches into matchdays with only a "once per matchday" rule (the old `cupColor()` path)
+broke the sequence rule for **70% of clubs** (455 of 648).
+
+- **KL needs no search.** The pairs of its six pots are a 1-factorisation of K6 (five
+  rounds, round robin), each round a perfect matching of all 36 clubs, plus the in-pot
+  pairs as a sixth: six matchdays. `cupInitCol6()` groups them two by two (1–2, 3–4, 5–6);
+  the union of two perfect matchings is a set of even cycles, and hosting in the direction
+  of travel gives every club one home and one away in every pair — 3/3 in total and the
+  sequence rule by construction. That replaced the Euler-circuit orientation.
+- **ŞL/AL need a short search.** Each pot pair's matches are a directed 2-factor with even
+  cycles, so `cupInitCol8()` colours pairs 0–1 + 2–3 alternately onto matchdays 1–2 and
+  0–2 + 1–3 onto 7–8 — the first/last-two rule holds from the start — and Kempe-colours
+  the rest (pair 0–3 + 1–2 and the in-pot matches, whose 9-club pots force an odd cycle)
+  onto matchdays 3–6. `cupSeqFix()` then anneals with two moves that keep the draw valid:
+  a Kempe swap of two matchdays along an alternating cycle, and reversing who hosts whom
+  along a directed cycle **inside one pot pair**, which keeps "one home and one away
+  against each pot". Each start gets 6,000 iterations; a stuck one restarts from a new
+  colouring. Shuffling the matchday order alone was tried first and almost never found a
+  valid order; Kempe swaps alone stalled at 2–8 violations; a random starting colouring
+  needed ~0.5 s.
+
+Measured on the fix: 1,080 draws over nine seeds, every one valid on every rule — country,
+the two-per-association cap, once per matchday, 4/4 (3/3) home and away, one home and one
+away against each pot, no repeated opponent, and the sequence rule. Time per draw: ŞL/AL
+median 12–16 ms, p95 ~120 ms, slowest 208 ms; KL ~1 ms. It runs once a season, in week 4.
 
 Legs use the league goal model with home advantage; the final is neutral. A level
 aggregate goes to penalties (`pen`), weighted slightly towards the stronger side. Every
@@ -1358,7 +1404,11 @@ cups do: **every club of the country**, both tiers; single-match knockout; a lev
 goes to penalties (`cupTieEnd()`, the same rule as the European legs); the final on neutral
 ground. The bracket is the next power of two, and the top seeds — tier first, then the
 finishing position of the season that just ended — take the byes, as real top-flight
-clubs enter in later rounds. Every round is drawn afresh (`dcDraw()`), open draw, and when
+clubs enter in later rounds. The tier is **next season's**: `endSeason()` takes the
+finishing order before promotion and relegation (`dcSeedOrder()`) and seeds after them
+(`seedDomCups(ord)`), so a club that has just gone down is seeded at the top of the second
+tier and a promoted one at the bottom of the first. Seeded before relegation, a relegated
+club used to count as top-flight and could take a bye. Every round is drawn afresh (`dcDraw()`), open draw, and when
 two tiers meet the lower one hosts. Spain, Italy, Portugal and Brazil play two-legged
 semi-finals (`DC_SF2`), as they really do.
 

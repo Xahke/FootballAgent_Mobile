@@ -15014,11 +15014,15 @@ function cupAssocs(){
   });
   return out.sort((x,y)=>x.r-y.r);
 }
-/* Bir önceki sezonun kupa sahibi (seedCups sezon sonunda, S.season artmadan
-   çalışıyor; o yüzden "bu sezonun" şampiyonu bir sonraki sezonun sahibi). */
-function cupHolder(ci){
+/* Kupa sahibi: se sezonunun şampiyonu. seedCups sezon sonunda, S.season artmadan
+   çalışıyor; o yüzden dağıtımda "bu sezonun" şampiyonu bir sonraki sezonun sahibi.
+   Kura ise yeni sezonun 4. haftasında, S.season arttıktan SONRA — orada sahip bir
+   önceki sezonunki (se = S.season−1). Varsayılanla çağrılınca sahip hiç bulunamıyor
+   ve 1. torbaya konmuyordu. */
+function cupHolder(ci,se){
+  if(se===undefined)se=S.season;
   const h=(S.cupHist||{})[CUPS[ci].c];const x=h&&h[h.length-1];
-  return x&&x.se===S.season&&S.teams[x.tid]?x.tid:null;
+  return x&&x.se===se&&S.teams[x.tid]?x.tid:null;
 }
 
 /* ===== KATILIMCI DAĞITIMI =====
@@ -15221,22 +15225,9 @@ function cupEdges6(P){
     if(!sg)return null;
     sg.forEach((y,x)=>U.push([x,y]));
   }
-  /* Yön: Euler devresi boyunca her kenarı geçiş yönünde ver — derecesi 6 olan
-     her düğüm 3 kez girer 3 kez çıkar: 3 iç saha, 3 dış saha. */
-  const adj=new Map();U.forEach(([x,y],k)=>{(adj.get(x)||adj.set(x,[]).get(x)).push(k);(adj.get(y)||adj.set(y,[]).get(y)).push(k);});
-  const usedE=new Array(U.length).fill(false),E=[];
-  for(const start of adj.keys()){
-    const st=[start];
-    while(st.length){
-      const v=st[st.length-1],l=adj.get(v);
-      while(l.length&&usedE[l[l.length-1]])l.pop();
-      if(!l.length){st.pop();continue;}
-      const k=l.pop();usedE[k]=true;
-      const [x,y]=U[k],w=x===v?y:x;
-      E.push([v,w]);st.push(w);
-    }
-  }
-  return E;
+  /* Yön (kim kimi ağırlıyor) burada verilmiyor: cupInitCol6 maç günleriyle birlikte
+     kuruyor ki iç/dış saha sırası kurala uysun (3 iç, 3 dış saha da oradan çıkıyor). */
+  return U;
 }
 /* Maç günlerine boyama: her kenara bir maç günü, bir takımın iki maçı aynı güne
    düşmeden (k = takım başına maç sayısı). Kempe zinciri değişimli açgözlü boyama;
@@ -15269,7 +15260,7 @@ function cupColor(nodes,E,k){
 }
 function cupDrawLp(ids,ci){
   const fmt=CUP_FMT[ci],per=ids.length/fmt.pots;
-  const hold=ci===0?cupHolder(0):null;
+  const hold=ci===0?cupHolder(0,S.season-1):null;
   const L=ids.slice().sort((a,b)=>(b===hold)-(a===hold)||clubCoef(b)-clubCoef(a));
   /* Torbalar katsayı sırasıyla. Bir torbada tek ülkeden çok kulüp toplanırsa
      (KL'de olabiliyor: 6'lık torbada 4 kulüp aynı ülkeden) ülke koruması
@@ -15303,15 +15294,161 @@ function cupDrawPots(L,fmt,per,tries){
       if(bad)break;
     }
     if(bad)continue;
+    /* ŞL/AL: yön çevirme torba çifti içinde kalsın diye grup = torba çifti. KL'de
+       torba başına iç/dış kuralı yok (yalnız toplam 3–3): tek grup. */
+    const g8=fmt.games===8;
+    const grp=E.map(([x,y])=>g8?Math.min(pot[x],pot[y])*10+Math.max(pot[x],pot[y]):0);
     for(let c=0;c<40;c++){
-      const col=cupColor(L,E,fmt.games);
+      const col=g8?cupInitCol8(L,E,pot):cupInitCol6(E,pot);
       if(!col)continue;
+      if(!cupSeqFix(L,E,col,fmt.games,grp,6000))continue;
       const md=[];for(let d=0;d<fmt.games;d++)md.push([]);
       E.forEach(([h,a],e)=>md[col[e]].push({h,a,hg:null,ag:null}));
       return {t:L,pot,md};
     }
   }
   return null;
+}
+/* İç/dış saha sırası (UEFA md. 17.02): bir kulüp art arda en fazla iki iç ya da iki
+   dış saha maçı oynar; ilk iki ve son iki maç gününde birer iç ve dış saha maçı.
+   Eskiden boyama her kulübe her gün tam bir maç veriyor ama sırayı hiç gözetmiyordu:
+   ölçülen kuralarda kulüplerin %70'i kuralı çiğniyordu.
+
+   Rakipler (kura) değişmiyor. Değişen iki şey: hangi maçın hangi güne düştüğü ve
+   bir YÖNLÜ DÖNGÜ boyunca kimin kimi ağırladığı. Döngüde her kulübün bir iç bir dış
+   saha maçı yer değiştiriyor: kulüp başına iç/dış sayısı aynı kalıyor, ŞL/AL'de
+   döngü aynı torba çifti içinde (grp) seçildiği için "her torbadan biri iç biri dış
+   saha" kuralı da. Yön kuradan değil bu aramadan çıkıyor — gerçekte de iç/dış saha
+   kurada, takvim kurulabilsin diye birlikte belirleniyor.
+
+   Arama tavlamalı yerel arama, iki hamleyle:
+   - Kempe takası: a ve b renkleri arasındaki dönüşümlü döngü (her kulübün her renkte
+     tam bir maçı var, bileşenler çift döngü) boyunca a ile b'yi değiştirmek boyamayı
+     geçerli bırakıp döngüdeki kulüplerin a ve b günlerini takas ediyor.
+   - Yön çevirme: yukarıdaki yönlü döngü.
+   Hamleler çoğunlukla kuralı çiğneyen bir kulüpten başlıyor. Yalnız gün sırasını
+   aramak (8! dizi) yetmedi: rastgele boyamada 36 kulübün hepsine uyan sıra yok
+   gibi; Kempe takası tek başına da 2–8 ihlalde takılıyordu. Bulunamazsa false —
+   çağıran yeni bir başlangıçla dener. col ve E yerinde değişiyor. */
+function cupSeqFix(nodes,E,col,k,grp,iters){
+  const n=nodes.length,ix=new Map(nodes.map((t,i)=>[t,i]));
+  const eu=E.map(e=>ix.get(e[0])),ev=E.map(e=>ix.get(e[1]));
+  /* at[düğüm][gün] = kenar; ha[düğüm][gün] = 1 iç saha; out[düğüm] = ağırladığı maçlar */
+  const at=[],ha=[],out=[];
+  for(let i=0;i<n;i++){at.push(new Int32Array(k).fill(-1));ha.push(new Uint8Array(k));out.push([]);}
+  col.forEach((c,e)=>{at[eu[e]][c]=e;at[ev[e]][c]=e;ha[eu[e]][c]=1;out[eu[e]].push(e);});
+  const cost=i=>{
+    const s=ha[i];let x=(s[0]===s[1]?1:0)+(s[k-2]===s[k-1]?1:0);
+    for(let d=0;d+2<k;d++)if(s[d]===s[d+1]&&s[d]===s[d+2])x++;
+    return x;
+  };
+  const cs=new Int32Array(n);let tot=0;
+  for(let i=0;i<n;i++){cs[i]=cost(i);tot+=cs[i];}
+  const badNode=()=>{const b=[];for(let i=0;i<n;i++)if(cs[i])b.push(i);return b[Math.floor(RF()*b.length)];};
+  const take=(nd,nw,T)=>nw<=nd||RF()<Math.exp((nd-nw)/T);
+  for(let it=0;it<iters&&tot>0;it++){
+    const T=1-it/iters+0.05,focus=RF()<0.8;
+    if(RF()<0.5){
+      /* yön çevirme: bir maçtan başla, aynı gruptaki ağırladığı maçlarla ilerle */
+      let e0;
+      if(focus){const v=badNode();const oe=[];for(let c=0;c<k;c++)oe.push(at[v][c]);e0=oe[Math.floor(RF()*k)];}
+      else e0=Math.floor(RF()*E.length);
+      const g=grp[e0],path=[e0],seen=new Map([[eu[e0],0]]);
+      let v=ev[e0],cyc=null;
+      for(let st=0;st<=n;st++){
+        if(seen.has(v)){cyc=path.slice(seen.get(v));break;}
+        seen.set(v,path.length);
+        const cand=out[v].filter(e=>grp[e]===g);
+        if(!cand.length)break;
+        const e=cand[Math.floor(RF()*cand.length)];path.push(e);v=ev[e];
+      }
+      if(!cyc)continue;
+      const ns=new Set();cyc.forEach(e=>{ns.add(eu[e]);ns.add(ev[e]);});
+      let nd=0,nw=0;ns.forEach(i=>nd+=cs[i]);
+      cyc.forEach(e=>{ha[eu[e]][col[e]]=0;ha[ev[e]][col[e]]=1;});
+      ns.forEach(i=>nw+=cost(i));
+      if(take(nd,nw,T)){
+        cyc.forEach(e=>{const u=eu[e];out[u].splice(out[u].indexOf(e),1);eu[e]=ev[e];ev[e]=u;out[eu[e]].push(e);});
+        ns.forEach(i=>{const q=cost(i);tot+=q-cs[i];cs[i]=q;});
+      } else cyc.forEach(e=>{ha[eu[e]][col[e]]=1;ha[ev[e]][col[e]]=0;});
+      continue;
+    }
+    /* Kempe takası */
+    const a=Math.floor(RF()*k);let b=Math.floor(RF()*(k-1));if(b>=a)b++;
+    const v0=focus?badNode():Math.floor(RF()*n),cyc=[],ce=[];
+    let v=v0,c=a;
+    do{const e=at[v][c];cyc.push(v);ce.push(e);v=eu[e]===v?ev[e]:eu[e];c=c===a?b:a;}while(v!==v0||c!==a);
+    let nd=0,nw=0;
+    for(const i of cyc){nd+=cs[i];const t=ha[i][a];ha[i][a]=ha[i][b];ha[i][b]=t;nw+=cost(i);}
+    if(take(nd,nw,T)){
+      ce.forEach(e=>{const x=col[e]===a?b:a;col[e]=x;at[eu[e]][x]=e;at[ev[e]][x]=e;});
+      for(const i of cyc){const q=cost(i);tot+=q-cs[i];cs[i]=q;}
+    } else for(const i of cyc){const t=ha[i][a];ha[i][a]=ha[i][b];ha[i][b]=t;}
+  }
+  E.forEach((_,e)=>{E[e]=[nodes[eu[e]],nodes[ev[e]]];});
+  return tot===0;
+}
+/* ŞL/AL için başlangıç boyaması. Bir torba çiftinin maçları yönlü bir 2-faktör ve
+   döngüleri iki torba arasında gidip geldiği için ÇİFT uzunlukta: dönüşümlü iki
+   güne boyanınca her kulüp o iki günde bir iç bir dış saha oynuyor. 0–1 ile 2–3
+   çiftleri ilk iki güne, 0–2 ile 1–3 son iki güne — ilk/son iki gün kuralı daha
+   başlangıçta sağlanmış oluyor; aramaya yalnız ortadaki dört gün kalıyor. (Torba içi
+   maçlar 9'luk torbada tek uzunlukta döngü verdiği için bu yapıya giremiyor.) */
+function cupInitCol8(L,E,pot){
+  const key=e=>{const p=pot[E[e][0]],q=pot[E[e][1]];return p===q?'i':Math.min(p,q)+''+Math.max(p,q);};
+  const col=new Array(E.length).fill(-1);
+  const alt=(ks,d0)=>{
+    const ed=[],nx=new Map();
+    E.forEach((x,e)=>{if(ks.includes(key(e))){ed.push(e);nx.set(x[0]+'|'+key(e),e);}});
+    ed.forEach(e0=>{
+      if(col[e0]>=0)return;
+      let e=e0,c=RF()<0.5?0:1;
+      do{col[e]=d0+c;c=1-c;e=nx.get(E[e][1]+'|'+key(e));}while(e!==e0);
+    });
+  };
+  alt(['01','23'],0);alt(['02','13'],6);
+  const mid=[];E.forEach((_,e)=>{if(col[e]<0)mid.push(e);});
+  const cc=cupColor(L,mid.map(e=>E[e]),4);
+  if(!cc)return null;
+  mid.forEach((e,j)=>col[e]=2+cc[j]);
+  return col;
+}
+/* KL için arama gerektirmeyen boyama. Altı torbanın çiftleri K6'nın beş tam
+   eşleşmesine ayrılıyor (döner devre); her biri 36 kulübün tam bir eşleşmesi = bir
+   maç günü, torba içi çiftler altıncı gün. Günler ikişer ikişer (1–2, 3–4, 5–6)
+   gruplanınca iki tam eşleşmenin birleşimi çift döngüler veriyor ve döngü boyunca
+   dolaşma yönünde ağırlatmak her kulübe her ikilide bir iç bir dış saha veriyor:
+   üç iç üç dış, art arda üçüncü maç yok, ilk ve son iki gün kuralı kendiliğinden.
+   Eski Euler yönlendirmesi burada yerini bu yöne bırakıyor. E yerinde değişiyor. */
+function cupInitCol6(E,pot){
+  const np=6,perm=cupShuffle(cupRange(0,np-1));
+  const rnd=new Map();
+  for(let r=0;r<np-1;r++){
+    const pr=[[np-1,r]];
+    for(let i=1;i<np/2;i++)pr.push([(r+i)%(np-1),(r-i+np-1)%(np-1)]);
+    pr.forEach(([x,y])=>{const a=perm[x],b=perm[y];rnd.set(Math.min(a,b)+'-'+Math.max(a,b),r);});
+  }
+  const roundOf=e=>{const p=pot[E[e][0]],q=pot[E[e][1]];return p===q?np-1:rnd.get(Math.min(p,q)+'-'+Math.max(p,q));};
+  const dayOf=cupShuffle(cupRange(0,np-1));
+  const col=E.map((_,e)=>dayOf[roundOf(e)]);
+  for(let d0=0;d0<np;d0+=2){
+    /* düğüm → [d0 günündeki maç, d0+1 günündeki maç] */
+    const adj=new Map();
+    E.forEach((x,e)=>{if(col[e]!==d0&&col[e]!==d0+1)return;
+      for(const v of x){if(!adj.has(v))adj.set(v,[-1,-1]);adj.get(v)[col[e]-d0]=e;}});
+    const done=new Set();
+    adj.forEach((_,v0)=>{
+      if(done.has(adj.get(v0)[0]))return;
+      let v=v0,side=RF()<0.5?0:1;
+      for(;;){
+        const e=adj.get(v)[side];if(done.has(e))break;
+        done.add(e);
+        const w=E[e][0]===v?E[e][1]:E[e][0];
+        E[e]=[v,w];v=w;side=1-side;
+      }
+    });
+  }
+  return col;
 }
 /* Kura çıkmazsa (beklenmiyor; test binlerce kurada ölçüyor) oyun durmasın:
    ülke kuralı gevşetilmiş, yalnız "haftada bir maç" korunan yedek kura. */
@@ -15329,18 +15466,27 @@ function cupDrawLpLoose(ids,ci){
 }
 
 /* ===== LİG AŞAMASI TABLOSU =====
-   Puan, averaj, atılan gol, deplasmanda atılan gol, galibiyet; sonra katsayı.
-   Saklanmıyor, oynanmış maçlardan türetiliyor — lig tablosu gibi. */
+   UEFA'nın eşitlik kriterleri, sırasıyla (2026/27 yönetmeliği md. 18): puan, averaj,
+   atılan gol, deplasmanda atılan gol, galibiyet, deplasman galibiyeti, sonra lig
+   aşaması RAKİPLERİNİN toplam puanı, toplam averajı ve toplam golü. Disiplin puanı
+   oyunda kart olmadığı için yok; en son kulüp katsayısı. Deplasman galibiyeti ve
+   rakip kriterleri eksikken 24./25. sıra çizgisini katsayı belirliyordu.
+   Saklanmıyor, oynanmış maçlardan türetiliyor — lig tablosu gibi. Aşama sürerken
+   rakip kriterleri o ana kadar oynanmış rakipler üzerinden. */
 function cupLpTable(cp){
   const R={};
-  (cp.lp.t||[]).forEach(id=>R[id]={id,pl:0,w:0,d:0,l:0,gf:0,ga:0,agf:0,pts:0});
+  (cp.lp.t||[]).forEach(id=>R[id]={id,pl:0,w:0,d:0,l:0,gf:0,ga:0,agf:0,aw:0,pts:0,op:[],opts:0,ogd:0,ogf:0});
   cp.lp.md.forEach(day=>day.forEach(m=>{
     if(m.hg===null)return;
     const h=R[m.h],a=R[m.a];if(!h||!a)return;
     h.pl++;a.pl++;h.gf+=m.hg;h.ga+=m.ag;a.gf+=m.ag;a.ga+=m.hg;a.agf+=m.ag;
-    if(m.hg>m.ag){h.w++;a.l++;h.pts+=3;}else if(m.hg<m.ag){a.w++;h.l++;a.pts+=3;}else{h.d++;a.d++;h.pts++;a.pts++;}
+    h.op.push(m.a);a.op.push(m.h);
+    if(m.hg>m.ag){h.w++;a.l++;h.pts+=3;}else if(m.hg<m.ag){a.w++;a.aw++;h.l++;a.pts+=3;}else{h.d++;a.d++;h.pts++;a.pts++;}
   }));
-  return Object.values(R).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||y.agf-x.agf||y.w-x.w||clubCoef(y.id)-clubCoef(x.id));
+  const rows=Object.values(R);
+  rows.forEach(r=>r.op.forEach(o=>{const q=R[o];r.opts+=q.pts;r.ogd+=q.gf-q.ga;r.ogf+=q.gf;}));
+  return rows.sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||y.agf-x.agf||y.w-x.w||y.aw-x.aw
+    ||y.opts-x.opts||y.ogd-x.ogd||y.ogf-x.ogf||clubCoef(y.id)-clubCoef(x.id));
 }
 
 /* ===== MAÇ =====
@@ -15425,17 +15571,29 @@ function cupR16(cp){
   [[0,3],[6,0],[4,1],[2,2]].forEach(([si,g])=>{
     const seeds=cupShuffle([tb[si],tb[si+1]]);
     const wins=cupShuffle(cp.ko.kpo.filter(t=>t.g===g).map(t=>t.w));
-    A.push(cupTie(seeds[0],wins[0]));B.push(cupTie(seeds[1],wins[1]));
+    const ta=cupTie(seeds[0],wins[0]),tb2=cupTie(seeds[1],wins[1]);
+    ta.ps=cp.rk[seeds[0]];tb2.ps=cp.rk[seeds[1]];
+    A.push(ta);B.push(tb2);
   });
   cp.ko.r16=A.concat(B);
 }
-/* Sonraki tur: sıradaki ikililer; lig aşamasında daha iyi bitiren seri başı. */
+/* Yol tohumu (ps): eşleşmenin ağaçtaki seri başı sırası. Son 16'da seri başının lig
+   aşaması sırası, sonra turdan tura daha iyi olan yolunki. ps'siz (eski kayıt) bir
+   eşleşmede seri başının kendi sırası. */
+function cupPs(cp,t){return t.ps||cp.rk[t.s]||99;}
+/* Sonraki tur: sıradaki ikililer. İkinci maçı evinde oynayan, sırası daha iyi olan
+   YOLUN kazananı — UEFA md. 19.04: seri başını eleyen onun ağaçtaki yerini alır,
+   sıralama turdan tura yeniden hesaplanmaz. Ağaç dizilişi (1/2–7/8, 5/6–3/4, sonra
+   1/2 yolu–3/4 yolu) bunu "çeyrekte 1–4, yarı finalde 1–2 evinde" kuralına çeviriyor.
+   Önce kalan kulüplerin kendi sırası okunuyordu: 1.'yi eleyen 17., 8.'ye deplasmanda
+   rövanş oynuyordu. */
 function cupNext(cp,ties,single){
   const out=[];
   for(let i=0;i<ties.length;i+=2){
-    const a=ties[i].w,b=ties[i+1].w;
-    const s=(cp.rk[a]||99)<=(cp.rk[b]||99)?a:b,u=s===a?b:a;
-    out.push(cupTie(s,u,single));
+    const pa=cupPs(cp,ties[i]),pb=cupPs(cp,ties[i+1]);
+    const top=pa<=pb?ties[i]:ties[i+1],oth=top===ties[i]?ties[i+1]:ties[i];
+    const t=cupTie(top.w,oth.w,single);t.ps=Math.min(pa,pb);
+    out.push(t);
   }
   return out;
 }
@@ -15510,14 +15668,17 @@ function cupTeams(cp){
 /* "Sezon şimdi bitse" kupa dağılımı: tid → kupa indeksi. Lig tablosundaki Avrupa
    bölgeleri bunu okuyor — sabit bir "ilk altı" değil, gerçek kontenjan. Hafta
    başına bir kez hesaplanıyor. */
-let CUPPROJ=null,CUPPROJK='';
+/* Önbellek kariyerin kendisine de bağlı (CUPPROJS): iki kayıt aynı sezon/haftadaysa
+   anahtar aynı çıkıyor ve yüklenen kariyer öbürünün Avrupa bölgelerini görüyordu.
+   loadSlot()/newGame() S'yi yeni bir nesneyle değiştiriyor, kimlik bunu yakalıyor. */
+let CUPPROJ=null,CUPPROJK='',CUPPROJS=null;
 function cupProj(){
   const key=S?(S.season+':'+(S.tw||0)+':'+S.week):'';
-  if(CUPPROJ&&CUPPROJK===key)return CUPPROJ;
+  if(CUPPROJ&&CUPPROJK===key&&CUPPROJS===S)return CUPPROJ;
   const al=cupAllocate(),m={};
   al.d.forEach((arr,ci)=>arr.forEach(t=>m[t]=ci));
   al.p.forEach((arr,ci)=>arr.forEach(t=>{if(m[t]===undefined)m[t]=ci;}));
-  CUPPROJ=m;CUPPROJK=key;
+  CUPPROJ=m;CUPPROJK=key;CUPPROJS=S;
   return m;
 }
 
@@ -15566,12 +15727,25 @@ function dcDraw(dc,ids,ri){
   }
   return out;
 }
-function seedDomCups(){
-  S.dc=dcCtrys().map(c=>{
-    /* Tohum sırası: kademe, sonra biten sezonun sırası (yeni oyunda takım sırası). */
-    const seed=[];
+/* Tohum sırası, ülke başına: kademe, sonra biten sezonun sırası (yeni oyunda takım
+   sırası). Sezon sonunda düşme/çıkmadan ÖNCE alınmalı — sonra tablolar karışıyor. */
+function dcSeedOrder(){
+  const o={};
+  dcCtrys().forEach(c=>{
+    const seed=o[c]=[];
     LEAGUES.map((l,i)=>[l,i]).filter(([l])=>l.ctry===c).sort((x,y)=>x[0].tier-y[0].tier)
       .forEach(([,i])=>leagueTable(i).forEach(tm=>seed.push(tm.id)));
+  });
+  return o;
+}
+/* ord: dcSeedOrder() — sezon sonunda düşme/çıkmadan önce alınıp buraya, düşme/çıkmadan
+   SONRA veriliyor. Kademeye göre kararlı sıralama yeni sezonun kademesini okuyor: düşen
+   kulüp alt ligin başına, çıkan üst ligin sonuna geçiyor. Önceden kupa düşme/çıkmadan
+   önce kuruluyordu ve az önce düşen kulüp üst lig kulübü sayılıp bay geçebiliyordu. */
+function seedDomCups(ord){
+  ord=ord||dcSeedOrder();
+  S.dc=dcCtrys().map(c=>{
+    const seed=(ord[c]||[]).filter(id=>S.teams[id]).sort((a,b)=>dcTier(a)-dcTier(b));
     let B=1;while(B<seed.length)B*=2;
     const nb=B-seed.length;
     const dc={ctry:c,t:seed,rk:{},by:seed.slice(0,nb),n:Math.round(Math.log2(B)),r:[],w:null,sc:{}};
@@ -16744,8 +16918,9 @@ function endSeason(){
   showSeasonModal(champs.filter(Boolean));
   /* --- next season's continental cups seeded from final standings --- */
   seedCups();
-  /* --- ulusal kupalar da düşme/çıkmadan önce, biten sezonun tablosundan --- */
-  seedDomCups();
+  /* --- ulusal kupaların tohum sırası biten sezonun tablosundan, düşme/çıkmadan önce;
+     kura düşme/çıkmadan sonra, yeni sezonun kademeleriyle (seedDomCups) --- */
+  const dcOrd=dcSeedOrder();
   /* --- promotion & relegation: bottom 3 ↔ top 3 in tiered countries --- */
   const myTids=new Set(S.clients.map(id=>byId(id).team));
   TIERS.forEach(([tc,sc])=>{
@@ -16754,6 +16929,7 @@ function endSeason(){
     down.forEach(tm=>{tm.lg=si;if(myTids.has(tm.id))pushNews('relegated',{c:tm.n,tid:tm.id,li:si},'bad');});
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
+  seedDomCups(dcOrd);
   /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
   /* Kadro dizini bu döngü için kuruluyor: dizinsiz squadOf() her kulüpte bütün
      oyuncuları tarıyordu (714 × 11.500). Döngü oyunculara dokunmuyor, dizin bayatlamaz. */
