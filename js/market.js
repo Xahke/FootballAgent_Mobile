@@ -76,6 +76,11 @@ function aiTransfer(p,buyer,fee,idx){
 function simTransfers(){
   if(!windowOpen())return;
   const idx=squadIndex();
+  /* Serbest oyuncu listesi bir kez: freeAgents() her alıcı kulüpte 11.500 oyuncuyu
+     baştan süzüyordu (transfer haftasının en pahalı işi, 4× yavaş CPU'da ~0,7 sn).
+     Bu döngüde serbest oyuncu yalnız AZALIYOR — aiTransfer kimseyi boşa çıkarmıyor —
+     bu yüzden aradan imzalananları atlamak (p.team>=0) aynı listeyi aynı sırayla veriyor. */
+  const faAll=freeAgents();
   S.teams.forEach(buyer=>{
     if(clubFin(buyer)<0.08)return;
     if(RF()>=0.55+buyer.bud*0.40)return;      // her kulüp her hafta piyasada değil
@@ -112,8 +117,8 @@ function simTransfers(){
       });
     }
     /* bonservissiz oyuncular: kulüp seviyesine uyan her serbest oyuncu adaydır */
-    freeAgents().forEach(p=>{
-      if(p.pos!==bk||!sellable(p))return;
+    faAll.forEach(p=>{
+      if(p.team>=0||p.pos!==bk||!sellable(p))return;
       if(p.r<=floor-4||p.r>buyer.str+5)return;
       cands.push({p,sel:null,fee:0,free:true});
     });
@@ -221,10 +226,14 @@ function rebalanceSquads(){
     S.players=S.players.filter(p=>!drop.has(p.id));
   }
   /* 4) prestij gerçek kadro gücüne doğru kayar ama kulüp kimliğinden fazla uzaklaşmaz */
-  S.teams.forEach(tm=>{
-    if(tm.str0===undefined)tm.str0=tm.str;
-    const real=teamStr(tm.id);
-    tm.str=Math.round(clamp(tm.str*0.7+real*0.3,tm.str0-8,tm.str0+8));
-    tm.fin=seasonBudget(tm);
-  });
+  /* Kadro dizini bu döngü için (bkz. endSeason'daki tstr): oyuncular burada değişmiyor. */
+  SQIDX=weekSquads();
+  try{
+    S.teams.forEach(tm=>{
+      if(tm.str0===undefined)tm.str0=tm.str;
+      const real=teamStr(tm.id);
+      tm.str=Math.round(clamp(tm.str*0.7+real*0.3,tm.str0-8,tm.str0+8));
+      tm.fin=seasonBudget(tm);
+    });
+  }finally{SQIDX=null;}
 }

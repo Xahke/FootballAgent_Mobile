@@ -179,13 +179,12 @@ function playFixture(m,cp,ns){
         sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0};
       if(cup)e.cp=cp;
       if(ns)e.nt=1;
-      (p.l5=p.l5||[]).push(e);
-      if(p.l5.length>5)p.l5.shift();
+      l5Push(p,e);
       if(rt>best){best=rt;motm=p;}
     });
   });
   if(motm){
-    motm.l5[motm.l5.length-1].mm=true;
+    l5Motm(motm);
     motm.form=clamp(motm.form+3,0,100);
   }
   /* --- haftalık müşteri raporu: gelen kutusuna değil, hafta sonunda açılan
@@ -194,7 +193,7 @@ function playFixture(m,cp,ns){
   S.wkRep=S.wkRep||[];
   playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
     if(p.agent!=='you')return;
-    const last=p.l5[p.l5.length-1];
+    const l=l5List(p),last=l[l.length-1];
     /* Milli maçta tid oyuncunun ülkesi: satırın rozeti kulübü değil milli takımı göstersin. */
     const r={pid:p.id,n:p.n,tid:ns?p.nat:p.team,opp:last.o,res:last.res,sc:last.sc,
       min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0};
@@ -519,7 +518,10 @@ function endSeason(){
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
   /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
-  const tstr={};S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});
+  /* Kadro dizini bu döngü için kuruluyor: dizinsiz squadOf() her kulüpte bütün
+     oyuncuları tarıyordu (714 × 11.500). Döngü oyunculara dokunmuyor, dizin bayatlamaz. */
+  const tstr={};SQIDX=weekSquads();
+  try{S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});}finally{SQIDX=null;}
   /* --- gol bonusu anlaşmaları: 10+ gol atan transferden pay --- */
   (S.deals=S.deals||[]).forEach(d=>{
     const dp=byId(d.pid);

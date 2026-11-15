@@ -155,7 +155,7 @@ function genPlayer(team,pos,forceAge){
   if(pot>=90&&r<88&&RF()>0.15)pot=clamp(89-R(0,4),r,96);
   return {id:PID++,n:genName(nat),nat,age,pos:pos||POS[R(0,3)],r,pot,
     team:team.id,wage:Math.max(1,Math.round(marketWage(r)*(0.75+RF()*0.35))),yrs:R(1,4),
-    morale:R(55,85),form:R(40,70),g:0,a:0,app:0,min:0,rtSum:0,rtN:0,l5:[],agent:RF()<(low?0.25:0.45)?'rival':null,ignored:0,
+    morale:R(55,85),form:R(40,70),g:0,a:0,app:0,min:0,rtSum:0,rtN:0,l5:'',agent:RF()<(low?0.25:0.45)?'rival':null,ignored:0,
     h:R(168,196),ft:RF()<0.74?'R':'L',hist:[],seasons:[]};
 }
 /* ===== kariyer sonu & kadro yenilenmesi =====
@@ -203,13 +203,18 @@ function natCount(){
 /* Kadro dengelemesinde doğan genç: eşiğin altında bir ülke varsa en az oyuncusu
    olan o ülkeden. Kulüpsüz kalıp futbolu bırakanlar ve serbest oyuncu fazlası
    silindiği için küçük ülkeler yalnız emeklilikle değil bu yolla da eriyor. */
+/* p henüz S.players'ta DEĞİL; iki çağıran da (market.js, kadro dengelemesi) hemen
+   ardından ekliyor. Sayım burada p'yi de katıp anahtarı yeni oyuncu sayısına taşıyor.
+   Önceden anahtar oyuncu sayısını içerdiği için her yeni gençte 11.500 oyuncu baştan
+   sayılıyordu: sezon sonunun en pahalı işiydi (4× yavaşlatılmış CPU'da ~1,6 sn).
+   Sonuç aynı — sayım her an tam, yalnız artımlı. */
 function natFill(p){
   const c=natCount();
   let lo=null;
   NATKEYS.forEach(n=>{if(lo===null||(c[n]||0)<(c[lo]||0))lo=n;});
-  if(lo===null||(c[lo]||0)>=NAT_MIN||p.nat===lo)return;
-  c[p.nat]=(c[p.nat]||0)-1;c[lo]=(c[lo]||0)+1;
-  p.nat=lo;p.n=genName(lo);
+  if(lo!==null&&(c[lo]||0)<NAT_MIN&&p.nat!==lo){p.nat=lo;p.n=genName(lo);}
+  c[p.nat]=(c[p.nat]||0)+1;
+  NATCNTK=S.season+':'+(S.tw||0)+':'+(S.players.length+1);
 }
 function regenPlayer(p){
   const c=natCount(),old=p.nat;
@@ -548,8 +553,55 @@ function nextWindowLabel(){const m=midWeek();return S.week<m?(t('week')+' '+m):t
    sözleşme bitiyordur, oyuncu üst üste iyi oynamıştır ya da maaşı piyasanın
    belirgin altında kalmıştır. Aksi halde "neden şimdi?" sorusunun cevabı yoktur. */
 function last5Avg(p){
-  if(!p.l5||p.l5.length<5)return 0;
-  return p.l5.reduce((s,m)=>s+m.rt,0)/p.l5.length;
+  const l=l5List(p);
+  if(l.length<5)return 0;
+  return l.reduce((s,m)=>s+m.rt,0)/l.length;
+}
+/* ===== SON BEŞ MAÇ (p.l5) — sıkışık biçim =====
+   Kayıt her hafta bütünüyle kopyalanıyor (IndexedDB put = yapısal kopya, ana iş
+   parçacığında) ve 11.500 oyuncunun son beş maçı kaydın %40'ıydı: 57.000 küçük
+   nesne. 4× yavaşlatılmış CPU'da (orta seviye telefon) haftalık kopyanın yarısı
+   onlardı. Artık oyuncu başına TEK bir dize: maçlar '|' ile, alanlar ',' ile.
+     o,res,g,a,rt,mm,sc,min,cp,nt
+   o ve cp sayı ya da dize olabiliyor (kulüp id'si / milli maçta ülke kodu; kupa
+   indeksi / 'd:TR', 'n:c:eu'); yalnız rakamdan oluşan alan sayıya dönüyor. Hiçbir
+   değer ',' ya da '|' içermiyor. Sayılar String/Number ile birebir gidip geliyor,
+   yani çözülen nesne yazılanla aynı — alan sırası ve isteğe bağlı cp/nt dahil.
+   Eski kayıtlarda p.l5 nesne dizisi: okuyucular ikisini de kabul ediyor, ilk yeni
+   maçta dize olarak yeniden yazılıyor. Geçiş adımı yok. */
+const L5_MAX=5;
+function l5Enc(e){
+  return [e.o,e.res,e.g,e.a,e.rt,e.mm?1:'',e.sc,e.min,e.cp===undefined?'':e.cp,e.nt?1:''].join(',');
+}
+function l5Num(x){return /^-?\d+(\.\d+)?$/.test(x)?Number(x):x;}
+function l5Dec(s){
+  const f=s.split(',');
+  const e={o:l5Num(f[0]),res:f[1],g:Number(f[2]),a:Number(f[3]),rt:Number(f[4]),mm:f[5]==='1',sc:f[6],min:Number(f[7])};
+  if(f[8]!=='')e.cp=l5Num(f[8]);
+  if(f[9]==='1')e.nt=1;
+  return e;
+}
+/* Okuyucu: her zaman yeni bir nesne dizisi, eskiden yeniye. */
+function l5List(p){
+  const v=p&&p.l5;
+  if(!v)return [];
+  if(Array.isArray(v))return v.slice();
+  return v.split('|').map(l5Dec);
+}
+/* Yazıcı: maç sonunda bir kayıt ekler, en eskisini beşte kırpar. Dize üzerinde
+   çalışıyor — haftada ~15.000 oyuncu için bütün listeyi çözüp yeniden kurmamak. */
+function l5Push(p,e){
+  let s=Array.isArray(p.l5)?p.l5.map(l5Enc).join('|'):(p.l5||'');
+  s=s?s+'|'+l5Enc(e):l5Enc(e);
+  let n=1;for(let i=s.indexOf('|');i>=0;i=s.indexOf('|',i+1))n++;
+  while(n>L5_MAX){s=s.slice(s.indexOf('|')+1);n--;}
+  p.l5=s;
+}
+/* Maçın adamı: son kaydın mm alanını işaretle. */
+function l5Motm(p){
+  const l=l5List(p);if(!l.length)return;
+  l[l.length-1].mm=true;
+  p.l5=l.map(l5Enc).join('|');
 }
 function renewReason(p){
   if(isFree(p))return null;

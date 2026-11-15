@@ -14415,7 +14415,7 @@ function genPlayer(team,pos,forceAge){
   if(pot>=90&&r<88&&RF()>0.15)pot=clamp(89-R(0,4),r,96);
   return {id:PID++,n:genName(nat),nat,age,pos:pos||POS[R(0,3)],r,pot,
     team:team.id,wage:Math.max(1,Math.round(marketWage(r)*(0.75+RF()*0.35))),yrs:R(1,4),
-    morale:R(55,85),form:R(40,70),g:0,a:0,app:0,min:0,rtSum:0,rtN:0,l5:[],agent:RF()<(low?0.25:0.45)?'rival':null,ignored:0,
+    morale:R(55,85),form:R(40,70),g:0,a:0,app:0,min:0,rtSum:0,rtN:0,l5:'',agent:RF()<(low?0.25:0.45)?'rival':null,ignored:0,
     h:R(168,196),ft:RF()<0.74?'R':'L',hist:[],seasons:[]};
 }
 /* ===== kariyer sonu & kadro yenilenmesi =====
@@ -14463,13 +14463,18 @@ function natCount(){
 /* Kadro dengelemesinde doğan genç: eşiğin altında bir ülke varsa en az oyuncusu
    olan o ülkeden. Kulüpsüz kalıp futbolu bırakanlar ve serbest oyuncu fazlası
    silindiği için küçük ülkeler yalnız emeklilikle değil bu yolla da eriyor. */
+/* p henüz S.players'ta DEĞİL; iki çağıran da (market.js, kadro dengelemesi) hemen
+   ardından ekliyor. Sayım burada p'yi de katıp anahtarı yeni oyuncu sayısına taşıyor.
+   Önceden anahtar oyuncu sayısını içerdiği için her yeni gençte 11.500 oyuncu baştan
+   sayılıyordu: sezon sonunun en pahalı işiydi (4× yavaşlatılmış CPU'da ~1,6 sn).
+   Sonuç aynı — sayım her an tam, yalnız artımlı. */
 function natFill(p){
   const c=natCount();
   let lo=null;
   NATKEYS.forEach(n=>{if(lo===null||(c[n]||0)<(c[lo]||0))lo=n;});
-  if(lo===null||(c[lo]||0)>=NAT_MIN||p.nat===lo)return;
-  c[p.nat]=(c[p.nat]||0)-1;c[lo]=(c[lo]||0)+1;
-  p.nat=lo;p.n=genName(lo);
+  if(lo!==null&&(c[lo]||0)<NAT_MIN&&p.nat!==lo){p.nat=lo;p.n=genName(lo);}
+  c[p.nat]=(c[p.nat]||0)+1;
+  NATCNTK=S.season+':'+(S.tw||0)+':'+(S.players.length+1);
 }
 function regenPlayer(p){
   const c=natCount(),old=p.nat;
@@ -14808,8 +14813,55 @@ function nextWindowLabel(){const m=midWeek();return S.week<m?(t('week')+' '+m):t
    sözleşme bitiyordur, oyuncu üst üste iyi oynamıştır ya da maaşı piyasanın
    belirgin altında kalmıştır. Aksi halde "neden şimdi?" sorusunun cevabı yoktur. */
 function last5Avg(p){
-  if(!p.l5||p.l5.length<5)return 0;
-  return p.l5.reduce((s,m)=>s+m.rt,0)/p.l5.length;
+  const l=l5List(p);
+  if(l.length<5)return 0;
+  return l.reduce((s,m)=>s+m.rt,0)/l.length;
+}
+/* ===== SON BEŞ MAÇ (p.l5) — sıkışık biçim =====
+   Kayıt her hafta bütünüyle kopyalanıyor (IndexedDB put = yapısal kopya, ana iş
+   parçacığında) ve 11.500 oyuncunun son beş maçı kaydın %40'ıydı: 57.000 küçük
+   nesne. 4× yavaşlatılmış CPU'da (orta seviye telefon) haftalık kopyanın yarısı
+   onlardı. Artık oyuncu başına TEK bir dize: maçlar '|' ile, alanlar ',' ile.
+     o,res,g,a,rt,mm,sc,min,cp,nt
+   o ve cp sayı ya da dize olabiliyor (kulüp id'si / milli maçta ülke kodu; kupa
+   indeksi / 'd:TR', 'n:c:eu'); yalnız rakamdan oluşan alan sayıya dönüyor. Hiçbir
+   değer ',' ya da '|' içermiyor. Sayılar String/Number ile birebir gidip geliyor,
+   yani çözülen nesne yazılanla aynı — alan sırası ve isteğe bağlı cp/nt dahil.
+   Eski kayıtlarda p.l5 nesne dizisi: okuyucular ikisini de kabul ediyor, ilk yeni
+   maçta dize olarak yeniden yazılıyor. Geçiş adımı yok. */
+const L5_MAX=5;
+function l5Enc(e){
+  return [e.o,e.res,e.g,e.a,e.rt,e.mm?1:'',e.sc,e.min,e.cp===undefined?'':e.cp,e.nt?1:''].join(',');
+}
+function l5Num(x){return /^-?\d+(\.\d+)?$/.test(x)?Number(x):x;}
+function l5Dec(s){
+  const f=s.split(',');
+  const e={o:l5Num(f[0]),res:f[1],g:Number(f[2]),a:Number(f[3]),rt:Number(f[4]),mm:f[5]==='1',sc:f[6],min:Number(f[7])};
+  if(f[8]!=='')e.cp=l5Num(f[8]);
+  if(f[9]==='1')e.nt=1;
+  return e;
+}
+/* Okuyucu: her zaman yeni bir nesne dizisi, eskiden yeniye. */
+function l5List(p){
+  const v=p&&p.l5;
+  if(!v)return [];
+  if(Array.isArray(v))return v.slice();
+  return v.split('|').map(l5Dec);
+}
+/* Yazıcı: maç sonunda bir kayıt ekler, en eskisini beşte kırpar. Dize üzerinde
+   çalışıyor — haftada ~15.000 oyuncu için bütün listeyi çözüp yeniden kurmamak. */
+function l5Push(p,e){
+  let s=Array.isArray(p.l5)?p.l5.map(l5Enc).join('|'):(p.l5||'');
+  s=s?s+'|'+l5Enc(e):l5Enc(e);
+  let n=1;for(let i=s.indexOf('|');i>=0;i=s.indexOf('|',i+1))n++;
+  while(n>L5_MAX){s=s.slice(s.indexOf('|')+1);n--;}
+  p.l5=s;
+}
+/* Maçın adamı: son kaydın mm alanını işaretle. */
+function l5Motm(p){
+  const l=l5List(p);if(!l.length)return;
+  l[l.length-1].mm=true;
+  p.l5=l.map(l5Enc).join('|');
 }
 function renewReason(p){
   if(isFree(p))return null;
@@ -16364,13 +16416,12 @@ function playFixture(m,cp,ns){
         sc:gf+'-'+ga,min:playedMap[tid].mins[p.id]||0};
       if(cup)e.cp=cp;
       if(ns)e.nt=1;
-      (p.l5=p.l5||[]).push(e);
-      if(p.l5.length>5)p.l5.shift();
+      l5Push(p,e);
       if(rt>best){best=rt;motm=p;}
     });
   });
   if(motm){
-    motm.l5[motm.l5.length-1].mm=true;
+    l5Motm(motm);
     motm.form=clamp(motm.form+3,0,100);
   }
   /* --- haftalık müşteri raporu: gelen kutusuna değil, hafta sonunda açılan
@@ -16379,7 +16430,7 @@ function playFixture(m,cp,ns){
   S.wkRep=S.wkRep||[];
   playedMap[m.h].all.concat(playedMap[m.a].all).forEach(p=>{
     if(p.agent!=='you')return;
-    const last=p.l5[p.l5.length-1];
+    const l=l5List(p),last=l[l.length-1];
     /* Milli maçta tid oyuncunun ülkesi: satırın rozeti kulübü değil milli takımı göstersin. */
     const r={pid:p.id,n:p.n,tid:ns?p.nat:p.team,opp:last.o,res:last.res,sc:last.sc,
       min:last.min,g:last.g,a:last.a,rt:last.rt,mm:last.mm?1:0};
@@ -16704,7 +16755,10 @@ function endSeason(){
     up.forEach(tm=>{tm.lg=ti;if(myTids.has(tm.id))pushNews('promoted',{c:tm.n,tid:tm.id,li:ti},'good');});
   });
   /* Milletler Kupası artık yaz haftalarında oynanıyor (nations.js), sezon sonundan önce. */
-  const tstr={};S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});
+  /* Kadro dizini bu döngü için kuruluyor: dizinsiz squadOf() her kulüpte bütün
+     oyuncuları tarıyordu (714 × 11.500). Döngü oyunculara dokunmuyor, dizin bayatlamaz. */
+  const tstr={};SQIDX=weekSquads();
+  try{S.teams.forEach(tm=>{tstr[tm.id]=teamStr(tm.id);});}finally{SQIDX=null;}
   /* --- gol bonusu anlaşmaları: 10+ gol atan transferden pay --- */
   (S.deals=S.deals||[]).forEach(d=>{
     const dp=byId(d.pid);
@@ -16885,6 +16939,11 @@ function aiTransfer(p,buyer,fee,idx){
 function simTransfers(){
   if(!windowOpen())return;
   const idx=squadIndex();
+  /* Serbest oyuncu listesi bir kez: freeAgents() her alıcı kulüpte 11.500 oyuncuyu
+     baştan süzüyordu (transfer haftasının en pahalı işi, 4× yavaş CPU'da ~0,7 sn).
+     Bu döngüde serbest oyuncu yalnız AZALIYOR — aiTransfer kimseyi boşa çıkarmıyor —
+     bu yüzden aradan imzalananları atlamak (p.team>=0) aynı listeyi aynı sırayla veriyor. */
+  const faAll=freeAgents();
   S.teams.forEach(buyer=>{
     if(clubFin(buyer)<0.08)return;
     if(RF()>=0.55+buyer.bud*0.40)return;      // her kulüp her hafta piyasada değil
@@ -16921,8 +16980,8 @@ function simTransfers(){
       });
     }
     /* bonservissiz oyuncular: kulüp seviyesine uyan her serbest oyuncu adaydır */
-    freeAgents().forEach(p=>{
-      if(p.pos!==bk||!sellable(p))return;
+    faAll.forEach(p=>{
+      if(p.team>=0||p.pos!==bk||!sellable(p))return;
       if(p.r<=floor-4||p.r>buyer.str+5)return;
       cands.push({p,sel:null,fee:0,free:true});
     });
@@ -17030,12 +17089,16 @@ function rebalanceSquads(){
     S.players=S.players.filter(p=>!drop.has(p.id));
   }
   /* 4) prestij gerçek kadro gücüne doğru kayar ama kulüp kimliğinden fazla uzaklaşmaz */
-  S.teams.forEach(tm=>{
-    if(tm.str0===undefined)tm.str0=tm.str;
-    const real=teamStr(tm.id);
-    tm.str=Math.round(clamp(tm.str*0.7+real*0.3,tm.str0-8,tm.str0+8));
-    tm.fin=seasonBudget(tm);
-  });
+  /* Kadro dizini bu döngü için (bkz. endSeason'daki tstr): oyuncular burada değişmiyor. */
+  SQIDX=weekSquads();
+  try{
+    S.teams.forEach(tm=>{
+      if(tm.str0===undefined)tm.str0=tm.str;
+      const real=teamStr(tm.id);
+      tm.str=Math.round(clamp(tm.str*0.7+real*0.3,tm.str0-8,tm.str0+8));
+      tm.fin=seasonBudget(tm);
+    });
+  }finally{SQIDX=null;}
 }
 
 /* js/events.js — olaylar: menajerliğin sahada olmayan tarafı.
@@ -21781,7 +21844,7 @@ function pfOvHtml(p,tm,cx){
     const rv=rivalOf(p);
     rel=rv?t('pfRepBy').replace('{a}',esc(rivalName(rv))):t('hasAgent');
   } else rel=t('pfUnrep');
-  const l5=(p.l5||[]);
+  const l5=l5List(p);
   /* Form şeridi kronolojik: soldan sağa zaman akıyor, çünkü bu şeridin tek işi
      eğilimi göstermek. Maçlar sekmesindeki liste ise en yenisi üstte — orada
      soru "en son ne oldu". */
@@ -21833,7 +21896,7 @@ function pfOvHtml(p,tm,cx){
    toplamı; o yüzden filtre değil, ayrı bir "Kariyer" bölümü. */
 function pfMtHtml(p,tm,cx){
   const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
-  const l5=(p.l5||[]).slice().reverse();
+  const l5=l5List(p).reverse();
   const rows=l5.length?l5.map(m5=>{
     const o=oppOf(m5.o,m5.nt);
     const facts=[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
@@ -22778,9 +22841,9 @@ player(id){
     ${mine?bar(t('trustL'),trustOf(p)):''}
     ${mine?`<div class="sub" style="margin-top:-4px">${t(trustLabel(trustOf(p)))}</div>`:''}
   </div>
-  ${(p.l5&&p.l5.length)?`<div class="card">
+  ${l5List(p).length?`<div class="card">
     <div class="sect">${t('last5')}</div>
-    ${p.l5.slice().reverse().map(m5=>{
+    ${l5List(p).reverse().map(m5=>{
       const o=oppOf(m5.o,m5.nt);
       const rc=m5.rt>=7.5?'var(--acc)':m5.rt>=6.5?'var(--warn)':'var(--bad)';
       const resCh=pfResCh(m5.res);

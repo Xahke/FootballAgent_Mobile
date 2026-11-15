@@ -2251,7 +2251,7 @@ function pfOvHtml(p,tm,cx){
     const rv=rivalOf(p);
     rel=rv?t('pfRepBy').replace('{a}',esc(rivalName(rv))):t('hasAgent');
   } else rel=t('pfUnrep');
-  const l5=(p.l5||[]);
+  const l5=l5List(p);
   /* Form şeridi kronolojik: soldan sağa zaman akıyor, çünkü bu şeridin tek işi
      eğilimi göstermek. Maçlar sekmesindeki liste ise en yenisi üstte — orada
      soru "en son ne oldu". */
@@ -2303,7 +2303,7 @@ function pfOvHtml(p,tm,cx){
    toplamı; o yüzden filtre değil, ayrı bir "Kariyer" bölümü. */
 function pfMtHtml(p,tm,cx){
   const rtAvg=p.rtN?(p.rtSum/p.rtN):0;
-  const l5=(p.l5||[]).slice().reverse();
+  const l5=l5List(p).reverse();
   const rows=l5.length?l5.map(m5=>{
     const o=oppOf(m5.o,m5.nt);
     const facts=[esc(cupTag(m5.cp)),m5.min?m5.min+"'":'',m5.g?m5.g+' G':'',m5.a?m5.a+' A':'',
@@ -3248,9 +3248,9 @@ player(id){
     ${mine?bar(t('trustL'),trustOf(p)):''}
     ${mine?`<div class="sub" style="margin-top:-4px">${t(trustLabel(trustOf(p)))}</div>`:''}
   </div>
-  ${(p.l5&&p.l5.length)?`<div class="card">
+  ${l5List(p).length?`<div class="card">
     <div class="sect">${t('last5')}</div>
-    ${p.l5.slice().reverse().map(m5=>{
+    ${l5List(p).reverse().map(m5=>{
       const o=oppOf(m5.o,m5.nt);
       const rc=m5.rt>=7.5?'var(--acc)':m5.rt>=6.5?'var(--warn)':'var(--bad)';
       const resCh=pfResCh(m5.res);
